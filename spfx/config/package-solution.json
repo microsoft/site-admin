@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "site-admin-client-side-solution",
+    "id": "9c7bcdac-024d-4ffe-b63a-cef526bc1930",
+    "version": "0.0.0.1",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.18.2"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "site-admin description"
+      },
+      "longDescription": {
+        "default": "site-admin description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "site-admin Feature",
+        "description": "The feature that activates elements of the site-admin solution.",
+        "id": "42003153-48a8-435e-8ade-4722eeeb312b",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "../../dist/site-admin.sppkg"
+  }
+}

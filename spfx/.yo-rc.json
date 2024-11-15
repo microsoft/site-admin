@@ -1,0 +1,21 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "plusBeta": false,
+    "isCreatingSolution": true,
+    "nodeVersion": "18.19.0",
+    "sdksVersions": {
+      "@microsoft/microsoft-graph-client": "3.0.2",
+      "@microsoft/teams-js": "2.12.0"
+    },
+    "version": "1.18.2",
+    "libraryName": "site-admin",
+    "libraryId": "9c7bcdac-024d-4ffe-b63a-cef526bc1930",
+    "environment": "spo",
+    "packageManager": "npm",
+    "solutionName": "site-admin",
+    "solutionShortDescription": "site-admin description",
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "componentType": "webpart"
+  }
+}
