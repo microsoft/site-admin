@@ -9,7 +9,8 @@
     "clean": "node ./clean.js",
     "flow": "node ./flow.js",
     "prod": "webpack --mode=production",
-    "spfx": "cd spfx && npm run package"
+    "spfx": "cd spfx && npm run package",
+    "test": "npm run build && cd spfx && gulp serve --nobrowser"
   },
   "keywords": [],
   "author": "",

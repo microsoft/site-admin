@@ -17,6 +17,9 @@ export class App {
         // Clear the element
         while (el.firstChild) { el.removeChild(el.firstChild); }
 
+        // Add the class for bootstrap
+        el.classList.add("bs");
+
         // Render the template
         el.innerHTML = `
             <div class="row">
