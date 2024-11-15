@@ -61,34 +61,27 @@ export class Web {
             btnProps: {
                 text: "Save Changes",
                 onClick: () => {
-                    let props = {};
-                    let updateFl = false;
                     let values = this._form.getValues();
 
-                    // See if an update is needed
-                    if (this._currValues.CommentsOnSitePagesDisabled != values["CommentsOnSitePagesDisabled"]) { props["CommentsOnSitePagesDisabled"] = values["CommentsOnSitePagesDisabled"]; updateFl = true; }
-                    if (this._currValues.ExcludeFromOfflineClient != values["ExcludeFromOfflineClient"]) { props["ExcludeFromOfflineClient"] = values["ExcludeFromOfflineClient"]; updateFl = true; }
-                    if (this._currValues.SearchScope != values["SearchScope"]) { props["SearchScope"] = values["SearchScope"]; updateFl = true; }
+                    // Save the properties
+                    this.save(values).then(() => {
+                        // See if we are updating the property bag
+                        if (this._currValues.DesignatedMAJCOM != values["DesignatedMAJCOM"]) {
+                            // Show a loading dialog
+                            LoadingDialog.setHeader("Updating Site Property");
+                            LoadingDialog.setBody("This will close after the update completes.");
+                            LoadingDialog.show();
 
-                    // See if we are updating the property bag
-                    if (this._currValues.DesignatedMAJCOM != values["DesignatedMAJCOM"]) {
-                        // Update the property
-                        Helper.setWebProperty("DesignatedMAJCOM", values["DesignatedMAJCOM"], true);
-                    }
+                            // Update the property
+                            Helper.setWebProperty("DesignatedMAJCOM", values["DesignatedMAJCOM"], true, this._web.Url).then(() => {
+                                // Update the current value
+                                this._currValues.DesignatedMAJCOM = values["DesignatedMAJCOM"];
 
-                    // See if an update is needed
-                    if (updateFl) {
-                        // Show a loading dialog
-                        LoadingDialog.setHeader("Updating Web");
-                        LoadingDialog.setBody("This will close after the changes complete.");
-                        LoadingDialog.show();
-
-                        // Update the web
-                        this._web.update(props).execute(() => {
-                            // Close the dialog
-                            LoadingDialog.hide();
-                        });
-                    }
+                                // Hide the dialog
+                                LoadingDialog.hide();
+                            });
+                        }
+                    });
                 }
             }
         });
@@ -99,28 +92,29 @@ export class Web {
         // Render the form
         this._form = Components.Form({
             el: this._el,
-            value: this._currValues,
             groupClassName: "mb-3",
             controls: [
                 {
                     name: "WebTemplate",
                     label: "Web Template:",
                     description: "The type of web.",
-                    type: Components.FormControlTypes.Readonly
+                    type: Components.FormControlTypes.Readonly,
+                    value: this._currValues.WebTemplate
                 },
                 {
                     name: "CommentsOnSitePagesDisabled",
                     label: "Comments On Site Pages Disabled:",
                     description: "If true, it will hide the comments on the site pages.",
                     type: Components.FormControlTypes.Dropdown,
+                    value: this._currValues.CommentsOnSitePagesDisabled ? "true" : "false",
                     items: [
                         {
                             text: "true",
-                            value: "true"
+                            data: true
                         },
                         {
                             text: "false",
-                            value: "false"
+                            data: false
                         }
                     ]
                 } as Components.IFormControlPropsDropdown,
@@ -129,14 +123,15 @@ export class Web {
                     label: "Exclude From Offline Client:",
                     description: "Disables the offline sync feature in all libraries.",
                     type: Components.FormControlTypes.Dropdown,
+                    value: this._currValues.ExcludeFromOfflineClient ? "true" : "false",
                     items: [
                         {
                             text: "true",
-                            value: "true"
+                            data: true
                         },
                         {
                             text: "false",
-                            value: "false"
+                            data: false
                         }
                     ]
                 } as Components.IFormControlPropsDropdown,
@@ -145,21 +140,26 @@ export class Web {
                     label: "Search Scope:",
                     description: "The search scope for the site to target. Default is 'Site'.",
                     type: Components.FormControlTypes.Dropdown,
+                    value: this._currValues.SearchScope,
                     items: [
                         {
                             text: "Default",
+                            data: 0,
                             value: "0"
                         },
                         {
                             text: "Tenant",
+                            data: 1,
                             value: "1"
                         },
                         {
                             text: "Hub",
+                            data: 2,
                             value: "2"
                         },
                         {
                             text: "Site",
+                            data: 3,
                             value: "3"
                         }
                     ]
@@ -168,7 +168,8 @@ export class Web {
                     name: "DesignatedMAJCOM",
                     label: "Designated MAJCOM",
                     description: "The designated MAJCOM for this site.",
-                    type: Components.FormControlTypes.TextField
+                    type: Components.FormControlTypes.TextField,
+                    value: this._currValues.DesignatedMAJCOM
                 }
             ]
         });
@@ -179,9 +180,49 @@ export class Web {
         // Render the header
         Components.Jumbotron({
             el: this._el,
+            className: "mb-2",
             lead: "Site Settings",
             size: Components.JumbotronSize.Small,
-            type: Components["JumbotronTypes"].Primary
+            type: Components.JumbotronTypes.Primary
         });
+    }
+
+    // Saves the properties
+    private save(values): PromiseLike<void> {
+        return new Promise((resolve, reject) => {
+            let props = {};
+            let updateFl = false;
+
+            // See if an update is needed
+            if (this._currValues.CommentsOnSitePagesDisabled != values["CommentsOnSitePagesDisabled"].data) { props["CommentsOnSitePagesDisabled"] = values["CommentsOnSitePagesDisabled"].data; updateFl = true; }
+            if (this._currValues.ExcludeFromOfflineClient != values["ExcludeFromOfflineClient"].data) { props["ExcludeFromOfflineClient"] = values["ExcludeFromOfflineClient"].data; updateFl = true; }
+            if (this._currValues.SearchScope != values["SearchScope"].data) { props["SearchScope"] = values["SearchScope"].data; updateFl = true; }
+
+            // See if an update is needed
+            if (updateFl) {
+                // Show a loading dialog
+                LoadingDialog.setHeader("Updating Web");
+                LoadingDialog.setBody("This will close after the changes complete.");
+                LoadingDialog.show();
+
+                // Update the web
+                this._web.update(props).execute(() => {
+                    // Update the current values
+                    this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"].data;
+                    this._currValues.DesignatedMAJCOM = values["DesignatedMAJCOM"];
+                    this._currValues.ExcludeFromOfflineClient = values["ExcludeFromOfflineClient"].data;
+                    this._currValues.SearchScope = values["SearchScope"].data;
+
+                    // Close the dialog
+                    LoadingDialog.hide();
+
+                    // Resolve the request
+                    resolve();
+                }, reject);
+            } else {
+                // Resolve the request
+                resolve();
+            }
+        })
     }
 }

@@ -64,10 +64,10 @@ export class Site {
                     let values = this._form.getValues();
 
                     // See if an update is needed
-                    if (this._currValues.CommentsOnSitePagesDisabled != values["CommentsOnSitePagesDisabled"]) { props["CommentsOnSitePagesDisabled"] = values["CommentsOnSitePagesDisabled"]; updateFl = true; }
-                    if (this._currValues.DisableCompanyWideSharingLinks != values["DisableCompanyWideSharingLinks"]) { props["DisableCompanyWideSharingLinks"] = values["DisableCompanyWideSharingLinks"]; updateFl = true; }
-                    if (this._currValues.ShareByEmailEnabled != values["ShareByEmailEnabled"]) { props["ShareByEmailEnabled"] = values["ShareByEmailEnabled"]; updateFl = true; }
-                    if (this._currValues.SocialBarOnSitePagesDisabled != values["SocialBarOnSitePagesDisabled"]) { props["SocialBarOnSitePagesDisabled"] = values["SocialBarOnSitePagesDisabled"]; updateFl = true; }
+                    if (this._currValues.CommentsOnSitePagesDisabled != values["CommentsOnSitePagesDisabled"].data) { props["CommentsOnSitePagesDisabled"] = values["CommentsOnSitePagesDisabled"].data; updateFl = true; }
+                    if (this._currValues.DisableCompanyWideSharingLinks != values["DisableCompanyWideSharingLinks"].data) { props["DisableCompanyWideSharingLinks"] = values["DisableCompanyWideSharingLinks"].data; updateFl = true; }
+                    if (this._currValues.ShareByEmailEnabled != values["ShareByEmailEnabled"].data) { props["ShareByEmailEnabled"] = values["ShareByEmailEnabled"].data; updateFl = true; }
+                    if (this._currValues.SocialBarOnSitePagesDisabled != values["SocialBarOnSitePagesDisabled"].data) { props["SocialBarOnSitePagesDisabled"] = values["SocialBarOnSitePagesDisabled"].data; updateFl = true; }
 
                     // See if an update is needed
                     if (updateFl) {
@@ -78,6 +78,12 @@ export class Site {
 
                         // Save the changes
                         this._site.update(props).execute(() => {
+                            // Update the current values
+                            this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"].data;
+                            this._currValues.DisableCompanyWideSharingLinks = values["DisableCompanyWideSharingLinks"].data;
+                            this._currValues.ShareByEmailEnabled = values["ShareByEmailEnabled"].data;
+                            this._currValues.SocialBarOnSitePagesDisabled = values["SocialBarOnSitePagesDisabled"].data;
+
                             // Close the dialog
                             LoadingDialog.hide();
                         });
@@ -92,7 +98,6 @@ export class Site {
         // Render the form
         this._form = Components.Form({
             el: this._el,
-            value: this._currValues,
             groupClassName: "mb-3",
             controls: [
                 {
@@ -100,14 +105,15 @@ export class Site {
                     label: "Comments On Site Pages Disabled:",
                     description: "The type of web.",
                     type: Components.FormControlTypes.Dropdown,
+                    value: this._currValues.CommentsOnSitePagesDisabled ? "true" : "false",
                     items: [
                         {
                             text: "true",
-                            value: "true"
+                            data: true
                         },
                         {
                             text: "false",
-                            value: "false"
+                            data: false
                         }
                     ]
                 } as Components.IFormControlPropsDropdown,
@@ -116,14 +122,15 @@ export class Site {
                     label: "Disable Company Wide Sharing Links:",
                     description: "If true, it will hide the comments on the site pages.",
                     type: Components.FormControlTypes.Dropdown,
+                    value: this._currValues.DisableCompanyWideSharingLinks ? "true" : "false",
                     items: [
                         {
                             text: "true",
-                            value: "true"
+                            data: true
                         },
                         {
                             text: "false",
-                            value: "false"
+                            data: false
                         }
                     ]
                 } as Components.IFormControlPropsDropdown,
@@ -132,14 +139,15 @@ export class Site {
                     label: "Share By Email Enabled:",
                     description: "Disables the offline sync feature in all libraries.",
                     type: Components.FormControlTypes.Dropdown,
+                    value: this._currValues.ShareByEmailEnabled ? "true" : "false",
                     items: [
                         {
                             text: "true",
-                            value: "true"
+                            data: true
                         },
                         {
                             text: "false",
-                            value: "false"
+                            data: false
                         }
                     ]
                 } as Components.IFormControlPropsDropdown,
@@ -148,14 +156,15 @@ export class Site {
                     label: "Social Bar On Site Pages Disabled:",
                     description: "The search scope for the site to target. Default is 'Site'.",
                     type: Components.FormControlTypes.Dropdown,
+                    value: this._currValues.SocialBarOnSitePagesDisabled ? "true" : "false",
                     items: [
                         {
                             text: "true",
-                            value: "true"
+                            data: true
                         },
                         {
                             text: "false",
-                            value: "false"
+                            data: false
                         }
                     ]
                 } as Components.IFormControlPropsDropdown
@@ -168,9 +177,10 @@ export class Site {
         // Render the header
         Components.Jumbotron({
             el: this._el,
+            className: "mb-2",
             lead: "Site Collection Settings",
             size: Components.JumbotronSize.Small,
-            type: Components["JumbotronTypes"].Primary
+            type: Components.JumbotronTypes.Primary
         });
     }
 }

@@ -131,6 +131,7 @@ export class DataSource {
                     "CommentsOnSitePagesDisabled",
                     "ExcludeFromOfflineClient",
                     "SearchScope",
+                    "Url",
                     "WebTemplate"
                 ]
             }).execute(resolve, reject);
