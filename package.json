@@ -1,0 +1,40 @@
+{
+  "name": "site-admin",
+  "version": "0.0.1",
+  "description": "An automation tool for tenant admins to use for automation of features/enhancements.",
+  "main": "src/index.ts",
+  "scripts": {
+    "all": "npm run clean && npm run build && npm run prod && npm run flow && npm run spfx",
+    "build": "webpack --mode=development",
+    "clean": "node ./clean.js",
+    "flow": "node ./flow.js",
+    "prod": "webpack --mode=production",
+    "spfx": "cd spfx && npm run package"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "datatables.net": "^2.1.8",
+    "datatables.net-bs5": "^2.1.8",
+    "dattatable": "^2.11.20",
+    "gd-sprest-bs": "^10.12.55",
+    "jquery": "^3.7.1",
+    "moment": "^2.30.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "archiver": "^7.0.1",
+    "babel-loader": "^9.2.1",
+    "css-loader": "^7.1.2",
+    "html-loader": "^5.1.0",
+    "moment-locales-webpack-plugin": "^1.2.0",
+    "sass": "^1.80.6",
+    "sass-loader": "^14.2.1",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^9.5.1",
+    "webpack": "^5.96.1",
+    "webpack-cli": "^5.1.4"
+  }
+}
