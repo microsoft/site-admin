@@ -184,9 +184,9 @@ export class DataSource {
             // Query the root web's lists
             Web(url).Lists().query({ Filter: "BaseTemplate eq " + SPTypes.ListTemplateType.AppCatalog }).execute(
                 // Success
-                () => {
+                (lists) => {
                     // Exists
-                    resolve(true);
+                    resolve(lists.results.length > 0);
                 },
 
                 () => {
