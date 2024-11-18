@@ -139,7 +139,7 @@ export class Site {
                             DataSource.hasAppCatalog(this._site.Url).then(hasAppCatalog => {
                                 // Set the value
                                 this._currValues.ContainsAppCatalog = hasAppCatalog;
-                                ctrl.value = hasAppCatalog;
+                                ctrl.value = hasAppCatalog ? "true" : "false";
 
                                 // Resolve the request
                                 resolve(ctrl);
