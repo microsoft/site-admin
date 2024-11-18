@@ -1,5 +1,6 @@
 import { LoadingDialog } from "dattatable";
-import { Components, Helper, Types } from "gd-sprest-bs";
+import { Components, Types } from "gd-sprest-bs";
+import { DataSource } from "../ds";
 
 /**
  * Site Form
@@ -12,6 +13,7 @@ export class Site {
     // The current values
     private _currValues: {
         CommentsOnSitePagesDisabled: boolean;
+        ContainsAppCatalog: boolean;
         DisableCompanyWideSharingLinks: boolean;
         ShareByEmailEnabled: boolean;
         SocialBarOnSitePagesDisabled: boolean;
@@ -25,6 +27,7 @@ export class Site {
         // Set the current values
         this._currValues = {
             CommentsOnSitePagesDisabled: this._site.CommentsOnSitePagesDisabled,
+            ContainsAppCatalog: false,
             DisableCompanyWideSharingLinks: this._site.DisableCompanyWideSharingLinks,
             ShareByEmailEnabled: this._site.ShareByEmailEnabled,
             SocialBarOnSitePagesDisabled: this._site.SocialBarOnSitePagesDisabled
@@ -59,35 +62,15 @@ export class Site {
             btnProps: {
                 text: "Save Changes",
                 onClick: () => {
-                    let props = {};
-                    let updateFl = false;
                     let values = this._form.getValues();
 
-                    // See if an update is needed
-                    if (this._currValues.CommentsOnSitePagesDisabled != values["CommentsOnSitePagesDisabled"].data) { props["CommentsOnSitePagesDisabled"] = values["CommentsOnSitePagesDisabled"].data; updateFl = true; }
-                    if (this._currValues.DisableCompanyWideSharingLinks != values["DisableCompanyWideSharingLinks"].data) { props["DisableCompanyWideSharingLinks"] = values["DisableCompanyWideSharingLinks"].data; updateFl = true; }
-                    if (this._currValues.ShareByEmailEnabled != values["ShareByEmailEnabled"].data) { props["ShareByEmailEnabled"] = values["ShareByEmailEnabled"].data; updateFl = true; }
-                    if (this._currValues.SocialBarOnSitePagesDisabled != values["SocialBarOnSitePagesDisabled"].data) { props["SocialBarOnSitePagesDisabled"] = values["SocialBarOnSitePagesDisabled"].data; updateFl = true; }
-
-                    // See if an update is needed
-                    if (updateFl) {
-                        // Show a loading dialog
-                        LoadingDialog.setHeader("Updating Web");
-                        LoadingDialog.setBody("This will close after the changes complete.");
-                        LoadingDialog.show();
-
-                        // Save the changes
-                        this._site.update(props).execute(() => {
-                            // Update the current values
-                            this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"].data;
-                            this._currValues.DisableCompanyWideSharingLinks = values["DisableCompanyWideSharingLinks"].data;
-                            this._currValues.ShareByEmailEnabled = values["ShareByEmailEnabled"].data;
-                            this._currValues.SocialBarOnSitePagesDisabled = values["SocialBarOnSitePagesDisabled"].data;
-
-                            // Close the dialog
-                            LoadingDialog.hide();
-                        });
-                    }
+                    // Save the site properties
+                    this.save(values).then(() => {
+                        // See if we are creating an app catalog
+                        if (this._currValues.ContainsAppCatalog != values["ContainsAppCatalog"].data) {
+                            // TODO
+                        }
+                    });
                 }
             }
         });
@@ -133,6 +116,36 @@ export class Site {
                             data: false
                         }
                     ]
+                } as Components.IFormControlPropsDropdown,
+                {
+                    name: "HasAppCatalog",
+                    label: "Has App Catalog:",
+                    description: "True if this has a site collection app catalog available.",
+                    type: Components.FormControlTypes.Dropdown,
+                    items: [
+                        {
+                            text: "true",
+                            data: true
+                        },
+                        {
+                            text: "false",
+                            data: false
+                        }
+                    ],
+                    onControlRendering: ctrl => {
+                        // Return a promise
+                        return new Promise((resolve) => {
+                            // See if an app catalog exists on this site
+                            DataSource.hasAppCatalog(this._site.Url).then(hasAppCatalog => {
+                                // Set the value
+                                this._currValues.ContainsAppCatalog = hasAppCatalog;
+                                ctrl.value = hasAppCatalog;
+
+                                // Resolve the request
+                                resolve(ctrl);
+                            });
+                        });
+                    }
                 } as Components.IFormControlPropsDropdown,
                 {
                     name: "ShareByEmailEnabled",
@@ -181,6 +194,46 @@ export class Site {
             lead: "Site Collection Settings",
             size: Components.JumbotronSize.Small,
             type: Components.JumbotronTypes.Primary
+        });
+    }
+
+    // Saves the properties
+    private save(values): PromiseLike<void> {
+        return new Promise((resolve) => {
+            let props = {};
+            let updateFl = false;
+
+            // See if an update is needed
+            if (this._currValues.CommentsOnSitePagesDisabled != values["CommentsOnSitePagesDisabled"].data) { props["CommentsOnSitePagesDisabled"] = values["CommentsOnSitePagesDisabled"].data; updateFl = true; }
+            if (this._currValues.DisableCompanyWideSharingLinks != values["DisableCompanyWideSharingLinks"].data) { props["DisableCompanyWideSharingLinks"] = values["DisableCompanyWideSharingLinks"].data; updateFl = true; }
+            if (this._currValues.ShareByEmailEnabled != values["ShareByEmailEnabled"].data) { props["ShareByEmailEnabled"] = values["ShareByEmailEnabled"].data; updateFl = true; }
+            if (this._currValues.SocialBarOnSitePagesDisabled != values["SocialBarOnSitePagesDisabled"].data) { props["SocialBarOnSitePagesDisabled"] = values["SocialBarOnSitePagesDisabled"].data; updateFl = true; }
+
+            // See if an update is needed
+            if (updateFl) {
+                // Show a loading dialog
+                LoadingDialog.setHeader("Updating Site Collection");
+                LoadingDialog.setBody("This will close after the changes complete.");
+                LoadingDialog.show();
+
+                // Save the changes
+                this._site.update(props).execute(() => {
+                    // Update the current values
+                    this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"].data;
+                    this._currValues.DisableCompanyWideSharingLinks = values["DisableCompanyWideSharingLinks"].data;
+                    this._currValues.ShareByEmailEnabled = values["ShareByEmailEnabled"].data;
+                    this._currValues.SocialBarOnSitePagesDisabled = values["SocialBarOnSitePagesDisabled"].data;
+
+                    // Close the dialog
+                    LoadingDialog.hide();
+
+                    // Resolve the request
+                    resolve();
+                });
+            } else {
+                // Resolve the request
+                resolve();
+            }
         });
     }
 }

@@ -1,5 +1,5 @@
 import { List } from "dattatable";
-import { Components, ContextInfo, Site, Types, Web } from "gd-sprest-bs";
+import { Components, ContextInfo, Site, SPTypes, Types, Web } from "gd-sprest-bs";
 import { Security } from "./security";
 import Strings from "./strings";
 
@@ -113,7 +113,8 @@ export class DataSource {
                     "ShowPeoplePickerSuggestionsForGuestUsers",
                     "SocialBarOnSitePagesDisabled",
                     "StatusBarLink",
-                    "StatusBarText"
+                    "StatusBarText",
+                    "Url"
                 ]
             }).execute(resolve, reject);
         });
@@ -174,6 +175,26 @@ export class DataSource {
                 return parseInt(value);
             }
         }
+    }
+
+    // Determines if the site collection has an app catalog
+    static hasAppCatalog(url: string): PromiseLike<boolean> {
+        // Return a promise
+        return new Promise((resolve) => {
+            // Query the root web's lists
+            Web(url).Lists().query({ Filter: "BaseTemplate eq " + SPTypes.ListTemplateType.AppCatalog }).execute(
+                // Success
+                () => {
+                    // Exists
+                    resolve(true);
+                },
+
+                () => {
+                    // Doesn't exist
+                    resolve(false);
+                }
+            )
+        });
     }
 
     // Initializes the application

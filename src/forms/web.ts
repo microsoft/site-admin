@@ -201,7 +201,7 @@ export class Web {
             // See if an update is needed
             if (updateFl) {
                 // Show a loading dialog
-                LoadingDialog.setHeader("Updating Web");
+                LoadingDialog.setHeader("Updating Site");
                 LoadingDialog.setBody("This will close after the changes complete.");
                 LoadingDialog.show();
 
@@ -223,6 +223,6 @@ export class Web {
                 // Resolve the request
                 resolve();
             }
-        })
+        });
     }
 }

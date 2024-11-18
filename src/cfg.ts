@@ -15,6 +15,17 @@ export const Configuration = Helper.SPConfig({
             TitleFieldDescription: "Enter the relative/absolute url to the site collection you want to enable custom scripts on.",
             CustomFields: [
                 {
+                    name: "RequestType",
+                    title: "Request Type",
+                    type: Helper.SPCfgFieldType.Choice,
+                    defaultValue: "",
+                    required: true,
+                    showInEditForm: false,
+                    choices: [
+                        "App Catalog", "Custom Script"
+                    ]
+                } as Helper.IFieldInfoChoice,
+                {
                     name: "Status",
                     title: "Status",
                     type: Helper.SPCfgFieldType.Choice,
