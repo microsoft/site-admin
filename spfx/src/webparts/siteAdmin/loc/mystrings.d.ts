@@ -1,7 +1,17 @@
 declare interface ISiteAdminWebPartStrings {
-  AzureFunctionUrlFieldDescription: string;
-  AzureFunctionUrlFieldLabel: string;
-  BasicGroupName: string;
+  SitePropCommentsOnSitePagesDisabled: string;
+  SitePropContainsAppCatalog: string;
+  SitePropContainsAppCatalogUrl: string;
+  SitePropDisableCompanyWideSharingLinks: string;
+  SitePropShareByEmailEnabled: string;
+  SitePropSocialBarOnSitePagesDisabled: string;
+  WebPropCommentsOnSitePagesDisabled: string;
+  WebPropSearchPropertyName: string;
+  WebPropSearchPropertyDescription: string;
+  WebPropSearchPropertyLabel: string;
+  WebPropExcludeFromOfflineClient: string;
+  WebPropSearchScope: string;
+  WebPropWebTemplate: string;
   AppLocalEnvironmentSharePoint: string;
   AppLocalEnvironmentTeams: string;
   AppLocalEnvironmentOffice: string;

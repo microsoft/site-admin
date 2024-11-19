@@ -11,10 +11,9 @@ import "./styles.scss";
 
 // App Properties
 interface IAppProps {
-    azureFunctionUrl?: string;
     context?: any;
     el: HTMLElement;
-    hideProps?: string[];
+    disableProps?: string[];
 }
 
 // Create the global variable for this solution
@@ -34,12 +33,13 @@ const GlobalVariable = {
         // Initialize the application and load the theme
         Promise.all([
             ThemeManager.load(true),
-            DataSource.init(props.azureFunctionUrl)
+            //DataSource.init(props.azureFunctionUrl)
+            DataSource.init(null)
         ]).then(
             // Success
             () => {
                 // Create the application
-                new App(props.el, props.hideProps);
+                new App(props.el, props.disableProps);
             },
 
             // Error

@@ -1,26 +1,58 @@
 import { Version } from '@microsoft/sp-core-library';
-import { IPropertyPaneConfiguration, PropertyPaneHorizontalRule, PropertyPaneLabel, PropertyPaneLink, PropertyPaneTextField } from '@microsoft/sp-property-pane';
+import {
+  IPropertyPaneConfiguration, IPropertyPaneGroup,
+  PropertyPaneHorizontalRule, PropertyPaneLabel, PropertyPaneLink, PropertyPaneToggle
+} from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart, WebPartContext } from '@microsoft/sp-webpart-base';
 import type { IReadonlyTheme } from '@microsoft/sp-component-base';
 import * as strings from 'SiteAdminWebPartStrings';
 
 export interface ISiteAdminWebPartProps {
-  azure_function_url: string;
+  hideProps: string[];
+  SitePropCommentsOnSitePagesDisabled: boolean;
+  SitePropContainsAppCatalog: boolean;
+  SitePropDisableCompanyWideSharingLinks: boolean;
+  SitePropShareByEmailEnabled: boolean;
+  SitePropSocialBarOnSitePagesDisabled: boolean;
+  WebPropCommentsOnSitePagesDisabled: boolean;
+  WebPropExcludeFromOfflineClient: boolean;
+  WebPropSearchScope: boolean;
+  WebPropWebTemplate: boolean;
 }
 
 // Reference the solution
 import "main-lib";
 declare const SiteAdmin: {
   appDescription: string;
-  render: (el: HTMLElement, context: WebPartContext, azureFunctionUrl: string) => void;
+  render: (props: {
+    context?: WebPartContext;
+    el: HTMLElement;
+    disableProps?: string[];
+  }) => void;
   updateTheme: (theme: IReadonlyTheme) => void;
 };
 
 export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWebPartProps> {
-
   public render(): void {
+    const disableProps: string[] = [];
+
+    // Parse the properties
+    for (let i = 0; i < this._siteProps.length; i++) {
+      const propName = this._siteProps[i];
+
+      // See if this one is selected to be hidden
+      if ((this.properties as any)[propName]) {
+        // Add the property to hide
+        disableProps.push(propName);
+      }
+    }
+
     // Render the solution
-    SiteAdmin.render(this.domElement, this.context, this.properties.azure_function_url);
+    SiteAdmin.render({
+      context: this.context,
+      el: this.domElement,
+      disableProps
+    });
   }
 
   protected onThemeChanged(currentTheme: IReadonlyTheme | undefined): void {
@@ -36,20 +68,64 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     return Version.parse(this.context.manifest.version);
   }
 
+
+  private _siteProps: string[] = [
+    "SitePropCommentsOnSitePagesDisabled",
+    "SitePropContainsAppCatalog",
+    "SitePropDisableCompanyWideSharingLinks",
+    "SitePropShareByEmailEnabled",
+    "SitePropSocialBarOnSitePagesDisabled"
+  ];
+
+  private _webProps: string[] = [
+    "WebPropCommentsOnSitePagesDisabled",
+    "WebPropExcludeFromOfflineClient",
+    "WebPropSearchScope"
+  ];
+
+  private generateGroup(groupName: string, props: string[], azureUrl: string[] = []): IPropertyPaneGroup {
+    const hideProps = this.properties.hideProps || [];
+    const groups: IPropertyPaneGroup = {
+      groupName,
+      groupFields: [
+      ]
+    };
+
+    // Parse the prop names
+    for (let i = 0; i < props.length; i++) {
+      const propName = props[i];
+      const hideProp = hideProps.indexOf(propName) >= 0;
+
+      // Add the property
+      groups.groupFields.push(PropertyPaneToggle(propName, {
+        label: (strings as any)[propName],
+        checked: hideProp,
+        onText: "The admin will not be able to change this value.",
+        offText: "The admin can make changes to this property"
+      }));
+    }
+
+    // Return the properties
+    return groups;
+  }
+
   protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
     return {
       pages: [
         {
           groups: [
-            {
-              groupName: "Settings:",
-              groupFields: [
-                PropertyPaneTextField('azure_function_url', {
-                  label: strings.AzureFunctionUrlFieldLabel,
-                  description: strings.AzureFunctionUrlFieldDescription
-                })
-              ]
-            }
+            this.generateGroup("Site Properties:", this._siteProps, ["SitePropContainsAppCatalog"]),
+          ]
+        },
+        {
+          groups: [
+            this.generateGroup("Web Properties:", this._webProps),
+            /**
+             *               "WebPropSearchPropertyName",
+              "WebPropSearchPropertyDescription",
+              "WebPropSearchPropertyLabel",
+
+             */
           ]
         },
         {
@@ -71,12 +147,12 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                 }),
                 PropertyPaneHorizontalRule(),
                 PropertyPaneLink('supportLink', {
-                  href: "https://www.spsprinkles.com/",
-                  text: "SharePoint Sprinkles",
+                  href: "https://github.com/spsprinkles/site-admin/issues",
+                  text: "Submit an Issue",
                   target: "_blank"
                 }),
                 PropertyPaneLink('sourceLink', {
-                  href: "https://github.com/spsprinkles/custom-script-request",
+                  href: "https://github.com/spsprinkles/site-admin",
                   text: "View Source on GitHub",
                   target: "_blank"
                 })

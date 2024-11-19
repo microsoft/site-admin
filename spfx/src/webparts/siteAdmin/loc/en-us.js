@@ -1,7 +1,20 @@
-define([], function() {
+define([], function () {
   return {
     "AzureFunctionUrlFieldDescription": "The url to trigger the azure function used to process requests",
     "AzureFunctionUrlFieldLabel": "Azure Function Url",
+    "SitePropCommentsOnSitePagesDisabled": "Comments on Site Pages",
+    "SitePropContainsAppCatalog": "App Catalog",
+    "SitePropContainsAppCatalogUrl": "App Catalog Azure Function",
+    "SitePropDisableCompanyWideSharingLinks": "Company Wide Sharing Links",
+    "SitePropShareByEmailEnabled": "Shared By Email",
+    "SitePropSocialBarOnSitePagesDisabled": "Social Bar on Site Pages",
+    "WebPropCommentsOnSitePagesDisabled": "Comments on Site Pages",
+    "WebPropSearchPropertyName": "DesignatedMAJCOM",
+    "WebPropSearchPropertyDescription": "Search Property Description",
+    "WebPropSearchPropertyLabel": "Search Property Label",
+    "WebPropExcludeFromOfflineClient": "Exclude From Offline Client",
+    "WebPropSearchScope": "Search Scope",
+    "WebPropWebTemplate": "Web Template",
     "PropertyPaneDescription": "Description",
     "BasicGroupName": "Group Name",
     "DescriptionFieldLabel": "Description Field",

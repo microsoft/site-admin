@@ -7,7 +7,7 @@ import { Components, Helper, Types } from "gd-sprest-bs";
 export class Web {
     private _el: HTMLElement = null;
     private _form: Components.IForm = null;
-    private _hideProps: string[] = null;
+    private _disableProps: string[] = null;
     private _web: Types.SP.WebOData = null;
 
     // The current values
@@ -19,10 +19,10 @@ export class Web {
         WebTemplate: string;
     } = null;
 
-    constructor(web: Types.SP.WebOData, el: HTMLElement, hideProps: string[]) {
+    constructor(web: Types.SP.WebOData, el: HTMLElement, disableProps: string[]) {
         // Save the properties
         this._el = el;
-        this._hideProps = hideProps;
+        this._disableProps = disableProps;
         this._web = web;
 
         // Set the current values
@@ -107,7 +107,7 @@ export class Web {
                     name: "CommentsOnSitePagesDisabled",
                     label: "Comments On Site Pages Disabled:",
                     description: "If true, it will hide the comments on the site pages.",
-                    isDisabled: this._hideProps.indexOf("CommentsOnSitePagesDisabled") >= 0,
+                    isDisabled: this._disableProps.indexOf("CommentsOnSitePagesDisabled") >= 0,
                     type: Components.FormControlTypes.Dropdown,
                     value: this._currValues.CommentsOnSitePagesDisabled ? "true" : "false",
                     items: [
@@ -125,7 +125,7 @@ export class Web {
                     name: "ExcludeFromOfflineClient",
                     label: "Exclude From Offline Client:",
                     description: "Disables the offline sync feature in all libraries.",
-                    isDisabled: this._hideProps.indexOf("ExcludeFromOfflineClient") >= 0,
+                    isDisabled: this._disableProps.indexOf("ExcludeFromOfflineClient") >= 0,
                     type: Components.FormControlTypes.Dropdown,
                     value: this._currValues.ExcludeFromOfflineClient ? "true" : "false",
                     items: [
@@ -143,7 +143,7 @@ export class Web {
                     name: "SearchScope",
                     label: "Search Scope:",
                     description: "The search scope for the site to target. Default is 'Site'.",
-                    isDisabled: this._hideProps.indexOf("SearchScope") >= 0,
+                    isDisabled: this._disableProps.indexOf("SearchScope") >= 0,
                     type: Components.FormControlTypes.Dropdown,
                     value: this._currValues.SearchScope,
                     items: [
@@ -173,7 +173,7 @@ export class Web {
                     name: "DesignatedMAJCOM",
                     label: "Designated MAJCOM",
                     description: "The designated MAJCOM for this site.",
-                    isDisabled: this._hideProps.indexOf("DesignatedMAJCOM") >= 0,
+                    isDisabled: this._disableProps.indexOf("DesignatedMAJCOM") >= 0,
                     type: Components.FormControlTypes.TextField,
                     value: this._currValues.DesignatedMAJCOM
                 }
