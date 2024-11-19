@@ -62,7 +62,7 @@ export class App {
         if (Security.IsAdmin) {
             // Add the settings for the app
             itemsEnd.push({
-                className: "btn-outline-light me-2",
+                className: "btn-outline-light ms-2",
                 isButton: true,
                 text: "Settings",
                 onClick: () => {
