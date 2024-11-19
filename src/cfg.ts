@@ -42,8 +42,9 @@ export const Configuration = Helper.SPConfig({
             ViewInformation: [
                 {
                     ViewName: "All Items",
+                    ViewQuery: "<Query><OrderBy><FieldRef Name=\"ID desc\" /></OrderBy></Query>",
                     ViewFields: [
-                        "ID", "LinkTitle", "Created", "Status"
+                        "ID", "RequestType", "LinkTitle", "Created", "Status"
                     ]
                 }
             ]

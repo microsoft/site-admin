@@ -8,6 +8,7 @@ import { DataSource } from "../ds";
 export class Site {
     private _el: HTMLElement = null;
     private _form: Components.IForm = null;
+    private _hideProps: string[] = null;
     private _site: Types.SP.SiteOData = null;
 
     // The current values
@@ -19,9 +20,10 @@ export class Site {
         SocialBarOnSitePagesDisabled: boolean;
     } = null;
 
-    constructor(site: Types.SP.SiteOData, el: HTMLElement) {
+    constructor(site: Types.SP.SiteOData, el: HTMLElement, hideProps: string[]) {
         // Save the properties
         this._el = el;
+        this._hideProps = hideProps;
         this._site = site;
 
         // Set the current values
@@ -87,6 +89,7 @@ export class Site {
                     name: "CommentsOnSitePagesDisabled",
                     label: "Comments On Site Pages Disabled:",
                     description: "The type of web.",
+                    isDisabled: this._hideProps.indexOf("CommentsOnSitePagesDisabled") >= 0,
                     type: Components.FormControlTypes.Dropdown,
                     value: this._currValues.CommentsOnSitePagesDisabled ? "true" : "false",
                     items: [
@@ -104,6 +107,7 @@ export class Site {
                     name: "DisableCompanyWideSharingLinks",
                     label: "Disable Company Wide Sharing Links:",
                     description: "If true, it will hide the comments on the site pages.",
+                    isDisabled: this._hideProps.indexOf("DisableCompanyWideSharingLinks") >= 0,
                     type: Components.FormControlTypes.Dropdown,
                     value: this._currValues.DisableCompanyWideSharingLinks ? "true" : "false",
                     items: [
@@ -121,6 +125,7 @@ export class Site {
                     name: "HasAppCatalog",
                     label: "Has App Catalog:",
                     description: "True if this has a site collection app catalog available.",
+                    isDisabled: this._hideProps.indexOf("HasAppCatalog") >= 0,
                     type: Components.FormControlTypes.Dropdown,
                     items: [
                         {
@@ -151,6 +156,7 @@ export class Site {
                     name: "ShareByEmailEnabled",
                     label: "Share By Email Enabled:",
                     description: "Disables the offline sync feature in all libraries.",
+                    isDisabled: this._hideProps.indexOf("ShareByEmailEnabled") >= 0,
                     type: Components.FormControlTypes.Dropdown,
                     value: this._currValues.ShareByEmailEnabled ? "true" : "false",
                     items: [
@@ -168,6 +174,7 @@ export class Site {
                     name: "SocialBarOnSitePagesDisabled",
                     label: "Social Bar On Site Pages Disabled:",
                     description: "The search scope for the site to target. Default is 'Site'.",
+                    isDisabled: this._hideProps.indexOf("SocialBarOnSitePagesDisabled") >= 0,
                     type: Components.FormControlTypes.Dropdown,
                     value: this._currValues.SocialBarOnSitePagesDisabled ? "true" : "false",
                     items: [

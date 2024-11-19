@@ -9,15 +9,23 @@ import Strings, { setContext } from "./strings";
 // Styling
 import "./styles.scss";
 
+// App Properties
+interface IAppProps {
+    azureFunctionUrl?: string;
+    context?: any;
+    el: HTMLElement;
+    hideProps?: string[];
+}
+
 // Create the global variable for this solution
 const GlobalVariable = {
     Configuration,
     appDescription: Strings.ProjectDescription,
-    render: (el, context?, azureFunctionUrl?: string) => {
+    render: (props: IAppProps) => {
         // See if the page context exists
-        if (context) {
+        if (props.context) {
             // Set the context
-            setContext(context);
+            setContext(props.context);
 
             // Update the configuration
             Configuration.setWebUrl(ContextInfo.webServerRelativeUrl);
@@ -26,12 +34,12 @@ const GlobalVariable = {
         // Initialize the application and load the theme
         Promise.all([
             ThemeManager.load(true),
-            DataSource.init(azureFunctionUrl)
+            DataSource.init(props.azureFunctionUrl)
         ]).then(
             // Success
             () => {
                 // Create the application
-                new App(el);
+                new App(props.el, props.hideProps);
             },
 
             // Error
@@ -57,5 +65,5 @@ window[Strings.GlobalVariable] = GlobalVariable;
 let elApp = document.querySelector("#" + Strings.AppElementId) as HTMLElement;
 if (elApp) {
     // Render the application
-    GlobalVariable.render(elApp);
+    GlobalVariable.render({ el: elApp });
 }
