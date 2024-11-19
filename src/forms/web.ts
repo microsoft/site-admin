@@ -1,6 +1,7 @@
 import { LoadingDialog } from "dattatable";
 import { Components, Helper, Types } from "gd-sprest-bs";
-import { DataSource } from "../ds";
+import { DataSource, RequestTypes, IAPIRequestProps } from "../ds";
+import { APIResponseModal } from "./response";
 
 /**
  * Web Form
@@ -199,8 +200,9 @@ export class Web {
     // Saves the properties
     private save(values): PromiseLike<void> {
         return new Promise((resolve, reject) => {
-            let apis: { api: string; key: string; value: any; }[] = [];
+            let apis: IAPIRequestProps[] = [];
             let props = {};
+            let requests: string[] = [];
             let updateFl = false;
 
             // Parse the keys
@@ -212,7 +214,14 @@ export class Web {
                     if (keyIdx >= 0) {
                         // Append the url
                         apis.push({ key, value, api: this._apiUrls[keyIdx] });
-                    } else {
+                    }
+                    // Else, see if we need to create a request for this
+                    else if (key == "ContainsAppCatalog") {
+                        // Add a request for this request
+                        requests.push(RequestTypes.AppCatalog);
+                    }
+                    // Else, we can update this using REST
+                    else {
                         // Add the property
                         props[key] = values[key].data;
 
@@ -227,33 +236,42 @@ export class Web {
             if (this._currValues.ExcludeFromOfflineClient != values["ExcludeFromOfflineClient"].data) { props["ExcludeFromOfflineClient"] = values["ExcludeFromOfflineClient"].data; updateFl = true; }
             if (this._currValues.SearchScope != values["SearchScope"].data) { props["SearchScope"] = values["SearchScope"].data; updateFl = true; }
 
-            // Process the requests
-            DataSource.processRequests(apis).then(() => {
-                // See if an update is needed
-                if (updateFl) {
-                    // Show a loading dialog
-                    LoadingDialog.setHeader("Updating Site");
-                    LoadingDialog.setBody("This will close after the changes complete.");
-                    LoadingDialog.show();
+            // Add the requests
+            DataSource.addRequest(this._web.Url, requests).then((responses) => {
+                // Process the requests
+                DataSource.processAPIRequests(apis).then((apiResponses) => {
+                    // See if an update is needed
+                    if (updateFl) {
+                        // Show a loading dialog
+                        LoadingDialog.setHeader("Updating Site");
+                        LoadingDialog.setBody("This will close after the changes complete.");
+                        LoadingDialog.show();
 
-                    // Update the web
-                    this._web.update(props).execute((responses) => {
-                        // Update the current values
-                        this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"].data;
-                        this._currValues.DesignatedMAJCOM = values["DesignatedMAJCOM"];
-                        this._currValues.ExcludeFromOfflineClient = values["ExcludeFromOfflineClient"].data;
-                        this._currValues.SearchScope = values["SearchScope"].data;
+                        // Update the web
+                        this._web.update(props).execute(() => {
+                            // Update the current values
+                            this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"].data;
+                            this._currValues.DesignatedMAJCOM = values["DesignatedMAJCOM"];
+                            this._currValues.ExcludeFromOfflineClient = values["ExcludeFromOfflineClient"].data;
+                            this._currValues.SearchScope = values["SearchScope"].data;
 
-                        // Close the dialog
-                        LoadingDialog.hide();
+                            // Close the dialog
+                            LoadingDialog.hide();
+
+                            // Show the responses
+                            new APIResponseModal(responses.concat(apiResponses));
+
+                            // Resolve the request
+                            resolve();
+                        }, reject);
+                    } else {
+                        // Show the responses
+                        new APIResponseModal(responses.concat(apiResponses));
 
                         // Resolve the request
                         resolve();
-                    }, reject);
-                } else {
-                    // Resolve the request
-                    resolve();
-                }
+                    }
+                });
             });
         });
     }

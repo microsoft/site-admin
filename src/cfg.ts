@@ -15,6 +15,17 @@ export const Configuration = Helper.SPConfig({
             TitleFieldDescription: "Enter the relative/absolute url to the site collection you want to enable custom scripts on.",
             CustomFields: [
                 {
+                    name: "ProcessFlag",
+                    title: "Process Flag",
+                    type: Helper.SPCfgFieldType.Boolean,
+                    defaultValue: "0",
+                    showInDisplayForm: false,
+                    showInEditForm: false,
+                    showInListSettings: false,
+                    showInNewForm: false,
+                    showInViewForms: false
+                },
+                {
                     name: "RequestType",
                     title: "Request Type",
                     type: Helper.SPCfgFieldType.Choice,

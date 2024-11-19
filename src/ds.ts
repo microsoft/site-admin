@@ -10,15 +10,27 @@ import Strings from "./strings";
 export interface IListItem extends Types.SP.ListItem {
     AuthorId: number;
     Author: { Id: number; Title: string; }
+    ProcessFlag: boolean;
+    RequestType: string;
     Status: string;
 }
 
 /**
- * Process Request
+ * API Request
  */
-export interface IProcessRequestProps {
+export interface IAPIRequestProps {
     api: string;
     key: string;
+    value: any;
+}
+
+/**
+ * Response from the api requests
+ */
+export interface IResponse {
+    errorFl: boolean;
+    key: string;
+    message: string;
     value: any;
 }
 
@@ -31,12 +43,78 @@ export interface ISiteInfo {
 }
 
 /**
+ * Request Types
+ */
+export enum RequestTypes {
+    AppCatalog = "App Catalog",
+    CustomScript = "Custom Script"
+}
+
+/**
  * Data Source
  */
 export class DataSource {
-    // Azure Function Url
-    static processRequests(requests: IProcessRequestProps[]): PromiseLike<{ errorFl: boolean; message: string; }[]> {
-        let responses: { errorFl: boolean; message: string; }[] = [];
+    // Method to process requests to add to the list
+    static addRequest(url: string, requests: string[]): PromiseLike<IResponse[]> {
+        let responses: IResponse[] = [];
+
+        // See if any requests exist
+        if (requests.length == 0) {
+            // Resolve the request
+            return Promise.resolve(responses);
+        }
+
+        // Return a promise
+        return new Promise(resolve => {
+            // Parse the requests
+            Helper.Executor(requests, request => {
+                // Return a promise
+                return new Promise(resolve => {
+                    // Create the item
+                    this.List.createItem({
+                        ProcessFlag: true,
+                        RequestType: request,
+                        Title: url
+                    } as IListItem).then(
+                        // Success
+                        (item) => {
+                            // Add the response
+                            responses.push({
+                                errorFl: false,
+                                key: "CreateRequest",
+                                message: "The request was successfully added to the list.",
+                                value: item.RequestType
+                            });
+
+                            // Try the next request
+                            resolve(null);
+                        },
+
+                        // Error
+                        ex => {
+                            // Add the response
+                            responses.push({
+                                errorFl: true,
+                                key: "CreateRequest",
+                                message: "There was an error trying to add the request to the list.",
+                                value: request
+                            });
+
+                            // Try the next request
+                            resolve(null);
+                        }
+                    );
+                });
+            }).then(() => {
+                // Resolve the request
+                resolve(responses);
+            });
+        });
+    }
+
+    // Method to process the API requests
+    static processAPIRequests(requests: IAPIRequestProps[]): PromiseLike<IResponse[]> {
+        let responses: IResponse[] = [];
 
         // See if any requests exist
         if (requests.length == 0) {
@@ -74,7 +152,9 @@ export class DataSource {
                         // Resolve the request
                         responses.push({
                             errorFl: xhr.status !== 200,
-                            message: xhr.responseText
+                            key: request.key,
+                            message: xhr.responseText,
+                            value: request.value
                         });
 
                         // Try the next request
