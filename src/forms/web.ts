@@ -1,5 +1,6 @@
 import { LoadingDialog } from "dattatable";
 import { Components, Helper, Types } from "gd-sprest-bs";
+import { DataSource } from "../ds";
 
 /**
  * Web Form
@@ -198,39 +199,62 @@ export class Web {
     // Saves the properties
     private save(values): PromiseLike<void> {
         return new Promise((resolve, reject) => {
+            let apis: { api: string; key: string; value: any; }[] = [];
             let props = {};
             let updateFl = false;
+
+            // Parse the keys
+            for (let key in this._currValues) {
+                let value = values[key].data;
+                if (this._currValues[key] != value) {
+                    // See if there is an associated api
+                    let keyIdx = this._apiUrls.indexOf(key);
+                    if (keyIdx >= 0) {
+                        // Append the url
+                        apis.push({ key, value, api: this._apiUrls[keyIdx] });
+                    } else {
+                        // Add the property
+                        props[key] = values[key].data;
+
+                        // Set the flag
+                        updateFl = true;
+                    }
+                }
+            }
 
             // See if an update is needed
             if (this._currValues.CommentsOnSitePagesDisabled != values["CommentsOnSitePagesDisabled"].data) { props["CommentsOnSitePagesDisabled"] = values["CommentsOnSitePagesDisabled"].data; updateFl = true; }
             if (this._currValues.ExcludeFromOfflineClient != values["ExcludeFromOfflineClient"].data) { props["ExcludeFromOfflineClient"] = values["ExcludeFromOfflineClient"].data; updateFl = true; }
             if (this._currValues.SearchScope != values["SearchScope"].data) { props["SearchScope"] = values["SearchScope"].data; updateFl = true; }
 
-            // See if an update is needed
-            if (updateFl) {
-                // Show a loading dialog
-                LoadingDialog.setHeader("Updating Site");
-                LoadingDialog.setBody("This will close after the changes complete.");
-                LoadingDialog.show();
+            // Process the requests
+            DataSource.processRequests(apis).then(() => {
+                // See if an update is needed
+                if (updateFl) {
+                    // Show a loading dialog
+                    LoadingDialog.setHeader("Updating Site");
+                    LoadingDialog.setBody("This will close after the changes complete.");
+                    LoadingDialog.show();
 
-                // Update the web
-                this._web.update(props).execute(() => {
-                    // Update the current values
-                    this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"].data;
-                    this._currValues.DesignatedMAJCOM = values["DesignatedMAJCOM"];
-                    this._currValues.ExcludeFromOfflineClient = values["ExcludeFromOfflineClient"].data;
-                    this._currValues.SearchScope = values["SearchScope"].data;
+                    // Update the web
+                    this._web.update(props).execute((responses) => {
+                        // Update the current values
+                        this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"].data;
+                        this._currValues.DesignatedMAJCOM = values["DesignatedMAJCOM"];
+                        this._currValues.ExcludeFromOfflineClient = values["ExcludeFromOfflineClient"].data;
+                        this._currValues.SearchScope = values["SearchScope"].data;
 
-                    // Close the dialog
-                    LoadingDialog.hide();
+                        // Close the dialog
+                        LoadingDialog.hide();
 
+                        // Resolve the request
+                        resolve();
+                    }, reject);
+                } else {
                     // Resolve the request
                     resolve();
-                }, reject);
-            } else {
-                // Resolve the request
-                resolve();
-            }
+                }
+            });
         });
     }
 }

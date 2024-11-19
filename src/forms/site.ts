@@ -208,9 +208,30 @@ export class Site {
 
     // Saves the properties
     private save(values): PromiseLike<void> {
+        // Return a promise
         return new Promise((resolve) => {
+            let apis: { api: string; key: string; value: any; }[] = [];
             let props = {};
             let updateFl = false;
+
+            // Parse the keys
+            for (let key in this._currValues) {
+                let value = values[key].data;
+                if (this._currValues[key] != value) {
+                    // See if there is an associated api
+                    let keyIdx = this._apiUrls.indexOf(key);
+                    if (keyIdx >= 0) {
+                        // Append the url
+                        apis.push({ key, value, api: this._apiUrls[keyIdx] });
+                    } else {
+                        // Add the property
+                        props[key] = values[key].data;
+
+                        // Set the flag
+                        updateFl = true;
+                    }
+                }
+            }
 
             // See if an update is needed
             if (this._currValues.CommentsOnSitePagesDisabled != values["CommentsOnSitePagesDisabled"].data) { props["CommentsOnSitePagesDisabled"] = values["CommentsOnSitePagesDisabled"].data; updateFl = true; }
@@ -218,31 +239,34 @@ export class Site {
             if (this._currValues.ShareByEmailEnabled != values["ShareByEmailEnabled"].data) { props["ShareByEmailEnabled"] = values["ShareByEmailEnabled"].data; updateFl = true; }
             if (this._currValues.SocialBarOnSitePagesDisabled != values["SocialBarOnSitePagesDisabled"].data) { props["SocialBarOnSitePagesDisabled"] = values["SocialBarOnSitePagesDisabled"].data; updateFl = true; }
 
-            // See if an update is needed
-            if (updateFl) {
-                // Show a loading dialog
-                LoadingDialog.setHeader("Updating Site Collection");
-                LoadingDialog.setBody("This will close after the changes complete.");
-                LoadingDialog.show();
+            // Process the requests
+            DataSource.processRequests(apis).then((responses) => {
+                // See if an update is needed
+                if (updateFl) {
+                    // Show a loading dialog
+                    LoadingDialog.setHeader("Updating Site Collection");
+                    LoadingDialog.setBody("This will close after the changes complete.");
+                    LoadingDialog.show();
 
-                // Save the changes
-                this._site.update(props).execute(() => {
-                    // Update the current values
-                    this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"].data;
-                    this._currValues.DisableCompanyWideSharingLinks = values["DisableCompanyWideSharingLinks"].data;
-                    this._currValues.ShareByEmailEnabled = values["ShareByEmailEnabled"].data;
-                    this._currValues.SocialBarOnSitePagesDisabled = values["SocialBarOnSitePagesDisabled"].data;
+                    // Save the changes
+                    this._site.update(props).execute(() => {
+                        // Update the current values
+                        this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"].data;
+                        this._currValues.DisableCompanyWideSharingLinks = values["DisableCompanyWideSharingLinks"].data;
+                        this._currValues.ShareByEmailEnabled = values["ShareByEmailEnabled"].data;
+                        this._currValues.SocialBarOnSitePagesDisabled = values["SocialBarOnSitePagesDisabled"].data;
 
-                    // Close the dialog
-                    LoadingDialog.hide();
+                        // Close the dialog
+                        LoadingDialog.hide();
 
+                        // Resolve the request
+                        resolve();
+                    });
+                } else {
                     // Resolve the request
                     resolve();
-                });
-            } else {
-                // Resolve the request
-                resolve();
-            }
+                }
+            });
         });
     }
 }

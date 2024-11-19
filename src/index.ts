@@ -36,8 +36,7 @@ const GlobalVariable = {
         // Initialize the application and load the theme
         Promise.all([
             ThemeManager.load(true),
-            //DataSource.init(props.azureFunctionUrl)
-            DataSource.init(null)
+            DataSource.init()
         ]).then(
             // Success
             () => {

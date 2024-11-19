@@ -1,5 +1,5 @@
-import { List } from "dattatable";
-import { Components, ContextInfo, Site, SPTypes, Types, Web } from "gd-sprest-bs";
+import { List, LoadingDialog } from "dattatable";
+import { Components, ContextInfo, Helper, Site, SPTypes, Types, Web } from "gd-sprest-bs";
 import { Security } from "./security";
 import Strings from "./strings";
 
@@ -11,6 +11,15 @@ export interface IListItem extends Types.SP.ListItem {
     AuthorId: number;
     Author: { Id: number; Title: string; }
     Status: string;
+}
+
+/**
+ * Process Request
+ */
+export interface IProcessRequestProps {
+    api: string;
+    key: string;
+    value: any;
 }
 
 /**
@@ -26,34 +35,62 @@ export interface ISiteInfo {
  */
 export class DataSource {
     // Azure Function Url
-    private static _azureFunctionUrl: string = null;
-    static get AzureFunctionEnabled(): boolean { return this._azureFunctionUrl ? true : false; }
-    static processRequest(itemId: number): PromiseLike<string> {
+    static processRequests(requests: IProcessRequestProps[]): PromiseLike<{ errorFl: boolean; message: string; }[]> {
+        let responses: { errorFl: boolean; message: string; }[] = [];
+
+        // See if any requests exist
+        if (requests.length == 0) {
+            // Resolve the request
+            return Promise.resolve(responses);
+        }
+
         // Return a promise
-        return new Promise((resolve, reject) => {
-            // Create the request
-            let xhr = new XMLHttpRequest();
-            xhr.open("POST", this._azureFunctionUrl, true);
+        return new Promise((resolve) => {
+            let counter = 0;
 
-            // Set the header
-            xhr.setRequestHeader("Content-Type", "application/json");
+            // Show a loading dialog
+            LoadingDialog.setHeader("Processing API Requests");
+            LoadingDialog.setBody(`Processing request 1 of ${requests.length}`);
+            LoadingDialog.show();
 
-            // Set the event
-            xhr.onreadystatechange = (ev) => {
-                if (xhr.readyState !== 4) { return; }
+            // Parse the requests
+            Helper.Executor(requests, request => {
+                // Set the body
+                LoadingDialog.setBody(`Processing request ${++counter} of ${requests.length}`);
 
-                // See if it was successful
-                if (xhr.status === 200) {
-                    // Resolve the request                
-                    resolve(xhr.responseText);
-                } else {
-                    // Reject the request
-                    reject(xhr.responseText);
-                }
-            }
+                // Return a promise
+                return new Promise((resolve) => {
+                    // Create the request
+                    let xhr = new XMLHttpRequest();
+                    xhr.open("POST", request.api, true);
 
-            // Send the request
-            xhr.send(JSON.stringify({ requestId: itemId }));
+                    // Set the header
+                    xhr.setRequestHeader("Content-Type", "application/json");
+
+                    // Set the event
+                    xhr.onreadystatechange = (ev) => {
+                        if (xhr.readyState !== 4) { return; }
+
+                        // Resolve the request
+                        responses.push({
+                            errorFl: xhr.status !== 200,
+                            message: xhr.responseText
+                        });
+
+                        // Try the next request
+                        resolve(null);
+                    }
+
+                    // Send the request
+                    xhr.send(JSON.stringify({ key: request.key, value: request.value }));
+                });
+            }).then(() => {
+                // Hide the dialog
+                LoadingDialog.hide();
+
+                // Resolve the request
+                resolve(responses);
+            });
         });
     }
 
@@ -198,10 +235,7 @@ export class DataSource {
     }
 
     // Initializes the application
-    static init(azureFunctionUrl: string): PromiseLike<any> {
-        // Set the url
-        this._azureFunctionUrl = azureFunctionUrl;
-
+    static init(): PromiseLike<any> {
         // Return a promise
         return new Promise((resolve, reject) => {
             // Init the security
