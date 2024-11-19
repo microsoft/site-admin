@@ -27,23 +27,36 @@ declare const SiteAdmin: {
   render: (props: {
     context?: WebPartContext;
     el: HTMLElement;
-    disableProps?: string[];
+    disableSiteProps?: string[];
+    disableWebProps?: string[];
   }) => void;
   updateTheme: (theme: IReadonlyTheme) => void;
 };
 
 export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWebPartProps> {
   public render(): void {
-    const disableProps: string[] = [];
+    const disableSiteProps: string[] = [];
+    const disableWebProps: string[] = [];
 
-    // Parse the properties
+    // Parse the site properties
     for (let i = 0; i < this._siteProps.length; i++) {
       const propName = this._siteProps[i];
 
       // See if this one is selected to be hidden
       if ((this.properties as any)[propName]) {
         // Add the property to hide
-        disableProps.push(propName);
+        disableSiteProps.push(propName.replace("SiteProp", ""));
+      }
+    }
+
+    // Parse the web properties
+    for (let i = 0; i < this._webProps.length; i++) {
+      const propName = this._webProps[i];
+
+      // See if this one is selected to be hidden
+      if ((this.properties as any)[propName]) {
+        // Add the property to hide
+        disableWebProps.push(propName.replace("WebProp", ""));
       }
     }
 
@@ -51,7 +64,8 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     SiteAdmin.render({
       context: this.context,
       el: this.domElement,
-      disableProps
+      disableSiteProps,
+      disableWebProps
     });
   }
 

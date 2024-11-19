@@ -122,10 +122,10 @@ export class Site {
                     ]
                 } as Components.IFormControlPropsDropdown,
                 {
-                    name: "HasAppCatalog",
-                    label: "Has App Catalog:",
+                    name: "ContainsAppCatalog",
+                    label: "App Catalog Enabled:",
                     description: "True if this has a site collection app catalog available.",
-                    isDisabled: this._disableProps.indexOf("HasAppCatalog") >= 0,
+                    isDisabled: this._disableProps.indexOf("ContainsAppCatalog") >= 0,
                     type: Components.FormControlTypes.Dropdown,
                     items: [
                         {

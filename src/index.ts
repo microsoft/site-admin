@@ -13,7 +13,8 @@ import "./styles.scss";
 interface IAppProps {
     context?: any;
     el: HTMLElement;
-    disableProps?: string[];
+    disableSiteProps?: string[];
+    disableWebProps?: string[];
 }
 
 // Create the global variable for this solution
@@ -39,7 +40,7 @@ const GlobalVariable = {
             // Success
             () => {
                 // Create the application
-                new App(props.el, props.disableProps);
+                new App(props.el, props.disableSiteProps, props.disableWebProps);
             },
 
             // Error
