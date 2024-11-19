@@ -13,7 +13,7 @@ export class App {
     private _elWeb: HTMLElement;
 
     // Constructor
-    constructor(el: HTMLElement, disableSiteProps: string[] = [], disableWebProps: string[] = []) {
+    constructor(el: HTMLElement, disableSiteProps: string[] = [], disableWebProps: string[] = [], siteUrls?: string[], webUrls?: string[]) {
         // Clear the element
         while (el.firstChild) { el.removeChild(el.firstChild); }
 
@@ -36,11 +36,11 @@ export class App {
         this._elWeb = elRow.children[2] as HTMLElement;
 
         // Render the dashboard
-        this.renderNavigation(disableSiteProps, disableWebProps);
+        this.renderNavigation(disableSiteProps, disableWebProps, siteUrls, webUrls);
     }
 
     // Renders the navigation
-    private renderNavigation(disableSiteProps: string[], disableWebProps: string[]) {
+    private renderNavigation(disableSiteProps: string[], disableWebProps: string[], siteUrls?: string[], webUrls?: string[]) {
         // Create the items to show
         let itemsEnd = [
             {
@@ -51,8 +51,8 @@ export class App {
                     // Show the load form
                     Forms.Load.show((siteInfo) => {
                         // Render the forms for this site
-                        new Forms.Web(siteInfo.web, this._elWeb, disableWebProps);
-                        new Forms.Site(siteInfo.site, this._elSite, disableSiteProps);
+                        new Forms.Web(siteInfo.web, this._elWeb, disableWebProps, siteUrls);
+                        new Forms.Site(siteInfo.site, this._elSite, disableSiteProps, webUrls);
                     });
                 }
             }

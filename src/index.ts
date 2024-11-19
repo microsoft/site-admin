@@ -15,6 +15,8 @@ interface IAppProps {
     el: HTMLElement;
     disableSiteProps?: string[];
     disableWebProps?: string[];
+    siteUrls?: string[];
+    webUrls?: string[];
 }
 
 // Create the global variable for this solution

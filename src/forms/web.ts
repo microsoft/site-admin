@@ -5,6 +5,7 @@ import { Components, Helper, Types } from "gd-sprest-bs";
  * Web Form
  */
 export class Web {
+    private _apiUrls: string[] = null;
     private _el: HTMLElement = null;
     private _form: Components.IForm = null;
     private _disableProps: string[] = null;
@@ -19,8 +20,9 @@ export class Web {
         WebTemplate: string;
     } = null;
 
-    constructor(web: Types.SP.WebOData, el: HTMLElement, disableProps: string[]) {
+    constructor(web: Types.SP.WebOData, el: HTMLElement, disableProps: string[], apiUrls?: string[]) {
         // Save the properties
+        this._apiUrls = apiUrls;
         this._el = el;
         this._disableProps = disableProps;
         this._web = web;

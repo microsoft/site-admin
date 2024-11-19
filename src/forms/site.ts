@@ -6,6 +6,7 @@ import { DataSource } from "../ds";
  * Site Form
  */
 export class Site {
+    private _apiUrls: string[] = null;
     private _el: HTMLElement = null;
     private _form: Components.IForm = null;
     private _disableProps: string[] = null;
@@ -20,8 +21,9 @@ export class Site {
         SocialBarOnSitePagesDisabled: boolean;
     } = null;
 
-    constructor(site: Types.SP.SiteOData, el: HTMLElement, disableProps: string[]) {
+    constructor(site: Types.SP.SiteOData, el: HTMLElement, disableProps: string[], apiUrls?: string[]) {
         // Save the properties
+        this._apiUrls = apiUrls;
         this._el = el;
         this._disableProps = disableProps;
         this._site = site;
