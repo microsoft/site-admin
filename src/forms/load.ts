@@ -6,6 +6,8 @@ import { DataSource, ISiteInfo } from "../ds";
  * Load Form
  */
 export class Load {
+    private static _form: Components.IForm = null;
+
     // Renders the modal
     private static render(onSuccess: (siteInfo: ISiteInfo) => void) {
         // Clear the modal
@@ -14,24 +16,20 @@ export class Load {
         // Set the header
         Modal.setHeader("Load Site");
 
-        // Set the body
-        let form = Components.Form({
-            el: Modal.BodyElement,
-            controls: [
-                {
-                    name: "url",
-                    label: "Site Collection Url:",
-                    type: Components.FormControlTypes.TextField,
-                    description: "The absolute/relative url to the site collection. (Example: /sites/dev)",
-                    required: true,
-                    errorMessage: "The site url is required."
-                }
-            ]
-        });
+        // Render the form
+        this.renderForm(Modal.BodyElement);
 
         // Render the footer
+        this.renderFooter(Modal.FooterElement, onSuccess);
+
+        // Show the modal
+        Modal.show();
+    }
+
+    // Renders the footer
+    static renderFooter(el: HTMLElement, onSuccess: (siteInfo: ISiteInfo) => void) {
         Components.TooltipGroup({
-            el: Modal.FooterElement,
+            el,
             tooltips: [
                 {
                     content: "Validates that you are a site collection admin for the site entered.",
@@ -39,9 +37,9 @@ export class Load {
                         text: "Load",
                         onClick: () => {
                             // Validate the form
-                            if (form.isValid()) {
-                                let ctrl = form.getControl("url");
-                                let url = form.getValues()["url"];
+                            if (this._form.isValid()) {
+                                let ctrl = this._form.getControl("url");
+                                let url = this._form.getValues()["url"];
 
                                 // Show a loading dialog
                                 LoadingDialog.setHeader("Validating Site");
@@ -78,9 +76,23 @@ export class Load {
                 }
             ]
         });
+    }
 
-        // Show the modal
-        Modal.show();
+    // Renders the form
+    static renderForm(el: HTMLElement) {
+        this._form = Components.Form({
+            el,
+            controls: [
+                {
+                    name: "url",
+                    label: "Site Collection Url:",
+                    type: Components.FormControlTypes.TextField,
+                    description: "The absolute/relative url to the site collection. (Example: /sites/dev)",
+                    required: true,
+                    errorMessage: "The site url is required."
+                }
+            ]
+        });
     }
 
     // Shows the modal
