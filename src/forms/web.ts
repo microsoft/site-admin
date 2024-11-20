@@ -3,6 +3,12 @@ import { Components, Helper, Types } from "gd-sprest-bs";
 import { DataSource, RequestTypes, IAPIRequestProps } from "../ds";
 import { APIResponseModal } from "./response";
 
+export interface ISearchProp {
+    description: string;
+    key: string;
+    label: string;
+}
+
 /**
  * Web Form
  */
@@ -11,29 +17,31 @@ export class Web {
     private _el: HTMLElement = null;
     private _form: Components.IForm = null;
     private _disableProps: string[] = null;
+    private _searchProp: ISearchProp;
     private _web: Types.SP.WebOData = null;
 
     // The current values
     private _currValues: {
         CommentsOnSitePagesDisabled: boolean;
-        DesignatedMAJCOM: string;
         ExcludeFromOfflineClient: boolean;
+        SearchProp: string;
         SearchScope: number;
         WebTemplate: string;
     } = null;
 
-    constructor(web: Types.SP.WebOData, el: HTMLElement, disableProps: string[], apiUrls?: string[]) {
+    constructor(web: Types.SP.WebOData, el: HTMLElement, disableProps: string[], apiUrls?: string[], searchProp?: ISearchProp) {
         // Save the properties
         this._apiUrls = apiUrls;
         this._el = el;
         this._disableProps = disableProps;
+        this._searchProp = searchProp;
         this._web = web;
 
         // Set the current values
         this._currValues = {
             CommentsOnSitePagesDisabled: this._web.CommentsOnSitePagesDisabled,
-            DesignatedMAJCOM: this._web.AllProperties["DesignatedMAJCOM"],
             ExcludeFromOfflineClient: this._web.ExcludeFromOfflineClient,
+            SearchProp: this._web.AllProperties[this._searchProp.key],
             SearchScope: this._web.SearchScope,
             WebTemplate: this._web.WebTemplate
         }
@@ -72,16 +80,16 @@ export class Web {
                     // Save the properties
                     this.save(values).then(() => {
                         // See if we are updating the property bag
-                        if (this._currValues.DesignatedMAJCOM != values["DesignatedMAJCOM"]) {
+                        if (this._currValues.SearchProp != values["SearchProp"]) {
                             // Show a loading dialog
                             LoadingDialog.setHeader("Updating Site Property");
                             LoadingDialog.setBody("This will close after the update completes.");
                             LoadingDialog.show();
 
                             // Update the property
-                            Helper.setWebProperty("DesignatedMAJCOM", values["DesignatedMAJCOM"], true, this._web.Url).then(() => {
+                            Helper.setWebProperty(this._searchProp.key, values["SearchProp"], true, this._web.Url).then(() => {
                                 // Update the current value
-                                this._currValues.DesignatedMAJCOM = values["DesignatedMAJCOM"];
+                                this._currValues.SearchProp = values["SearchProp"];
 
                                 // Hide the dialog
                                 LoadingDialog.hide();
@@ -174,12 +182,13 @@ export class Web {
                     ]
                 } as Components.IFormControlPropsDropdown,
                 {
-                    name: "DesignatedMAJCOM",
-                    label: "Designated MAJCOM",
-                    description: "The designated MAJCOM for this site.",
-                    isDisabled: this._disableProps.indexOf("DesignatedMAJCOM") >= 0,
+                    className: this._searchProp.key ? "" : "d-none",
+                    name: "SearchProp",
+                    label: this._searchProp.label || "Search Property",
+                    description: this._searchProp.description || "The custom property to set for search.",
+                    isDisabled: this._disableProps.indexOf("SearchProp") >= 0,
                     type: Components.FormControlTypes.TextField,
-                    value: this._currValues.DesignatedMAJCOM
+                    value: this._currValues.SearchProp
                 }
             ]
         });
@@ -240,39 +249,56 @@ export class Web {
             DataSource.addRequest(this._web.Url, requests).then((responses) => {
                 // Process the requests
                 DataSource.processAPIRequests(apis).then((apiResponses) => {
-                    // See if an update is needed
-                    if (updateFl) {
-                        // Show a loading dialog
-                        LoadingDialog.setHeader("Updating Site");
-                        LoadingDialog.setBody("This will close after the changes complete.");
-                        LoadingDialog.show();
+                    // Update the search property
+                    this.updateSearchProp(values["SearchProp"]).then(() => {
+                        // See if an update is needed
+                        if (updateFl) {
+                            // Show a loading dialog
+                            LoadingDialog.setHeader("Updating Site");
+                            LoadingDialog.setBody("This will close after the changes complete.");
+                            LoadingDialog.show();
 
-                        // Update the web
-                        this._web.update(props).execute(() => {
-                            // Update the current values
-                            this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"].data;
-                            this._currValues.DesignatedMAJCOM = values["DesignatedMAJCOM"];
-                            this._currValues.ExcludeFromOfflineClient = values["ExcludeFromOfflineClient"].data;
-                            this._currValues.SearchScope = values["SearchScope"].data;
+                            // Update the web
+                            this._web.update(props).execute(() => {
+                                // Update the current values
+                                this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"].data;
+                                this._currValues.ExcludeFromOfflineClient = values["ExcludeFromOfflineClient"].data;
+                                this._currValues.SearchScope = values["SearchScope"].data;
 
-                            // Close the dialog
-                            LoadingDialog.hide();
+                                // Close the dialog
+                                LoadingDialog.hide();
 
+                                // Show the responses
+                                new APIResponseModal(responses.concat(apiResponses));
+
+                                // Resolve the request
+                                resolve();
+                            }, reject);
+                        } else {
                             // Show the responses
                             new APIResponseModal(responses.concat(apiResponses));
 
                             // Resolve the request
                             resolve();
-                        }, reject);
-                    } else {
-                        // Show the responses
-                        new APIResponseModal(responses.concat(apiResponses));
-
-                        // Resolve the request
-                        resolve();
-                    }
+                        }
+                    });
                 });
             });
+        });
+    }
+
+    // Method to update the search property
+    private updateSearchProp(value: string): PromiseLike<void> {
+        // Return a promise
+        return new Promise(resolve => {
+            // Ensure a property is set and an update is required
+            if (this._searchProp.key && this._currValues.SearchProp != value) {
+                // Update the property
+                Helper.setWebProperty(this._searchProp.key, value, true, this._web.Url).then(resolve, resolve);
+            } else {
+                // Resolve the request
+                resolve();
+            }
         });
     }
 }

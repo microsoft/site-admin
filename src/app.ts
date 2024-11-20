@@ -4,6 +4,17 @@ import { InstallationModal } from "./install";
 import Strings from "./strings";
 import { Security } from "./security";
 
+// App Properties
+export interface IAppProps {
+    context?: any;
+    el: HTMLElement;
+    disableSiteProps?: string[];
+    disableWebProps?: string[];
+    searchProp?: Forms.ISearchProp;
+    siteUrls?: string[];
+    webUrls?: string[];
+}
+
 /**
  * Main Application
  */
@@ -13,15 +24,15 @@ export class App {
     private _elWeb: HTMLElement;
 
     // Constructor
-    constructor(el: HTMLElement, disableSiteProps: string[] = [], disableWebProps: string[] = [], siteUrls?: string[], webUrls?: string[]) {
+    constructor(props: IAppProps) {
         // Clear the element
-        while (el.firstChild) { el.removeChild(el.firstChild); }
+        while (props.el.firstChild) { props.el.removeChild(props.el.firstChild); }
 
         // Add the class for bootstrap
-        el.classList.add("bs");
+        props.el.classList.add("bs");
 
         // Render the template
-        el.innerHTML = `
+        props.el.innerHTML = `
             <div class="row">
                 <div class="col-12"></div>
                 <div class="col-6"></div>
@@ -30,17 +41,17 @@ export class App {
         `;
 
         // Set the elements
-        let elRow = el.children[0];
+        let elRow = props.el.children[0];
         this._elNav = elRow.children[0] as HTMLElement;
         this._elSite = elRow.children[1] as HTMLElement;
         this._elWeb = elRow.children[2] as HTMLElement;
 
         // Render the dashboard
-        this.renderNavigation(disableSiteProps, disableWebProps, siteUrls, webUrls);
+        this.renderNavigation(props);
     }
 
     // Renders the navigation
-    private renderNavigation(disableSiteProps: string[], disableWebProps: string[], siteUrls?: string[], webUrls?: string[]) {
+    private renderNavigation(props: IAppProps) {
         // Create the items to show
         let itemsEnd = [
             {
@@ -51,8 +62,8 @@ export class App {
                     // Show the load form
                     Forms.Load.show((siteInfo) => {
                         // Render the forms for this site
-                        new Forms.Web(siteInfo.web, this._elWeb, disableWebProps, siteUrls);
-                        new Forms.Site(siteInfo.site, this._elSite, disableSiteProps, webUrls);
+                        new Forms.Web(siteInfo.web, this._elWeb, props.disableWebProps, props.siteUrls, props.searchProp);
+                        new Forms.Site(siteInfo.site, this._elSite, props.disableSiteProps, props.webUrls);
                     });
                 }
             }

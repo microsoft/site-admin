@@ -1,5 +1,5 @@
 import { ContextInfo, ThemeManager } from "gd-sprest-bs";
-import { App } from "./app";
+import { App, IAppProps } from "./app";
 import { Configuration } from "./cfg";
 import { DataSource } from "./ds";
 import { InstallationModal } from "./install";
@@ -8,16 +8,6 @@ import Strings, { setContext } from "./strings";
 
 // Styling
 import "./styles.scss";
-
-// App Properties
-interface IAppProps {
-    context?: any;
-    el: HTMLElement;
-    disableSiteProps?: string[];
-    disableWebProps?: string[];
-    siteUrls?: string[];
-    webUrls?: string[];
-}
 
 // Create the global variable for this solution
 const GlobalVariable = {
@@ -41,7 +31,7 @@ const GlobalVariable = {
             // Success
             () => {
                 // Create the application
-                new App(props.el, props.disableSiteProps, props.disableWebProps);
+                new App(props);
             },
 
             // Error

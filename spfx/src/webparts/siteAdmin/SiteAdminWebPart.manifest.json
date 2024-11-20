@@ -18,11 +18,11 @@
   "preconfiguredEntries": [{
     "groupId": "5c03119e-3074-46fd-976b-c60198311f70", // Advanced
     "group": { "default": "Advanced" },
-    "title": { "default": "SiteAdmin" },
-    "description": { "default": "SiteAdmin description" },
+    "title": { "default": "Site Admin Tool" },
+    "description": { "default": "A tool for site admins to make requests for changes that require a SPO admin or Flow/PowerShell." },
     "officeFabricIconFontName": "Page",
     "properties": {
-      "description": "SiteAdmin"
+      "description": "A tool for site admins to make requests for changes that require a SPO admin or Flow/PowerShell."
     }
   }]
 }
