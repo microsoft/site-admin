@@ -106,37 +106,17 @@ export class Web {
                     label: "Comments On Site Pages Disabled:",
                     description: "If true, it will hide the comments on the site pages.",
                     isDisabled: this._disableProps.indexOf("CommentsOnSitePagesDisabled") >= 0,
-                    type: Components.FormControlTypes.Dropdown,
-                    value: this._currValues.CommentsOnSitePagesDisabled ? "true" : "false",
-                    items: [
-                        {
-                            text: "true",
-                            data: true
-                        },
-                        {
-                            text: "false",
-                            data: false
-                        }
-                    ]
-                } as Components.IFormControlPropsDropdown,
+                    type: Components.FormControlTypes.Switch,
+                    value: this._currValues.CommentsOnSitePagesDisabled
+                } as Components.IFormControlPropsSwitch,
                 {
                     name: "ExcludeFromOfflineClient",
                     label: "Exclude From Offline Client:",
                     description: "Disables the offline sync feature in all libraries.",
                     isDisabled: this._disableProps.indexOf("ExcludeFromOfflineClient") >= 0,
-                    type: Components.FormControlTypes.Dropdown,
-                    value: this._currValues.ExcludeFromOfflineClient ? "true" : "false",
-                    items: [
-                        {
-                            text: "true",
-                            data: true
-                        },
-                        {
-                            text: "false",
-                            data: false
-                        }
-                    ]
-                } as Components.IFormControlPropsDropdown,
+                    type: Components.FormControlTypes.Switch,
+                    value: this._currValues.ExcludeFromOfflineClient
+                } as Components.IFormControlPropsSwitch,
                 {
                     name: "SearchScope",
                     label: "Search Scope:",
@@ -202,7 +182,7 @@ export class Web {
 
             // Parse the keys
             for (let key in this._currValues) {
-                let value = values[key].data;
+                let value = typeof (values[key]) === "boolean" ? values[key] : values[key].data;
                 if (this._currValues[key] != value) {
                     // See if there is an associated api
                     let keyIdx = this._apiUrls.indexOf(key);
@@ -218,7 +198,7 @@ export class Web {
                     // Else, we can update this using REST
                     else {
                         // Add the property
-                        props[key] = values[key].data;
+                        props[key] = value;
 
                         // Set the flag
                         updateFl = true;

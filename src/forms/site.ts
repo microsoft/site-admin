@@ -93,53 +93,23 @@ export class Site {
                     label: "Comments On Site Pages Disabled:",
                     description: "The type of web.",
                     isDisabled: this._disableProps.indexOf("CommentsOnSitePagesDisabled") >= 0,
-                    type: Components.FormControlTypes.Dropdown,
-                    value: this._currValues.CommentsOnSitePagesDisabled ? "true" : "false",
-                    items: [
-                        {
-                            text: "true",
-                            data: true
-                        },
-                        {
-                            text: "false",
-                            data: false
-                        }
-                    ]
-                } as Components.IFormControlPropsDropdown,
+                    type: Components.FormControlTypes.Switch,
+                    value: this._currValues.CommentsOnSitePagesDisabled
+                } as Components.IFormControlPropsSwitch,
                 {
                     name: "DisableCompanyWideSharingLinks",
                     label: "Disable Company Wide Sharing Links:",
                     description: "If true, it will hide the comments on the site pages.",
                     isDisabled: this._disableProps.indexOf("DisableCompanyWideSharingLinks") >= 0,
-                    type: Components.FormControlTypes.Dropdown,
-                    value: this._currValues.DisableCompanyWideSharingLinks ? "true" : "false",
-                    items: [
-                        {
-                            text: "true",
-                            data: true
-                        },
-                        {
-                            text: "false",
-                            data: false
-                        }
-                    ]
-                } as Components.IFormControlPropsDropdown,
+                    type: Components.FormControlTypes.Switch,
+                    value: this._currValues.DisableCompanyWideSharingLinks
+                } as Components.IFormControlPropsSwitch,
                 {
                     name: "ContainsAppCatalog",
                     label: "App Catalog Enabled:",
                     description: "True if this has a site collection app catalog available.",
                     isDisabled: this._disableProps.indexOf("ContainsAppCatalog") >= 0,
-                    type: Components.FormControlTypes.Dropdown,
-                    items: [
-                        {
-                            text: "true",
-                            data: true
-                        },
-                        {
-                            text: "false",
-                            data: false
-                        }
-                    ],
+                    type: Components.FormControlTypes.Switch,
                     onControlRendering: ctrl => {
                         // Return a promise
                         return new Promise((resolve) => {
@@ -147,50 +117,30 @@ export class Site {
                             DataSource.hasAppCatalog(this._site.Url).then(hasAppCatalog => {
                                 // Set the value
                                 this._currValues.ContainsAppCatalog = hasAppCatalog;
-                                ctrl.value = hasAppCatalog ? "true" : "false";
+                                ctrl.value = hasAppCatalog
 
                                 // Resolve the request
                                 resolve(ctrl);
                             });
                         });
                     }
-                } as Components.IFormControlPropsDropdown,
+                } as Components.IFormControlPropsSwitch,
                 {
                     name: "ShareByEmailEnabled",
                     label: "Share By Email Enabled:",
                     description: "Disables the offline sync feature in all libraries.",
                     isDisabled: this._disableProps.indexOf("ShareByEmailEnabled") >= 0,
-                    type: Components.FormControlTypes.Dropdown,
-                    value: this._currValues.ShareByEmailEnabled ? "true" : "false",
-                    items: [
-                        {
-                            text: "true",
-                            data: true
-                        },
-                        {
-                            text: "false",
-                            data: false
-                        }
-                    ]
-                } as Components.IFormControlPropsDropdown,
+                    type: Components.FormControlTypes.Switch,
+                    value: this._currValues.ShareByEmailEnabled
+                } as Components.IFormControlPropsSwitch,
                 {
                     name: "SocialBarOnSitePagesDisabled",
                     label: "Social Bar On Site Pages Disabled:",
                     description: "The search scope for the site to target. Default is 'Site'.",
                     isDisabled: this._disableProps.indexOf("SocialBarOnSitePagesDisabled") >= 0,
-                    type: Components.FormControlTypes.Dropdown,
-                    value: this._currValues.SocialBarOnSitePagesDisabled ? "true" : "false",
-                    items: [
-                        {
-                            text: "true",
-                            data: true
-                        },
-                        {
-                            text: "false",
-                            data: false
-                        }
-                    ]
-                } as Components.IFormControlPropsDropdown
+                    type: Components.FormControlTypes.Switch,
+                    value: this._currValues.SocialBarOnSitePagesDisabled
+                } as Components.IFormControlPropsSwitch
             ]
         });
     }
@@ -218,7 +168,7 @@ export class Site {
 
             // Parse the keys
             for (let key in this._currValues) {
-                let value = values[key].data;
+                let value = typeof (values[key]) === "boolean" ? values[key] : values[key].data;
                 if (this._currValues[key] != value) {
                     // See if there is an associated api
                     let keyIdx = this._apiUrls.indexOf(key);
@@ -234,7 +184,7 @@ export class Site {
                     // Else, we can update this using REST
                     else {
                         // Add the property
-                        props[key] = values[key].data;
+                        props[key] = value;
 
                         // Set the flag
                         updateFl = true;
