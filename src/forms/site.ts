@@ -171,10 +171,15 @@ export class Site {
                         // Append the url
                         apis.push({ key, value, api: this._apiUrls[keyIdx] });
                     }
-                    // Else, see if we need to create a request for this
-                    else if (key == "ContainsAppCatalog" || key == "DisableCompanyWideSharingLinks") {
+                    // Else, see if we need to create a request
+                    else if (key == "ContainsAppCatalog") {
                         // Add a request for this request
                         requests.push(RequestTypes.AppCatalog);
+                    }
+                    // Else, see if we need to create a request
+                    else if (key == "DisableCompanyWideSharingLinks") {
+                        // Add a request for this request
+                        requests.push(RequestTypes.DisableCompanyWideSharingLinks);
                     }
                     // Else, we can update this using REST
                     else {

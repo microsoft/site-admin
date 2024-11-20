@@ -9,7 +9,8 @@ export const Configuration = Helper.SPConfig({
         {
             ListInformation: {
                 Title: Strings.Lists.Main,
-                BaseTemplate: SPTypes.ListTemplateType.GenericList
+                BaseTemplate: SPTypes.ListTemplateType.GenericList,
+                EnableAttachments: false
             },
             TitleFieldDisplayName: "Site Url",
             TitleFieldDescription: "Enter the relative/absolute url to the site collection you want to enable custom scripts on.",
@@ -46,16 +47,16 @@ export const Configuration = Helper.SPConfig({
                     showInNewForm: false,
                     showInEditForm: false,
                     choices: [
-                        "New", "Error", "Processed", "Completed"
+                        "New", "Cancelled", "Error", "Processed", "Completed"
                     ]
                 } as Helper.IFieldInfoChoice
             ],
             ViewInformation: [
                 {
                     ViewName: "All Items",
-                    ViewQuery: "<Query><OrderBy><FieldRef Name=\"ID desc\" /></OrderBy></Query>",
+                    ViewQuery: '<OrderBy><FieldRef Name="Created" Ascending="FALSE" /></OrderBy>',
                     ViewFields: [
-                        "ID", "RequestType", "LinkTitle", "Created", "Status"
+                        "ID", "Author", "RequestType", "LinkTitle", "Created", "Status"
                     ]
                 }
             ]
