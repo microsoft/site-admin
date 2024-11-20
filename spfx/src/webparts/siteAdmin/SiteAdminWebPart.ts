@@ -150,6 +150,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       if (hasUrl) {
         groups.groupFields.push(PropertyPaneTextField(propName + "Url", {
           label: `The azure function api to execute for this property.`,
+          disabled: (this.properties as any)[propName],
           multiline: true,
           value: (this.properties as any)[propName + "Url"]
         }));

@@ -47,7 +47,8 @@ export interface ISiteInfo {
  */
 export enum RequestTypes {
     AppCatalog = "App Catalog",
-    CustomScript = "Custom Script"
+    CustomScript = "Custom Script",
+    DisableCompanyWideSharingLinks = "Disable Company Wide Sharing Links"
 }
 
 /**

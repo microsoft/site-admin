@@ -78,10 +78,7 @@ export class Web {
                     let values = this._form.getValues();
 
                     // Save the properties
-                    this.save(values).then(() => {
-                        // Hide the dialog
-                        LoadingDialog.hide();
-                    });
+                    this.save(values);
                 }
             }
         });
@@ -190,11 +187,6 @@ export class Web {
                         // Append the url
                         apis.push({ key, value, api: this._apiUrls[keyIdx] });
                     }
-                    // Else, see if we need to create a request for this
-                    else if (key == "ContainsAppCatalog") {
-                        // Add a request for this request
-                        requests.push(RequestTypes.AppCatalog);
-                    }
                     // Else, we can update this using REST
                     else {
                         // Add the property
@@ -227,9 +219,9 @@ export class Web {
                             // Update the web
                             this._web.update(props).execute(() => {
                                 // Update the current values
-                                this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"].data;
-                                this._currValues.ExcludeFromOfflineClient = values["ExcludeFromOfflineClient"].data;
-                                this._currValues.SearchScope = values["SearchScope"].data;
+                                this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"];
+                                this._currValues.ExcludeFromOfflineClient = values["ExcludeFromOfflineClient"];
+                                this._currValues.SearchScope = values["SearchScope"];
 
                                 // Close the dialog
                                 LoadingDialog.hide();

@@ -70,12 +70,7 @@ export class Site {
                     let values = this._form.getValues();
 
                     // Save the site properties
-                    this.save(values).then(() => {
-                        // See if we are creating an app catalog
-                        if (this._currValues.ContainsAppCatalog != values["ContainsAppCatalog"].data) {
-                            // TODO
-                        }
-                    });
+                    this.save(values);
                 }
             }
         });
@@ -177,7 +172,7 @@ export class Site {
                         apis.push({ key, value, api: this._apiUrls[keyIdx] });
                     }
                     // Else, see if we need to create a request for this
-                    else if (key == "ContainsAppCatalog") {
+                    else if (key == "ContainsAppCatalog" || key == "DisableCompanyWideSharingLinks") {
                         // Add a request for this request
                         requests.push(RequestTypes.AppCatalog);
                     }
@@ -206,10 +201,9 @@ export class Site {
                         // Save the changes
                         this._site.update(props).execute(() => {
                             // Update the current values
-                            this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"].data;
-                            this._currValues.DisableCompanyWideSharingLinks = values["DisableCompanyWideSharingLinks"].data;
-                            this._currValues.ShareByEmailEnabled = values["ShareByEmailEnabled"].data;
-                            this._currValues.SocialBarOnSitePagesDisabled = values["SocialBarOnSitePagesDisabled"].data;
+                            this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"];
+                            this._currValues.ShareByEmailEnabled = values["ShareByEmailEnabled"];
+                            this._currValues.SocialBarOnSitePagesDisabled = values["SocialBarOnSitePagesDisabled"];
 
                             // Close the dialog
                             LoadingDialog.hide();

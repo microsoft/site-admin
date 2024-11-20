@@ -33,7 +33,7 @@ export const Configuration = Helper.SPConfig({
                     required: true,
                     showInEditForm: false,
                     choices: [
-                        "App Catalog", "Custom Script"
+                        "App Catalog", "Custom Script", "Disable Company Wide Sharing Links"
                     ]
                 } as Helper.IFieldInfoChoice,
                 {
