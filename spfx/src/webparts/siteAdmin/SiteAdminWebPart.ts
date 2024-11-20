@@ -18,8 +18,8 @@ export interface ISiteAdminWebPartProps {
   WebPropCommentsOnSitePagesDisabled: boolean;
   WebPropExcludeFromOfflineClient: boolean;
   WebPropSearchPropertyDescription: string;
+  WebPropSearchPropertyKey: string;
   WebPropSearchPropertyLabel: string;
-  WebPropSearchPropertyName: string;
   WebPropSearchScope: boolean;
   WebPropWebTemplate: boolean;
 }
@@ -89,8 +89,8 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       webUrls,
       searchProp: {
         description: this.properties.WebPropSearchPropertyDescription,
-        key: this.properties.WebPropSearchPropertyLabel,
-        label: this.properties.WebPropSearchPropertyName
+        key: this.properties.WebPropSearchPropertyKey,
+        label: this.properties.WebPropSearchPropertyLabel
       }
     });
   }
@@ -107,6 +107,8 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
   protected get dataVersion(): Version {
     return Version.parse(this.context.manifest.version);
   }
+
+  protected get disableReactivePropertyChanges(): boolean { return true; }
 
   private _siteProps: string[] = [
     "SitePropCommentsOnSitePagesDisabled",
@@ -172,18 +174,18 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
             {
               groupName: "Search Property",
               groupFields: [
-                PropertyPaneTextField("WebPropSearchPropertyName", {
-                  label: strings.WebPropSearchPropertyName,
+                PropertyPaneTextField("WebPropSearchPropertyKey", {
+                  label: strings.WebPropSearchPropertyKey,
                   description: "The custom property key to set for a site.",
-                  value: this.properties.WebPropSearchPropertyName
+                  value: this.properties.WebPropSearchPropertyKey
                 }),
                 PropertyPaneTextField("WebPropSearchPropertyLabel", {
-                  label: strings.WebPropSearchPropertyName,
+                  label: strings.WebPropSearchPropertyLabel,
                   description: "The label to display for the custom property in the form.",
                   value: this.properties.WebPropSearchPropertyLabel
                 }),
                 PropertyPaneTextField("WebPropSearchPropertyDescription", {
-                  label: strings.WebPropSearchPropertyName,
+                  label: strings.WebPropSearchPropertyDescription,
                   description: "The description to display for the custom  property in the form.",
                   value: this.properties.WebPropSearchPropertyDescription
                 })

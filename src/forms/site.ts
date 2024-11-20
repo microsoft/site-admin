@@ -22,7 +22,7 @@ export class Site {
         SocialBarOnSitePagesDisabled: boolean;
     } = null;
 
-    constructor(site: Types.SP.SiteOData, el: HTMLElement, disableProps: string[], apiUrls?: string[]) {
+    constructor(site: Types.SP.SiteOData, el: HTMLElement, disableProps: string[] = [], apiUrls: string[] = []) {
         // Save the properties
         this._apiUrls = apiUrls;
         this._el = el;

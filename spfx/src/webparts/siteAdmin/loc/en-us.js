@@ -9,7 +9,7 @@ define([], function () {
     "SitePropShareByEmailEnabled": "Shared By Email",
     "SitePropSocialBarOnSitePagesDisabled": "Social Bar on Site Pages",
     "WebPropCommentsOnSitePagesDisabled": "Comments on Site Pages",
-    "WebPropSearchPropertyName": "DesignatedMAJCOM",
+    "WebPropSearchPropertyKey": "Search Property Key",
     "WebPropSearchPropertyDescription": "Search Property Description",
     "WebPropSearchPropertyLabel": "Search Property Label",
     "WebPropExcludeFromOfflineClient": "Exclude From Offline Client",

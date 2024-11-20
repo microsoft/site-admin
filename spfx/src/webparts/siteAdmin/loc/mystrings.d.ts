@@ -6,7 +6,7 @@ declare interface ISiteAdminWebPartStrings {
   SitePropShareByEmailEnabled: string;
   SitePropSocialBarOnSitePagesDisabled: string;
   WebPropCommentsOnSitePagesDisabled: string;
-  WebPropSearchPropertyName: string;
+  WebPropSearchPropertyKey: string;
   WebPropSearchPropertyDescription: string;
   WebPropSearchPropertyLabel: string;
   WebPropExcludeFromOfflineClient: string;

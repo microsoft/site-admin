@@ -29,7 +29,7 @@ export class Web {
         WebTemplate: string;
     } = null;
 
-    constructor(web: Types.SP.WebOData, el: HTMLElement, disableProps: string[], apiUrls?: string[], searchProp?: ISearchProp) {
+    constructor(web: Types.SP.WebOData, el: HTMLElement, disableProps: string[] = [], apiUrls: string[] = [], searchProp: ISearchProp = {} as any) {
         // Save the properties
         this._apiUrls = apiUrls;
         this._el = el;
@@ -79,22 +79,8 @@ export class Web {
 
                     // Save the properties
                     this.save(values).then(() => {
-                        // See if we are updating the property bag
-                        if (this._currValues.SearchProp != values["SearchProp"]) {
-                            // Show a loading dialog
-                            LoadingDialog.setHeader("Updating Site Property");
-                            LoadingDialog.setBody("This will close after the update completes.");
-                            LoadingDialog.show();
-
-                            // Update the property
-                            Helper.setWebProperty(this._searchProp.key, values["SearchProp"], true, this._web.Url).then(() => {
-                                // Update the current value
-                                this._currValues.SearchProp = values["SearchProp"];
-
-                                // Hide the dialog
-                                LoadingDialog.hide();
-                            });
-                        }
+                        // Hide the dialog
+                        LoadingDialog.hide();
                     });
                 }
             }
@@ -293,8 +279,22 @@ export class Web {
         return new Promise(resolve => {
             // Ensure a property is set and an update is required
             if (this._searchProp.key && this._currValues.SearchProp != value) {
+                // Show a loading dialog
+                LoadingDialog.setHeader("Updating Site Property");
+                LoadingDialog.setBody("This will close after the update completes.");
+                LoadingDialog.show();
+
                 // Update the property
-                Helper.setWebProperty(this._searchProp.key, value, true, this._web.Url).then(resolve, resolve);
+                Helper.setWebProperty(this._searchProp.key, value, true, this._web.Url).then(() => {
+                    // Update the current value
+                    this._currValues.SearchProp = value;
+
+                    // Hide the dialog
+                    LoadingDialog.hide();
+
+                    // Resolve the request
+                    resolve();
+                }, resolve);
             } else {
                 // Resolve the request
                 resolve();
