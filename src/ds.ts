@@ -82,7 +82,7 @@ export class DataSource {
                             responses.push({
                                 errorFl: false,
                                 key: request.key,
-                                message: (item.RequestType ? "Enable " : "Disable ") + request.key,
+                                message: (item.RequestType ? "Enable " : "Disable ") + request.key + " will be processed within 5 minutes.",
                                 value: item.RequestType
                             });
 

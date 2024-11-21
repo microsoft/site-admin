@@ -14,7 +14,7 @@ export class APIResponseModal {
         Modal.clear();
 
         // Set the header
-        Modal.setHeader("API Responses");
+        Modal.setHeader("Request Status");
 
         // Render the responses
         this.renderResponses(responses);
