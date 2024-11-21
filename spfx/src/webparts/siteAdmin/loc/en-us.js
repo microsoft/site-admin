@@ -4,6 +4,7 @@ define([], function () {
     "AzureFunctionUrlFieldLabel": "Azure Function Url",
     "SitePropCommentsOnSitePagesDisabled": "Comments on Site Pages",
     "SitePropContainsAppCatalog": "App Catalog",
+    "SitePropCustomScriptsEnabled": "Custom Scripts",
     "SitePropDisableCompanyWideSharingLinks": "Company Wide Sharing Links",
     "SitePropShareByEmailEnabled": "Shared By Email",
     "SitePropSocialBarOnSitePagesDisabled": "Social Bar on Site Pages",

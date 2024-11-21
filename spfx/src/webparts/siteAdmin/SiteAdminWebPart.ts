@@ -11,6 +11,7 @@ export interface ISiteAdminWebPartProps {
   hideProps: string[];
   SitePropCommentsOnSitePagesDisabled: boolean;
   SitePropContainsAppCatalog: boolean;
+  SitePropCustomScriptsEnabled: boolean;
   SitePropDisableCompanyWideSharingLinks: boolean;
   SitePropShareByEmailEnabled: boolean;
   SitePropSocialBarOnSitePagesDisabled: boolean;
@@ -100,6 +101,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
   private _siteProps: string[] = [
     "SitePropCommentsOnSitePagesDisabled",
     "SitePropContainsAppCatalog",
+    "SitePropCustomScriptsEnabled",
     "SitePropDisableCompanyWideSharingLinks",
     "SitePropShareByEmailEnabled",
     "SitePropSocialBarOnSitePagesDisabled"
