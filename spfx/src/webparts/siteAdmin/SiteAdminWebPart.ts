@@ -11,7 +11,6 @@ export interface ISiteAdminWebPartProps {
   hideProps: string[];
   SitePropCommentsOnSitePagesDisabled: boolean;
   SitePropContainsAppCatalog: boolean;
-  SitePropContainsAppCatalogUrl: string;
   SitePropDisableCompanyWideSharingLinks: boolean;
   SitePropShareByEmailEnabled: boolean;
   SitePropSocialBarOnSitePagesDisabled: boolean;
@@ -38,8 +37,6 @@ declare const SiteAdmin: {
       key: string;
       label: string;
     }
-    siteUrls?: string[];
-    webUrls?: string[];
   }) => void;
   updateTheme: (theme: IReadonlyTheme) => void;
 };
@@ -48,8 +45,6 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
   public render(): void {
     const disableSiteProps: string[] = [];
     const disableWebProps: string[] = [];
-    const siteUrls: string[] = [];
-    const webUrls: string[] = [];
 
     // Parse the site properties
     for (let i = 0; i < this._siteProps.length; i++) {
@@ -60,9 +55,6 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         // Add the property to hide
         disableSiteProps.push(propName.replace("SiteProp", ""));
       }
-
-      // Add the associated api with this property
-      siteUrls.push((this.properties as any)[propName + "Url"])
     }
 
     // Parse the web properties
@@ -74,9 +66,6 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         // Add the property to hide
         disableWebProps.push(propName.replace("WebProp", ""));
       }
-
-      // See if there is an associated api with this property
-      webUrls.push((this.properties as any)[propName + "Url"]);
     }
 
     // Render the solution
@@ -85,8 +74,6 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       el: this.domElement,
       disableSiteProps,
       disableWebProps,
-      siteUrls,
-      webUrls,
       searchProp: {
         description: this.properties.WebPropSearchPropertyDescription,
         key: this.properties.WebPropSearchPropertyKey,
@@ -136,7 +123,6 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     for (let i = 0; i < props.length; i++) {
       const propName = props[i];
       const hideProp = hideProps.indexOf(propName) >= 0;
-      const hasUrl = (strings as any)[propName + "Url"] ? true : false;
 
       // Add the property
       groups.groupFields.push(PropertyPaneToggle(propName, {
@@ -145,16 +131,6 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         onText: "The admin will not be able to change this value.",
         offText: "The admin can make changes to this property"
       }));
-
-      // See if this has an associated api to call
-      if (hasUrl) {
-        groups.groupFields.push(PropertyPaneTextField(propName + "Url", {
-          label: `The azure function api to execute for this property.`,
-          disabled: (this.properties as any)[propName],
-          multiline: true,
-          value: (this.properties as any)[propName + "Url"]
-        }));
-      }
     }
 
     // Return the properties

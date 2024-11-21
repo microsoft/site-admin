@@ -1,13 +1,12 @@
 import { LoadingDialog } from "dattatable";
 import { Components, Types } from "gd-sprest-bs";
-import { DataSource, RequestTypes, IAPIRequestProps } from "../ds";
+import { DataSource, RequestTypes } from "../ds";
 import { APIResponseModal } from "./response";
 
 /**
  * Site Form
  */
 export class Site {
-    private _apiUrls: string[] = null;
     private _el: HTMLElement = null;
     private _form: Components.IForm = null;
     private _disableProps: string[] = null;
@@ -22,9 +21,8 @@ export class Site {
         SocialBarOnSitePagesDisabled: boolean;
     } = null;
 
-    constructor(site: Types.SP.SiteOData, el: HTMLElement, disableProps: string[] = [], apiUrls: string[] = []) {
+    constructor(site: Types.SP.SiteOData, el: HTMLElement, disableProps: string[] = []) {
         // Save the properties
-        this._apiUrls = apiUrls;
         this._el = el;
         this._disableProps = disableProps;
         this._site = site;
@@ -156,7 +154,6 @@ export class Site {
     private save(values): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve) => {
-            let apis: IAPIRequestProps[] = [];
             let props = {};
             let requests: string[] = [];
             let updateFl = false;
@@ -165,14 +162,8 @@ export class Site {
             for (let key in this._currValues) {
                 let value = typeof (values[key]) === "boolean" ? values[key] : values[key].data;
                 if (this._currValues[key] != value) {
-                    // See if there is an associated api
-                    let keyIdx = this._apiUrls.indexOf(key);
-                    if (keyIdx >= 0) {
-                        // Append the url
-                        apis.push({ key, value, api: this._apiUrls[keyIdx] });
-                    }
-                    // Else, see if we need to create a request
-                    else if (key == "ContainsAppCatalog") {
+                    // See if we need to create a request
+                    if (key == "ContainsAppCatalog") {
                         // Add a request for this request
                         requests.push(RequestTypes.AppCatalog);
                     }
@@ -194,40 +185,36 @@ export class Site {
 
             // Add the requests
             DataSource.addRequest(this._site.Url, requests).then((responses) => {
-                // Process the requests
-                DataSource.processAPIRequests(apis).then((apiResponses) => {
-                    // See if an update is needed
-                    if (updateFl) {
-                        // Show a loading dialog
-                        LoadingDialog.setHeader("Updating Site Collection");
-                        LoadingDialog.setBody("This will close after the changes complete.");
-                        LoadingDialog.show();
+                // See if an update is needed
+                if (updateFl) {
+                    // Show a loading dialog
+                    LoadingDialog.setHeader("Updating Site Collection");
+                    LoadingDialog.setBody("This will close after the changes complete.");
+                    LoadingDialog.show();
 
-                        // Save the changes
-                        this._site.update(props).execute(() => {
-                            // Update the current values
-                            this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"];
-                            this._currValues.ShareByEmailEnabled = values["ShareByEmailEnabled"];
-                            this._currValues.SocialBarOnSitePagesDisabled = values["SocialBarOnSitePagesDisabled"];
+                    // Save the changes
+                    this._site.update(props).execute(() => {
+                        // Update the current values
+                        this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"];
+                        this._currValues.ShareByEmailEnabled = values["ShareByEmailEnabled"];
+                        this._currValues.SocialBarOnSitePagesDisabled = values["SocialBarOnSitePagesDisabled"];
 
-                            // Close the dialog
-                            LoadingDialog.hide();
+                        // Close the dialog
+                        LoadingDialog.hide();
 
-                            // Show the responses
-                            new APIResponseModal(responses.concat(apiResponses));
-
-                            // Resolve the request
-                            resolve();
-                        });
-                    } else {
                         // Show the responses
-                        new APIResponseModal(responses.concat(apiResponses));
+                        new APIResponseModal(responses);
 
                         // Resolve the request
                         resolve();
-                    }
-                });
+                    });
+                } else {
+                    // Show the responses
+                    new APIResponseModal(responses);
 
+                    // Resolve the request
+                    resolve();
+                }
             });
         });
     }

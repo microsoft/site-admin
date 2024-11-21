@@ -16,15 +16,6 @@ export interface IListItem extends Types.SP.ListItem {
 }
 
 /**
- * API Request
- */
-export interface IAPIRequestProps {
-    api: string;
-    key: string;
-    value: any;
-}
-
-/**
  * Response from the api requests
  */
 export interface IResponse {
@@ -107,68 +98,6 @@ export class DataSource {
                     );
                 });
             }).then(() => {
-                // Resolve the request
-                resolve(responses);
-            });
-        });
-    }
-
-    // Method to process the API requests
-    static processAPIRequests(requests: IAPIRequestProps[]): PromiseLike<IResponse[]> {
-        let responses: IResponse[] = [];
-
-        // See if any requests exist
-        if (requests.length == 0) {
-            // Resolve the request
-            return Promise.resolve(responses);
-        }
-
-        // Return a promise
-        return new Promise((resolve) => {
-            let counter = 0;
-
-            // Show a loading dialog
-            LoadingDialog.setHeader("Processing API Requests");
-            LoadingDialog.setBody(`Processing request 1 of ${requests.length}`);
-            LoadingDialog.show();
-
-            // Parse the requests
-            Helper.Executor(requests, request => {
-                // Set the body
-                LoadingDialog.setBody(`Processing request ${++counter} of ${requests.length}`);
-
-                // Return a promise
-                return new Promise((resolve) => {
-                    // Create the request
-                    let xhr = new XMLHttpRequest();
-                    xhr.open("POST", request.api, true);
-
-                    // Set the header
-                    xhr.setRequestHeader("Content-Type", "application/json");
-
-                    // Set the event
-                    xhr.onreadystatechange = (ev) => {
-                        if (xhr.readyState !== 4) { return; }
-
-                        // Resolve the request
-                        responses.push({
-                            errorFl: xhr.status !== 200,
-                            key: request.key,
-                            message: xhr.responseText,
-                            value: request.value
-                        });
-
-                        // Try the next request
-                        resolve(null);
-                    }
-
-                    // Send the request
-                    xhr.send(JSON.stringify({ key: request.key, value: request.value }));
-                });
-            }).then(() => {
-                // Hide the dialog
-                LoadingDialog.hide();
-
                 // Resolve the request
                 resolve(responses);
             });

@@ -1,6 +1,6 @@
 import { LoadingDialog } from "dattatable";
 import { Components, Helper, Types } from "gd-sprest-bs";
-import { DataSource, RequestTypes, IAPIRequestProps } from "../ds";
+import { DataSource } from "../ds";
 import { APIResponseModal } from "./response";
 
 export interface ISearchProp {
@@ -13,7 +13,6 @@ export interface ISearchProp {
  * Web Form
  */
 export class Web {
-    private _apiUrls: string[] = null;
     private _el: HTMLElement = null;
     private _form: Components.IForm = null;
     private _disableProps: string[] = null;
@@ -29,9 +28,8 @@ export class Web {
         WebTemplate: string;
     } = null;
 
-    constructor(web: Types.SP.WebOData, el: HTMLElement, disableProps: string[] = [], apiUrls: string[] = [], searchProp: ISearchProp = {} as any) {
+    constructor(web: Types.SP.WebOData, el: HTMLElement, disableProps: string[] = [], searchProp: ISearchProp = {} as any) {
         // Save the properties
-        this._apiUrls = apiUrls;
         this._el = el;
         this._disableProps = disableProps;
         this._searchProp = searchProp;
@@ -172,7 +170,6 @@ export class Web {
     // Saves the properties
     private save(values): PromiseLike<void> {
         return new Promise((resolve, reject) => {
-            let apis: IAPIRequestProps[] = [];
             let props = {};
             let requests: string[] = [];
             let updateFl = false;
@@ -181,20 +178,11 @@ export class Web {
             for (let key in this._currValues) {
                 let value = typeof (values[key]) === "boolean" ? values[key] : values[key].data;
                 if (this._currValues[key] != value) {
-                    // See if there is an associated api
-                    let keyIdx = this._apiUrls.indexOf(key);
-                    if (keyIdx >= 0) {
-                        // Append the url
-                        apis.push({ key, value, api: this._apiUrls[keyIdx] });
-                    }
-                    // Else, we can update this using REST
-                    else {
-                        // Add the property
-                        props[key] = value;
+                    // Add the property
+                    props[key] = value;
 
-                        // Set the flag
-                        updateFl = true;
-                    }
+                    // Set the flag
+                    updateFl = true;
                 }
             }
 
@@ -205,41 +193,38 @@ export class Web {
 
             // Add the requests
             DataSource.addRequest(this._web.Url, requests).then((responses) => {
-                // Process the requests
-                DataSource.processAPIRequests(apis).then((apiResponses) => {
-                    // Update the search property
-                    this.updateSearchProp(values["SearchProp"]).then(() => {
-                        // See if an update is needed
-                        if (updateFl) {
-                            // Show a loading dialog
-                            LoadingDialog.setHeader("Updating Site");
-                            LoadingDialog.setBody("This will close after the changes complete.");
-                            LoadingDialog.show();
+                // Update the search property
+                this.updateSearchProp(values["SearchProp"]).then(() => {
+                    // See if an update is needed
+                    if (updateFl) {
+                        // Show a loading dialog
+                        LoadingDialog.setHeader("Updating Site");
+                        LoadingDialog.setBody("This will close after the changes complete.");
+                        LoadingDialog.show();
 
-                            // Update the web
-                            this._web.update(props).execute(() => {
-                                // Update the current values
-                                this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"];
-                                this._currValues.ExcludeFromOfflineClient = values["ExcludeFromOfflineClient"];
-                                this._currValues.SearchScope = values["SearchScope"];
+                        // Update the web
+                        this._web.update(props).execute(() => {
+                            // Update the current values
+                            this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"];
+                            this._currValues.ExcludeFromOfflineClient = values["ExcludeFromOfflineClient"];
+                            this._currValues.SearchScope = values["SearchScope"];
 
-                                // Close the dialog
-                                LoadingDialog.hide();
+                            // Close the dialog
+                            LoadingDialog.hide();
 
-                                // Show the responses
-                                new APIResponseModal(responses.concat(apiResponses));
-
-                                // Resolve the request
-                                resolve();
-                            }, reject);
-                        } else {
                             // Show the responses
-                            new APIResponseModal(responses.concat(apiResponses));
+                            new APIResponseModal(responses);
 
                             // Resolve the request
                             resolve();
-                        }
-                    });
+                        }, reject);
+                    } else {
+                        // Show the responses
+                        new APIResponseModal(responses);
+
+                        // Resolve the request
+                        resolve();
+                    }
                 });
             });
         });

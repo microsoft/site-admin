@@ -12,8 +12,6 @@ export interface IAppProps {
     disableSiteProps?: string[];
     disableWebProps?: string[];
     searchProp?: Forms.ISearchProp;
-    siteUrls?: string[];
-    webUrls?: string[];
 }
 
 /**
@@ -128,7 +126,7 @@ export class App {
         this._elForm.classList.add("d-none");
 
         // Render the forms for this site
-        new Forms.Web(siteInfo.web, this._elWeb, this._props.disableWebProps, this._props.siteUrls, this._props.searchProp);
-        new Forms.Site(siteInfo.site, this._elSite, this._props.disableSiteProps, this._props.webUrls);
+        new Forms.Web(siteInfo.web, this._elWeb, this._props.disableWebProps, this._props.searchProp);
+        new Forms.Site(siteInfo.site, this._elSite, this._props.disableSiteProps);
     }
 }
