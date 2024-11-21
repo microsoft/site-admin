@@ -1,5 +1,5 @@
 import { LoadingDialog } from "dattatable";
-import { Components, Types } from "gd-sprest-bs";
+import { Components, Helper, SPTypes, Types } from "gd-sprest-bs";
 import { DataSource, RequestTypes } from "../ds";
 import { APIResponseModal } from "./response";
 
@@ -16,6 +16,7 @@ export class Site {
     private _currValues: {
         CommentsOnSitePagesDisabled: boolean;
         ContainsAppCatalog: boolean;
+        CustomScriptsEnabled: boolean;
         DisableCompanyWideSharingLinks: boolean;
         ShareByEmailEnabled: boolean;
         SocialBarOnSitePagesDisabled: boolean;
@@ -31,6 +32,7 @@ export class Site {
         this._currValues = {
             CommentsOnSitePagesDisabled: this._site.CommentsOnSitePagesDisabled,
             ContainsAppCatalog: false,
+            CustomScriptsEnabled: Helper.hasPermissions(site.RootWeb.EffectiveBasePermissions, SPTypes.BasePermissionTypes.AddAndCustomizePages),
             DisableCompanyWideSharingLinks: this._site.DisableCompanyWideSharingLinks,
             ShareByEmailEnabled: this._site.ShareByEmailEnabled,
             SocialBarOnSitePagesDisabled: this._site.SocialBarOnSitePagesDisabled
@@ -119,6 +121,14 @@ export class Site {
                     }
                 } as Components.IFormControlPropsSwitch,
                 {
+                    name: "CustomScriptsEnabled",
+                    label: "Custom Scripts Enabled:",
+                    description: "Enables the custom scripts feature for this site collection.",
+                    isDisabled: this._disableProps.indexOf("CustomScriptsEnabled") >= 0,
+                    type: Components.FormControlTypes.Switch,
+                    value: this._currValues.CustomScriptsEnabled
+                } as Components.IFormControlPropsSwitch,
+                {
                     name: "ShareByEmailEnabled",
                     label: "Share By Email Enabled:",
                     description: "Disables the offline sync feature in all libraries.",
@@ -166,22 +176,27 @@ export class Site {
                     updateFlags[key] = false;
 
                     // See if we need to create a request
-                    if (key == "ContainsAppCatalog") {
-                        // Add a request for this request
-                        requests.push(RequestTypes.AppCatalog);
-                    }
-                    // Else, see if we need to create a request
-                    else if (key == "DisableCompanyWideSharingLinks") {
-                        // Add a request for this request
-                        requests.push(RequestTypes.DisableCompanyWideSharingLinks);
-                    }
-                    // Else, we can update this using REST
-                    else {
-                        // Add the property
-                        props[key] = value;
+                    switch (key) {
+                        case "ContainsAppCatalog":
+                            // Add a request for this request
+                            requests.push(RequestTypes.AppCatalog);
+                            break;
+                        case "CustomScriptsEnabled":
+                            // Add a request for this request
+                            requests.push(RequestTypes.CustomScript);
+                            break;
+                        case "DisableCompanyWideSharingLinks":
+                            // Add a request for this request
+                            requests.push(RequestTypes.DisableCompanyWideSharingLinks);
+                            break;
+                        // We are updating a property
+                        default:
+                            // Add the property
+                            props[key] = value;
 
-                        // Set the flag
-                        updateFlags[key] = true;
+                            // Set the flag
+                            updateFlags[key] = true;
+                            break;
                     }
                 }
             }

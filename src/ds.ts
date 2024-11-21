@@ -39,7 +39,7 @@ export interface ISiteInfo {
 export enum RequestTypes {
     AppCatalog = "App Catalog",
     CustomScript = "Custom Script",
-    DisableCompanyWideSharingLinks = "Disable Company Wide Sharing Links"
+    DisableCompanyWideSharingLinks = "Company Wide Sharing Links"
 }
 
 /**
@@ -173,7 +173,7 @@ export class DataSource {
         return new Promise((resolve, reject) => {
             // Load the web
             Web(context.WebFullUrl, { requestDigest: context.FormDigestValue }).query({
-                Expand: ["AllProperties"],
+                Expand: ["AllProperties", "RootWeb/EffectiveBasePermissions"],
                 Select: [
                     "Configuration",
                     "CommentsOnSitePagesDisabled",
