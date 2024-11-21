@@ -55,12 +55,8 @@ export class APIResponseModal {
                     title: "Property"
                 },
                 {
-                    name: "value",
-                    title: "New Value"
-                },
-                {
                     name: "",
-                    title: "Status",
+                    title: "Request Submitted?",
                     onRenderCell: (el, col, item: IResponse) => {
                         // Render the status
                         item.errorFl ? "Error" : "Successful";
@@ -68,7 +64,7 @@ export class APIResponseModal {
                 },
                 {
                     name: "message",
-                    title: "API Reponse"
+                    title: "Message"
                 }
             ]
         });

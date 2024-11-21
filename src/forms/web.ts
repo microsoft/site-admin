@@ -172,31 +172,30 @@ export class Web {
         return new Promise((resolve, reject) => {
             let props = {};
             let requests: string[] = [];
-            let updateFl = false;
+            let updateFlags: { [key: string]: boolean } = {};
 
             // Parse the keys
             for (let key in this._currValues) {
+                // Set the flag
+                updateFlags[key] = false;
+
+                // See if an update is needed
                 let value = typeof (values[key]) === "boolean" ? values[key] : values[key].data;
                 if (this._currValues[key] != value) {
                     // Add the property
                     props[key] = value;
 
                     // Set the flag
-                    updateFl = true;
+                    updateFlags[key] = true;
                 }
             }
-
-            // See if an update is needed
-            if (this._currValues.CommentsOnSitePagesDisabled != values["CommentsOnSitePagesDisabled"].data) { props["CommentsOnSitePagesDisabled"] = values["CommentsOnSitePagesDisabled"].data; updateFl = true; }
-            if (this._currValues.ExcludeFromOfflineClient != values["ExcludeFromOfflineClient"].data) { props["ExcludeFromOfflineClient"] = values["ExcludeFromOfflineClient"].data; updateFl = true; }
-            if (this._currValues.SearchScope != values["SearchScope"].data) { props["SearchScope"] = values["SearchScope"].data; updateFl = true; }
 
             // Add the requests
             DataSource.addRequest(this._web.Url, requests).then((responses) => {
                 // Update the search property
                 this.updateSearchProp(values["SearchProp"]).then(() => {
                     // See if an update is needed
-                    if (updateFl) {
+                    if (updateFlags.CommentsOnSitePagesDisabled || updateFlags.ExcludeFromOfflineClient || updateFlags.SearchScope) {
                         // Show a loading dialog
                         LoadingDialog.setHeader("Updating Site");
                         LoadingDialog.setBody("This will close after the changes complete.");
@@ -204,10 +203,19 @@ export class Web {
 
                         // Update the web
                         this._web.update(props).execute(() => {
-                            // Update the current values
-                            this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"];
-                            this._currValues.ExcludeFromOfflineClient = values["ExcludeFromOfflineClient"];
-                            this._currValues.SearchScope = values["SearchScope"];
+                            // Parse the keys
+                            for (let key in updateFlags) {
+                                // Update the current values
+                                this._currValues[key] = values[key];
+
+                                // Add the response
+                                responses.push({
+                                    errorFl: false,
+                                    key,
+                                    message: "The property was updated successfully.",
+                                    value: values[key]
+                                });
+                            }
 
                             // Close the dialog
                             LoadingDialog.hide();

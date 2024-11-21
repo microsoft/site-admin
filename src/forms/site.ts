@@ -156,12 +156,15 @@ export class Site {
         return new Promise((resolve) => {
             let props = {};
             let requests: string[] = [];
-            let updateFl = false;
+            let updateFlags: { [key: string]: boolean } = {};
 
             // Parse the keys
             for (let key in this._currValues) {
                 let value = typeof (values[key]) === "boolean" ? values[key] : values[key].data;
                 if (this._currValues[key] != value) {
+                    // Set the flag
+                    updateFlags[key] = false;
+
                     // See if we need to create a request
                     if (key == "ContainsAppCatalog") {
                         // Add a request for this request
@@ -178,7 +181,7 @@ export class Site {
                         props[key] = value;
 
                         // Set the flag
-                        updateFl = true;
+                        updateFlags[key] = true;
                     }
                 }
             }
@@ -186,7 +189,7 @@ export class Site {
             // Add the requests
             DataSource.addRequest(this._site.Url, requests).then((responses) => {
                 // See if an update is needed
-                if (updateFl) {
+                if (updateFlags.CommentsOnSitePagesDisabled || updateFlags.ShareByEmailEnabled || updateFlags.SocialBarOnSitePagesDisabled) {
                     // Show a loading dialog
                     LoadingDialog.setHeader("Updating Site Collection");
                     LoadingDialog.setBody("This will close after the changes complete.");
@@ -194,10 +197,19 @@ export class Site {
 
                     // Save the changes
                     this._site.update(props).execute(() => {
-                        // Update the current values
-                        this._currValues.CommentsOnSitePagesDisabled = values["CommentsOnSitePagesDisabled"];
-                        this._currValues.ShareByEmailEnabled = values["ShareByEmailEnabled"];
-                        this._currValues.SocialBarOnSitePagesDisabled = values["SocialBarOnSitePagesDisabled"];
+                        // Parse the keys
+                        for (let key in updateFlags) {
+                            // Update the current values
+                            this._currValues[key] = values[key];
+
+                            // Add the response
+                            responses.push({
+                                errorFl: false,
+                                key,
+                                message: "The property was updated successfully.",
+                                value: values[key]
+                            })
+                        }
 
                         // Close the dialog
                         LoadingDialog.hide();

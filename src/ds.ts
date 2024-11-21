@@ -74,7 +74,7 @@ export class DataSource {
                             responses.push({
                                 errorFl: false,
                                 key: "CreateRequest",
-                                message: "The request was successfully added to the list.",
+                                message: "The request was created. It will be processed within 5 minutes.",
                                 value: item.RequestType
                             });
 
@@ -88,7 +88,7 @@ export class DataSource {
                             responses.push({
                                 errorFl: true,
                                 key: "CreateRequest",
-                                message: "There was an error trying to add the request to the list.",
+                                message: "There was an error creating the request. Please refresh and try again.",
                                 value: request
                             });
 
