@@ -18,6 +18,7 @@ export class Site {
         ContainsAppCatalog: boolean;
         CustomScriptsEnabled: boolean;
         DisableCompanyWideSharingLinks: boolean;
+        LockState: string;
         ShareByEmailEnabled: boolean;
         SocialBarOnSitePagesDisabled: boolean;
     } = null;
@@ -34,6 +35,7 @@ export class Site {
             ContainsAppCatalog: false,
             CustomScriptsEnabled: Helper.hasPermissions(site.RootWeb.EffectiveBasePermissions, SPTypes.BasePermissionTypes.AddAndCustomizePages),
             DisableCompanyWideSharingLinks: this._site.DisableCompanyWideSharingLinks,
+            LockState: this._site.ReadOnly && this._site.WriteLocked ? "ReadOnly" : "Unlock",
             ShareByEmailEnabled: this._site.ShareByEmailEnabled,
             SocialBarOnSitePagesDisabled: this._site.SocialBarOnSitePagesDisabled
         }
@@ -129,6 +131,32 @@ export class Site {
                     value: this._currValues.CustomScriptsEnabled
                 } as Components.IFormControlPropsSwitch,
                 {
+                    name: "LockState",
+                    label: "Lock State:",
+                    description: `<ul>
+                        <li><b>Unlock:</b> To unlock the site and make it available to users.</li>
+                        <li><b>Read Only:</b> To prevent users from adding/updating/deleting content.</li>
+                        <li><b>No Access</b> To prevent users from accessing the site and its content.</li>
+                    </ul>`,
+                    isDisabled: this._disableProps.indexOf("LockState") >= 0,
+                    type: Components.FormControlTypes.Dropdown,
+                    value: this._currValues.LockState,
+                    items: [
+                        {
+                            text: "Unlocked",
+                            value: "Unlock"
+                        },
+                        {
+                            text: "Read Only",
+                            value: "ReadOnly"
+                        },
+                        {
+                            text: "No Access",
+                            value: "NoAccess"
+                        }
+                    ]
+                } as Components.IFormControlPropsDropdown,
+                {
                     name: "ShareByEmailEnabled",
                     label: "Share By Email Enabled:",
                     description: "Disables the offline sync feature in all libraries.",
@@ -179,15 +207,35 @@ export class Site {
                     switch (key) {
                         case "ContainsAppCatalog":
                             // Add a request for this request
-                            requests.push({ key: RequestTypes.AppCatalog, value: values[key] });
+                            requests.push({
+                                key: RequestTypes.AppCatalog,
+                                message: `The request to ${values[key] ? "enable" : "disable"} the app catalog will be processed within 5 minutes.`,
+                                value: values[key]
+                            });
                             break;
                         case "CustomScriptsEnabled":
                             // Add a request for this request
-                            requests.push({ key: RequestTypes.CustomScript, value: values[key] });
+                            requests.push({
+                                key: RequestTypes.CustomScript,
+                                message: `The request to ${values[key] ? "enable" : "disable"} custom scripts will be processed within 5 minutes.`,
+                                value: values[key]
+                            });
                             break;
                         case "DisableCompanyWideSharingLinks":
                             // Add a request for this request
-                            requests.push({ key: RequestTypes.DisableCompanyWideSharingLinks, value: values[key] });
+                            requests.push({
+                                key: RequestTypes.DisableCompanyWideSharingLinks,
+                                message: `The request to ${values[key] ? "disable" : "enable"} company wide sharing links will be processed within 5 minutes.`,
+                                value: values[key]
+                            });
+                            break;
+                        case "LockState":
+                            // Add a request for this request
+                            requests.push({
+                                key: RequestTypes.LockState,
+                                message: `The request to make the site collection ${values[key].value == "NoAccess" ? "have" : "be"} '${values[key].text}' will be processed within 5 minutes.`,
+                                value: values[key].value
+                            });
                             break;
                         // We are updating a property
                         default:

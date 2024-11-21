@@ -20,6 +20,7 @@ export interface IListItem extends Types.SP.ListItem {
  */
 export interface IRequest {
     key: string;
+    message: string;
     value: boolean;
 }
 
@@ -47,7 +48,8 @@ export interface ISiteInfo {
 export enum RequestTypes {
     AppCatalog = "App Catalog",
     CustomScript = "Custom Script",
-    DisableCompanyWideSharingLinks = "Company Wide Sharing Links"
+    DisableCompanyWideSharingLinks = "Company Wide Sharing Links",
+    LockState = "Lock State"
 }
 
 /**
@@ -82,7 +84,7 @@ export class DataSource {
                             responses.push({
                                 errorFl: false,
                                 key: request.key,
-                                message: (item.RequestType ? "Enable " : "Disable ") + request.key + " will be processed within 5 minutes.",
+                                message: request.message,
                                 value: item.RequestType
                             });
 
@@ -163,6 +165,7 @@ export class DataSource {
                     "DisableCompanyWideSharingLinks",
                     "MediaTranscriptionDisabled",
                     "Owner",
+                    "ReadOnly",
                     "SandboxedCodeActivationCapability",
                     "SecondaryContact",
                     "ShareByEmailEnabled",
@@ -170,7 +173,8 @@ export class DataSource {
                     "SocialBarOnSitePagesDisabled",
                     "StatusBarLink",
                     "StatusBarText",
-                    "Url"
+                    "Url",
+                    "WriteLocked"
                 ]
             }).execute(resolve, reject);
         });
