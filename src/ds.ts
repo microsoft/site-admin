@@ -16,7 +16,16 @@ export interface IListItem extends Types.SP.ListItem {
 }
 
 /**
- * Response from the api requests
+ * Request for creating an item
+ */
+export interface IRequest {
+    key: string;
+    label: string;
+    value: boolean;
+}
+
+/**
+ * Response from creating an item
  */
 export interface IResponse {
     errorFl: boolean;
@@ -47,7 +56,7 @@ export enum RequestTypes {
  */
 export class DataSource {
     // Method to process requests to add to the list
-    static addRequest(url: string, requests: string[]): PromiseLike<IResponse[]> {
+    static addRequest(url: string, requests: IRequest[]): PromiseLike<IResponse[]> {
         let responses: IResponse[] = [];
 
         // See if any requests exist
@@ -67,14 +76,14 @@ export class DataSource {
                         ProcessFlag: true,
                         RequestType: request,
                         Title: url
-                    } as IListItem).then(
+                    }).then(
                         // Success
                         (item) => {
                             // Add the response
                             responses.push({
                                 errorFl: false,
-                                key: "CreateRequest",
-                                message: "The request was created. It will be processed within 5 minutes.",
+                                key: request.key,
+                                message: (item.RequestType ? "Enable " : "Disable ") + request.label,
                                 value: item.RequestType
                             });
 
@@ -87,7 +96,7 @@ export class DataSource {
                             // Add the response
                             responses.push({
                                 errorFl: true,
-                                key: "CreateRequest",
+                                key: request.key,
                                 message: "There was an error creating the request. Please refresh and try again.",
                                 value: request
                             });

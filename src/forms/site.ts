@@ -1,6 +1,6 @@
 import { LoadingDialog } from "dattatable";
 import { Components, Helper, SPTypes, Types } from "gd-sprest-bs";
-import { DataSource, RequestTypes } from "../ds";
+import { DataSource, IRequest, RequestTypes } from "../ds";
 import { APIResponseModal } from "./response";
 
 /**
@@ -165,7 +165,7 @@ export class Site {
         // Return a promise
         return new Promise((resolve) => {
             let props = {};
-            let requests: string[] = [];
+            let requests: IRequest[] = [];
             let updateFlags: { [key: string]: boolean } = {};
 
             // Parse the keys
@@ -179,15 +179,15 @@ export class Site {
                     switch (key) {
                         case "ContainsAppCatalog":
                             // Add a request for this request
-                            requests.push(RequestTypes.AppCatalog);
+                            requests.push({ key: RequestTypes.AppCatalog, label: "App Catalog", value: values[key] });
                             break;
                         case "CustomScriptsEnabled":
                             // Add a request for this request
-                            requests.push(RequestTypes.CustomScript);
+                            requests.push({ key: RequestTypes.CustomScript, label: "Custom Scripts", value: values[key] });
                             break;
                         case "DisableCompanyWideSharingLinks":
                             // Add a request for this request
-                            requests.push(RequestTypes.DisableCompanyWideSharingLinks);
+                            requests.push({ key: RequestTypes.DisableCompanyWideSharingLinks, label: "Custom Wide Sharing Links", value: values[key] });
                             break;
                         // We are updating a property
                         default:

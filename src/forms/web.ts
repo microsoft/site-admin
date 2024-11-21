@@ -1,6 +1,6 @@
 import { LoadingDialog } from "dattatable";
 import { Components, Helper, Types } from "gd-sprest-bs";
-import { DataSource } from "../ds";
+import { IResponse } from "../ds";
 import { APIResponseModal } from "./response";
 
 export interface ISearchProp {
@@ -171,7 +171,7 @@ export class Web {
     private save(values): PromiseLike<void> {
         return new Promise((resolve, reject) => {
             let props = {};
-            let requests: string[] = [];
+            let responses: IResponse[] = [];
             let updateFlags: { [key: string]: boolean } = {};
 
             // Parse the keys
@@ -190,50 +190,47 @@ export class Web {
                 }
             }
 
-            // Add the requests
-            DataSource.addRequest(this._web.Url, requests).then((responses) => {
-                // Update the search property
-                this.updateSearchProp(values["SearchProp"]).then(() => {
-                    // See if an update is needed
-                    if (updateFlags.CommentsOnSitePagesDisabled || updateFlags.ExcludeFromOfflineClient || updateFlags.SearchScope) {
-                        // Show a loading dialog
-                        LoadingDialog.setHeader("Updating Site");
-                        LoadingDialog.setBody("This will close after the changes complete.");
-                        LoadingDialog.show();
+            // Update the search property
+            this.updateSearchProp(values["SearchProp"]).then(() => {
+                // See if an update is needed
+                if (updateFlags.CommentsOnSitePagesDisabled || updateFlags.ExcludeFromOfflineClient || updateFlags.SearchScope) {
+                    // Show a loading dialog
+                    LoadingDialog.setHeader("Updating Site");
+                    LoadingDialog.setBody("This will close after the changes complete.");
+                    LoadingDialog.show();
 
-                        // Update the web
-                        this._web.update(props).execute(() => {
-                            // Parse the keys
-                            for (let key in updateFlags) {
-                                // Update the current values
-                                this._currValues[key] = values[key];
+                    // Update the web
+                    this._web.update(props).execute(() => {
+                        // Parse the keys
+                        for (let key in updateFlags) {
+                            // Update the current values
+                            this._currValues[key] = values[key];
 
-                                // Add the response
-                                responses.push({
-                                    errorFl: false,
-                                    key,
-                                    message: "The property was updated successfully.",
-                                    value: values[key]
-                                });
-                            }
+                            // Add the response
+                            responses.push({
+                                errorFl: false,
+                                key,
+                                message: "The property was updated successfully.",
+                                value: values[key]
+                            });
+                        }
 
-                            // Close the dialog
-                            LoadingDialog.hide();
+                        // Close the dialog
+                        LoadingDialog.hide();
 
-                            // Show the responses
-                            new APIResponseModal(responses);
-
-                            // Resolve the request
-                            resolve();
-                        }, reject);
-                    } else {
                         // Show the responses
                         new APIResponseModal(responses);
 
                         // Resolve the request
                         resolve();
-                    }
-                });
+                    }, reject);
+                } else {
+                    // Show the responses
+                    new APIResponseModal(responses);
+
+                    // Resolve the request
+                    resolve();
+                }
             });
         });
     }
