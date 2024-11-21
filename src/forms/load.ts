@@ -6,28 +6,17 @@ import { DataSource, ISiteInfo } from "../ds";
  * Load Form
  */
 export class Load {
-    private static _form: Components.IForm = null;
+    _form: Components.IForm = null;
 
     // Renders the modal
-    private static render(onSuccess: (siteInfo: ISiteInfo) => void) {
-        // Clear the modal
-        Modal.clear();
-
-        // Set the header
-        Modal.setHeader("Load Site");
-
-        // Render the form
-        this.renderForm(Modal.BodyElement);
-
-        // Render the footer
-        this.renderFooter(Modal.FooterElement, onSuccess);
-
-        // Show the modal
-        Modal.show();
+    constructor(elForm: HTMLElement, elFooter: HTMLElement, onSuccess: (siteInfo: ISiteInfo) => void) {
+        // Render the form and footer
+        this.renderForm(elForm);
+        this.renderFooter(elFooter, onSuccess);
     }
 
     // Renders the footer
-    static renderFooter(el: HTMLElement, onSuccess: (siteInfo: ISiteInfo) => void) {
+    private renderFooter(el: HTMLElement, onSuccess: (siteInfo: ISiteInfo) => void) {
         Components.TooltipGroup({
             el,
             tooltips: [
@@ -79,7 +68,7 @@ export class Load {
     }
 
     // Renders the form
-    static renderForm(el: HTMLElement) {
+    private renderForm(el: HTMLElement) {
         this._form = Components.Form({
             el,
             controls: [
@@ -96,8 +85,17 @@ export class Load {
     }
 
     // Shows the modal
-    static show(onSuccess: (siteInfo: ISiteInfo) => void) {
-        // Render the modal
-        this.render(onSuccess);
+    static showModal(onSuccess: (siteInfo: ISiteInfo) => void) {
+        // Clear the modal
+        Modal.clear();
+
+        // Set the header
+        Modal.setHeader("Load Site");
+
+        // Create the form/footer
+        new Load(Modal.BodyElement, Modal.FooterElement, onSuccess);
+
+        // Show the modal
+        Modal.show();
     }
 }

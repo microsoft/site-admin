@@ -69,10 +69,7 @@ export class App {
         `;
 
         // Render the form
-        Forms.Load.renderForm(this._elForm.children[0].children[0] as HTMLElement);
-
-        // Render the footer
-        Forms.Load.renderFooter(this._elForm.children[0].children[1] as HTMLElement, siteInfo => {
+        new Forms.Load(this._elForm.children[0].children[0] as HTMLElement, this._elForm.children[0].children[1] as HTMLElement, siteInfo => {
             // Render the site form
             this.renderSiteForm(siteInfo);
         });
@@ -88,7 +85,7 @@ export class App {
                 text: "Load Site",
                 onClick: () => {
                     // Show the load form
-                    Forms.Load.show(siteInfo => {
+                    Forms.Load.showModal(siteInfo => {
                         // Render the site form
                         this.renderSiteForm(siteInfo);
                     });

@@ -20,7 +20,6 @@ export interface IListItem extends Types.SP.ListItem {
  */
 export interface IRequest {
     key: string;
-    label: string;
     value: boolean;
 }
 
@@ -74,7 +73,7 @@ export class DataSource {
                     // Create the item
                     this.List.createItem({
                         ProcessFlag: true,
-                        RequestType: request,
+                        RequestType: request.key,
                         Title: url
                     }).then(
                         // Success
@@ -83,7 +82,7 @@ export class DataSource {
                             responses.push({
                                 errorFl: false,
                                 key: request.key,
-                                message: (item.RequestType ? "Enable " : "Disable ") + request.label,
+                                message: (item.RequestType ? "Enable " : "Disable ") + request.key,
                                 value: item.RequestType
                             });
 

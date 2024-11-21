@@ -179,15 +179,15 @@ export class Site {
                     switch (key) {
                         case "ContainsAppCatalog":
                             // Add a request for this request
-                            requests.push({ key: RequestTypes.AppCatalog, label: "App Catalog", value: values[key] });
+                            requests.push({ key: RequestTypes.AppCatalog, value: values[key] });
                             break;
                         case "CustomScriptsEnabled":
                             // Add a request for this request
-                            requests.push({ key: RequestTypes.CustomScript, label: "Custom Scripts", value: values[key] });
+                            requests.push({ key: RequestTypes.CustomScript, value: values[key] });
                             break;
                         case "DisableCompanyWideSharingLinks":
                             // Add a request for this request
-                            requests.push({ key: RequestTypes.DisableCompanyWideSharingLinks, label: "Custom Wide Sharing Links", value: values[key] });
+                            requests.push({ key: RequestTypes.DisableCompanyWideSharingLinks, value: values[key] });
                             break;
                         // We are updating a property
                         default:
