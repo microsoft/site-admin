@@ -47,9 +47,6 @@ export class Web {
         // Clear the element
         while (el.firstChild) { el.removeChild(el.firstChild); }
 
-        // Render the header
-        this.renderHeader();
-
         // Renders the form
         this.renderForm();
 
@@ -152,18 +149,6 @@ export class Web {
                     value: this._currValues.SearchProp
                 }
             ]
-        });
-    }
-
-    // Renders the header
-    private renderHeader() {
-        // Render the header
-        Components.Jumbotron({
-            el: this._el,
-            className: "mb-2",
-            lead: "Site Settings",
-            size: Components.JumbotronSize.Small,
-            type: Components.JumbotronTypes.Primary
         });
     }
 

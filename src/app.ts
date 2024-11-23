@@ -130,14 +130,14 @@ export class App {
                     isActive: true,
                     onRender: (el) => {
                         // Render the site form
-                        new Forms.Web(siteInfo.web, el, this._props.disableWebProps, this._props.searchProp);
+                        new Forms.Site(siteInfo.site, el, this._props.disableSiteProps);
                     }
                 },
                 {
                     tabName: "Site",
                     onRender: (el) => {
                         // Render the web form
-                        new Forms.Site(siteInfo.site, el, this._props.disableSiteProps);
+                        new Forms.Web(siteInfo.web, el, this._props.disableWebProps, this._props.searchProp);
                     }
                 }
             ]
