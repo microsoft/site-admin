@@ -4,6 +4,7 @@ import * as Forms from "./forms";
 import { InstallationModal } from "./install";
 import Strings from "./strings";
 import { Security } from "./security";
+import { Components } from "gd-sprest-bs";
 
 // App Properties
 export interface IAppProps {
@@ -20,8 +21,7 @@ export interface IAppProps {
 export class App {
     private _elNav: HTMLElement;
     private _elForm: HTMLElement;
-    private _elSite: HTMLElement;
-    private _elWeb: HTMLElement;
+    private _elTabs: HTMLElement;
     private _props: IAppProps = null;
 
     // Constructor
@@ -39,8 +39,7 @@ export class App {
             <div class="row">
                 <div class="col-12"></div>
                 <div class="col-12"></div>
-                <div class="col-6"></div>
-                <div class="col-6"></div>
+                <div class="col-12"></div>
             </div>
         `;
 
@@ -48,8 +47,7 @@ export class App {
         let elRow = this._props.el.children[0];
         this._elNav = elRow.children[0] as HTMLElement;
         this._elForm = elRow.children[1] as HTMLElement;
-        this._elSite = elRow.children[2] as HTMLElement;
-        this._elWeb = elRow.children[3] as HTMLElement;
+        this._elTabs = elRow.children[2] as HTMLElement;
 
         // Render the dashboard
         this.renderNavigation();
@@ -70,8 +68,8 @@ export class App {
 
         // Render the form
         new Forms.Load(this._elForm.children[0].children[0] as HTMLElement, this._elForm.children[0].children[1] as HTMLElement, siteInfo => {
-            // Render the site form
-            this.renderSiteForm(siteInfo);
+            // Render the tabs
+            this.renderTabs(siteInfo);
         });
     }
 
@@ -86,8 +84,8 @@ export class App {
                 onClick: () => {
                     // Show the load form
                     Forms.Load.showModal(siteInfo => {
-                        // Render the site form
-                        this.renderSiteForm(siteInfo);
+                        // Render the tabs
+                        this.renderTabs(siteInfo);
                     });
                 }
             }
@@ -117,13 +115,32 @@ export class App {
         });
     }
 
-    // Renders the site form
-    private renderSiteForm(siteInfo: ISiteInfo) {
+    // Renders the tabs
+    private renderTabs(siteInfo: ISiteInfo) {
         // Hide the form
         this._elForm.classList.add("d-none");
 
-        // Render the forms for this site
-        new Forms.Web(siteInfo.web, this._elWeb, this._props.disableWebProps, this._props.searchProp);
-        new Forms.Site(siteInfo.site, this._elSite, this._props.disableSiteProps);
+        // Render the tabs
+        Components.ListGroup({
+            el: this._elTabs,
+            isTabs: true,
+            items: [
+                {
+                    tabName: "Site Collection",
+                    isActive: true,
+                    onRender: (el) => {
+                        // Render the site form
+                        new Forms.Web(siteInfo.web, el, this._props.disableWebProps, this._props.searchProp);
+                    }
+                },
+                {
+                    tabName: "Site",
+                    onRender: (el) => {
+                        // Render the web form
+                        new Forms.Site(siteInfo.site, el, this._props.disableSiteProps);
+                    }
+                }
+            ]
+        });
     }
 }
