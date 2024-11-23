@@ -114,6 +114,16 @@ export class DataSource {
         });
     }
 
+    // Formats a value to bytes
+    static formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
     // List Items
     static get ListItems(): IListItem[] { return this.List.Items; }
 
@@ -159,7 +169,7 @@ export class DataSource {
         return new Promise((resolve, reject) => {
             // Load the web
             Site(context.SiteFullUrl, { requestDigest: context.FormDigestValue }).query({
-                Expand: ["RootWeb/EffectiveBasePermissions"],
+                Expand: ["RootWeb/EffectiveBasePermissions", "Usage"],
                 Select: [
                     "CommentsOnSitePagesDisabled",
                     "DisableCompanyWideSharingLinks",

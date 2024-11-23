@@ -21,6 +21,8 @@ export class Site {
         LockState: string;
         ShareByEmailEnabled: boolean;
         SocialBarOnSitePagesDisabled: boolean;
+        UsageSize: string;
+        UsageUsed: string;
     } = null;
 
     constructor(site: Types.SP.SiteOData, el: HTMLElement, disableProps: string[] = []) {
@@ -37,7 +39,9 @@ export class Site {
             DisableCompanyWideSharingLinks: this._site.DisableCompanyWideSharingLinks,
             LockState: this._site.ReadOnly && this._site.WriteLocked ? "ReadOnly" : "Unlock",
             ShareByEmailEnabled: this._site.ShareByEmailEnabled,
-            SocialBarOnSitePagesDisabled: this._site.SocialBarOnSitePagesDisabled
+            SocialBarOnSitePagesDisabled: this._site.SocialBarOnSitePagesDisabled,
+            UsageSize: DataSource.formatBytes(this._site.Usage.Storage),
+            UsageUsed: this._site.Usage.StoragePercentageUsed + "%"
         }
 
         // Clear the element
@@ -171,7 +175,21 @@ export class Site {
                     isDisabled: this._disableProps.indexOf("SocialBarOnSitePagesDisabled") >= 0,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.SocialBarOnSitePagesDisabled
-                } as Components.IFormControlPropsSwitch
+                } as Components.IFormControlPropsSwitch,
+                {
+                    name: "UsageSize",
+                    label: "Usage Size:",
+                    description: "The total size of the site collection.",
+                    type: Components.FormControlTypes.Readonly,
+                    value: this._currValues.UsageSize
+                },
+                {
+                    name: "UsageUsed",
+                    label: "Usage Used:",
+                    description: "The total percent used for the site collection.",
+                    type: Components.FormControlTypes.Readonly,
+                    value: this._currValues.UsageUsed
+                },
             ]
         });
     }
