@@ -84,7 +84,8 @@ export class Site {
         // Render the form
         this._form = Components.Form({
             el: this._el,
-            groupClassName: "mb-3",
+            className: "row",
+            groupClassName: "col-4 mb-5",
             controls: [
                 {
                     name: "CommentsOnSitePagesDisabled",
@@ -134,7 +135,7 @@ export class Site {
                 {
                     name: "LockState",
                     label: "Lock State:",
-                    description: `<ul>
+                    description: `<ul class="mt-3">
                         <li><b>Unlock:</b> To unlock the site and make it available to users.</li>
                         <li><b>Read Only:</b> To prevent users from adding/updating/deleting content.</li>
                         <li><b>No Access</b> To prevent users from accessing the site and its content.</li>

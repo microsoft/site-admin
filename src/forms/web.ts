@@ -84,7 +84,12 @@ export class Web {
         // Render the form
         this._form = Components.Form({
             el: this._el,
-            groupClassName: "mb-3",
+            className: "row",
+            groupClassName: "col-4 mb-5",
+            onControlRendered: ctrl => {
+                // Set the class name
+                ctrl.el.classList.add("col-4");
+            },
             controls: [
                 {
                     name: "WebTemplate",

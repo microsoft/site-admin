@@ -39,7 +39,7 @@ export class App {
             <div class="row">
                 <div class="col-12"></div>
                 <div class="col-12"></div>
-                <div class="col-12"></div>
+                <div class="col-12 mt-2"></div>
             </div>
         `;
 
@@ -123,7 +123,9 @@ export class App {
         // Render the tabs
         Components.ListGroup({
             el: this._elTabs,
+            isHorizontal: true,
             isTabs: true,
+            colWidth: 12,
             items: [
                 {
                     tabName: "Site Collection",
