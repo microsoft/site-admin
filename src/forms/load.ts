@@ -7,16 +7,19 @@ import { DataSource, ISiteInfo } from "../ds";
  */
 export class Load {
     _form: Components.IForm = null;
+    _onSuccess: (siteInfo: ISiteInfo) => void = null;
 
     // Renders the modal
     constructor(elForm: HTMLElement, elFooter: HTMLElement, onSuccess: (siteInfo: ISiteInfo) => void) {
+        this._onSuccess = onSuccess;
+
         // Render the form and footer
         this.renderForm(elForm);
-        this.renderFooter(elFooter, onSuccess);
+        this.renderFooter(elFooter);
     }
 
     // Renders the footer
-    private renderFooter(el: HTMLElement, onSuccess: (siteInfo: ISiteInfo) => void) {
+    private renderFooter(el: HTMLElement) {
         Components.TooltipGroup({
             el,
             tooltips: [
@@ -25,41 +28,8 @@ export class Load {
                     btnProps: {
                         text: "Load",
                         onClick: () => {
-                            // Validate the form
-                            if (this._form.isValid()) {
-                                let ctrl = this._form.getControl("url");
-                                let url = this._form.getValues()["url"];
-
-                                // Show a loading dialog
-                                LoadingDialog.setHeader("Validating Site");
-                                LoadingDialog.setBody("This will close after the site url is validated...");
-                                LoadingDialog.show();
-
-                                // Validate the url
-                                DataSource.validate(url).then(
-                                    // Success
-                                    (siteInfo) => {
-                                        // Close the dialogs
-                                        LoadingDialog.hide();
-                                        Modal.hide();
-
-                                        // Call the success method
-                                        onSuccess(siteInfo);
-                                    },
-
-                                    // Error
-                                    (errorMessage) => {
-                                        // Close the dialog
-                                        LoadingDialog.hide();
-
-                                        // Update the validation
-                                        ctrl.updateValidation(ctrl.el, {
-                                            isValid: false,
-                                            invalidMessage: errorMessage
-                                        });
-                                    }
-                                )
-                            }
+                            // Submit the request
+                            this.submitForm();
                         }
                     }
                 }
@@ -78,7 +48,19 @@ export class Load {
                     type: Components.FormControlTypes.TextField,
                     description: "The absolute/relative url to the site collection. (Example: /sites/dev)",
                     required: true,
-                    errorMessage: "The site url is required."
+                    errorMessage: "The site url is required.",
+                    onControlRendered: ctrl => {
+                        // Set the key down event
+                        ctrl.textbox.elTextbox.addEventListener("onkeypress", ev => {
+                            // See if they hit the enter button
+                            if (ev["keyCode"] === 13) {
+                                ev.preventDefault();
+
+                                // Submit the request
+                                this.submitForm();
+                            }
+                        });
+                    }
                 }
             ]
         });
@@ -97,5 +79,44 @@ export class Load {
 
         // Show the modal
         Modal.show();
+    }
+
+    // Submits the form
+    private submitForm() {
+        // Validate the form
+        if (this._form.isValid()) {
+            let ctrl = this._form.getControl("url");
+            let url = this._form.getValues()["url"];
+
+            // Show a loading dialog
+            LoadingDialog.setHeader("Validating Site");
+            LoadingDialog.setBody("This will close after the site url is validated...");
+            LoadingDialog.show();
+
+            // Validate the url
+            DataSource.validate(url).then(
+                // Success
+                (siteInfo) => {
+                    // Close the dialogs
+                    LoadingDialog.hide();
+                    Modal.hide();
+
+                    // Call the success method
+                    this._onSuccess(siteInfo);
+                },
+
+                // Error
+                (errorMessage) => {
+                    // Close the dialog
+                    LoadingDialog.hide();
+
+                    // Update the validation
+                    ctrl.updateValidation(ctrl.el, {
+                        isValid: false,
+                        invalidMessage: errorMessage
+                    });
+                }
+            )
+        }
     }
 }
