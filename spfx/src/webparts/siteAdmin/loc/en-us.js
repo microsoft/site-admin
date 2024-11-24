@@ -6,6 +6,7 @@ define([], function () {
     "SitePropContainsAppCatalog": "App Catalog",
     "SitePropCustomScriptsEnabled": "Custom Scripts",
     "SitePropDisableCompanyWideSharingLinks": "Company Wide Sharing Links",
+    "SitePropIncreaseStorage": "Increase Site Storage",
     "SitePropShareByEmailEnabled": "Shared By Email",
     "SitePropSocialBarOnSitePagesDisabled": "Social Bar on Site Pages",
     "WebPropCommentsOnSitePagesDisabled": "Comments on Site Pages",

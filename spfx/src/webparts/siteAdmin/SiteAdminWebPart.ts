@@ -13,6 +13,7 @@ export interface ISiteAdminWebPartProps {
   SitePropContainsAppCatalog: boolean;
   SitePropCustomScriptsEnabled: boolean;
   SitePropDisableCompanyWideSharingLinks: boolean;
+  SitePropIncreaseStorage: boolean;
   SitePropShareByEmailEnabled: boolean;
   SitePropSocialBarOnSitePagesDisabled: boolean;
   WebPropCommentsOnSitePagesDisabled: boolean;

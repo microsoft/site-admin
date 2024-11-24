@@ -49,6 +49,7 @@ export enum RequestTypes {
     AppCatalog = "App Catalog",
     CustomScript = "Custom Script",
     DisableCompanyWideSharingLinks = "Company Wide Sharing Links",
+    IncreaseStorage = "Increase Storage",
     LockState = "Lock State"
 }
 

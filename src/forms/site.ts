@@ -18,6 +18,7 @@ export class Site {
         ContainsAppCatalog: boolean;
         CustomScriptsEnabled: boolean;
         DisableCompanyWideSharingLinks: boolean;
+        IncreaseStorage: boolean;
         LockState: string;
         ShareByEmailEnabled: boolean;
         SocialBarOnSitePagesDisabled: boolean;
@@ -37,6 +38,7 @@ export class Site {
             ContainsAppCatalog: false,
             CustomScriptsEnabled: Helper.hasPermissions(site.RootWeb.EffectiveBasePermissions, SPTypes.BasePermissionTypes.AddAndCustomizePages),
             DisableCompanyWideSharingLinks: this._site.DisableCompanyWideSharingLinks,
+            IncreaseStorage: false,
             LockState: this._site.ReadOnly && this._site.WriteLocked ? "ReadOnly" : "Unlock",
             ShareByEmailEnabled: this._site.ShareByEmailEnabled,
             SocialBarOnSitePagesDisabled: this._site.SocialBarOnSitePagesDisabled,
@@ -167,12 +169,12 @@ export class Site {
                     value: this._currValues.ShareByEmailEnabled
                 } as Components.IFormControlPropsSwitch,
                 {
-                    name: "SocialBarOnSitePagesDisabled",
-                    label: "Social Bar On Site Pages Disabled:",
-                    description: "The search scope for the site to target. Default is 'Site'.",
-                    isDisabled: this._disableProps.indexOf("SocialBarOnSitePagesDisabled") >= 0,
+                    name: "IncreaseStorage",
+                    label: "Increase Storage:",
+                    description: "Enable to increase the site collection storage size.",
+                    isDisabled: this._disableProps.indexOf("IncreaseStorage") >= 0,
                     type: Components.FormControlTypes.Switch,
-                    value: this._currValues.SocialBarOnSitePagesDisabled
+                    value: this._currValues.IncreaseStorage
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "UsageSize",
@@ -188,6 +190,14 @@ export class Site {
                     type: Components.FormControlTypes.Readonly,
                     value: this._currValues.UsageUsed
                 },
+                {
+                    name: "SocialBarOnSitePagesDisabled",
+                    label: "Social Bar On Site Pages Disabled:",
+                    description: "The search scope for the site to target. Default is 'Site'.",
+                    isDisabled: this._disableProps.indexOf("SocialBarOnSitePagesDisabled") >= 0,
+                    type: Components.FormControlTypes.Switch,
+                    value: this._currValues.SocialBarOnSitePagesDisabled
+                } as Components.IFormControlPropsSwitch
             ]
         });
     }
