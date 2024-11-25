@@ -51,9 +51,9 @@ export class Load {
                     errorMessage: "The site url is required.",
                     onControlRendered: ctrl => {
                         // Set the key down event
-                        ctrl.textbox.elTextbox.addEventListener("onkeypress", ev => {
+                        ctrl.textbox.elTextbox.addEventListener("keypress", ev => {
                             // See if they hit the enter button
-                            if (ev["keyCode"] === 13) {
+                            if (ev["key"] === 13) {
                                 ev.preventDefault();
 
                                 // Submit the request
