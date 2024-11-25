@@ -248,7 +248,7 @@ export class Site {
                             requests.push({
                                 key: RequestTypes.IncreaseStorage,
                                 message: `The request to increase storage for the site collection will be processed within 5 minutes.`,
-                                value: values[key].value
+                                value: values[key]
                             });
                             break;
                         case "LockState":

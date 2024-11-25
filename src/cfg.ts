@@ -38,6 +38,11 @@ export const Configuration = Helper.SPConfig({
                     ]
                 } as Helper.IFieldInfoChoice,
                 {
+                    name: "RequestValue",
+                    title: "Request Value",
+                    type: Helper.SPCfgFieldType.Text
+                },
+                {
                     name: "Status",
                     title: "Status",
                     type: Helper.SPCfgFieldType.Choice,

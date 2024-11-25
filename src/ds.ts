@@ -12,6 +12,7 @@ export interface IListItem extends Types.SP.ListItem {
     Author: { Id: number; Title: string; }
     ProcessFlag: boolean;
     RequestType: string;
+    RequestValue: string;
     Status: string;
 }
 
@@ -77,6 +78,7 @@ export class DataSource {
                     this.List.createItem({
                         ProcessFlag: true,
                         RequestType: request.key,
+                        RequestValue: request.value,
                         Title: url
                     }).then(
                         // Success
