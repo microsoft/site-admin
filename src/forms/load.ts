@@ -53,7 +53,7 @@ export class Load {
                         // Set the key down event
                         ctrl.textbox.elTextbox.addEventListener("keypress", ev => {
                             // See if they hit the enter button
-                            if (ev["key"] === 13) {
+                            if (ev["keyCode"] === 13) {
                                 ev.preventDefault();
 
                                 // Submit the request
