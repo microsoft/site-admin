@@ -243,19 +243,19 @@ export class Site {
                                 value: values[key]
                             });
                             break;
-                        case "LockState":
-                            // Add a request for this request
-                            requests.push({
-                                key: RequestTypes.LockState,
-                                message: `The request to make the site collection ${values[key].value == "NoAccess" ? "have" : "be"} '${values[key].text}' will be processed within 5 minutes.`,
-                                value: values[key].value
-                            });
-                            break;
                         case "IncreaseStorage":
                             // Add a request for this request
                             requests.push({
                                 key: RequestTypes.IncreaseStorage,
                                 message: `The request to increase storage for the site collection will be processed within 5 minutes.`,
+                                value: values[key].value
+                            });
+                            break;
+                        case "LockState":
+                            // Add a request for this request
+                            requests.push({
+                                key: RequestTypes.LockState,
+                                message: `The request to make the site collection ${values[key].value == "NoAccess" ? "have" : "be"} '${values[key].text}' will be processed within 5 minutes.`,
                                 value: values[key].value
                             });
                             break;
