@@ -22,6 +22,7 @@ export class Site {
         LockState: string;
         ShareByEmailEnabled: boolean;
         SocialBarOnSitePagesDisabled: boolean;
+        TeamsConnected: boolean;
         UsageSize: string;
         UsageUsed: string;
     } = null;
@@ -42,6 +43,7 @@ export class Site {
             LockState: this._site.ReadOnly && this._site.WriteLocked ? "ReadOnly" : "Unlock",
             ShareByEmailEnabled: this._site.ShareByEmailEnabled,
             SocialBarOnSitePagesDisabled: this._site.SocialBarOnSitePagesDisabled,
+            TeamsConnected: this._site.GroupId && this._site.GroupId != "00000000-0000-0000-0000-000000000000",
             UsageSize: DataSource.formatBytes(this._site.Usage.Storage),
             UsageUsed: this._site.Usage.StoragePercentageUsed + "%"
         }
@@ -197,6 +199,14 @@ export class Site {
                     isDisabled: this._disableProps.indexOf("SocialBarOnSitePagesDisabled") >= 0,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.SocialBarOnSitePagesDisabled
+                } as Components.IFormControlPropsSwitch,
+                {
+                    name: "TeamsConnected",
+                    label: "Teams Connected:",
+                    description: "The search scope for the site to target. Default is 'Site'.",
+                    isDisabled: this._currValues.TeamsConnected || this._disableProps.indexOf("TeamsConnected") >= 0,
+                    type: Components.FormControlTypes.Switch,
+                    value: this._currValues.TeamsConnected
                 } as Components.IFormControlPropsSwitch
             ]
         });
@@ -261,6 +271,14 @@ export class Site {
                             requests.push({
                                 key: RequestTypes.LockState,
                                 message: `The request to make the site collection ${values[key].value == "NoAccess" ? "have" : "be"} '${values[key].text}' will be processed within 5 minutes.`,
+                                value: values[key].value
+                            });
+                            break;
+                        case "TeamsConnected":
+                            // Add a request for this request
+                            requests.push({
+                                key: RequestTypes.TeamsConnected,
+                                message: `The request to connect the site to teams will be processed within 5 minutes.`,
                                 value: values[key].value
                             });
                             break;

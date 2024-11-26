@@ -10,6 +10,7 @@ define([], function () {
     "SitePropLockState": "Lock State",
     "SitePropShareByEmailEnabled": "Shared By Email",
     "SitePropSocialBarOnSitePagesDisabled": "Social Bar on Site Pages",
+    "SitePropTeamsConnected": "Teams Connected",
     "WebPropCommentsOnSitePagesDisabled": "Comments on Site Pages",
     "WebPropSearchPropertyKey": "Search Property Key",
     "WebPropSearchPropertyDescription": "Search Property Description",

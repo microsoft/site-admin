@@ -51,7 +51,8 @@ export enum RequestTypes {
     CustomScript = "Custom Script",
     DisableCompanyWideSharingLinks = "Company Wide Sharing Links",
     IncreaseStorage = "Increase Storage",
-    LockState = "Lock State"
+    LockState = "Lock State",
+    TeamsConnected = "Teams Connected"
 }
 
 /**
@@ -176,6 +177,7 @@ export class DataSource {
                 Select: [
                     "CommentsOnSitePagesDisabled",
                     "DisableCompanyWideSharingLinks",
+                    "GroupId",
                     "MediaTranscriptionDisabled",
                     "Owner",
                     "ReadOnly",

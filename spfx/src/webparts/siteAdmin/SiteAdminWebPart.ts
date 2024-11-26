@@ -17,6 +17,7 @@ export interface ISiteAdminWebPartProps {
   SitePropLockState: boolean;
   SitePropShareByEmailEnabled: boolean;
   SitePropSocialBarOnSitePagesDisabled: boolean;
+  SitePropTeamsConnected: boolean;
   WebPropCommentsOnSitePagesDisabled: boolean;
   WebPropExcludeFromOfflineClient: boolean;
   WebPropSearchPropertyDescription: string;
@@ -108,7 +109,8 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     "SitePropIncreaseStorage",
     "SitePropLockState",
     "SitePropShareByEmailEnabled",
-    "SitePropSocialBarOnSitePagesDisabled"
+    "SitePropSocialBarOnSitePagesDisabled",
+    "SitePropTeamsConnected"
   ];
 
   private _webProps: string[] = [
