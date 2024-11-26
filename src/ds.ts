@@ -36,14 +36,6 @@ export interface IResponse {
 }
 
 /**
- * Site Information
- */
-export interface ISiteInfo {
-    site: Types.SP.SiteOData;
-    web: Types.SP.WebOData;
-}
-
-/**
  * Request Types
  */
 export enum RequestTypes {
@@ -168,7 +160,9 @@ export class DataSource {
     }
 
     // Loads the site collection information
-    private static loadSiteInfo(context: Types.SP.ContextWebInformation): PromiseLike<Types.SP.SiteOData> {
+    private static _site: Types.SP.SiteOData = null;
+    static get Site(): Types.SP.SiteOData { return this._site; }
+    private static loadSiteInfo(context: Types.SP.ContextWebInformation): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve, reject) => {
             // Load the web
@@ -191,12 +185,18 @@ export class DataSource {
                     "Url",
                     "WriteLocked"
                 ]
-            }).execute(resolve, reject);
+            }).execute(site => {
+                // Save the reference and resolve the request
+                this._site = site;
+                resolve();
+            }, reject);
         });
     }
 
     // Loads the web information
-    private static loadWebInfo(context: Types.SP.ContextWebInformation): PromiseLike<Types.SP.WebOData> {
+    private static _web: Types.SP.WebOData = null;
+    static get Web(): Types.SP.WebOData { return this._web; }
+    private static loadWebInfo(context: Types.SP.ContextWebInformation): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve, reject) => {
             // Load the web
@@ -205,12 +205,18 @@ export class DataSource {
                 Select: [
                     "Configuration",
                     "CommentsOnSitePagesDisabled",
+                    "Created",
                     "ExcludeFromOfflineClient",
                     "SearchScope",
+                    "Title",
                     "Url",
                     "WebTemplate"
                 ]
-            }).execute(resolve, reject);
+            }).execute(web => {
+                // Save the reference and resolve the request
+                this._web = web;
+                resolve();
+            }, reject);
         });
     }
 
@@ -300,7 +306,7 @@ export class DataSource {
     }
 
     // Validates that the user is an SCA of the site
-    static validate(webUrl: string): PromiseLike<ISiteInfo> {
+    static validate(webUrl: string): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve, reject) => {
             // Get the web context
@@ -311,12 +317,9 @@ export class DataSource {
                         // Ensure this is an SCA
                         if (user.IsSiteAdmin) {
                             // Load the web information
-                            this.loadWebInfo(context.GetContextWebInformation).then(web => {
+                            this.loadWebInfo(context.GetContextWebInformation).then(() => {
                                 // Load the site information
-                                this.loadSiteInfo(context.GetContextWebInformation).then(site => {
-                                    // Resolve the request
-                                    resolve({ site, web });
-                                }, reject);
+                                this.loadSiteInfo(context.GetContextWebInformation).then(resolve, reject);
                             }, reject);
                         } else {
                             // Not the SCA of the site

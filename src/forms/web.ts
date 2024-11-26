@@ -1,6 +1,6 @@
 import { LoadingDialog } from "dattatable";
-import { Components, Helper, Types } from "gd-sprest-bs";
-import { IResponse } from "../ds";
+import { Components, Helper } from "gd-sprest-bs";
+import { DataSource, IResponse } from "../ds";
 import { APIResponseModal } from "./response";
 
 export interface ISearchProp {
@@ -17,7 +17,6 @@ export class Web {
     private _form: Components.IForm = null;
     private _disableProps: string[] = null;
     private _searchProp: ISearchProp;
-    private _web: Types.SP.WebOData = null;
 
     // The current values
     private _currValues: {
@@ -28,20 +27,19 @@ export class Web {
         WebTemplate: string;
     } = null;
 
-    constructor(web: Types.SP.WebOData, el: HTMLElement, disableProps: string[] = [], searchProp: ISearchProp = {} as any) {
+    constructor(el: HTMLElement, disableProps: string[] = [], searchProp: ISearchProp = {} as any) {
         // Save the properties
         this._el = el;
         this._disableProps = disableProps;
         this._searchProp = searchProp;
-        this._web = web;
 
         // Set the current values
         this._currValues = {
-            CommentsOnSitePagesDisabled: this._web.CommentsOnSitePagesDisabled,
-            ExcludeFromOfflineClient: this._web.ExcludeFromOfflineClient,
-            SearchProp: this._web.AllProperties[this._searchProp.key],
-            SearchScope: this._web.SearchScope,
-            WebTemplate: this._web.WebTemplate
+            CommentsOnSitePagesDisabled: DataSource.Web.CommentsOnSitePagesDisabled,
+            ExcludeFromOfflineClient: DataSource.Web.ExcludeFromOfflineClient,
+            SearchProp: DataSource.Web.AllProperties[this._searchProp.key],
+            SearchScope: DataSource.Web.SearchScope,
+            WebTemplate: DataSource.Web.WebTemplate
         }
 
         // Clear the element
@@ -194,7 +192,7 @@ export class Web {
                     LoadingDialog.show();
 
                     // Update the web
-                    this._web.update(props).execute(() => {
+                    DataSource.Web.update(props).execute(() => {
                         // Parse the keys
                         for (let key in updateFlags) {
                             // Update the current values
@@ -241,7 +239,7 @@ export class Web {
                 LoadingDialog.show();
 
                 // Update the property
-                Helper.setWebProperty(this._searchProp.key, value, true, this._web.Url).then(() => {
+                Helper.setWebProperty(this._searchProp.key, value, true, DataSource.Web.Url).then(() => {
                     // Update the current value
                     this._currValues.SearchProp = value;
 

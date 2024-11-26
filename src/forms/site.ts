@@ -10,7 +10,6 @@ export class Site {
     private _el: HTMLElement = null;
     private _form: Components.IForm = null;
     private _disableProps: string[] = null;
-    private _site: Types.SP.SiteOData = null;
 
     // The current values
     private _currValues: {
@@ -27,25 +26,24 @@ export class Site {
         UsageUsed: string;
     } = null;
 
-    constructor(site: Types.SP.SiteOData, el: HTMLElement, disableProps: string[] = []) {
+    constructor(el: HTMLElement, disableProps: string[] = []) {
         // Save the properties
         this._el = el;
         this._disableProps = disableProps;
-        this._site = site;
 
         // Set the current values
         this._currValues = {
-            CommentsOnSitePagesDisabled: this._site.CommentsOnSitePagesDisabled,
+            CommentsOnSitePagesDisabled: DataSource.Site.CommentsOnSitePagesDisabled,
             ContainsAppCatalog: false,
-            CustomScriptsEnabled: Helper.hasPermissions(site.RootWeb.EffectiveBasePermissions, SPTypes.BasePermissionTypes.AddAndCustomizePages),
-            DisableCompanyWideSharingLinks: this._site.DisableCompanyWideSharingLinks,
+            CustomScriptsEnabled: Helper.hasPermissions(DataSource.Site.RootWeb.EffectiveBasePermissions, SPTypes.BasePermissionTypes.AddAndCustomizePages),
+            DisableCompanyWideSharingLinks: DataSource.Site.DisableCompanyWideSharingLinks,
             IncreaseStorage: false,
-            LockState: this._site.ReadOnly && this._site.WriteLocked ? "ReadOnly" : "Unlock",
-            ShareByEmailEnabled: this._site.ShareByEmailEnabled,
-            SocialBarOnSitePagesDisabled: this._site.SocialBarOnSitePagesDisabled,
-            TeamsConnected: this._site.GroupId && this._site.GroupId != "00000000-0000-0000-0000-000000000000",
-            UsageSize: DataSource.formatBytes(this._site.Usage.Storage),
-            UsageUsed: this._site.Usage.StoragePercentageUsed + "%"
+            LockState: DataSource.Site.ReadOnly && DataSource.Site.WriteLocked ? "ReadOnly" : "Unlock",
+            ShareByEmailEnabled: DataSource.Site.ShareByEmailEnabled,
+            SocialBarOnSitePagesDisabled: DataSource.Site.SocialBarOnSitePagesDisabled,
+            TeamsConnected: DataSource.Site.GroupId && DataSource.Site.GroupId != "00000000-0000-0000-0000-000000000000",
+            UsageSize: DataSource.formatBytes(DataSource.Site.Usage.Storage),
+            UsageUsed: DataSource.Site.Usage.StoragePercentageUsed + "%"
         }
 
         // Clear the element
@@ -92,6 +90,20 @@ export class Site {
             groupClassName: "col-4 mb-5",
             controls: [
                 {
+                    name: "Created",
+                    label: "Created:",
+                    description: "The date the site was created.",
+                    type: Components.FormControlTypes.Readonly,
+                    value: DataSource.Web.Created
+                },
+                {
+                    name: "Title",
+                    label: "Title:",
+                    description: "The title of the site collection.",
+                    type: Components.FormControlTypes.Readonly,
+                    value: DataSource.Web.Title
+                },
+                {
                     name: "CommentsOnSitePagesDisabled",
                     label: "Comments On Site Pages Disabled:",
                     description: "If true, comments on modern site pages will be disabled.",
@@ -117,7 +129,7 @@ export class Site {
                         // Return a promise
                         return new Promise((resolve) => {
                             // See if an app catalog exists on this site
-                            DataSource.hasAppCatalog(this._site.Url).then(hasAppCatalog => {
+                            DataSource.hasAppCatalog(DataSource.Site.Url).then(hasAppCatalog => {
                                 // Set the value
                                 this._currValues.ContainsAppCatalog = hasAppCatalog;
                                 ctrl.value = hasAppCatalog
@@ -295,7 +307,7 @@ export class Site {
             }
 
             // Add the requests
-            DataSource.addRequest(this._site.Url, requests).then((responses) => {
+            DataSource.addRequest(DataSource.Site.Url, requests).then((responses) => {
                 // See if an update is needed
                 if (updateFlags.CommentsOnSitePagesDisabled || updateFlags.ShareByEmailEnabled || updateFlags.SocialBarOnSitePagesDisabled) {
                     // Show a loading dialog
@@ -304,7 +316,7 @@ export class Site {
                     LoadingDialog.show();
 
                     // Save the changes
-                    this._site.update(props).execute(() => {
+                    DataSource.Site.update(props).execute(() => {
                         // Parse the keys
                         for (let key in updateFlags) {
                             // Update the current values

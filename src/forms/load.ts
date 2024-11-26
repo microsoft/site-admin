@@ -1,16 +1,16 @@
 import { LoadingDialog, Modal } from "dattatable";
 import { Components } from "gd-sprest-bs";
-import { DataSource, ISiteInfo } from "../ds";
+import { DataSource } from "../ds";
 
 /**
  * Load Form
  */
 export class Load {
     _form: Components.IForm = null;
-    _onSuccess: (siteInfo: ISiteInfo) => void = null;
+    _onSuccess: () => void = null;
 
     // Renders the modal
-    constructor(elForm: HTMLElement, elFooter: HTMLElement, onSuccess: (siteInfo: ISiteInfo) => void) {
+    constructor(elForm: HTMLElement, elFooter: HTMLElement, onSuccess: () => void) {
         this._onSuccess = onSuccess;
 
         // Render the form and footer
@@ -67,7 +67,7 @@ export class Load {
     }
 
     // Shows the modal
-    static showModal(onSuccess: (siteInfo: ISiteInfo) => void) {
+    static showModal(onSuccess: () => void) {
         // Clear the modal
         Modal.clear();
 
@@ -96,13 +96,13 @@ export class Load {
             // Validate the url
             DataSource.validate(url).then(
                 // Success
-                (siteInfo) => {
+                () => {
                     // Close the dialogs
                     LoadingDialog.hide();
                     Modal.hide();
 
                     // Call the success method
-                    this._onSuccess(siteInfo);
+                    this._onSuccess();
                 },
 
                 // Error

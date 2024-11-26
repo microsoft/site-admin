@@ -1,5 +1,4 @@
 import { Navigation } from "dattatable";
-import { ISiteInfo } from "./ds";
 import * as Forms from "./forms";
 import { InstallationModal } from "./install";
 import Strings from "./strings";
@@ -67,9 +66,9 @@ export class App {
         `;
 
         // Render the form
-        new Forms.Load(this._elForm.children[0].children[0] as HTMLElement, this._elForm.children[0].children[1] as HTMLElement, siteInfo => {
+        new Forms.Load(this._elForm.children[0].children[0] as HTMLElement, this._elForm.children[0].children[1] as HTMLElement, () => {
             // Render the tabs
-            this.renderTabs(siteInfo);
+            this.renderTabs();
         });
     }
 
@@ -83,9 +82,9 @@ export class App {
                 text: "Load Site",
                 onClick: () => {
                     // Show the load form
-                    Forms.Load.showModal(siteInfo => {
+                    Forms.Load.showModal(() => {
                         // Render the tabs
-                        this.renderTabs(siteInfo);
+                        this.renderTabs();
                     });
                 }
             }
@@ -116,7 +115,7 @@ export class App {
     }
 
     // Renders the tabs
-    private renderTabs(siteInfo: ISiteInfo) {
+    private renderTabs() {
         // Hide the form
         this._elForm.classList.add("d-none");
 
@@ -135,14 +134,14 @@ export class App {
                     isActive: true,
                     onRender: (el) => {
                         // Render the site form
-                        new Forms.Site(siteInfo.site, el, this._props.disableSiteProps);
+                        new Forms.Site(el, this._props.disableSiteProps);
                     }
                 },
                 {
                     tabName: "Site",
                     onRender: (el) => {
                         // Render the web form
-                        new Forms.Web(siteInfo.web, el, this._props.disableWebProps, this._props.searchProp);
+                        new Forms.Web(el, this._props.disableWebProps, this._props.searchProp);
                     }
                 }
             ]
