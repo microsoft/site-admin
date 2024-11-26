@@ -120,6 +120,9 @@ export class App {
         // Hide the form
         this._elForm.classList.add("d-none");
 
+        // Clear the tabls
+        while (this._elTabs.firstChild) { this._elTabs.removeChild(this._elTabs.firstChild); }
+
         // Render the tabs
         Components.ListGroup({
             el: this._elTabs,
