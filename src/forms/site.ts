@@ -92,7 +92,7 @@ export class Site {
                 {
                     name: "CommentsOnSitePagesDisabled",
                     label: "Comments On Site Pages Disabled:",
-                    description: "The type of web.",
+                    description: "If true, comments on modern site pages will be disabled.",
                     isDisabled: this._disableProps.indexOf("CommentsOnSitePagesDisabled") >= 0,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.CommentsOnSitePagesDisabled
@@ -212,7 +212,12 @@ export class Site {
 
             // Parse the keys
             for (let key in this._currValues) {
-                let value = typeof (values[key]) === "boolean" ? values[key] : values[key].data;
+                // Skip disabled and read-only controls
+                let ctrl = this._form.getControl(key);
+                if (ctrl.props.isDisabled || ctrl.props.isReadonly) { continue; }
+
+                // Compare the values for a change
+                let value = typeof (values[key]) === "boolean" ? values[key] : values[key].data || values[key].value;
                 if (this._currValues[key] != value) {
                     // Set the flag
                     updateFlags[key] = false;

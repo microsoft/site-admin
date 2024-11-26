@@ -166,11 +166,15 @@ export class Web {
 
             // Parse the keys
             for (let key in this._currValues) {
+                // Skip disabled and read-only controls
+                let ctrl = this._form.getControl(key);
+                if (ctrl.props.isDisabled || ctrl.props.isReadonly) { continue; }
+
                 // Set the flag
                 updateFlags[key] = false;
 
                 // See if an update is needed
-                let value = typeof (values[key]) === "boolean" ? values[key] : values[key].data;
+                let value = typeof (values[key]) === "boolean" ? values[key] : values[key].data || values[key].value;
                 if (this._currValues[key] != value) {
                     // Add the property
                     props[key] = value;
