@@ -14,6 +14,7 @@ export interface ISiteAdminWebPartProps {
   SitePropCustomScriptsEnabled: boolean;
   SitePropDisableCompanyWideSharingLinks: boolean;
   SitePropIncreaseStorage: boolean;
+  SitePropLockState: boolean;
   SitePropShareByEmailEnabled: boolean;
   SitePropSocialBarOnSitePagesDisabled: boolean;
   WebPropCommentsOnSitePagesDisabled: boolean;
@@ -105,6 +106,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     "SitePropCustomScriptsEnabled",
     "SitePropDisableCompanyWideSharingLinks",
     "SitePropIncreaseStorage",
+    "SitePropLockState",
     "SitePropShareByEmailEnabled",
     "SitePropSocialBarOnSitePagesDisabled"
   ];

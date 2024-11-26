@@ -4,6 +4,7 @@ declare interface ISiteAdminWebPartStrings {
   SitePropCustomScriptsEnabled: string;
   SitePropDisableCompanyWideSharingLinks: string;
   SitePropIncreaseStorage: string;
+  SitePropLockState: string;
   SitePropShareByEmailEnabled: string;
   SitePropSocialBarOnSitePagesDisabled: string;
   WebPropCommentsOnSitePagesDisabled: string;

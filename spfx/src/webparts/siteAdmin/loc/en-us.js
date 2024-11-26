@@ -7,6 +7,7 @@ define([], function () {
     "SitePropCustomScriptsEnabled": "Custom Scripts",
     "SitePropDisableCompanyWideSharingLinks": "Company Wide Sharing Links",
     "SitePropIncreaseStorage": "Increase Site Storage",
+    "SitePropLockState": "Lock State",
     "SitePropShareByEmailEnabled": "Shared By Email",
     "SitePropSocialBarOnSitePagesDisabled": "Social Bar on Site Pages",
     "WebPropCommentsOnSitePagesDisabled": "Comments on Site Pages",
