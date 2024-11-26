@@ -78,7 +78,7 @@ export class DataSource {
                     this.List.createItem({
                         ProcessFlag: true,
                         RequestType: request.key,
-                        RequestValue: request.value,
+                        RequestValue: request.value + "",
                         Title: url
                     }).then(
                         // Success
