@@ -41,7 +41,7 @@ export class Site {
             LockState: DataSource.Site.ReadOnly && DataSource.Site.WriteLocked ? "ReadOnly" : "Unlock",
             ShareByEmailEnabled: DataSource.Site.ShareByEmailEnabled,
             SocialBarOnSitePagesDisabled: DataSource.Site.SocialBarOnSitePagesDisabled,
-            TeamsConnected: DataSource.Site.GroupId && DataSource.Site.GroupId != "00000000-0000-0000-0000-000000000000",
+            TeamsConnected: DataSource.Site.GroupId && DataSource.Site.GroupId != "00000000-0000-0000-0000-000000000000" && DataSource.Web.AllProperties["TeamifyHidden"] != "TRUE",
             UsageSize: DataSource.formatBytes(DataSource.Site.Usage.Storage),
             UsageUsed: DataSource.Site.Usage.StoragePercentageUsed + "%"
         }
