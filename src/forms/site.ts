@@ -23,7 +23,6 @@ export class Site {
         SocialBarOnSitePagesDisabled: boolean;
         TeamsConnected: boolean;
         UsageSize: string;
-        UsageUsed: string;
     } = null;
 
     constructor(el: HTMLElement, disableProps: string[] = []) {
@@ -42,8 +41,7 @@ export class Site {
             ShareByEmailEnabled: DataSource.Site.ShareByEmailEnabled,
             SocialBarOnSitePagesDisabled: DataSource.Site.SocialBarOnSitePagesDisabled,
             TeamsConnected: DataSource.Site.GroupId && DataSource.Site.GroupId != "00000000-0000-0000-0000-000000000000" && DataSource.Web.AllProperties["TeamifyHidden"] != "TRUE",
-            UsageSize: DataSource.formatBytes(DataSource.Site.Usage.Storage),
-            UsageUsed: DataSource.Site.Usage.StoragePercentageUsed + "%"
+            UsageSize: DataSource.formatBytes(DataSource.Site.Usage.Storage) + ` (${Math.round(DataSource.Site.Usage.StoragePercentageUsed * 100) / 100 + "%"} Used)`,
         }
 
         // Clear the element
@@ -104,6 +102,13 @@ export class Site {
                     value: DataSource.Web.Title
                 },
                 {
+                    name: "UsageSize",
+                    label: "Usage Size:",
+                    description: "The total size of the site collection.",
+                    type: Components.FormControlTypes.Readonly,
+                    value: this._currValues.UsageSize
+                },
+                {
                     name: "CommentsOnSitePagesDisabled",
                     label: "Comments On Site Pages Disabled:",
                     description: "If true, comments on modern site pages will be disabled.",
@@ -149,6 +154,14 @@ export class Site {
                     value: this._currValues.CustomScriptsEnabled
                 } as Components.IFormControlPropsSwitch,
                 {
+                    name: "IncreaseStorage",
+                    label: "Increase Storage:",
+                    description: "Enable to increase the site collection storage size.",
+                    isDisabled: this._disableProps.indexOf("IncreaseStorage") >= 0,
+                    type: Components.FormControlTypes.Switch,
+                    value: this._currValues.IncreaseStorage
+                } as Components.IFormControlPropsSwitch,
+                {
                     name: "LockState",
                     label: "Lock State:",
                     description: `<ul class="mt-3">
@@ -182,28 +195,6 @@ export class Site {
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.ShareByEmailEnabled
                 } as Components.IFormControlPropsSwitch,
-                {
-                    name: "IncreaseStorage",
-                    label: "Increase Storage:",
-                    description: "Enable to increase the site collection storage size.",
-                    isDisabled: this._disableProps.indexOf("IncreaseStorage") >= 0,
-                    type: Components.FormControlTypes.Switch,
-                    value: this._currValues.IncreaseStorage
-                } as Components.IFormControlPropsSwitch,
-                {
-                    name: "UsageSize",
-                    label: "Usage Size:",
-                    description: "The total size of the site collection.",
-                    type: Components.FormControlTypes.Readonly,
-                    value: this._currValues.UsageSize
-                },
-                {
-                    name: "UsageUsed",
-                    label: "Usage Used:",
-                    description: "The total percent used for the site collection.",
-                    type: Components.FormControlTypes.Readonly,
-                    value: this._currValues.UsageUsed
-                },
                 {
                     name: "SocialBarOnSitePagesDisabled",
                     label: "Social Bar On Site Pages Disabled:",
