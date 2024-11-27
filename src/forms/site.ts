@@ -1,5 +1,6 @@
 import { LoadingDialog } from "dattatable";
-import { Components, Helper, SPTypes, Types } from "gd-sprest-bs";
+import { Components, Helper, SPTypes } from "gd-sprest-bs";
+import * as moment from "moment";
 import { DataSource, IRequest, RequestTypes } from "../ds";
 import { APIResponseModal } from "./response";
 
@@ -92,7 +93,7 @@ export class Site {
                     label: "Created:",
                     description: "The date the site was created.",
                     type: Components.FormControlTypes.Readonly,
-                    value: DataSource.Web.Created
+                    value: moment(DataSource.Web.Created).format("LLLL")
                 },
                 {
                     name: "Title",

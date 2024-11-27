@@ -25,6 +25,7 @@ export class Web {
         SearchProp: string;
         SearchScope: number;
         WebTemplate: string;
+        WebTitle: string;
     } = null;
 
     constructor(el: HTMLElement, disableProps: string[] = [], searchProp: ISearchProp = {} as any) {
@@ -39,7 +40,8 @@ export class Web {
             ExcludeFromOfflineClient: DataSource.Web.ExcludeFromOfflineClient,
             SearchProp: DataSource.Web.AllProperties[this._searchProp.key],
             SearchScope: DataSource.Web.SearchScope,
-            WebTemplate: DataSource.Web.WebTemplate
+            WebTemplate: DataSource.Web.WebTemplate,
+            WebTitle: DataSource.Web.Title
         }
 
         // Clear the element
@@ -95,6 +97,13 @@ export class Web {
                     description: "The type of web.",
                     type: Components.FormControlTypes.Readonly,
                     value: this._currValues.WebTemplate
+                },
+                {
+                    name: "WebTitle",
+                    label: "Web Title:",
+                    description: "The title of web.",
+                    type: Components.FormControlTypes.Readonly,
+                    value: this._currValues.WebTitle
                 },
                 {
                     name: "CommentsOnSitePagesDisabled",
