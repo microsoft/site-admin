@@ -11,7 +11,7 @@ param($Request, $TriggerMetadata)
 # tenant - The domain of the tenant
 # listName - The list name containing the requests
 ###########################################################################################################
-$appUrl = "[Site containing the application]";
+$appUrl = "https://tenant.sharepoint.com/sites/dev";
 $azureEnv = "[The azure environment]";
 $cert = $env:WEBSITE_LOAD_CERTIFICATES;
 $clientId = $env:CLIENT_ID;
@@ -61,7 +61,7 @@ $value = $item["RequestValue"];
 if ($item -ne $null) {
     $siteUrl = $item["Title"];
 
-    # Ensure this request hasn't already been completed
+    # Ensure the status is "New" or "Error"
     $currentStatus = $item["Status"];
     if ($currentStatus -eq "Completed") {
         # The item is already processed
@@ -79,10 +79,16 @@ if ($item -ne $null) {
                     # Add the site collection app catalog
                     Add-PnPSiteCollectionAppCatalog -site $siteUrl;
 
+                    # Allow this to work over Flow3
+                    Set-PnPList -Identity "Client Side Assets" -ExemptFromBlockDownloadOfNonViewableFiles $true
+
                     # Set the output
                     $output = "The app catalog has been enabled for this site collection.";
                 }
                 else {
+                    # Allow this to work over Flow3
+                    Set-PnPList -Identity "Client Side Assets" -ExemptFromBlockDownloadOfNonViewableFiles $false
+
                     # Remove the site collection app catalog
                     Remove-PnPSiteCollectionAppCatalog -site $siteUrl;
 
@@ -128,7 +134,7 @@ if ($item -ne $null) {
                 # See if we are enabling custom scripts
                 if ($value -eq "true") {
                     # Enable the setting
-                    #Set-PnPSite -Identity $siteUrl -NoScriptSite $false;
+                    #Set-SPOSite -Identity $OneDriveSite -StorageQuota $OneDriveStorageQuota -StorageQuotaWarningLevel $OneDriveStorageQuotaWarningLevel;
                 }
                 else {
                     # Disable the setting
