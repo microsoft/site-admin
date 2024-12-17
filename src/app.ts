@@ -1,9 +1,10 @@
 import { Navigation } from "dattatable";
+import { Components } from "gd-sprest-bs";
+import { DataSource } from "./ds";
 import * as Forms from "./forms";
 import { InstallationModal } from "./install";
 import Strings from "./strings";
 import { Security } from "./security";
-import { Components } from "gd-sprest-bs";
 
 // App Properties
 export interface IAppProps {
@@ -121,6 +122,34 @@ export class App {
 
         // Clear the tabls
         while (this._elTabs.firstChild) { this._elTabs.removeChild(this._elTabs.firstChild); }
+
+        // Render the site information
+        Components.Form({
+            el: this._elTabs,
+            className: "my-1",
+            rows: [
+                {
+                    columns: [
+                        {
+                            size: 6,
+                            control: {
+                                label: "Site Collection Url:",
+                                type: Components.FormControlTypes.Readonly,
+                                value: DataSource.Site.Url
+                            }
+                        },
+                        {
+                            size: 6,
+                            control: {
+                                label: "Site Url:",
+                                type: Components.FormControlTypes.Readonly,
+                                value: DataSource.Web.Url
+                            }
+                        }
+                    ]
+                }
+            ]
+        });
 
         // Render the tabs
         Components.ListGroup({
