@@ -1,5 +1,5 @@
-import { List, LoadingDialog } from "dattatable";
-import { Components, ContextInfo, Helper, Site, SPTypes, Types, Web } from "gd-sprest-bs";
+import { List } from "dattatable";
+import { Components, ContextInfo, Helper, Site, SPTypes, Types, Web, v2 } from "gd-sprest-bs";
 import { Security } from "./security";
 import Strings from "./strings";
 
@@ -200,6 +200,26 @@ export class DataSource {
         // Return a promise
         return new Promise((resolve, reject) => {
             // Load the web
+            v2.sites.getIdByUrl(context.WebFullUrl).then(siteInfo => {
+                v2.sites({
+                    siteId: siteInfo.webId,
+                    targetInfo: { requestDigest: siteInfo.digestValue }
+                }).query({
+                    Expand: ["AllProperties"],
+                    Select: [
+                        "Configuration",
+                        "CommentsOnSitePagesDisabled",
+                        "Created",
+                        "ExcludeFromOfflineClient",
+                        "SearchScope",
+                        "Title",
+                        "Url",
+                        "WebTemplate"
+                    ]
+                }).execute(web => {
+                    debugger;
+                });
+            });
             Web(context.WebFullUrl, { requestDigest: context.FormDigestValue }).query({
                 Expand: ["AllProperties"],
                 Select: [
