@@ -172,6 +172,8 @@ export class DataSource {
                     "CommentsOnSitePagesDisabled",
                     "DisableCompanyWideSharingLinks",
                     "GroupId",
+                    "HubSiteId",
+                    "IsHubSite",
                     "MediaTranscriptionDisabled",
                     "Owner",
                     "ReadOnly",

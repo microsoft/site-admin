@@ -19,6 +19,8 @@ export class Site {
         CustomScriptsEnabled: boolean;
         DisableCompanyWideSharingLinks: boolean;
         IncreaseStorage: boolean;
+        IsHubSite: boolean;
+        IsHubSiteConnected: boolean;
         LockState: string;
         ShareByEmailEnabled: boolean;
         SocialBarOnSitePagesDisabled: boolean;
@@ -38,6 +40,8 @@ export class Site {
             CustomScriptsEnabled: Helper.hasPermissions(DataSource.Site.RootWeb.EffectiveBasePermissions, SPTypes.BasePermissionTypes.AddAndCustomizePages),
             DisableCompanyWideSharingLinks: DataSource.Site.DisableCompanyWideSharingLinks,
             IncreaseStorage: false,
+            IsHubSite: DataSource.Site.IsHubSite,
+            IsHubSiteConnected: DataSource.Site.HubSiteId != "00000000-0000-0000-0000-000000000000",
             LockState: DataSource.Site.ReadOnly && DataSource.Site.WriteLocked ? "ReadOnly" : "Unlock",
             ShareByEmailEnabled: DataSource.Site.ShareByEmailEnabled,
             SocialBarOnSitePagesDisabled: DataSource.Site.SocialBarOnSitePagesDisabled,
@@ -101,6 +105,20 @@ export class Site {
                     description: "The title of the site collection.",
                     type: Components.FormControlTypes.Readonly,
                     value: DataSource.Web.Title
+                },
+                {
+                    name: "IsHubSite",
+                    label: "Is Hub Site:",
+                    description: "If true, indicates this is a hub site.",
+                    type: Components.FormControlTypes.Readonly,
+                    value: this._currValues.IsHubSite
+                },
+                {
+                    name: "IsHubSiteConnected",
+                    label: "Is Connected to Hub Site:",
+                    description: "If true, indicates this is connected to a hub site.",
+                    type: Components.FormControlTypes.Readonly,
+                    value: this._currValues.IsHubSiteConnected
                 },
                 {
                     name: "UsageSize",
