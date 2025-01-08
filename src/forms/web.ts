@@ -1,6 +1,7 @@
 import { LoadingDialog } from "dattatable";
 import { Components, Helper } from "gd-sprest-bs";
 import { DataSource, IResponse } from "../ds";
+import { isEmpty } from "./common";
 import { APIResponseModal } from "./response";
 
 export interface ISearchProp {
@@ -27,6 +28,16 @@ export class Web {
         WebTemplate: string;
         WebTitle: string;
     } = null;
+
+    // The new values requested
+    private _newWebValues: {
+        CommentsOnSitePagesDisabled?: boolean;
+        ExcludeFromOfflineClient?: boolean;
+        SearchScope?: number;
+    } = {};
+
+    // The new search property to set
+    private _newSearchProp: string = null;
 
     constructor(el: HTMLElement, disableProps: string[] = [], searchProp: ISearchProp = {} as any) {
         // Save the properties
@@ -70,10 +81,8 @@ export class Web {
             btnProps: {
                 text: "Save Changes",
                 onClick: () => {
-                    let values = this._form.getValues();
-
                     // Save the properties
-                    this.save(values);
+                    this.save();
                 }
             }
         });
@@ -111,7 +120,19 @@ export class Web {
                     description: "If true, it will hide the comments on the site pages.",
                     isDisabled: this._disableProps.indexOf("CommentsOnSitePagesDisabled") >= 0,
                     type: Components.FormControlTypes.Switch,
-                    value: this._currValues.CommentsOnSitePagesDisabled
+                    value: this._currValues.CommentsOnSitePagesDisabled,
+                    onChange: item => {
+                        let value = item ? true : false;
+
+                        // See if we are changing the value
+                        if (this._currValues.CommentsOnSitePagesDisabled != value) {
+                            // Set the value
+                            this._newWebValues.CommentsOnSitePagesDisabled = value;
+                        } else {
+                            // Remove the value
+                            delete this._newWebValues.CommentsOnSitePagesDisabled;
+                        }
+                    }
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "ExcludeFromOfflineClient",
@@ -119,7 +140,19 @@ export class Web {
                     description: "Disables the offline sync feature in all libraries.",
                     isDisabled: this._disableProps.indexOf("ExcludeFromOfflineClient") >= 0,
                     type: Components.FormControlTypes.Switch,
-                    value: !this._currValues.ExcludeFromOfflineClient
+                    value: !this._currValues.ExcludeFromOfflineClient,
+                    onChange: item => {
+                        let value = item ? true : false;
+
+                        // See if we are changing the value
+                        if (this._currValues.ExcludeFromOfflineClient != value) {
+                            // Set the value
+                            this._newWebValues.ExcludeFromOfflineClient = value;
+                        } else {
+                            // Remove the value
+                            delete this._newWebValues.ExcludeFromOfflineClient;
+                        }
+                    }
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "SearchScope",
@@ -149,7 +182,19 @@ export class Web {
                             data: 3,
                             value: "3"
                         }
-                    ]
+                    ],
+                    onChange: item => {
+                        let value = item?.data;
+
+                        // See if we are changing the value
+                        if (this._currValues.SearchScope != value) {
+                            // Set the value
+                            this._newWebValues.SearchScope = value;
+                        } else {
+                            // Remove the value
+                            delete this._newWebValues.SearchScope;
+                        }
+                    }
                 } as Components.IFormControlPropsDropdown,
                 {
                     className: this._searchProp.key ? "" : "d-none",
@@ -158,63 +203,67 @@ export class Web {
                     description: this._searchProp.description || "The custom property to set for search.",
                     isDisabled: this._disableProps.indexOf("SearchProp") >= 0,
                     type: Components.FormControlTypes.TextField,
-                    value: this._currValues.SearchProp
+                    value: this._currValues.SearchProp,
+                    onChange: value => {
+                        // See if we are changing the value
+                        if (this._currValues.SearchProp != value) {
+                            // Set the value
+                            this._newSearchProp = value;
+                        } else {
+                            // Clear the value
+                            this._newSearchProp = null;
+                        }
+                    }
                 }
             ]
         });
     }
 
     // Saves the properties
-    private save(values): PromiseLike<void> {
+    private save(): PromiseLike<void> {
         return new Promise((resolve, reject) => {
-            let props = {};
             let responses: IResponse[] = [];
-            let updateFlags: { [key: string]: boolean } = {};
 
-            // Parse the keys
-            for (let key in this._currValues) {
-                // Skip disabled and read-only controls
-                let ctrl = this._form.getControl(key);
-                if (ctrl.props.isDisabled || ctrl.props.isReadonly) { continue; }
-
-                // Set the flag
-                updateFlags[key] = false;
-
-                // See if an update is needed
-                let value = typeof (values[key]) === "boolean" ? values[key] : values[key].data || values[key].value;
-                if (this._currValues[key] != value) {
-                    // Add the property
-                    props[key] = value;
-
-                    // Set the flag
-                    updateFlags[key] = true;
-                }
-            }
+            // Show a loading dialog
+            LoadingDialog.setHeader("Updating Site Property");
+            LoadingDialog.setBody("This will close after the update completes.");
+            LoadingDialog.show();
 
             // Update the search property
-            this.updateSearchProp(values["SearchProp"]).then(() => {
+            DataSource.updateSearchProp(this._searchProp.key, this._newSearchProp).then(() => {
+                // Update the current value
+                this._currValues.SearchProp = this._newSearchProp;
+
+                // Clear the search prop
+                this._newSearchProp = null;
+
                 // See if an update is needed
-                if (updateFlags.CommentsOnSitePagesDisabled || updateFlags.ExcludeFromOfflineClient || updateFlags.SearchScope) {
+                if (!isEmpty(this._newWebValues)) {
                     // Show a loading dialog
                     LoadingDialog.setHeader("Updating Site");
                     LoadingDialog.setBody("This will close after the changes complete.");
-                    LoadingDialog.show();
 
                     // Update the web
-                    DataSource.Web.update(props).execute(() => {
+                    DataSource.Web.update(this._newWebValues).execute(() => {
                         // Parse the keys
-                        for (let key in updateFlags) {
+                        for (let key in this._newWebValues) {
+                            // Skip the metadata property
+                            if (key == "__metadata") { continue; }
+
                             // Update the current values
-                            this._currValues[key] = values[key];
+                            this._currValues[key] = this._newWebValues[key];
 
                             // Add the response
                             responses.push({
                                 errorFl: false,
                                 key,
                                 message: "The property was updated successfully.",
-                                value: values[key]
+                                value: this._newWebValues[key]
                             });
                         }
+
+                        // Clear the new values
+                        this._newWebValues = {};
 
                         // Close the dialog
                         LoadingDialog.hide();
@@ -226,6 +275,9 @@ export class Web {
                         resolve();
                     }, reject);
                 } else {
+                    // Close the dialog
+                    LoadingDialog.hide();
+
                     // Show the responses
                     new APIResponseModal(responses);
 
@@ -233,35 +285,6 @@ export class Web {
                     resolve();
                 }
             });
-        });
-    }
-
-    // Method to update the search property
-    private updateSearchProp(value: string): PromiseLike<void> {
-        // Return a promise
-        return new Promise(resolve => {
-            // Ensure a property is set and an update is required
-            if (this._searchProp.key && this._currValues.SearchProp != value) {
-                // Show a loading dialog
-                LoadingDialog.setHeader("Updating Site Property");
-                LoadingDialog.setBody("This will close after the update completes.");
-                LoadingDialog.show();
-
-                // Update the property
-                Helper.setWebProperty(this._searchProp.key, value, true, DataSource.Web.Url).then(() => {
-                    // Update the current value
-                    this._currValues.SearchProp = value;
-
-                    // Hide the dialog
-                    LoadingDialog.hide();
-
-                    // Resolve the request
-                    resolve();
-                }, resolve);
-            } else {
-                // Resolve the request
-                resolve();
-            }
         });
     }
 }

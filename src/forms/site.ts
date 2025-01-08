@@ -2,6 +2,7 @@ import { LoadingDialog } from "dattatable";
 import { Components, Helper, SPTypes } from "gd-sprest-bs";
 import * as moment from "moment";
 import { DataSource, IRequest, RequestTypes } from "../ds";
+import { isEmpty } from "./common";
 import { APIResponseModal } from "./response";
 
 /**
@@ -28,6 +29,24 @@ export class Site {
         TeamsConnected: boolean;
         UsageSize: string;
     } = null;
+
+    // The new request items to create
+    private _newRequestItems: {
+        ContainsAppCatalog?: IRequest;
+        CustomScriptsEnabled?: IRequest;
+        DisableCompanyWideSharingLinks?: IRequest;
+        IncreaseStorage?: IRequest;
+        LockState?: IRequest;
+        TeamsConnected?: IRequest;
+    } = {};
+
+    // The new values requested
+    private _newSiteValues: {
+        CommentsOnSitePagesDisabled?: boolean;
+        SensitivityLabel?: string;
+        ShareByEmailEnabled?: boolean;
+        SocialBarOnSitePagesDisabled?: boolean;
+    } = {};
 
     constructor(el: HTMLElement, disableProps: string[] = []) {
         // Save the properties
@@ -77,10 +96,8 @@ export class Site {
             btnProps: {
                 text: "Save Changes",
                 onClick: () => {
-                    let values = this._form.getValues();
-
                     // Save the site properties
-                    this.save(values);
+                    this.save();
                 }
             }
         });
@@ -135,7 +152,23 @@ export class Site {
                     description: "Enable to increase the site collection storage size.",
                     isDisabled: this._disableProps.indexOf("IncreaseStorage") >= 0,
                     type: Components.FormControlTypes.Switch,
-                    value: this._currValues.IncreaseStorage
+                    value: this._currValues.IncreaseStorage,
+                    onChange: item => {
+                        let value = item ? true : false;
+
+                        // See if we are changing the value
+                        if (this._currValues.IncreaseStorage != value) {
+                            // Set the value
+                            this._newRequestItems.IncreaseStorage = {
+                                key: RequestTypes.IncreaseStorage,
+                                message: `The request to increase storage for the site collection will be processed within 5 minutes.`,
+                                value
+                            };
+                        } else {
+                            // Remove the value
+                            delete this._newRequestItems.IncreaseStorage;
+                        }
+                    }
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "CommentsOnSitePagesDisabled",
@@ -143,7 +176,19 @@ export class Site {
                     description: "If true, comments on modern site pages will be disabled.",
                     isDisabled: this._disableProps.indexOf("CommentsOnSitePagesDisabled") >= 0,
                     type: Components.FormControlTypes.Switch,
-                    value: this._currValues.CommentsOnSitePagesDisabled
+                    value: this._currValues.CommentsOnSitePagesDisabled,
+                    onChange: item => {
+                        let value = item ? true : false;
+
+                        // See if we are changing the value
+                        if (this._currValues.CommentsOnSitePagesDisabled != value) {
+                            // Set the value
+                            this._newSiteValues.CommentsOnSitePagesDisabled = value;
+                        } else {
+                            // Remove the value
+                            delete this._newSiteValues.CommentsOnSitePagesDisabled;
+                        }
+                    }
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "DisableCompanyWideSharingLinks",
@@ -151,7 +196,23 @@ export class Site {
                     description: "If true, it will hide the comments on the site pages.",
                     isDisabled: this._disableProps.indexOf("DisableCompanyWideSharingLinks") >= 0,
                     type: Components.FormControlTypes.Switch,
-                    value: this._currValues.DisableCompanyWideSharingLinks
+                    value: this._currValues.DisableCompanyWideSharingLinks,
+                    onChange: item => {
+                        let value = item ? true : false;
+
+                        // See if we are changing the value
+                        if (this._currValues.DisableCompanyWideSharingLinks != value) {
+                            // Set the value
+                            this._newRequestItems.DisableCompanyWideSharingLinks = {
+                                key: RequestTypes.DisableCompanyWideSharingLinks,
+                                message: `The request to ${value ? "disable" : "enable"} company wide sharing links will be processed within 5 minutes.`,
+                                value
+                            };
+                        } else {
+                            // Remove the value
+                            delete this._newRequestItems.DisableCompanyWideSharingLinks;
+                        }
+                    }
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "ContainsAppCatalog",
@@ -172,6 +233,22 @@ export class Site {
                                 resolve(ctrl);
                             });
                         });
+                    },
+                    onChange: item => {
+                        let value = item ? true : false;
+
+                        // See if we are changing the value
+                        if (this._currValues.ContainsAppCatalog != value) {
+                            // Set the value
+                            this._newRequestItems.ContainsAppCatalog = {
+                                key: RequestTypes.AppCatalog,
+                                message: `The request to ${value ? "enable" : "disable"} the app catalog will be processed within 5 minutes.`,
+                                value
+                            };
+                        } else {
+                            // Remove the value
+                            delete this._newRequestItems.ContainsAppCatalog;
+                        }
                     }
                 } as Components.IFormControlPropsSwitch,
                 {
@@ -180,7 +257,23 @@ export class Site {
                     description: "Enables the custom scripts feature for this site collection.",
                     isDisabled: this._disableProps.indexOf("CustomScriptsEnabled") >= 0,
                     type: Components.FormControlTypes.Switch,
-                    value: this._currValues.CustomScriptsEnabled
+                    value: this._currValues.CustomScriptsEnabled,
+                    onChange: item => {
+                        let value = item ? true : false;
+
+                        // See if we are changing the value
+                        if (this._currValues.CustomScriptsEnabled != value) {
+                            // Set the value
+                            this._newRequestItems.CustomScriptsEnabled = {
+                                key: RequestTypes.CustomScript,
+                                message: `The request to ${value ? "enable" : "disable"} custom scripts will be processed within 5 minutes.`,
+                                value
+                            };
+                        } else {
+                            // Remove the value
+                            delete this._newRequestItems.CustomScriptsEnabled;
+                        }
+                    }
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "LockState",
@@ -206,7 +299,23 @@ export class Site {
                             text: "No Access",
                             value: "NoAccess"
                         }
-                    ]
+                    ],
+                    onChange: item => {
+                        let value: string = item?.value;
+
+                        // See if we are changing the value
+                        if (this._currValues.LockState != value) {
+                            // Set the value
+                            this._newRequestItems.LockState = {
+                                key: RequestTypes.LockState,
+                                message: `The request to make the site collection ${value == "NoAccess" ? "have" : "be"} '${item.text}' will be processed within 5 minutes.`,
+                                value
+                            };
+                        } else {
+                            // Remove the value
+                            delete this._newRequestItems.LockState;
+                        }
+                    }
                 } as Components.IFormControlPropsDropdown,
                 {
                     name: "ShareByEmailEnabled",
@@ -214,7 +323,19 @@ export class Site {
                     description: "Disables the offline sync feature in all libraries.",
                     isDisabled: this._disableProps.indexOf("ShareByEmailEnabled") >= 0,
                     type: Components.FormControlTypes.Switch,
-                    value: this._currValues.ShareByEmailEnabled
+                    value: this._currValues.ShareByEmailEnabled,
+                    onChange: item => {
+                        let value = item ? true : false;
+
+                        // See if we are changing the value
+                        if (this._currValues.ShareByEmailEnabled != value) {
+                            // Set the value
+                            this._newSiteValues.ShareByEmailEnabled = value;
+                        } else {
+                            // Remove the value
+                            delete this._newSiteValues.ShareByEmailEnabled;
+                        }
+                    }
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "SocialBarOnSitePagesDisabled",
@@ -222,7 +343,19 @@ export class Site {
                     description: "The search scope for the site to target. Default is 'Site'.",
                     isDisabled: this._disableProps.indexOf("SocialBarOnSitePagesDisabled") >= 0,
                     type: Components.FormControlTypes.Switch,
-                    value: this._currValues.SocialBarOnSitePagesDisabled
+                    value: this._currValues.SocialBarOnSitePagesDisabled,
+                    onChange: item => {
+                        let value = item ? true : false;
+
+                        // See if we are changing the value
+                        if (this._currValues.SocialBarOnSitePagesDisabled != value) {
+                            // Set the value
+                            this._newSiteValues.SocialBarOnSitePagesDisabled = value;
+                        } else {
+                            // Remove the value
+                            delete this._newSiteValues.SocialBarOnSitePagesDisabled;
+                        }
+                    }
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "TeamsConnected",
@@ -230,7 +363,23 @@ export class Site {
                     description: "The search scope for the site to target. Default is 'Site'.",
                     isDisabled: this._currValues.TeamsConnected || this._disableProps.indexOf("TeamsConnected") >= 0,
                     type: Components.FormControlTypes.Switch,
-                    value: this._currValues.TeamsConnected
+                    value: this._currValues.TeamsConnected,
+                    onChange: item => {
+                        let value = item ? true : false;
+
+                        // See if we are changing the value
+                        if (this._currValues.TeamsConnected != value) {
+                            // Set the value
+                            this._newRequestItems.TeamsConnected = {
+                                key: RequestTypes.TeamsConnected,
+                                message: `The request to connect the site to teams will be processed within 5 minutes.`,
+                                value
+                            };
+                        } else {
+                            // Remove the value
+                            delete this._newRequestItems.TeamsConnected;
+                        }
+                    }
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "SensitivityLabel",
@@ -238,118 +387,70 @@ export class Site {
                     description: "The sensitivity label guid value for this site.",
                     isDisabled: this._disableProps.indexOf("SensitivityLabel") >= 0,
                     type: Components.FormControlTypes.TextField,
-                    value: this._currValues.SensitivityLabel
+                    value: this._currValues.SensitivityLabel,
+                    onChange: value => {
+                        // See if we are changing the value
+                        if (this._currValues.SensitivityLabel != value) {
+                            // Set the value
+                            this._newSiteValues.SensitivityLabel = value;
+                        } else {
+                            // Remove the value
+                            delete this._newSiteValues.SensitivityLabel;
+                        }
+                    }
                 }
             ]
         });
     }
 
     // Saves the properties
-    private save(values): PromiseLike<void> {
+    private save(): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve) => {
-            let props = {};
+            // Get the request items to create
             let requests: IRequest[] = [];
-            let updateFlags: { [key: string]: boolean } = {};
-
-            // Parse the keys
-            for (let key in this._currValues) {
-                // Skip disabled and read-only controls
-                let ctrl = this._form.getControl(key);
-                if (ctrl.props.isDisabled || ctrl.props.isReadonly || ctrl.props.type == Components.FormControlTypes.Readonly) { continue; }
-
-                // Compare the values for a change
-                let value = typeof (values[key]) === "boolean" ? values[key] : values[key].data || values[key].value;
-                if (this._currValues[key] != value) {
-                    // Set the flag
-                    updateFlags[key] = false;
-
-                    // See if we need to create a request
-                    switch (key) {
-                        case "ContainsAppCatalog":
-                            // Add a request for this request
-                            requests.push({
-                                key: RequestTypes.AppCatalog,
-                                message: `The request to ${values[key] ? "enable" : "disable"} the app catalog will be processed within 5 minutes.`,
-                                value: values[key]
-                            });
-                            break;
-                        case "CustomScriptsEnabled":
-                            // Add a request for this request
-                            requests.push({
-                                key: RequestTypes.CustomScript,
-                                message: `The request to ${values[key] ? "enable" : "disable"} custom scripts will be processed within 5 minutes.`,
-                                value: values[key]
-                            });
-                            break;
-                        case "DisableCompanyWideSharingLinks":
-                            // Add a request for this request
-                            requests.push({
-                                key: RequestTypes.DisableCompanyWideSharingLinks,
-                                message: `The request to ${values[key] ? "disable" : "enable"} company wide sharing links will be processed within 5 minutes.`,
-                                value: values[key]
-                            });
-                            break;
-                        case "IncreaseStorage":
-                            // Add a request for this request
-                            requests.push({
-                                key: RequestTypes.IncreaseStorage,
-                                message: `The request to increase storage for the site collection will be processed within 5 minutes.`,
-                                value: values[key]
-                            });
-                            break;
-                        case "LockState":
-                            // Add a request for this request
-                            requests.push({
-                                key: RequestTypes.LockState,
-                                message: `The request to make the site collection ${values[key].value == "NoAccess" ? "have" : "be"} '${values[key].text}' will be processed within 5 minutes.`,
-                                value: values[key].value
-                            });
-                            break;
-                        case "TeamsConnected":
-                            // Add a request for this request
-                            requests.push({
-                                key: RequestTypes.TeamsConnected,
-                                message: `The request to connect the site to teams will be processed within 5 minutes.`,
-                                value: values[key].value
-                            });
-                            break;
-                        // We are updating a property
-                        default:
-                            // Add the property
-                            props[key] = value;
-
-                            // Set the flag
-                            updateFlags[key] = true;
-                            break;
-                    }
-                }
+            for (let key in this._newRequestItems) {
+                // Append the request
+                requests.push(this._newRequestItems[key]);
             }
+
+            // Show a loading dialog
+            LoadingDialog.setHeader("Create Items");
+            LoadingDialog.setBody("Creating the request items to process.");
+            LoadingDialog.show();
 
             // Add the requests
             DataSource.addRequest(DataSource.Site.Url, requests).then((responses) => {
+                // Clear the new values
+                this._newRequestItems = {};
+
                 // See if an update is needed
-                if (updateFlags.CommentsOnSitePagesDisabled || updateFlags.ShareByEmailEnabled || updateFlags.SocialBarOnSitePagesDisabled) {
+                if (!isEmpty(this._newSiteValues)) {
                     // Show a loading dialog
                     LoadingDialog.setHeader("Updating Site Collection");
                     LoadingDialog.setBody("This will close after the changes complete.");
-                    LoadingDialog.show();
 
                     // Save the changes
-                    DataSource.Site.update(props).execute(() => {
+                    DataSource.Site.update(this._newSiteValues).execute(() => {
                         // Parse the keys
-                        for (let key in updateFlags) {
+                        for (let key in this._newSiteValues) {
+                            // Skip the metadata property
+                            if (key == "__metadata") { continue; }
+
                             // Update the current values
-                            this._currValues[key] = values[key];
+                            this._currValues[key] = this._newSiteValues[key];
 
                             // Add the response
                             responses.push({
                                 errorFl: false,
                                 key,
                                 message: "The property was updated successfully.",
-                                value: values[key]
-                            })
+                                value: this._newSiteValues[key]
+                            });
                         }
+
+                        // Clear the new values
+                        this._newSiteValues = {};
 
                         // Close the dialog
                         LoadingDialog.hide();
@@ -361,6 +462,9 @@ export class Site {
                         resolve();
                     });
                 } else {
+                    // Close the dialog
+                    LoadingDialog.hide();
+
                     // Show the responses
                     new APIResponseModal(responses);
 

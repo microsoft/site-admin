@@ -22,7 +22,7 @@ export interface IListItem extends Types.SP.ListItem {
 export interface IRequest {
     key: string;
     message: string;
-    value: boolean;
+    value: boolean | string;
 }
 
 /**
@@ -304,6 +304,24 @@ export class DataSource {
             } else {
                 // Refresh the data
                 DataSource.List.refresh().then(resolve, reject);
+            }
+        });
+    }
+
+    // Updates the search property
+    static updateSearchProp(key: string, value: string): PromiseLike<void> {
+        // Return a promise
+        return new Promise(resolve => {
+            // Ensure the key and value exist
+            if (key && value != null) {
+                // Update the property
+                Helper.setWebProperty(key, value, true, DataSource.Web.Url).then(() => {
+                    // Resolve the request
+                    resolve();
+                }, resolve);
+            } else {
+                // Resolve the request
+                resolve();
             }
         });
     }
