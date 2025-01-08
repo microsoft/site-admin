@@ -179,6 +179,7 @@ export class DataSource {
                     "ReadOnly",
                     "SandboxedCodeActivationCapability",
                     "SecondaryContact",
+                    "SensitivityLabel",
                     "ShareByEmailEnabled",
                     "ShowPeoplePickerSuggestionsForGuestUsers",
                     "SocialBarOnSitePagesDisabled",

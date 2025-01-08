@@ -108,6 +108,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     "SitePropDisableCompanyWideSharingLinks",
     "SitePropIncreaseStorage",
     "SitePropLockState",
+    "SitePropSensitivityLabel",
     "SitePropShareByEmailEnabled",
     "SitePropSocialBarOnSitePagesDisabled",
     "SitePropTeamsConnected"

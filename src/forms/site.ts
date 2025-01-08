@@ -22,6 +22,7 @@ export class Site {
         IsHubSite: boolean;
         IsHubSiteConnected: boolean;
         LockState: string;
+        SensitivityLabel: string;
         ShareByEmailEnabled: boolean;
         SocialBarOnSitePagesDisabled: boolean;
         TeamsConnected: boolean;
@@ -43,9 +44,10 @@ export class Site {
             IsHubSite: DataSource.Site.IsHubSite,
             IsHubSiteConnected: DataSource.Site.HubSiteId != "00000000-0000-0000-0000-000000000000",
             LockState: DataSource.Site.ReadOnly && DataSource.Site.WriteLocked ? "ReadOnly" : "Unlock",
+            SensitivityLabel: DataSource.Site.SensitivityLabel == "00000000-0000-0000-0000-000000000000" ? "" : DataSource.Site.SensitivityLabel,
             ShareByEmailEnabled: DataSource.Site.ShareByEmailEnabled,
             SocialBarOnSitePagesDisabled: DataSource.Site.SocialBarOnSitePagesDisabled,
-            TeamsConnected: DataSource.Site.GroupId && DataSource.Site.GroupId != "00000000-0000-0000-0000-000000000000" && DataSource.Web.AllProperties["TeamifyHidden"] != "TRUE",
+            TeamsConnected: DataSource.Site?.GroupId != "00000000-0000-0000-0000-000000000000" && DataSource.Web.AllProperties["TeamifyHidden"] != "TRUE",
             UsageSize: DataSource.formatBytes(DataSource.Site.Usage.Storage) + ` (${Math.round(DataSource.Site.Usage.StoragePercentageUsed * 100) / 100 + "%"} Used)`,
         }
 
@@ -128,6 +130,14 @@ export class Site {
                     value: this._currValues.UsageSize
                 },
                 {
+                    name: "IncreaseStorage",
+                    label: "Increase Storage:",
+                    description: "Enable to increase the site collection storage size.",
+                    isDisabled: this._disableProps.indexOf("IncreaseStorage") >= 0,
+                    type: Components.FormControlTypes.Switch,
+                    value: this._currValues.IncreaseStorage
+                } as Components.IFormControlPropsSwitch,
+                {
                     name: "CommentsOnSitePagesDisabled",
                     label: "Comments On Site Pages Disabled:",
                     description: "If true, comments on modern site pages will be disabled.",
@@ -171,14 +181,6 @@ export class Site {
                     isDisabled: this._disableProps.indexOf("CustomScriptsEnabled") >= 0,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.CustomScriptsEnabled
-                } as Components.IFormControlPropsSwitch,
-                {
-                    name: "IncreaseStorage",
-                    label: "Increase Storage:",
-                    description: "Enable to increase the site collection storage size.",
-                    isDisabled: this._disableProps.indexOf("IncreaseStorage") >= 0,
-                    type: Components.FormControlTypes.Switch,
-                    value: this._currValues.IncreaseStorage
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "LockState",
@@ -229,7 +231,15 @@ export class Site {
                     isDisabled: this._currValues.TeamsConnected || this._disableProps.indexOf("TeamsConnected") >= 0,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.TeamsConnected
-                } as Components.IFormControlPropsSwitch
+                } as Components.IFormControlPropsSwitch,
+                {
+                    name: "SensitivityLabel",
+                    label: "Sensitivity Label",
+                    description: "The sensitivity label guid value for this site.",
+                    isDisabled: this._disableProps.indexOf("SensitivityLabel") >= 0,
+                    type: Components.FormControlTypes.TextField,
+                    value: this._currValues.SensitivityLabel
+                }
             ]
         });
     }
