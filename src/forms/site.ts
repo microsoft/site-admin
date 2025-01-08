@@ -246,7 +246,7 @@ export class Site {
             for (let key in this._currValues) {
                 // Skip disabled and read-only controls
                 let ctrl = this._form.getControl(key);
-                if (ctrl.props.isDisabled || ctrl.props.isReadonly) { continue; }
+                if (ctrl.props.isDisabled || ctrl.props.isReadonly || ctrl.props.type == Components.FormControlTypes.Readonly) { continue; }
 
                 // Compare the values for a change
                 let value = typeof (values[key]) === "boolean" ? values[key] : values[key].data || values[key].value;

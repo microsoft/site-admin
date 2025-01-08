@@ -7,20 +7,14 @@ import { IResponse } from "../ds";
  */
 export class APIResponseModal {
     constructor(responses: IResponse[]) {
-        // Return if no responses exist
-        if (responses.length == 0) { return; }
-
         // Clear the modal
         Modal.clear();
 
         // Set the header
-        Modal.setHeader("Request Status");
+        Modal.setHeader("Change Request(s)");
 
         // Render the responses
         this.renderResponses(responses);
-
-        // Set the footer
-        this.renderFooter();
 
         // Show the modal
         Modal.show();
@@ -45,6 +39,13 @@ export class APIResponseModal {
 
     // Renders the reponses
     private renderResponses(responses: IResponse[]) {
+        // See if there are no responses
+        if (responses.length == 0) {
+            // Set the message
+            Modal.setBody("No changes were detected.");
+            return;
+        }
+
         // Render a table
         Components.Table({
             el: Modal.BodyElement,
@@ -68,5 +69,8 @@ export class APIResponseModal {
                 }
             ]
         });
+
+        // Set the footer
+        this.renderFooter();
     }
 }
