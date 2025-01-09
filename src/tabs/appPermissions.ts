@@ -29,5 +29,6 @@ export class AppPermissionsTab implements ITab {
 
     // Renders the tab
     private render() {
+        this._el.innerHTML = "This feature is coming soon. This will allow you to set permissions for apps accessing data from the site collection.";
     }
 }

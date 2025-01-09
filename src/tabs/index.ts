@@ -58,7 +58,6 @@ export class Tabs {
                     tabName: "App Permissions",
                     onRender: (el) => {
                         // Render the tab
-                        el.innerHTML = "Coming soon...";
                         this._tabs.push(new AppPermissionsTab(el));
                     }
                 },
