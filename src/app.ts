@@ -121,13 +121,13 @@ export class App {
         // Hide the form
         this._elForm.classList.add("d-none");
 
-        // Clear the tabs
+        // Clear the tabs element
         while (this._elTabs.firstChild) { this._elTabs.removeChild(this._elTabs.firstChild); }
 
         // Render the site information
         Components.Form({
             el: this._elTabs,
-            className: "my-1",
+            className: "mt-1 mb-2",
             rows: [
                 {
                     columns: [

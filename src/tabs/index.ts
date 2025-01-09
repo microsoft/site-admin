@@ -19,9 +19,6 @@ export class Tabs {
     constructor(el: HTMLElement) {
         this._el = el;
 
-        // Clear the element
-        while (el.firstChild) { el.removeChild(el.firstChild); }
-
         // Render the tabs
         this.render();
     }
