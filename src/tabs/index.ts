@@ -1,6 +1,5 @@
 import { Components } from "gd-sprest-bs";
 import { AppPermissionsTab } from "./appPermissions";
-import { Tab } from "./base";
 import { ChangesTab } from "./changes";
 import { FeaturesTab } from "./features";
 import { InfoTab } from "./info";
@@ -11,21 +10,23 @@ import { WebsTab } from "./webs";
  * Tabs
  */
 export class Tabs {
-    private _appPermissionsTab: AppPermissionsTab = null;
-    private _changesTab: ChangesTab = null;
     private _el: HTMLElement = null;
-    private _tabs: Tab[] = [];
+    private _tabAppPermissions: AppPermissionsTab = null;
+    private _tabChanges: ChangesTab = null;
+    private _tabFeatures: FeaturesTab = null;
+    private _tabManagement: ManagementTab = null;
+    private _tabWebs: WebsTab = null;
 
     // Constructor
-    constructor(el: HTMLElement) {
+    constructor(el: HTMLElement, disableSiteProps: string[] = [], disableWebProps: string[] = []) {
         this._el = el;
 
         // Render the tabs
-        this.render();
+        this.render(disableSiteProps, disableWebProps);
     }
 
     // Renders the tabs
-    private render() {
+    private render(disableSiteProps: string[] = [], disableWebProps: string[] = []) {
         // Render the tabs
         Components.ListGroup({
             el: this._el,
@@ -38,42 +39,52 @@ export class Tabs {
                     isActive: true,
                     onRender: (el) => {
                         // Render the tab
-                        this._tabs.push(new InfoTab(el));
+                        new InfoTab(el, disableSiteProps);
                     }
                 },
                 {
                     tabName: "Management",
                     onRender: (el) => {
                         // Render the tab
-                        this._tabs.push(new ManagementTab(el));
+                        this._tabManagement = new ManagementTab(el, disableSiteProps);
                     }
                 },
                 {
                     tabName: "Features",
                     onRender: (el) => {
                         // Render the tab
-                        this._tabs.push(new FeaturesTab(el));
+                        this._tabFeatures = new FeaturesTab(el, disableSiteProps);
                     }
                 },
                 {
                     tabName: "App Permissions",
                     onRender: (el) => {
                         // Render the tab
-                        this._appPermissionsTab = new AppPermissionsTab(el);
+                        this._tabAppPermissions = new AppPermissionsTab(el);
                     }
                 },
                 {
                     tabName: "Web(s)",
                     onRender: (el) => {
                         // Render the tab
-                        this._tabs.push(new WebsTab(el));
+                        this._tabWebs = new WebsTab(el, disableWebProps);
                     }
                 },
                 {
                     tabName: "Changes",
                     onRender: (el) => {
                         // Render the changes
-                        this._changesTab = new ChangesTab(el);
+                        this._tabChanges = new ChangesTab(el);
+                    },
+                    onClick: () => {
+                        // Get the changes
+                        let changes = this._tabFeatures.getRequests().concat(
+                            this._tabManagement.getRequests(),
+                            this._tabWebs.getRequests()
+                        );
+
+                        // Set the changes
+                        this._tabChanges.setChanges(changes);
                     }
                 }
             ]

@@ -24,7 +24,7 @@ export class ManagementTab extends Tab<{
 
     // Constructor
     constructor(el: HTMLElement, disableProps: string[] = []) {
-        super(el, disableProps);
+        super(el, disableProps, "Site");
 
         // Set the current values
         this._currValues = {

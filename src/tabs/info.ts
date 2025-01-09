@@ -8,8 +8,8 @@ import { DataSource } from "../ds";
  */
 export class InfoTab extends Tab {
     // Constructor
-    constructor(el: HTMLElement) {
-        super(el);
+    constructor(el: HTMLElement, disabledProps:string[]) {
+        super(el, disabledProps, "Site");
 
         // Render the tab
         this.render();

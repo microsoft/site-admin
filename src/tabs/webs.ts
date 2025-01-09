@@ -19,7 +19,7 @@ export class WebsTab extends Tab<{
 }> {
     // Constructor
     constructor(el: HTMLElement, disableProps: string[] = []) {
-        super(el, disableProps);
+        super(el, disableProps, "Web");
 
         // Set the current values
         this._currValues = {
