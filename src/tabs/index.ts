@@ -1,19 +1,20 @@
 import { Components } from "gd-sprest-bs";
 import { AppPermissionsTab } from "./appPermissions";
+import { Tab } from "./base";
 import { ChangesTab } from "./changes";
 import { FeaturesTab } from "./features";
 import { InfoTab } from "./info";
 import { ManagementTab } from "./management";
 import { WebsTab } from "./webs";
-import { ITab } from "./tab.d";
 
 /**
  * Tabs
  */
 export class Tabs {
-    private _el: HTMLElement = null;
+    private _appPermissionsTab: AppPermissionsTab = null;
     private _changesTab: ChangesTab = null;
-    private _tabs: ITab[] = [];
+    private _el: HTMLElement = null;
+    private _tabs: Tab[] = [];
 
     // Constructor
     constructor(el: HTMLElement) {
@@ -58,7 +59,7 @@ export class Tabs {
                     tabName: "App Permissions",
                     onRender: (el) => {
                         // Render the tab
-                        this._tabs.push(new AppPermissionsTab(el));
+                        this._appPermissionsTab = new AppPermissionsTab(el);
                     }
                 },
                 {

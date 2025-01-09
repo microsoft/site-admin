@@ -1,27 +1,19 @@
 import { Components } from "gd-sprest-bs";
 import * as moment from "moment";
-import { ITab } from "./tab.d";
-import { DataSource, IRequest } from "../ds";
+import { Tab } from "./base";
+import { DataSource } from "../ds";
 
 /**
  * Information Tab
  */
-export class InfoTab implements ITab {
-    private _el: HTMLElement = null;
-
+export class InfoTab extends Tab {
     // Constructor
     constructor(el: HTMLElement) {
-        this._el = el;
+        super(el);
 
         // Render the tab
         this.render();
     }
-
-    // This tab only holds read-only properties, so no changes will exist
-    getProps(): { [key: string]: string | number | boolean; } { return {}; }
-
-    // This tab only holds read-only properties, so no changes will exist
-    getRequests(): IRequest[] { return []; }
 
     // Renders the tab
     private render() {

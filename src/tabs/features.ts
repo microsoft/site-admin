@@ -1,38 +1,26 @@
 import { Components } from "gd-sprest-bs";
-import { ITab } from "./tab.d";
 import { DataSource, IRequest, RequestTypes } from "../ds";
+import { Tab } from "./base";
 
 /**
  * Features Tab
  */
-export class FeaturesTab implements ITab {
-    private _disableProps: string[] = null;
-    private _el: HTMLElement = null;
-
-    // The current values
-    private _currValues: {
-        CommentsOnSitePagesDisabled: boolean;
-        DisableCompanyWideSharingLinks: boolean;
-        ShareByEmailEnabled: boolean;
-        SocialBarOnSitePagesDisabled: boolean;
-    } = null;
-
-    // The new request items to create
-    private _newRequestItems: {
-        DisableCompanyWideSharingLinks?: IRequest;
-    } = {};
-
-    // The new values requested
-    private _newSiteValues: {
-        CommentsOnSitePagesDisabled?: boolean;
-        ShareByEmailEnabled?: boolean;
-        SocialBarOnSitePagesDisabled?: boolean;
-    } = {};
+export class FeaturesTab extends Tab<{
+    CommentsOnSitePagesDisabled: boolean;
+    DisableCompanyWideSharingLinks: boolean;
+    ShareByEmailEnabled: boolean;
+    SocialBarOnSitePagesDisabled: boolean;
+}, {
+    DisableCompanyWideSharingLinks: IRequest
+}, {
+    CommentsOnSitePagesDisabled: boolean;
+    ShareByEmailEnabled: boolean;
+    SocialBarOnSitePagesDisabled: boolean;
+}> {
 
     // Constructor
     constructor(el: HTMLElement, disableProps: string[] = []) {
-        this._disableProps = disableProps;
-        this._el = el;
+        super(el, disableProps);
 
         // Set the current values
         this._currValues = {
@@ -44,22 +32,6 @@ export class FeaturesTab implements ITab {
 
         // Render the tab
         this.render();
-    }
-
-    // Returns the site properties to update
-    getProps(): { [key: string]: string | number | boolean; } { return this._newSiteValues; }
-
-    // Returns the new request items to create
-    getRequests(): IRequest[] {
-        // Get the request items to create
-        let requests: IRequest[] = [];
-        for (let key in this._newRequestItems) {
-            // Append the request
-            requests.push(this._newRequestItems[key]);
-        }
-
-        // Return the requests
-        return requests;
     }
 
     // Renders the tab
@@ -83,10 +55,10 @@ export class FeaturesTab implements ITab {
                         // See if we are changing the value
                         if (this._currValues.CommentsOnSitePagesDisabled != value) {
                             // Set the value
-                            this._newSiteValues.CommentsOnSitePagesDisabled = value;
+                            this._newValues.CommentsOnSitePagesDisabled = value;
                         } else {
                             // Remove the value
-                            delete this._newSiteValues.CommentsOnSitePagesDisabled;
+                            delete this._newValues.CommentsOnSitePagesDisabled;
                         }
                     }
                 } as Components.IFormControlPropsSwitch,
@@ -103,14 +75,14 @@ export class FeaturesTab implements ITab {
                         // See if we are changing the value
                         if (this._currValues.DisableCompanyWideSharingLinks != value) {
                             // Set the value
-                            this._newRequestItems.DisableCompanyWideSharingLinks = {
+                            this._requestItems.DisableCompanyWideSharingLinks = {
                                 key: RequestTypes.DisableCompanyWideSharingLinks,
                                 message: `The request to ${value ? "disable" : "enable"} company wide sharing links will be processed within 5 minutes.`,
                                 value
                             };
                         } else {
                             // Remove the value
-                            delete this._newRequestItems.DisableCompanyWideSharingLinks;
+                            delete this._requestItems.DisableCompanyWideSharingLinks;
                         }
                     }
                 } as Components.IFormControlPropsSwitch,
@@ -127,10 +99,10 @@ export class FeaturesTab implements ITab {
                         // See if we are changing the value
                         if (this._currValues.ShareByEmailEnabled != value) {
                             // Set the value
-                            this._newSiteValues.ShareByEmailEnabled = value;
+                            this._newValues.ShareByEmailEnabled = value;
                         } else {
                             // Remove the value
-                            delete this._newSiteValues.ShareByEmailEnabled;
+                            delete this._newValues.ShareByEmailEnabled;
                         }
                     }
                 } as Components.IFormControlPropsSwitch,
@@ -147,10 +119,10 @@ export class FeaturesTab implements ITab {
                         // See if we are changing the value
                         if (this._currValues.SocialBarOnSitePagesDisabled != value) {
                             // Set the value
-                            this._newSiteValues.SocialBarOnSitePagesDisabled = value;
+                            this._newValues.SocialBarOnSitePagesDisabled = value;
                         } else {
                             // Remove the value
-                            delete this._newSiteValues.SocialBarOnSitePagesDisabled;
+                            delete this._newValues.SocialBarOnSitePagesDisabled;
                         }
                     }
                 } as Components.IFormControlPropsSwitch

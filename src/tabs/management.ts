@@ -1,42 +1,30 @@
 import { Components, Helper, SPTypes } from "gd-sprest-bs";
-import { ITab } from "./tab.d";
+import { Tab } from "./base";
 import { DataSource, IRequest, RequestTypes } from "../ds";
 
 /**
  * Management Tab
  */
-export class ManagementTab implements ITab {
-    private _disableProps: string[] = null;
-    private _el: HTMLElement = null;
-
-    // The current values
-    private _currValues: {
-        ContainsAppCatalog: boolean;
-        CustomScriptsEnabled: boolean;
-        IncreaseStorage: boolean;
-        LockState: string;
-        SensitivityLabel: string;
-        TeamsConnected: boolean;
-    } = null;
-
-    // The new request items to create
-    private _newRequestItems: {
-        ContainsAppCatalog?: IRequest;
-        CustomScriptsEnabled?: IRequest;
-        IncreaseStorage?: IRequest;
-        LockState?: IRequest;
-        TeamsConnected?: IRequest;
-    } = {};
-
-    // The new values requested
-    private _newSiteValues: {
-        SensitivityLabel?: string;
-    } = {};
+export class ManagementTab extends Tab<{
+    ContainsAppCatalog: boolean;
+    CustomScriptsEnabled: boolean;
+    IncreaseStorage: boolean;
+    LockState: string;
+    SensitivityLabel: string;
+    TeamsConnected: boolean;
+}, {
+    ContainsAppCatalog: IRequest;
+    CustomScriptsEnabled: IRequest;
+    IncreaseStorage: IRequest;
+    LockState: IRequest;
+    TeamsConnected: IRequest;
+}, {
+    SensitivityLabel: string;
+}> {
 
     // Constructor
     constructor(el: HTMLElement, disableProps: string[] = []) {
-        this._disableProps = disableProps;
-        this._el = el;
+        super(el, disableProps);
 
         // Set the current values
         this._currValues = {
@@ -50,22 +38,6 @@ export class ManagementTab implements ITab {
 
         // Render the tab
         this.render();
-    }
-
-    // Returns the site properties to update
-    getProps(): { [key: string]: string | number | boolean; } { return this._newSiteValues; }
-
-    // Returns the new request items to create
-    getRequests(): IRequest[] {
-        // Get the request items to create
-        let requests: IRequest[] = [];
-        for (let key in this._newRequestItems) {
-            // Append the request
-            requests.push(this._newRequestItems[key]);
-        }
-
-        // Return the requests
-        return requests;
     }
 
     // Renders the tab
@@ -89,14 +61,14 @@ export class ManagementTab implements ITab {
                         // See if we are changing the value
                         if (this._currValues.CustomScriptsEnabled != value) {
                             // Set the value
-                            this._newRequestItems.CustomScriptsEnabled = {
+                            this._requestItems.CustomScriptsEnabled = {
                                 key: RequestTypes.CustomScript,
                                 message: `The request to ${value ? "enable" : "disable"} custom scripts will be processed within 5 minutes.`,
                                 value
                             };
                         } else {
                             // Remove the value
-                            delete this._newRequestItems.CustomScriptsEnabled;
+                            delete this._requestItems.CustomScriptsEnabled;
                         }
                     }
                 } as Components.IFormControlPropsSwitch,
@@ -131,14 +103,14 @@ export class ManagementTab implements ITab {
                         // See if we are changing the value
                         if (this._currValues.LockState != value) {
                             // Set the value
-                            this._newRequestItems.LockState = {
+                            this._requestItems.LockState = {
                                 key: RequestTypes.LockState,
                                 message: `The request to make the site collection ${value == "NoAccess" ? "have" : "be"} '${item.text}' will be processed within 5 minutes.`,
                                 value
                             };
                         } else {
                             // Remove the value
-                            delete this._newRequestItems.LockState;
+                            delete this._requestItems.LockState;
                         }
                     }
                 } as Components.IFormControlPropsDropdown,
@@ -168,14 +140,14 @@ export class ManagementTab implements ITab {
                         // See if we are changing the value
                         if (this._currValues.ContainsAppCatalog != value) {
                             // Set the value
-                            this._newRequestItems.ContainsAppCatalog = {
+                            this._requestItems.ContainsAppCatalog = {
                                 key: RequestTypes.AppCatalog,
                                 message: `The request to ${value ? "enable" : "disable"} the app catalog will be processed within 5 minutes.`,
                                 value
                             };
                         } else {
                             // Remove the value
-                            delete this._newRequestItems.ContainsAppCatalog;
+                            delete this._requestItems.ContainsAppCatalog;
                         }
                     }
                 } as Components.IFormControlPropsSwitch,
@@ -192,14 +164,14 @@ export class ManagementTab implements ITab {
                         // See if we are changing the value
                         if (this._currValues.IncreaseStorage != value) {
                             // Set the value
-                            this._newRequestItems.IncreaseStorage = {
+                            this._requestItems.IncreaseStorage = {
                                 key: RequestTypes.IncreaseStorage,
                                 message: `The request to increase storage for the site collection will be processed within 5 minutes.`,
                                 value
                             };
                         } else {
                             // Remove the value
-                            delete this._newRequestItems.IncreaseStorage;
+                            delete this._requestItems.IncreaseStorage;
                         }
                     }
                 } as Components.IFormControlPropsSwitch,
@@ -216,14 +188,14 @@ export class ManagementTab implements ITab {
                         // See if we are changing the value
                         if (this._currValues.TeamsConnected != value) {
                             // Set the value
-                            this._newRequestItems.TeamsConnected = {
+                            this._requestItems.TeamsConnected = {
                                 key: RequestTypes.TeamsConnected,
                                 message: `The request to connect the site to teams will be processed within 5 minutes.`,
                                 value
                             };
                         } else {
                             // Remove the value
-                            delete this._newRequestItems.TeamsConnected;
+                            delete this._requestItems.TeamsConnected;
                         }
                     }
                 } as Components.IFormControlPropsSwitch,
@@ -238,10 +210,10 @@ export class ManagementTab implements ITab {
                         // See if we are changing the value
                         if (this._currValues.SensitivityLabel != value) {
                             // Set the value
-                            this._newSiteValues.SensitivityLabel = value;
+                            this._newValues.SensitivityLabel = value;
                         } else {
                             // Remove the value
-                            delete this._newSiteValues.SensitivityLabel;
+                            delete this._newValues.SensitivityLabel;
                         }
                     }
                 }

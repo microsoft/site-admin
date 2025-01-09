@@ -1,11 +1,10 @@
 import { Components } from "gd-sprest-bs";
-import { ITab } from "./tab";
 import { IRequest } from "../ds";
 
 /**
  * Search Property Tab
  */
-export class SearchPropTab implements ITab {
+export class SearchPropTab {
     private _el: HTMLElement = null;
 
     // Constructor
@@ -16,19 +15,8 @@ export class SearchPropTab implements ITab {
         this.render();
     }
 
-    getProps(): { [key: string]: string | number | boolean; } {
-        let props = {};
-
-        return props;
-    }
-
-    getRequests(): IRequest[] {
-        let requests: IRequest[] = [];
-
-        return requests;
-    }
-
     // Renders the tab
     private render() {
+        this._el.innerHTML = "This feature is coming soon. This will allow you to set a custom search property on the root site.";
     }
 }
