@@ -1,1 +1,9 @@
-/** Custom Styles Go Here */
+/** Make the form labels bold */
+#site-admin {
+    form {
+        label.form-label {
+            font-size: medium;
+            font-weight: bold;
+        }
+    }
+}

@@ -5,6 +5,7 @@ import * as Forms from "./forms";
 import { InstallationModal } from "./install";
 import Strings from "./strings";
 import { Security } from "./security";
+import { Tabs } from "./tabs";
 
 // App Properties
 export interface IAppProps {
@@ -120,7 +121,7 @@ export class App {
         // Hide the form
         this._elForm.classList.add("d-none");
 
-        // Clear the tabls
+        // Clear the tabs
         while (this._elTabs.firstChild) { this._elTabs.removeChild(this._elTabs.firstChild); }
 
         // Render the site information
@@ -152,28 +153,6 @@ export class App {
         });
 
         // Render the tabs
-        Components.ListGroup({
-            el: this._elTabs,
-            isHorizontal: true,
-            isTabs: true,
-            colWidth: 12,
-            items: [
-                {
-                    tabName: "Site Collection",
-                    isActive: true,
-                    onRender: (el) => {
-                        // Render the site form
-                        new Forms.Site(el, this._props.disableSiteProps);
-                    }
-                },
-                {
-                    tabName: "Site",
-                    onRender: (el) => {
-                        // Render the web form
-                        new Forms.Web(el, this._props.disableWebProps, this._props.searchProp);
-                    }
-                }
-            ]
-        });
+        new Tabs(this._elTabs);
     }
 }
