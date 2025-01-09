@@ -25,6 +25,7 @@ export class InfoTab implements ITab {
 
     // Renders the tab
     private render() {
+        // Render the form
         Components.Form({
             el: this._el,
             className: "row mt-2",
