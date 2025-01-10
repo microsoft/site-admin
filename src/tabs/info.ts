@@ -39,7 +39,6 @@ export class InfoTab extends Tab {
                 {
                     name: "SiteTemplate",
                     label: "Site Template:",
-                    description: "The site template of the root web.",
                     type: Components.FormControlTypes.Readonly,
                     value: DataSource.Site.RootWeb.WebTemplate
                 },
@@ -60,7 +59,6 @@ export class InfoTab extends Tab {
                 {
                     name: "UsageSize",
                     label: "Storage Used:",
-                    description: "The current storage of the site collection.",
                     type: Components.FormControlTypes.Readonly,
                     value: `${DataSource.formatBytes(DataSource.Site.Usage.Storage)} of ${DataSource.formatBytes(DataSource.Site.Usage.Storage/DataSource.Site.Usage.StoragePercentageUsed)} (${Math.round(DataSource.Site.Usage.StoragePercentageUsed * 100) / 100 + "%"} Used)`
                 }

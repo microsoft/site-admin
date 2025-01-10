@@ -47,8 +47,7 @@ export class WebsTab extends Tab<{
             controls: [
                 {
                     name: "WebTemplate",
-                    label: "Web Template:",
-                    description: "The type of web.",
+                    label: "Site Template:",
                     type: Components.FormControlTypes.Readonly,
                     value: this._currValues.WebTemplate
                 },
@@ -81,8 +80,7 @@ export class WebsTab extends Tab<{
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "ExcludeFromOfflineClient",
-                    label: "Exclude From Offline Client:",
-                    description: "Disables the offline sync feature in all libraries.",
+                    label: "Remove Site From Search Results:",
                     isDisabled: this._disableProps.indexOf("ExcludeFromOfflineClient") >= 0,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.ExcludeFromOfflineClient,

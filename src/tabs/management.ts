@@ -50,8 +50,7 @@ export class ManagementTab extends Tab<{
             controls: [
                 {
                     name: "CustomScriptsEnabled",
-                    label: "Custom Scripts Enabled:",
-                    description: "Enables the custom scripts feature for this site collection.",
+                    label: "Enable Custom Scripts:",
                     isDisabled: this._disableProps.indexOf("CustomScriptsEnabled") >= 0,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.CustomScriptsEnabled,
@@ -116,8 +115,7 @@ export class ManagementTab extends Tab<{
                 } as Components.IFormControlPropsDropdown,
                 {
                     name: "ContainsAppCatalog",
-                    label: "App Catalog Enabled:",
-                    description: "True if this has a site collection app catalog available.",
+                    label: "Enable App Catalog:",
                     isDisabled: this._disableProps.indexOf("ContainsAppCatalog") >= 0,
                     type: Components.FormControlTypes.Switch,
                     onControlRendering: ctrl => {

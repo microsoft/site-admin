@@ -88,8 +88,7 @@ export class FeaturesTab extends Tab<{
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "ShareByEmailEnabled",
-                    label: "Share By Email Enabled:",
-                    description: "Disables the offline sync feature in all libraries.",
+                    label: "Enable Guest Access:",
                     isDisabled: this._disableProps.indexOf("ShareByEmailEnabled") >= 0,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.ShareByEmailEnabled,
