@@ -139,9 +139,15 @@ export class App {
                             size: 6,
                             control: {
                                 label: "Site Url:",
-                                type: Components.FormControlTypes.Readonly,
-                                value: DataSource.Web.Url
-                            }
+                                type: Components.FormControlTypes.Dropdown,
+                                items: DataSource.SiteItems,
+                                value: DataSource.Web.Id,
+                                required: true,
+                                onChange: item => {
+                                    // Refresh the web tab
+                                    tabs.refreshWebTab(item.text);
+                                }
+                            } as Components.IFormControlPropsDropdown
                         }
                     ]
                 }
@@ -149,6 +155,6 @@ export class App {
         });
 
         // Render the tabs
-        new Tabs(el, this._props.disableSiteProps, this._props.disableWebProps, this._props.searchProp);
+        let tabs = new Tabs(el, this._props.disableSiteProps, this._props.disableWebProps, this._props.searchProp);
     }
 }

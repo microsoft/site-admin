@@ -1,28 +1,32 @@
+import { LoadingDialog } from "dattatable";
 import { Components } from "gd-sprest-bs";
 import { AppPermissionsTab } from "./appPermissions";
-import { ChangesTab } from "./changes";
+import { ChangesTab, IChangeRequest } from "./changes";
 import { isEmpty } from "./common";
+import { DataSource } from "../ds";
 import { FeaturesTab } from "./features";
 import { InfoTab } from "./info";
 import { ManagementTab } from "./management";
 import { SearchPropTab, ISearchProp } from "./searchProp";
-import { WebsTab } from "./webs";
+import { WebTab } from "./web";
 
 /**
  * Tabs
  */
 export class Tabs {
     private _el: HTMLElement = null;
+    private _webRequests: IChangeRequest[];
     private _tabAppPermissions: AppPermissionsTab = null;
     private _tabChanges: ChangesTab = null;
     private _tabFeatures: FeaturesTab = null;
     private _tabManagement: ManagementTab = null;
     private _tabSearch: SearchPropTab = null;
-    private _tabWebs: WebsTab = null;
+    private _tabWeb: WebTab = null;
 
     // Constructor
     constructor(el: HTMLElement, disableSiteProps: string[] = [], disableWebProps: string[] = [], searchProp: ISearchProp) {
         this._el = el;
+        this._webRequests = [];
 
         // Render the tabs
         this.render(disableSiteProps, disableWebProps, searchProp);
@@ -79,7 +83,7 @@ export class Tabs {
             tabName: "Web(s)",
             onRender: (el) => {
                 // Render the tab
-                this._tabWebs = new WebsTab(el, disableWebProps);
+                this._tabWeb = new WebTab(el, disableWebProps);
             }
         });
 
@@ -94,7 +98,8 @@ export class Tabs {
                 // Get the changes
                 let changes = this._tabFeatures.getRequests().concat(
                     this._tabManagement.getRequests(),
-                    this._tabWebs.getRequests()
+                    this._webRequests,
+                    this._tabWeb.getRequests()
                 );
 
                 // Set the changes
@@ -109,6 +114,26 @@ export class Tabs {
             isTabs: true,
             colWidth: 12,
             items
+        });
+    }
+
+    // Method to refresh the web tab
+    refreshWebTab(url: string) {
+        // Show a loading dialog
+        LoadingDialog.setHeader("Loading Web");
+        LoadingDialog.setBody("Loading the selected web...");
+        LoadingDialog.show();
+
+        // Update the requests
+        this._webRequests = this._webRequests.concat(this._tabWeb.getRequests());
+
+        // Load the web
+        DataSource.loadWebInfo(url).then(() => {
+            // Refresh the web tab
+            this._tabWeb.refresh();
+
+            // Hide the loading dialog
+            LoadingDialog.hide();
         });
     }
 }

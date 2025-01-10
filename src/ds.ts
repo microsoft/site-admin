@@ -1,5 +1,5 @@
 import { List } from "dattatable";
-import { Components, ContextInfo, Helper, Site, SPTypes, Types, Web, v2 } from "gd-sprest-bs";
+import { Components, ContextInfo, Helper, Site, SPTypes, Types, Web, v2, Search } from "gd-sprest-bs";
 import { Security } from "./security";
 import Strings from "./strings";
 
@@ -162,11 +162,15 @@ export class DataSource {
     // Loads the site collection information
     private static _site: Types.SP.SiteOData = null;
     static get Site(): Types.SP.SiteOData { return this._site; }
-    private static loadSiteInfo(context: Types.SP.ContextWebInformation): PromiseLike<void> {
+    private static _siteContext: Types.SP.ContextWebInformation = null;
+    static get SiteContext(): Types.SP.ContextWebInformation { return this._siteContext; }
+    private static _siteItems: Components.IDropdownItem[] = null;
+    static get SiteItems(): Components.IDropdownItem[] { return this._siteItems; }
+    private static loadSiteInfo(): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve, reject) => {
             // Load the web
-            Site(context.SiteFullUrl, { requestDigest: context.FormDigestValue }).query({
+            Site(this.SiteContext.SiteFullUrl, { requestDigest: this.SiteContext.FormDigestValue }).query({
                 Expand: ["RootWeb/AllProperties", "RootWeb/EffectiveBasePermissions", "Usage"],
                 Select: [
                     "CommentsOnSitePagesDisabled",
@@ -194,7 +198,44 @@ export class DataSource {
             }).execute(site => {
                 // Save the reference and resolve the request
                 this._site = site;
-                resolve();
+
+                // Clear the items
+                this._siteItems = [];
+
+                // Get all of the sites for this collection
+                let s = Search.postQuery<{
+                    SPWebUrl: string;
+                    WebId;
+                }>({
+                    getAllItems: true,
+                    query: {
+                        Querytext: "contentClass:STS_Site contentClass:STS_Web path: " + this.SiteContext.SiteFullUrl,
+                        SelectProperties: {
+                            results: ["SPWebUrl", "WebId"]
+                        }
+                    },
+                }).then(search => {
+                    // Parse the results
+                    for (let i = 0; i < search.results.length; i++) {
+                        let result = search.results[i];
+
+                        // Append the item
+                        this._siteItems.push({
+                            text: result.SPWebUrl,
+                            value: result.WebId
+                        });
+                    }
+
+                    // Sort the items
+                    this._siteItems = this._siteItems.sort((a, b) => {
+                        if (a.text < b.text) { return -1; }
+                        if (a.text > b.text) { return 1; }
+                        return 0;
+                    });
+
+                    // Resolve the request
+                    resolve();
+                }, reject);
             }, reject);
         });
     }
@@ -202,17 +243,18 @@ export class DataSource {
     // Loads the web information
     private static _web: Types.SP.WebOData = null;
     static get Web(): Types.SP.WebOData { return this._web; }
-    private static loadWebInfo(context: Types.SP.ContextWebInformation): PromiseLike<void> {
+    static loadWebInfo(url: string): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve, reject) => {
             // Load the web
-            Web(context.WebFullUrl, { requestDigest: context.FormDigestValue }).query({
+            Web(url, { requestDigest: this.SiteContext.FormDigestValue }).query({
                 Expand: ["AllProperties"],
                 Select: [
                     "Configuration",
                     "CommentsOnSitePagesDisabled",
                     "Created",
                     "ExcludeFromOfflineClient",
+                    "Id",
                     "SearchScope",
                     "Title",
                     "Url",
@@ -336,14 +378,16 @@ export class DataSource {
             // Get the web context
             ContextInfo.getWeb(webUrl).execute(
                 context => {
+                    this._siteContext = context.GetContextWebInformation;
+
                     // Check to see if the user is a SCA
-                    Web(context.GetContextWebInformation.SiteFullUrl).SiteUsers().getByEmail(ContextInfo.userEmail).execute(user => {
+                    Web(this.SiteContext.SiteFullUrl).SiteUsers().getByEmail(ContextInfo.userEmail).execute(user => {
                         // Ensure this is an SCA
                         if (user.IsSiteAdmin) {
                             // Load the web information
-                            this.loadWebInfo(context.GetContextWebInformation).then(() => {
+                            this.loadWebInfo(this.SiteContext.WebFullUrl).then(() => {
                                 // Load the site information
-                                this.loadSiteInfo(context.GetContextWebInformation).then(resolve, reject);
+                                this.loadSiteInfo().then(resolve, reject);
                             }, reject);
                         } else {
                             // Not the SCA of the site

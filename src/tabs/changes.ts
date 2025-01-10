@@ -1,4 +1,5 @@
 import { Dashboard, LoadingDialog } from "dattatable";
+import { Helper, Web } from "gd-sprest-bs";
 import { DataSource, IRequest } from "../ds";
 import { isEmpty } from "./common";
 
@@ -8,7 +9,8 @@ export interface IChangeRequest {
     oldValue: string | boolean | number;
     request?: IRequest
     response?: string;
-    scope: "Site" | "Web"
+    scope: "Site" | "Web",
+    url: string;
 }
 
 /**
@@ -27,7 +29,6 @@ export class ChangesTab {
     processRequests(changes: IChangeRequest[]) {
         let requests: IRequest[] = [];
         let siteProps = {};
-        let webProps = {};
 
         // Parse the requests
         for (let i = 0; i < changes.length; i++) {
@@ -41,8 +42,6 @@ export class ChangesTab {
                 // Set the site/web property
                 if (change.scope == "Site") {
                     siteProps[change.property] = change.newValue;
-                } else {
-                    webProps[change.property] = change.newValue;
                 }
             }
         }
@@ -51,12 +50,12 @@ export class ChangesTab {
         LoadingDialog.setBody("Applying the site changes...");
 
         // Update the site properties
-        this.updateProperties(siteProps, "Site").then((siteUpdateError) => {
+        this.updateSite(siteProps).then((siteUpdateError) => {
             // Set the status
             LoadingDialog.setBody("Applying the web changes...");
 
             // Update the web properties
-            this.updateProperties(webProps, "Web").then((webUpdateError) => {
+            this.updateWeb(changes).then(() => {
                 // Set the status
                 LoadingDialog.setBody("Creating the request items...");
 
@@ -79,11 +78,9 @@ export class ChangesTab {
                                     break;
                                 }
                             }
-                        } else {
-                            let errorFl = change.scope == "Site" ? siteUpdateError : webUpdateError;
-
+                        } else if (change.scope == "Site") {
                             // Set the response
-                            change.response = `The request ${errorFl ? "failed to be updated" : "was completed successfully"}.`
+                            change.response = `The request ${siteUpdateError ? "failed to be updated" : "was completed successfully"}.`
                         }
                     }
 
@@ -133,6 +130,10 @@ export class ChangesTab {
                         title: "Scope"
                     },
                     {
+                        name: "url",
+                        title: "Url"
+                    },
+                    {
                         name: "property",
                         title: "Property",
                         onRenderCell: (el, col, change: IChangeRequest) => {
@@ -143,12 +144,16 @@ export class ChangesTab {
                         }
                     },
                     {
-                        name: "oldValue",
-                        title: "Old Value"
-                    },
-                    {
-                        name: "newValue",
-                        title: "New Value"
+                        name: "",
+                        title: "Value",
+                        onRenderCell: (el, col, change: IChangeRequest) => {
+                            // Render the old/new values
+                            el.innerHTML = `
+                                <b>Old Value:</b> ${change.oldValue}
+                                <br/>
+                                <b>New Value:</b> ${change.newValue}
+                            `;
+                        }
                     },
                     {
                         name: "",
@@ -174,8 +179,8 @@ export class ChangesTab {
         });
     }
 
-    // Update the properties
-    private updateProperties(props, scope: "Site" | "Web"): PromiseLike<boolean> {
+    // Update the site properties
+    private updateSite(props): PromiseLike<boolean> {
         // Return a promise
         return new Promise(resolve => {
             // See if the properties are empty
@@ -185,20 +190,41 @@ export class ChangesTab {
                 return;
             }
 
-            // See if we are updating the site
-            if (scope == "Site") {
-                // Save the changes
-                DataSource.Site.update(props).execute(
-                    () => { resolve(false) },
-                    () => { resolve(true) }
-                );
-            } else {
-                // Save the changes
-                DataSource.Web.update(props).execute(
-                    () => { resolve(false) },
-                    () => { resolve(true) }
-                );
-            }
+            // Save the changes
+            DataSource.Site.update(props).execute(
+                () => { resolve(false) },
+                () => { resolve(true) }
+            );
+
+        });
+    }
+
+    // Update the web properties
+    private updateWeb(requests: IChangeRequest[]) {
+        // Return a promise
+        return new Promise(resolve => {
+            // Parse the requests
+            Helper.Executor(requests, request => {
+                // Return a promise
+                return new Promise(resolve => {
+                    let props = {};
+                    props[request.property] = request.newValue;
+
+                    // Save the changes
+                    Web(request.url, { requestDigest: DataSource.SiteContext.FormDigestValue }).update(props).execute(
+                        () => {
+                            // Update the request
+                            request.response = "The request was completed successfully.";
+                            resolve(null);
+                        },
+                        () => {
+                            // Update the request
+                            request.response = "The request failed to be updated.";
+                            resolve(null);
+                        }
+                    );
+                });
+            }).then(resolve);
         });
     }
 }

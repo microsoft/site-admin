@@ -1,4 +1,4 @@
-import { IRequest } from "../ds";
+import { DataSource, IRequest } from "../ds";
 import { IChangeRequest } from "./changes";
 
 export class Tab<IProps = { [key: string]: string | number | boolean }, IRequestItems = { [key: string]: IRequest }, INewProps = { [key: string]: string | number | boolean }> {
@@ -31,6 +31,7 @@ export class Tab<IProps = { [key: string]: string | number | boolean }, IRequest
     // Returns the new request items to create
     getRequests(): IChangeRequest[] {
         let requests: IChangeRequest[] = [];
+        let url = this._scope == "Site" ? DataSource.SiteContext.SiteFullUrl : DataSource.Web.Url;
 
         // Parse the new values
         for (let key in this._newValues) {
@@ -39,7 +40,8 @@ export class Tab<IProps = { [key: string]: string | number | boolean }, IRequest
                 oldValue: (this._currValues as any)[key],
                 newValue: (this._newValues as any)[key],
                 scope: this._scope,
-                property: key
+                property: key,
+                url
             });
         }
 
@@ -52,7 +54,8 @@ export class Tab<IProps = { [key: string]: string | number | boolean }, IRequest
                 oldValue: (this._currValues as any)[key],
                 newValue: request.value,
                 scope: this._scope,
-                request
+                request,
+                url
             });
         }
 

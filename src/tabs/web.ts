@@ -6,7 +6,7 @@ import { DataSource } from "../ds";
  * Webs Tab
  * Displays the root and sub-webs of the site collection.
  */
-export class WebsTab extends Tab<{
+export class WebTab extends Tab<{
     CommentsOnSitePagesDisabled: boolean;
     ExcludeFromOfflineClient: boolean;
     SearchScope: number;
@@ -29,6 +29,29 @@ export class WebsTab extends Tab<{
             WebTemplate: DataSource.Web.WebTemplate,
             WebTitle: DataSource.Web.Title
         }
+
+        // Render the tab
+        this.render();
+    }
+
+
+    // Method to refresh the tab
+    refresh() {
+        // Update the current values
+        this._currValues = {
+            CommentsOnSitePagesDisabled: DataSource.Web.CommentsOnSitePagesDisabled,
+            ExcludeFromOfflineClient: DataSource.Web.ExcludeFromOfflineClient,
+            SearchScope: DataSource.Web.SearchScope,
+            WebTemplate: DataSource.Web.WebTemplate,
+            WebTitle: DataSource.Web.Title
+        }
+
+        // Clear the changes
+        this._newValues = {};
+        this._requestItems = {};
+
+        // Clear the tab
+        while (this._el.firstChild) { this._el.removeChild(this._el.firstChild); }
 
         // Render the tab
         this.render();
