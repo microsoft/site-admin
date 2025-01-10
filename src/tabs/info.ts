@@ -25,8 +25,7 @@ export class InfoTab extends Tab {
             controls: [
                 {
                     name: "Created",
-                    label: "Created:",
-                    description: "The date the site was created.",
+                    label: "Date Created:",
                     type: Components.FormControlTypes.Readonly,
                     value: moment(DataSource.Site.RootWeb.Created).format("LLLL")
                 },
@@ -46,14 +45,14 @@ export class InfoTab extends Tab {
                 },
                 {
                     name: "IsHubSite",
-                    label: "Is Hub Site:",
+                    label: "Hub Site:",
                     description: "If true, indicates this is a hub site.",
                     type: Components.FormControlTypes.Readonly,
                     value: DataSource.Site.IsHubSite ? "Yes" : "No"
                 },
                 {
                     name: "IsHubSiteConnected",
-                    label: "Is Connected to Hub Site:",
+                    label: "Connected to Hub:",
                     description: "If true, indicates this is connected to a hub site.",
                     type: Components.FormControlTypes.Readonly,
                     value: DataSource.Site.HubSiteId != "00000000-0000-0000-0000-000000000000" ? "Yes" : "No"
