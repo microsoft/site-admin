@@ -130,7 +130,7 @@ export class App {
                         {
                             size: 6,
                             control: {
-                                label: "Site Collection Url:",
+                                label: "Top Site Url:",
                                 type: Components.FormControlTypes.Readonly,
                                 value: DataSource.Site.Url
                             }
