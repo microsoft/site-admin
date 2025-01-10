@@ -1,11 +1,11 @@
 import { LoadingDialog, Modal } from "dattatable";
 import { Components } from "gd-sprest-bs";
-import { DataSource } from "../ds";
+import { DataSource } from "./ds";
 
 /**
  * Load Form
  */
-export class Load {
+export class LoadForm {
     _form: Components.IForm = null;
     _onSuccess: () => void = null;
 
@@ -75,7 +75,7 @@ export class Load {
         Modal.setHeader("Load Site");
 
         // Create the form/footer
-        new Load(Modal.BodyElement, Modal.FooterElement, onSuccess);
+        new LoadForm(Modal.BodyElement, Modal.FooterElement, onSuccess);
 
         // Show the modal
         Modal.show();

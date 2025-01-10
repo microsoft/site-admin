@@ -1,11 +1,12 @@
 import { Navigation } from "dattatable";
 import { Components } from "gd-sprest-bs";
 import { DataSource } from "./ds";
-import * as Forms from "./forms";
 import { InstallationModal } from "./install";
+import { LoadForm } from "./loadForm";
 import Strings from "./strings";
 import { Security } from "./security";
 import { Tabs } from "./tabs";
+import { ISearchProp } from "./tabs/searchProp";
 
 // App Properties
 export interface IAppProps {
@@ -13,24 +14,18 @@ export interface IAppProps {
     el: HTMLElement;
     disableSiteProps?: string[];
     disableWebProps?: string[];
-    searchProp?: Forms.ISearchProp;
+    searchProp?: ISearchProp;
 }
 
 /**
  * Main Application
  */
 export class App {
-    private _elNav: HTMLElement;
-    private _elForm: HTMLElement;
-    private _elTabs: HTMLElement;
     private _props: IAppProps = null;
 
     // Constructor
     constructor(props: IAppProps) {
         this._props = props;
-
-        // Clear the element
-        while (this._props.el.firstChild) { this._props.el.removeChild(this._props.el.firstChild); }
 
         // Add the class for bootstrap
         this._props.el.classList.add("bs");
@@ -39,28 +34,30 @@ export class App {
         this._props.el.innerHTML = `
             <div class="row">
                 <div class="col-12"></div>
-                <div class="col-12"></div>
                 <div class="col-12 mt-2"></div>
             </div>
         `;
 
         // Set the elements
-        let elRow = this._props.el.children[0];
-        this._elNav = elRow.children[0] as HTMLElement;
-        this._elForm = elRow.children[1] as HTMLElement;
-        this._elTabs = elRow.children[2] as HTMLElement;
+        let elRow = this._props.el.children[0] as HTMLElement;
 
         // Render the dashboard
-        this.renderNavigation();
+        this.renderNavigation(elRow);
 
-        // Render the form
-        this.renderForm();
+        // See if data has been loaded
+        if (DataSource.Site) {
+            // Render the tabs
+            this.renderTabs(elRow.children[1] as HTMLElement);
+        } else {
+            // Render the load form
+            this.renderForm(elRow.children[1] as HTMLElement);
+        }
     }
 
     // Renders the form
-    private renderForm() {
+    private renderForm(el: HTMLElement) {
         // Render the form
-        this._elForm.innerHTML = `
+        el.innerHTML = `
             <div class="row">
                 <div class="col-12 my-3"></div>
                 <div class="col-12 d-flex justify-content-end"></div>
@@ -68,29 +65,31 @@ export class App {
         `;
 
         // Render the form
-        new Forms.Load(this._elForm.children[0].children[0] as HTMLElement, this._elForm.children[0].children[1] as HTMLElement, () => {
+        new LoadForm(el.children[0].children[0] as HTMLElement, el.children[0].children[1] as HTMLElement, () => {
             // Render the tabs
-            this.renderTabs();
+            new App(this._props);
         });
     }
 
     // Renders the navigation
-    private renderNavigation() {
-        // Create the items to show
-        let itemsEnd = [
-            {
+    private renderNavigation(elRow: HTMLElement) {
+        let itemsEnd: Components.INavbarItem[] = [];
+
+        // Show the load site button if data has already been loaded
+        if (DataSource.Site) {
+            itemsEnd.push({
                 className: "btn-outline-light",
                 isButton: true,
                 text: "Load Site",
                 onClick: () => {
                     // Show the load form
-                    Forms.Load.showModal(() => {
+                    LoadForm.showModal(() => {
                         // Render the tabs
-                        this.renderTabs();
+                        this.renderTabs(elRow.children[1] as HTMLElement);
                     });
                 }
-            }
-        ];
+            });
+        }
 
         // See if this is the admin
         if (Security.IsAdmin) {
@@ -108,7 +107,7 @@ export class App {
 
         // Render the navigation
         new Navigation({
-            el: this._elNav,
+            el: elRow.children[0] as HTMLElement,
             title: Strings.ProjectName,
             hideFilter: true,
             hideSearch: true,
@@ -117,16 +116,13 @@ export class App {
     }
 
     // Renders the tabs
-    private renderTabs() {
-        // Hide the form
-        this._elForm.classList.add("d-none");
-
+    private renderTabs(el: HTMLElement) {
         // Clear the tabs element
-        while (this._elTabs.firstChild) { this._elTabs.removeChild(this._elTabs.firstChild); }
+        while (el.firstChild) { el.removeChild(el.firstChild); }
 
         // Render the site information
         Components.Form({
-            el: this._elTabs,
+            el,
             className: "mt-1 mb-2",
             rows: [
                 {
@@ -153,6 +149,6 @@ export class App {
         });
 
         // Render the tabs
-        new Tabs(this._elTabs, this._props.disableSiteProps, this._props.disableWebProps, this._props.searchProp);
+        new Tabs(el, this._props.disableSiteProps, this._props.disableWebProps, this._props.searchProp);
     }
 }

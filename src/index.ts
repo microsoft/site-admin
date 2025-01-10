@@ -30,6 +30,9 @@ const GlobalVariable = {
         ]).then(
             // Success
             () => {
+                // Clear the element
+                while (props.el.firstChild) { props.el.removeChild(props.el.firstChild); }
+
                 // Create the application
                 new App(props);
             },
