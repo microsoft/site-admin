@@ -7,6 +7,7 @@
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
+    "iconPath": "images/AppIcon.png",
     "developer": {
       "name": "Gunjan Datta",
       "websiteUrl": "https://github.com/spsprinkles/site-admin",
