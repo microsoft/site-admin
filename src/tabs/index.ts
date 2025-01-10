@@ -1,6 +1,7 @@
 import { Components } from "gd-sprest-bs";
 import { AppPermissionsTab } from "./appPermissions";
 import { ChangesTab } from "./changes";
+import { isEmpty } from "./common";
 import { FeaturesTab } from "./features";
 import { InfoTab } from "./info";
 import { ManagementTab } from "./management";
@@ -63,7 +64,7 @@ export class Tabs {
         ];
 
         // See if we are customizing a search property
-        if (searchProp) {
+        if (!isEmpty(searchProp)) {
             items.push({
                 tabName: "Search Property",
                 onRender: (el) => {

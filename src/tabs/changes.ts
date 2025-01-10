@@ -1,5 +1,6 @@
 import { Dashboard, LoadingDialog } from "dattatable";
 import { DataSource, IRequest } from "../ds";
+import { isEmpty } from "./common";
 
 export interface IChangeRequest {
     property?: string;
@@ -20,21 +21,6 @@ export class ChangesTab {
     // Constructor
     constructor(el: HTMLElement) {
         this._el = el;
-    }
-
-    // Sees if the properties is empty
-    isEmpty(obj) {
-        // Return true if null
-        if (obj == null) { return true; }
-
-        // Parse the properties
-        for (var prop in obj) {
-            // See if the object has properties
-            if (Object.prototype.hasOwnProperty.call(obj, prop)) { return false; }
-        }
-
-        // Object is empty
-        return true;
     }
 
     // Process the requests
@@ -193,7 +179,7 @@ export class ChangesTab {
         // Return a promise
         return new Promise(resolve => {
             // See if the properties are empty
-            if (this.isEmpty(props)) {
+            if (isEmpty(props)) {
                 // Resolve the request
                 resolve(false);
                 return;
