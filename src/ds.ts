@@ -182,6 +182,7 @@ export class DataSource {
                     "Owner",
                     "ReadOnly",
                     "RootWeb/Created",
+                    "RootWeb/Id",
                     "RootWeb/Title",
                     "RootWeb/WebTemplate",
                     "SandboxedCodeActivationCapability",
@@ -203,7 +204,7 @@ export class DataSource {
                 this._siteItems = [];
 
                 // Get all of the sites for this collection
-                let s = Search.postQuery<{
+                Search.postQuery<{
                     SPWebUrl: string;
                     WebId;
                 }>({

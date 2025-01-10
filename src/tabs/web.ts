@@ -104,6 +104,7 @@ export class WebTab extends Tab<{
                 {
                     name: "ExcludeFromOfflineClient",
                     label: "Remove Site From Search Results:",
+                    className: DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "" : "d-none",
                     isDisabled: this._disableProps.indexOf("ExcludeFromOfflineClient") >= 0,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.ExcludeFromOfflineClient,
