@@ -167,7 +167,7 @@ export class DataSource {
         return new Promise((resolve, reject) => {
             // Load the web
             Site(context.SiteFullUrl, { requestDigest: context.FormDigestValue }).query({
-                Expand: ["RootWeb/EffectiveBasePermissions", "Usage"],
+                Expand: ["RootWeb/AllProperties", "RootWeb/EffectiveBasePermissions", "Usage"],
                 Select: [
                     "CommentsOnSitePagesDisabled",
                     "DisableCompanyWideSharingLinks",

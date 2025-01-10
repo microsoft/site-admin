@@ -153,6 +153,6 @@ export class App {
         });
 
         // Render the tabs
-        new Tabs(this._elTabs);
+        new Tabs(this._elTabs, this._props.disableSiteProps, this._props.disableWebProps, this._props.searchProp);
     }
 }

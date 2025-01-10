@@ -121,7 +121,8 @@ export class ChangesTab {
             el: this._el,
             navigation: {
                 showFilter: false,
-                items: [
+                showSearch: false,
+                itemsEnd: [
                     {
                         className: "btn-outline-light",
                         isButton: true,

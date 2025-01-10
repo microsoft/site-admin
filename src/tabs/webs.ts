@@ -85,7 +85,7 @@ export class WebsTab extends Tab<{
                     description: "Disables the offline sync feature in all libraries.",
                     isDisabled: this._disableProps.indexOf("ExcludeFromOfflineClient") >= 0,
                     type: Components.FormControlTypes.Switch,
-                    value: !this._currValues.ExcludeFromOfflineClient,
+                    value: this._currValues.ExcludeFromOfflineClient,
                     onChange: item => {
                         let value = item ? true : false;
 
