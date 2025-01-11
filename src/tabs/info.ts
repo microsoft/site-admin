@@ -1,15 +1,16 @@
 import { Components } from "gd-sprest-bs";
 import * as moment from "moment";
-import { Tab } from "./base";
+import { IProp } from "../app";
 import { DataSource } from "../ds";
+import { Tab } from "./base";
 
 /**
  * Information Tab
  */
 export class InfoTab extends Tab {
     // Constructor
-    constructor(el: HTMLElement, disabledProps:string[]) {
-        super(el, disabledProps, "Site");
+    constructor(el: HTMLElement, props: { [key: string]: IProp; }) {
+        super(el, props, "Site");
 
         // Render the tab
         this.render();
@@ -25,42 +26,45 @@ export class InfoTab extends Tab {
             controls: [
                 {
                     name: "Created",
-                    label: "Date Created:",
+                    label: this._props["Created"].label,
+                    description: this._props["Created"].description,
                     type: Components.FormControlTypes.Readonly,
                     value: moment(DataSource.Site.RootWeb.Created).format("LLLL")
                 },
                 {
                     name: "Title",
-                    label: "Title:",
-                    description: "The title of the site collection.",
+                    label: this._props["Title"].label,
+                    description: this._props["Title"].description,
                     type: Components.FormControlTypes.Readonly,
                     value: DataSource.Site.RootWeb.Title
                 },
                 {
-                    name: "SiteTemplate",
-                    label: "Site Template:",
+                    name: "Template",
+                    label: this._props["Template"].label,
+                    description: this._props["Template"].description,
                     type: Components.FormControlTypes.Readonly,
                     value: DataSource.Site.RootWeb.WebTemplate
                 },
                 {
-                    name: "IsHubSite",
-                    label: "Hub Site:",
-                    description: "If true, indicates this is a hub site.",
+                    name: "HubSite",
+                    label: this._props["HubSite"].label,
+                    description: this._props["HubSite"].description,
                     type: Components.FormControlTypes.Readonly,
                     value: DataSource.Site.IsHubSite ? "Yes" : "No"
                 },
                 {
-                    name: "IsHubSiteConnected",
-                    label: "Connected to Hub:",
-                    description: "If true, indicates this is connected to a hub site.",
+                    name: "HubSiteConnected",
+                    label: this._props["HubSiteConnected"].label,
+                    description: this._props["HubSiteConnected"].description,
                     type: Components.FormControlTypes.Readonly,
                     value: DataSource.Site.HubSiteId != "00000000-0000-0000-0000-000000000000" ? "Yes" : "No"
                 },
                 {
-                    name: "UsageSize",
-                    label: "Storage Used:",
+                    name: "StorageUsed",
+                    label: this._props["StorageUsed"].label,
+                    description: this._props["StorageUsed"].description,
                     type: Components.FormControlTypes.Readonly,
-                    value: `${DataSource.formatBytes(DataSource.Site.Usage.Storage)} of ${DataSource.formatBytes(DataSource.Site.Usage.Storage/DataSource.Site.Usage.StoragePercentageUsed)} (${Math.round(DataSource.Site.Usage.StoragePercentageUsed * 100) / 100 + "%"} Used)`
+                    value: `${DataSource.formatBytes(DataSource.Site.Usage.Storage)} of ${DataSource.formatBytes(DataSource.Site.Usage.Storage / DataSource.Site.Usage.StoragePercentageUsed)} (${Math.round(DataSource.Site.Usage.StoragePercentageUsed * 100) / 100 + "%"} Used)`
                 }
             ]
         });

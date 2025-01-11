@@ -3,6 +3,7 @@ import { Components } from "gd-sprest-bs";
 import { AppPermissionsTab } from "./appPermissions";
 import { ChangesTab, IChangeRequest } from "./changes";
 import { isEmpty } from "./common";
+import { IAppProps } from "../app";
 import { DataSource } from "../ds";
 import { FeaturesTab } from "./features";
 import { InfoTab } from "./info";
@@ -24,16 +25,16 @@ export class Tabs {
     private _tabWeb: WebTab = null;
 
     // Constructor
-    constructor(el: HTMLElement, disableSiteProps: string[] = [], disableWebProps: string[] = [], searchProp: ISearchProp) {
+    constructor(el: HTMLElement, appProps: IAppProps) {
         this._el = el;
         this._webRequests = [];
 
         // Render the tabs
-        this.render(disableSiteProps, disableWebProps, searchProp);
+        this.render(appProps);
     }
 
     // Renders the tabs
-    private render(disableSiteProps: string[] = [], disableWebProps: string[] = [], searchProp: ISearchProp) {
+    private render(appProps: IAppProps) {
         // Set the items
         let items: Components.IListGroupItem[] = [
             {
@@ -41,21 +42,21 @@ export class Tabs {
                 isActive: true,
                 onRender: (el) => {
                     // Render the tab
-                    new InfoTab(el, disableSiteProps);
+                    new InfoTab(el, appProps.siteProps);
                 }
             },
             {
                 tabName: "Management",
                 onRender: (el) => {
                     // Render the tab
-                    this._tabManagement = new ManagementTab(el, disableSiteProps);
+                    this._tabManagement = new ManagementTab(el, appProps.siteProps);
                 }
             },
             {
                 tabName: "Features",
                 onRender: (el) => {
                     // Render the tab
-                    this._tabFeatures = new FeaturesTab(el, disableSiteProps);
+                    this._tabFeatures = new FeaturesTab(el, appProps.siteProps);
                 }
             },
             {
@@ -68,12 +69,12 @@ export class Tabs {
         ];
 
         // See if we are customizing a search property
-        if (!isEmpty(searchProp)) {
+        if (!isEmpty(appProps.searchProp)) {
             items.push({
                 tabName: "Search Property",
                 onRender: (el) => {
                     // Render the tab
-                    this._tabSearch = new SearchPropTab(el, searchProp);
+                    this._tabSearch = new SearchPropTab(el, appProps.searchProp);
                 }
             });
         }
@@ -83,7 +84,7 @@ export class Tabs {
             tabName: "Web(s)",
             onRender: (el) => {
                 // Render the tab
-                this._tabWeb = new WebTab(el, disableWebProps);
+                this._tabWeb = new WebTab(el, appProps.webProps);
             }
         });
 

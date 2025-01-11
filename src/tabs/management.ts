@@ -1,5 +1,6 @@
 import { Components, Helper, SPTypes } from "gd-sprest-bs";
 import { Tab } from "./base";
+import { IProp } from "../app";
 import { DataSource, IRequest, RequestTypes } from "../ds";
 
 /**
@@ -23,8 +24,8 @@ export class ManagementTab extends Tab<{
 }> {
 
     // Constructor
-    constructor(el: HTMLElement, disableProps: string[] = []) {
-        super(el, disableProps, "Site");
+    constructor(el: HTMLElement, props: { [key: string]: IProp; }) {
+        super(el, props, "Site");
 
         // Set the current values
         this._currValues = {
@@ -50,8 +51,9 @@ export class ManagementTab extends Tab<{
             controls: [
                 {
                     name: "CustomScriptsEnabled",
-                    label: "Enable Custom Scripts:",
-                    isDisabled: this._disableProps.indexOf("CustomScriptsEnabled") >= 0,
+                    label: this._props["CustomScriptsEnabled"].label,
+                    description: this._props["CustomScriptsEnabled"].description,
+                    isDisabled: this._props["CustomScriptsEnabled"].disabled,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.CustomScriptsEnabled,
                     onChange: item => {
@@ -73,13 +75,9 @@ export class ManagementTab extends Tab<{
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "LockState",
-                    label: "Lock State:",
-                    description: `<ul class="mt-3">
-                        <li><b>Unlock:</b> To unlock the site and make it available to users.</li>
-                        <li><b>Read Only:</b> To prevent users from adding/updating/deleting content.</li>
-                        <li><b>No Access</b> To prevent users from accessing the site and its content.</li>
-                    </ul>`,
-                    isDisabled: this._disableProps.indexOf("LockState") >= 0,
+                    label: this._props["LockState"].label,
+                    description: this._props["LockState"].description,
+                    isDisabled: this._props["LockState"].disabled,
                     type: Components.FormControlTypes.Dropdown,
                     value: this._currValues.LockState,
                     items: [
@@ -115,8 +113,9 @@ export class ManagementTab extends Tab<{
                 } as Components.IFormControlPropsDropdown,
                 {
                     name: "ContainsAppCatalog",
-                    label: "Enable App Catalog:",
-                    isDisabled: this._disableProps.indexOf("ContainsAppCatalog") >= 0,
+                    label: this._props["ContainsAppCatalog"].label,
+                    description: this._props["ContainsAppCatalog"].description,
+                    isDisabled: this._props["ContainsAppCatalog"].disabled,
                     type: Components.FormControlTypes.Switch,
                     onControlRendering: ctrl => {
                         // Return a promise
@@ -151,9 +150,9 @@ export class ManagementTab extends Tab<{
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "IncreaseStorage",
-                    label: "Increase Storage:",
-                    description: "Enable to increase the site collection storage size.",
-                    isDisabled: this._disableProps.indexOf("IncreaseStorage") >= 0,
+                    label: this._props["IncreaseStorage"].label,
+                    description: this._props["IncreaseStorage"].description,
+                    isDisabled: this._props["IncreaseStorage"].disabled,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.IncreaseStorage,
                     onChange: item => {
@@ -175,9 +174,9 @@ export class ManagementTab extends Tab<{
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "TeamsConnected",
-                    label: "Teams Connected:",
-                    description: "The search scope for the site to target. Default is 'Site'.",
-                    isDisabled: this._currValues.TeamsConnected || this._disableProps.indexOf("TeamsConnected") >= 0,
+                    label: this._props["TeamsConnected"].label,
+                    description: this._props["TeamsConnected"].description,
+                    isDisabled: this._props["TeamsConnected"].disabled,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.TeamsConnected,
                     onChange: item => {
@@ -199,9 +198,9 @@ export class ManagementTab extends Tab<{
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "SensitivityLabel",
-                    label: "Sensitivity Label",
-                    description: "The sensitivity label guid value for this site.",
-                    isDisabled: this._disableProps.indexOf("SensitivityLabel") >= 0,
+                    label: this._props["SensitivityLabel"].label,
+                    description: this._props["SensitivityLabel"].description,
+                    isDisabled: this._props["SensitivityLabel"].disabled,
                     type: Components.FormControlTypes.TextField,
                     value: this._currValues.SensitivityLabel,
                     onChange: value => {

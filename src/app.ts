@@ -9,12 +9,17 @@ import { Tabs } from "./tabs";
 import { ISearchProp } from "./tabs/searchProp";
 
 // App Properties
+export interface IProp {
+    description: string;
+    disabled: boolean;
+    label: string;
+}
 export interface IAppProps {
     context?: any;
     el: HTMLElement;
-    disableSiteProps?: string[];
-    disableWebProps?: string[];
     searchProp?: ISearchProp;
+    siteProps: { [key: string]: IProp; }
+    webProps: { [key: string]: IProp; }
 }
 
 /**
@@ -155,6 +160,6 @@ export class App {
         });
 
         // Render the tabs
-        let tabs = new Tabs(el, this._props.disableSiteProps, this._props.disableWebProps, this._props.searchProp);
+        let tabs = new Tabs(el, this._props);
     }
 }

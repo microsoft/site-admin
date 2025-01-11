@@ -1,8 +1,9 @@
+import { IProp } from "../app";
 import { DataSource, IRequest } from "../ds";
 import { IChangeRequest } from "./changes";
 
 export class Tab<IProps = { [key: string]: string | number | boolean }, IRequestItems = { [key: string]: IRequest }, INewProps = { [key: string]: string | number | boolean }> {
-    protected _disableProps: string[] = null;
+    protected _props: { [key: string]: IProp; } = null;
     protected _el: HTMLElement = null;
 
     // The current values
@@ -18,10 +19,10 @@ export class Tab<IProps = { [key: string]: string | number | boolean }, IRequest
     protected _scope: "Site" | "Web" = null;
 
     // Constructor
-    constructor(el: HTMLElement, disableProps: string[] = [], scope?: "Site" | "Web") {
+    constructor(el: HTMLElement, props: { [key: string]: IProp; }, scope?: "Site" | "Web") {
         // Set the properties
-        this._disableProps = disableProps;
         this._el = el;
+        this._props = props;
         this._scope = scope;
     }
 

@@ -1,4 +1,5 @@
 import { Components } from "gd-sprest-bs";
+import { IProp } from "../app";
 import { DataSource, IRequest, RequestTypes } from "../ds";
 import { Tab } from "./base";
 
@@ -19,8 +20,8 @@ export class FeaturesTab extends Tab<{
 }> {
 
     // Constructor
-    constructor(el: HTMLElement, disableProps: string[] = []) {
-        super(el, disableProps, "Site");
+    constructor(el: HTMLElement, props: { [key: string]: IProp; }) {
+        super(el, props, "Site");
 
         // Set the current values
         this._currValues = {
@@ -44,9 +45,9 @@ export class FeaturesTab extends Tab<{
             controls: [
                 {
                     name: "CommentsOnSitePagesDisabled",
-                    label: "Comments On Site Pages Disabled:",
-                    description: "If true, comments on modern site pages will be disabled.",
-                    isDisabled: this._disableProps.indexOf("CommentsOnSitePagesDisabled") >= 0,
+                    label: this._props["CommentsOnSitePagesDisabled"].label,
+                    description: this._props["CommentsOnSitePagesDisabled"].description,
+                    isDisabled: this._props["CommentsOnSitePagesDisabled"].disabled,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.CommentsOnSitePagesDisabled,
                     onChange: item => {
@@ -64,9 +65,9 @@ export class FeaturesTab extends Tab<{
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "DisableCompanyWideSharingLinks",
-                    label: "Disable Company Wide Sharing Links:",
-                    description: "If true, it will hide the comments on the site pages.",
-                    isDisabled: this._disableProps.indexOf("DisableCompanyWideSharingLinks") >= 0,
+                    label: this._props["DisableCompanyWideSharingLinks"].label,
+                    description: this._props["DisableCompanyWideSharingLinks"].description,
+                    isDisabled: this._props["DisableCompanyWideSharingLinks"].disabled,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.DisableCompanyWideSharingLinks,
                     onChange: item => {
@@ -88,8 +89,9 @@ export class FeaturesTab extends Tab<{
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "ShareByEmailEnabled",
-                    label: "Enable Guest Access:",
-                    isDisabled: this._disableProps.indexOf("ShareByEmailEnabled") >= 0,
+                    label: this._props["ShareByEmailEnabled"].label,
+                    description: this._props["ShareByEmailEnabled"].description,
+                    isDisabled: this._props["ShareByEmailEnabled"].disabled,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.ShareByEmailEnabled,
                     onChange: item => {
@@ -107,9 +109,9 @@ export class FeaturesTab extends Tab<{
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "SocialBarOnSitePagesDisabled",
-                    label: "Social Bar On Site Pages Disabled:",
-                    description: "The search scope for the site to target. Default is 'Site'.",
-                    isDisabled: this._disableProps.indexOf("SocialBarOnSitePagesDisabled") >= 0,
+                    label: this._props["SocialBarOnSitePagesDisabled"].label,
+                    description: this._props["SocialBarOnSitePagesDisabled"].description,
+                    isDisabled: this._props["SocialBarOnSitePagesDisabled"].disabled,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.SocialBarOnSitePagesDisabled,
                     onChange: item => {

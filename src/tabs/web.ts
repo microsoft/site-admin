@@ -1,5 +1,6 @@
 import { Components } from "gd-sprest-bs";
 import { Tab } from "./base";
+import { IProp } from "../app";
 import { DataSource } from "../ds";
 
 /**
@@ -18,8 +19,8 @@ export class WebTab extends Tab<{
     SearchScope?: number;
 }> {
     // Constructor
-    constructor(el: HTMLElement, disableProps: string[] = []) {
-        super(el, disableProps, "Web");
+    constructor(el: HTMLElement, props: { [key: string]: IProp; }) {
+        super(el, props, "Web");
 
         // Set the current values
         this._currValues = {
@@ -69,23 +70,26 @@ export class WebTab extends Tab<{
             },
             controls: [
                 {
-                    name: "WebTemplate",
-                    label: "Site Template:",
+                    name: "Template",
+                    label: this._props["Template"].label,
+                    description: this._props["Template"].description,
+                    isDisabled: this._props["Template"].disabled,
                     type: Components.FormControlTypes.Readonly,
                     value: this._currValues.WebTemplate
                 },
                 {
-                    name: "WebTitle",
-                    label: "Web Title:",
-                    description: "The title of web.",
+                    name: "Title",
+                    label: this._props["Title"].label,
+                    description: this._props["Title"].description,
+                    isDisabled: this._props["Title"].disabled,
                     type: Components.FormControlTypes.Readonly,
                     value: this._currValues.WebTitle
                 },
                 {
                     name: "CommentsOnSitePagesDisabled",
-                    label: "Comments On Site Pages Disabled:",
-                    description: "If true, it will hide the comments on the site pages.",
-                    isDisabled: this._disableProps.indexOf("CommentsOnSitePagesDisabled") >= 0,
+                    label: this._props["CommentsOnSitePagesDisabled"].label,
+                    description: this._props["CommentsOnSitePagesDisabled"].description,
+                    isDisabled: this._props["CommentsOnSitePagesDisabled"].disabled,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.CommentsOnSitePagesDisabled,
                     onChange: item => {
@@ -103,9 +107,10 @@ export class WebTab extends Tab<{
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "ExcludeFromOfflineClient",
-                    label: "Remove Site From Search Results:",
+                    label: this._props["ExcludeFromOfflineClient"].label,
+                    description: this._props["ExcludeFromOfflineClient"].description,
+                    isDisabled: this._props["ExcludeFromOfflineClient"].disabled,
                     className: DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "" : "d-none",
-                    isDisabled: this._disableProps.indexOf("ExcludeFromOfflineClient") >= 0,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.ExcludeFromOfflineClient,
                     onChange: item => {
@@ -123,9 +128,9 @@ export class WebTab extends Tab<{
                 } as Components.IFormControlPropsSwitch,
                 {
                     name: "SearchScope",
-                    label: "Search Scope:",
-                    description: "The search scope for the site to target. Default is 'Site'.",
-                    isDisabled: this._disableProps.indexOf("SearchScope") >= 0,
+                    label: this._props["SearchScope"].label,
+                    description: this._props["SearchScope"].description,
+                    isDisabled: this._props["SearchScope"].disabled,
                     type: Components.FormControlTypes.Dropdown,
                     value: this._currValues.SearchScope,
                     items: [

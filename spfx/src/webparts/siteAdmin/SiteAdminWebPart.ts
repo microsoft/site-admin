@@ -8,23 +8,72 @@ import type { IReadonlyTheme } from '@microsoft/sp-component-base';
 import * as strings from 'SiteAdminWebPartStrings';
 
 export interface ISiteAdminWebPartProps {
-  hideProps: string[];
   SitePropCommentsOnSitePagesDisabled: boolean;
+  SitePropCommentsOnSitePagesDisabledDescription: string;
+  SitePropCommentsOnSitePagesDisabledLabel: string;
   SitePropContainsAppCatalog: boolean;
+  SitePropContainsAppCatalogDescription: string;
+  SitePropContainsAppCatalogLabel: string;
+  SitePropCreated: boolean;
+  SitePropCreatedDescription: string;
+  SitePropCreatedLabel: string;
   SitePropCustomScriptsEnabled: boolean;
+  SitePropCustomScriptsEnabledDescription: string;
+  SitePropCustomScriptsEnabledLabel: string;
   SitePropDisableCompanyWideSharingLinks: boolean;
+  SitePropDisableCompanyWideSharingLinksDescription: string;
+  SitePropDisableCompanyWideSharingLinksLabel: string;
+  SitePropHubSite: boolean;
+  SitePropHubSiteDescription: string;
+  SitePropHubSiteLabel: string;
+  SitePropHubSiteConnected: boolean;
+  SitePropHubSiteConnectedDescription: string;
+  SitePropHubSiteConnectedLabel: string;
   SitePropIncreaseStorage: boolean;
+  SitePropIncreaseStorageDescription: string;
+  SitePropIncreaseStorageLabel: string;
   SitePropLockState: boolean;
+  SitePropLockStateDescription: string;
+  SitePropLockStateLabel: string;
+  SitePropSensitivity: boolean;
+  SitePropSensitivityDescription: string;
+  SitePropSensitivityLabel: string;
   SitePropShareByEmailEnabled: boolean;
+  SitePropShareByEmailEnabledDescription: string;
+  SitePropShareByEmailEnabledLabel: string;
   SitePropSocialBarOnSitePagesDisabled: boolean;
+  SitePropSocialBarOnSitePagesDisabledDescription: string;
+  SitePropSocialBarOnSitePagesDisabledLabel: string;
+  SitePropStorageUsed: boolean;
+  SitePropStorageUsedDescription: string;
+  SitePropStorageUsedLabel: string;
   SitePropTeamsConnected: boolean;
+  SitePropTeamsConnectedDescription: string;
+  SitePropTeamsConnectedLabel: string;
+  SitePropTemplate: boolean;
+  SitePropTemplateDescription: string;
+  SitePropTemplateLabel: string;
+  SitePropTitle: boolean;
+  SitePropTitleDescription: string;
+  SitePropTitleLabel: string;
   WebPropCommentsOnSitePagesDisabled: boolean;
+  WebPropCommentsOnSitePagesDisabledDescription: string;
+  WebPropCommentsOnSitePagesDisabledLabel: string;
   WebPropExcludeFromOfflineClient: boolean;
+  WebPropExcludeFromOfflineClientDescription: string;
+  WebPropExcludeFromOfflineClientLabel: string;
   WebPropSearchPropertyDescription: string;
   WebPropSearchPropertyKey: string;
   WebPropSearchPropertyLabel: string;
   WebPropSearchScope: boolean;
-  WebPropWebTemplate: boolean;
+  WebPropSearchScopeDescription: string;
+  WebPropSearchScopeLabel: string;
+  WebPropTemplate: boolean;
+  WebPropTemplateDescription: string;
+  WebPropTemplateLabel: string;
+  WebPropTitle: boolean;
+  WebPropTitleDescription: string;
+  WebPropTitleLabel: string;
 }
 
 // Reference the solution
@@ -34,12 +83,24 @@ declare const SiteAdmin: {
   render: (props: {
     context?: WebPartContext;
     el: HTMLElement;
-    disableSiteProps?: string[];
-    disableWebProps?: string[];
     searchProp?: {
       description: string;
       key: string;
       label: string;
+    }
+    siteProps: {
+      [key: string]: {
+        description: string;
+        disabled: boolean;
+        label: string;
+      }
+    }
+    webProps: {
+      [key: string]: {
+        description: string;
+        disabled: boolean;
+        label: string;
+      }
     }
   }) => void;
   updateTheme: (theme: IReadonlyTheme) => void;
@@ -47,42 +108,59 @@ declare const SiteAdmin: {
 
 export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWebPartProps> {
   public render(): void {
-    const disableSiteProps: string[] = [];
-    const disableWebProps: string[] = [];
+    const propValues = (this.properties as any);
+    const siteProps: {
+      [key: string]: {
+        description: string;
+        disabled: boolean;
+        label: string;
+      }
+    } = {};
+    const webProps: {
+      [key: string]: {
+        description: string;
+        disabled: boolean;
+        label: string;
+      }
+    } = {};
 
     // Parse the site properties
     for (let i = 0; i < this._siteProps.length; i++) {
       const propName = this._siteProps[i];
+      const key = propName.replace("SiteProp", "");
 
-      // See if this one is selected to be hidden
-      if ((this.properties as any)[propName]) {
-        // Add the property to hide
-        disableSiteProps.push(propName.replace("SiteProp", ""));
-      }
+      // Add the property
+      siteProps[key] = {
+        description: propValues[propName + "Description"],
+        disabled: propValues[propName],
+        label: propValues[propName + "Label"]
+      };
     }
 
     // Parse the web properties
     for (let i = 0; i < this._webProps.length; i++) {
       const propName = this._webProps[i];
+      const key = propName.replace("WebProp", "");
 
-      // See if this one is selected to be hidden
-      if ((this.properties as any)[propName]) {
-        // Add the property to hide
-        disableWebProps.push(propName.replace("WebProp", ""));
-      }
+      // Add the property
+      webProps[key] = {
+        description: propValues[propName + "Description"],
+        disabled: propValues[propName],
+        label: propValues[propName + "Label"]
+      };
     }
 
     // Render the solution
     SiteAdmin.render({
       context: this.context,
       el: this.domElement,
-      disableSiteProps,
-      disableWebProps,
       searchProp: {
         description: this.properties.WebPropSearchPropertyDescription,
         key: this.properties.WebPropSearchPropertyKey,
         label: this.properties.WebPropSearchPropertyLabel
-      }
+      },
+      siteProps,
+      webProps
     });
   }
 
@@ -104,24 +182,31 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
   private _siteProps: string[] = [
     "SitePropCommentsOnSitePagesDisabled",
     "SitePropContainsAppCatalog",
+    "SitePropCreated",
     "SitePropCustomScriptsEnabled",
     "SitePropDisableCompanyWideSharingLinks",
+    "SitePropHubSite",
+    "SitePropHubSiteConnected",
     "SitePropIncreaseStorage",
     "SitePropLockState",
     "SitePropSensitivityLabel",
     "SitePropShareByEmailEnabled",
     "SitePropSocialBarOnSitePagesDisabled",
-    "SitePropTeamsConnected"
+    "SitePropStorageUsed",
+    "SitePropTeamsConnected",
+    "SitePropTemplate",
+    "SitePropTitle"
   ];
 
   private _webProps: string[] = [
     "WebPropCommentsOnSitePagesDisabled",
     "WebPropExcludeFromOfflineClient",
-    "WebPropSearchScope"
+    "WebPropSearchScope",
+    "WebPropTemplate",
+    "WebPropTitle"
   ];
 
-  private generateGroup(groupName: string, props: string[], azureUrl: string[] = []): IPropertyPaneGroup {
-    const hideProps = this.properties.hideProps || [];
+  private generateGroup(groupName: string, props: string[]): IPropertyPaneGroup {
     const groups: IPropertyPaneGroup = {
       groupName,
       groupFields: [
@@ -131,15 +216,28 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     // Parse the prop names
     for (let i = 0; i < props.length; i++) {
       const propName = props[i];
-      const hideProp = hideProps.indexOf(propName) >= 0;
+      const hideProp = (this.properties as any)[propName] as boolean;
 
-      // Add the property
+      // Add the property fields
       groups.groupFields.push(PropertyPaneToggle(propName, {
         label: (strings as any)[propName],
         checked: hideProp,
         onText: "The admin will not be able to change this value.",
         offText: "The admin can make changes to this property"
       }));
+      if (!hideProp) {
+        groups.groupFields.push(PropertyPaneTextField(propName + "Label", {
+          label: (strings as any)[propName] + " Label",
+          description: "The label displayed in the form.",
+          value: (this.properties as any)[propName + "Label"]
+        }));
+        groups.groupFields.push(PropertyPaneTextField(propName + "Description", {
+          label: (strings as any)[propName] + " Description",
+          description: "The description displayed in the form",
+          multiline: true,
+          value: (this.properties as any)[propName + "Description"]
+        }));
+      }
     }
 
     // Return the properties
@@ -151,7 +249,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       pages: [
         {
           groups: [
-            this.generateGroup("Site Properties:", this._siteProps, ["SitePropContainsAppCatalog"]),
+            this.generateGroup("Site Properties:", this._siteProps),
           ]
         },
         {
