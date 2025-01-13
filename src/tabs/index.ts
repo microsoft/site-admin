@@ -81,7 +81,7 @@ export class Tabs {
 
         // Add the webs
         items.push({
-            tabName: "Web",
+            tabName: DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "Top Site" : "Sub Site",
             onRender: (el) => {
                 // Render the tab
                 this._tabWeb = new WebTab(el, appProps.webProps);
