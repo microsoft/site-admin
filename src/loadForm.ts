@@ -26,7 +26,7 @@ export class LoadForm {
                 {
                     content: "Validates that you are a site collection admin for the site entered.",
                     btnProps: {
-                        text: "Load",
+                        text: "Load Site",
                         onClick: () => {
                             // Submit the request
                             this.submitForm();
@@ -44,7 +44,7 @@ export class LoadForm {
             controls: [
                 {
                     name: "url",
-                    label: "Site Collection Url:",
+                    label: "Site Url:",
                     type: Components.FormControlTypes.TextField,
                     description: "The absolute/relative url to the site collection. (Example: /sites/dev)",
                     required: true,

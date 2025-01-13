@@ -16,6 +16,7 @@ import { WebTab } from "./web";
  */
 export class Tabs {
     private _el: HTMLElement = null;
+    private _elWebTab: HTMLElement = null;
     private _webRequests: IChangeRequest[];
     private _tabAppPermissions: AppPermissionsTab = null;
     private _tabChanges: ChangesTab = null;
@@ -82,6 +83,10 @@ export class Tabs {
         // Add the webs
         items.push({
             tabName: DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "Top Site" : "Sub Site",
+            onRenderTab: el => {
+                // Set the tab reference
+                this._elWebTab = el;
+            },
             onRender: (el) => {
                 // Render the tab
                 this._tabWeb = new WebTab(el, appProps.webProps);
@@ -131,6 +136,9 @@ export class Tabs {
 
         // Load the web
         DataSource.loadWebInfo(url).then(() => {
+            // Update the tab name
+            this._elWebTab.innerHTML = DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "Top Site" : "Sub Site";
+
             // Refresh the web tab
             this._tabWeb.refresh();
 
