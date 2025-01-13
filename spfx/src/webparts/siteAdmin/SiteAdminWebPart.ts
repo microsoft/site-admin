@@ -60,6 +60,7 @@ export interface ISiteAdminWebPartProps {
   WebPropSearchPropertyKey: string;
   WebPropSearchPropertyLabel: string;
   WebPropSearchPropertyTabName: string;
+  WebPropSearchPropertyValues: string;
   WebPropSearchScope: boolean;
   WebPropSearchScopeDescription: string;
   WebPropSearchScopeLabel: string;
@@ -83,6 +84,7 @@ declare const SiteAdmin: {
       key: string;
       label: string;
       tabName: string;
+      values: string;
     }
     siteProps: {
       [key: string]: {
@@ -154,7 +156,8 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         description: this.properties.WebPropSearchPropertyDescription,
         key: this.properties.WebPropSearchPropertyKey,
         label: this.properties.WebPropSearchPropertyLabel,
-        tabName: this.properties.WebPropSearchPropertyTabName
+        tabName: this.properties.WebPropSearchPropertyTabName,
+        values: this.properties.WebPropSearchPropertyValues
       },
       siteProps,
       webProps
@@ -244,12 +247,16 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       pages: [
         {
           groups: [
-            this.generateGroup("Site Properties:", this._siteProps),
+            this.generateGroup("Site Properties:", this._siteProps)
           ]
         },
         {
           groups: [
-            this.generateGroup("Web Properties:", this._webProps),
+            this.generateGroup("Web Properties:", this._webProps)
+          ]
+        },
+        {
+          groups: [
             {
               groupName: "Search Property",
               groupFields: [
@@ -272,10 +279,14 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   label: strings.WebPropSearchPropertyDescription,
                   description: "The description to display for the custom  property in the form.",
                   value: this.properties.WebPropSearchPropertyDescription
-                })
+                }),
+                PropertyPaneTextField("WebPropSearchPropertyValues", {
+                  label: strings.WebPropSearchPropertyValues,
+                  description: "A CSV formatted string containing the values for the search property. If not set, a textbox will be displayed for the user to enter the value.",
+                  value: this.properties.WebPropSearchPropertyValues
+                }),
               ]
-            }
-          ]
+            }]
         },
         {
           groups: [
@@ -295,6 +306,11 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   text: "Are you having a problem or do you have a great idea for this app? Visit our GitHub link below to open an issue and let us know!"
                 }),
                 PropertyPaneHorizontalRule(),
+                PropertyPaneLink('requestEnhancement', {
+                  href: "https://github.com/spsprinkles/site-admin/issues",
+                  text: "Request an Enhancement",
+                  target: "_blank"
+                }),
                 PropertyPaneLink('supportLink', {
                   href: "https://github.com/spsprinkles/site-admin/issues",
                   text: "Submit an Issue",
