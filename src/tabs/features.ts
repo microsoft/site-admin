@@ -9,16 +9,13 @@ import { Tab } from "./base";
 export class FeaturesTab extends Tab<{
     CommentsOnSitePagesDisabled: boolean;
     DisableCompanyWideSharingLinks: boolean;
-    ShareByEmailEnabled: boolean;
     SocialBarOnSitePagesDisabled: boolean;
 }, {
     DisableCompanyWideSharingLinks: IRequest
 }, {
     CommentsOnSitePagesDisabled: boolean;
-    ShareByEmailEnabled: boolean;
     SocialBarOnSitePagesDisabled: boolean;
 }> {
-
     // Constructor
     constructor(el: HTMLElement, props: { [key: string]: IProp; }) {
         super(el, props, "Site");
@@ -27,7 +24,6 @@ export class FeaturesTab extends Tab<{
         this._currValues = {
             CommentsOnSitePagesDisabled: DataSource.Site.CommentsOnSitePagesDisabled,
             DisableCompanyWideSharingLinks: DataSource.Site.DisableCompanyWideSharingLinks,
-            ShareByEmailEnabled: DataSource.Site.ShareByEmailEnabled,
             SocialBarOnSitePagesDisabled: DataSource.Site.SocialBarOnSitePagesDisabled
         }
 
@@ -84,26 +80,6 @@ export class FeaturesTab extends Tab<{
                         } else {
                             // Remove the value
                             delete this._requestItems.DisableCompanyWideSharingLinks;
-                        }
-                    }
-                } as Components.IFormControlPropsSwitch,
-                {
-                    name: "ShareByEmailEnabled",
-                    label: this._props["ShareByEmailEnabled"].label,
-                    description: this._props["ShareByEmailEnabled"].description,
-                    isDisabled: this._props["ShareByEmailEnabled"].disabled,
-                    type: Components.FormControlTypes.Switch,
-                    value: this._currValues.ShareByEmailEnabled,
-                    onChange: item => {
-                        let value = item ? true : false;
-
-                        // See if we are changing the value
-                        if (this._currValues.ShareByEmailEnabled != value) {
-                            // Set the value
-                            this._newValues.ShareByEmailEnabled = value;
-                        } else {
-                            // Remove the value
-                            delete this._newValues.ShareByEmailEnabled;
                         }
                     }
                 } as Components.IFormControlPropsSwitch,

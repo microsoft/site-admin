@@ -35,9 +35,6 @@ export interface ISiteAdminWebPartProps {
   SitePropLockState: boolean;
   SitePropLockStateDescription: string;
   SitePropLockStateLabel: string;
-  SitePropSensitivity: boolean;
-  SitePropSensitivityDescription: string;
-  SitePropSensitivityLabel: string;
   SitePropShareByEmailEnabled: boolean;
   SitePropShareByEmailEnabledDescription: string;
   SitePropShareByEmailEnabledLabel: string;
@@ -47,9 +44,6 @@ export interface ISiteAdminWebPartProps {
   SitePropStorageUsed: boolean;
   SitePropStorageUsedDescription: string;
   SitePropStorageUsedLabel: string;
-  SitePropTeamsConnected: boolean;
-  SitePropTeamsConnectedDescription: string;
-  SitePropTeamsConnectedLabel: string;
   SitePropTemplate: boolean;
   SitePropTemplateDescription: string;
   SitePropTemplateLabel: string;
@@ -189,11 +183,9 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     "SitePropHubSiteConnected",
     "SitePropIncreaseStorage",
     "SitePropLockState",
-    "SitePropSensitivityLabel",
     "SitePropShareByEmailEnabled",
     "SitePropSocialBarOnSitePagesDisabled",
     "SitePropStorageUsed",
-    "SitePropTeamsConnected",
     "SitePropTemplate",
     "SitePropTitle"
   ];

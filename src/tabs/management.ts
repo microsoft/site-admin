@@ -12,6 +12,7 @@ export class ManagementTab extends Tab<{
     IncreaseStorage: boolean;
     LockState: string;
     SensitivityLabel: string;
+    ShareByEmailEnabled: boolean;
     TeamsConnected: boolean;
 }, {
     ContainsAppCatalog: IRequest;
@@ -20,9 +21,8 @@ export class ManagementTab extends Tab<{
     LockState: IRequest;
     TeamsConnected: IRequest;
 }, {
-    SensitivityLabel: string;
+    ShareByEmailEnabled: boolean;
 }> {
-
     // Constructor
     constructor(el: HTMLElement, props: { [key: string]: IProp; }) {
         super(el, props, "Site");
@@ -34,6 +34,7 @@ export class ManagementTab extends Tab<{
             IncreaseStorage: false,
             LockState: DataSource.Site.ReadOnly && DataSource.Site.WriteLocked ? "ReadOnly" : "Unlock",
             SensitivityLabel: DataSource.Site.SensitivityLabel == "00000000-0000-0000-0000-000000000000" ? "" : DataSource.Site.SensitivityLabel,
+            ShareByEmailEnabled: DataSource.Site.ShareByEmailEnabled,
             TeamsConnected: DataSource.Site?.GroupId != "00000000-0000-0000-0000-000000000000" && DataSource.Web.AllProperties["TeamifyHidden"] != "TRUE",
         }
 
@@ -151,7 +152,7 @@ export class ManagementTab extends Tab<{
                 {
                     name: "IncreaseStorage",
                     label: this._props["IncreaseStorage"].label,
-                    description: this._props["IncreaseStorage"].description,
+                    description: this._props["IncreaseStorage"].description + ` The current usage is: ${DataSource.formatBytes(DataSource.Site.Usage.Storage)} of ${DataSource.formatBytes(DataSource.Site.Usage.Storage / DataSource.Site.Usage.StoragePercentageUsed)}`,
                     isDisabled: this._props["IncreaseStorage"].disabled,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.IncreaseStorage,
@@ -169,6 +170,26 @@ export class ManagementTab extends Tab<{
                         } else {
                             // Remove the value
                             delete this._requestItems.IncreaseStorage;
+                        }
+                    }
+                } as Components.IFormControlPropsSwitch,
+                {
+                    name: "ShareByEmailEnabled",
+                    label: this._props["ShareByEmailEnabled"].label,
+                    description: this._props["ShareByEmailEnabled"].description,
+                    isDisabled: this._props["ShareByEmailEnabled"].disabled,
+                    type: Components.FormControlTypes.Switch,
+                    value: this._currValues.ShareByEmailEnabled,
+                    onChange: item => {
+                        let value = item ? true : false;
+
+                        // See if we are changing the value
+                        if (this._currValues.ShareByEmailEnabled != value) {
+                            // Set the value
+                            this._newValues.ShareByEmailEnabled = value;
+                        } else {
+                            // Remove the value
+                            delete this._newValues.ShareByEmailEnabled;
                         }
                     }
                 } as Components.IFormControlPropsSwitch,
@@ -195,25 +216,7 @@ export class ManagementTab extends Tab<{
                             delete this._requestItems.TeamsConnected;
                         }
                     }
-                } as Components.IFormControlPropsSwitch,
-                {
-                    name: "SensitivityLabel",
-                    label: this._props["SensitivityLabel"].label,
-                    description: this._props["SensitivityLabel"].description,
-                    isDisabled: this._props["SensitivityLabel"].disabled,
-                    type: Components.FormControlTypes.TextField,
-                    value: this._currValues.SensitivityLabel,
-                    onChange: value => {
-                        // See if we are changing the value
-                        if (this._currValues.SensitivityLabel != value) {
-                            // Set the value
-                            this._newValues.SensitivityLabel = value;
-                        } else {
-                            // Remove the value
-                            delete this._newValues.SensitivityLabel;
-                        }
-                    }
-                }
+                } as Components.IFormControlPropsSwitch
             ]
         });
     }
