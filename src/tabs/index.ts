@@ -81,7 +81,7 @@ export class Tabs {
 
         // Add the webs
         items.push({
-            tabName: "Web(s)",
+            tabName: "Web",
             onRender: (el) => {
                 // Render the tab
                 this._tabWeb = new WebTab(el, appProps.webProps);
@@ -91,6 +91,7 @@ export class Tabs {
         // Add the changes
         items.push({
             tabName: "Changes",
+            type: Components.ListGroupItemTypes.Success,
             onRender: (el) => {
                 // Render the changes
                 this._tabChanges = new ChangesTab(el);

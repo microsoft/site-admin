@@ -1,5 +1,5 @@
-import { Dashboard, LoadingDialog } from "dattatable";
-import { Helper, Web } from "gd-sprest-bs";
+import { Dashboard, Modal, LoadingDialog } from "dattatable";
+import { Components, Helper, Web } from "gd-sprest-bs";
 import { DataSource, IRequest } from "../ds";
 import { isEmpty } from "./common";
 
@@ -118,6 +118,17 @@ export class ChangesTab {
 
                             // Process the requests
                             this.processRequests(requests);
+
+                            // Show a confirmation dialog
+                            Modal.clear();
+                            Modal.setHeader("Update Completed");
+                            Modal.setBody("The changes have completed. Please refer to the table for additional information of the requests.");
+                            Components.Button({
+                                el: Modal.FooterElement,
+                                text: "Close",
+                                onClick: () => { Modal.hide(); }
+                            });
+                            Modal.show();
                         }
                     }
                 ]
@@ -149,7 +160,7 @@ export class ChangesTab {
                         onRenderCell: (el, col, change: IChangeRequest) => {
                             // Render the old/new values
                             el.innerHTML = `
-                                <b>Old Value:</b> ${change.oldValue}
+                                <b>Current Value:</b> ${change.oldValue}
                                 <br/>
                                 <b>New Value:</b> ${change.newValue}
                             `;
@@ -157,7 +168,7 @@ export class ChangesTab {
                     },
                     {
                         name: "",
-                        title: isResponse ? "Status" : "Time to Complete",
+                        title: "Status",
                         onRenderCell: (el, col, change: IChangeRequest) => {
                             // See if this is a response
                             if (isResponse) {

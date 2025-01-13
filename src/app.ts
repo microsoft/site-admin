@@ -128,7 +128,7 @@ export class App {
         // Render the site information
         Components.Form({
             el,
-            className: "mt-1 mb-2",
+            className: "mt-1 mb-4",
             rows: [
                 {
                     columns: [
