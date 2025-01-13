@@ -19,7 +19,7 @@ const Strings = {
     Lists: {
         Main: "Site Admin Requests"
     },
-    ProjectName: "Site Admin Tool",
+    ProjectName: "Site Admin",
     ProjectDescription: "Application for adminitrators to make requests for changes on their site collections.",
     SourceUrl: ContextInfo.webServerRelativeUrl,
     Version: "0.1"

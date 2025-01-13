@@ -175,7 +175,6 @@ export class DataSource {
                 Select: [
                     "CommentsOnSitePagesDisabled",
                     "DisableCompanyWideSharingLinks",
-                    "GroupId",
                     "HubSiteId",
                     "IsHubSite",
                     "MediaTranscriptionDisabled",
@@ -187,7 +186,6 @@ export class DataSource {
                     "RootWeb/WebTemplate",
                     "SandboxedCodeActivationCapability",
                     "SecondaryContact",
-                    "SensitivityLabel",
                     "ShareByEmailEnabled",
                     "ShowPeoplePickerSuggestionsForGuestUsers",
                     "SocialBarOnSitePagesDisabled",

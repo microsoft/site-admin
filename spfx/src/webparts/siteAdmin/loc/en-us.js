@@ -20,6 +20,7 @@ define([], function () {
     "WebPropSearchPropertyKey": "Search Property Key",
     "WebPropSearchPropertyDescription": "Search Property Description",
     "WebPropSearchPropertyLabel": "Search Property Label",
+    "WebPropSearchPropertyTabName": "Search Propeerty Tab Name",
     "WebPropExcludeFromOfflineClient": "Exclude From Offline Client",
     "WebPropSearchScope": "Search Scope",
     "WebPropTemplate": "Web Template",

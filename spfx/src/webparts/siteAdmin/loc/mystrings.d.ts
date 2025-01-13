@@ -17,6 +17,7 @@ declare interface ISiteAdminWebPartStrings {
   WebPropSearchPropertyKey: string;
   WebPropSearchPropertyDescription: string;
   WebPropSearchPropertyLabel: string;
+  WebPropSearchPropertyTabName: string;
   WebPropExcludeFromOfflineClient: string;
   WebPropSearchScope: string;
   WebPropWebTemplate: string;

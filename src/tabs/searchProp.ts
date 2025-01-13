@@ -5,6 +5,7 @@ export interface ISearchProp {
     description: string;
     key: string;
     label: string;
+    tabName: string;
 }
 
 /**
@@ -32,6 +33,7 @@ export class SearchPropTab {
     private render() {
         Components.Form({
             el: this._el,
+            className: "mt-2",
             controls: [
                 {
                     className: this._searchProp.key ? "" : "d-none",

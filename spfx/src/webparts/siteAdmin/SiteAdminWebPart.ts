@@ -59,6 +59,7 @@ export interface ISiteAdminWebPartProps {
   WebPropSearchPropertyDescription: string;
   WebPropSearchPropertyKey: string;
   WebPropSearchPropertyLabel: string;
+  WebPropSearchPropertyTabName: string;
   WebPropSearchScope: boolean;
   WebPropSearchScopeDescription: string;
   WebPropSearchScopeLabel: string;
@@ -81,6 +82,7 @@ declare const SiteAdmin: {
       description: string;
       key: string;
       label: string;
+      tabName: string;
     }
     siteProps: {
       [key: string]: {
@@ -151,7 +153,8 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       searchProp: {
         description: this.properties.WebPropSearchPropertyDescription,
         key: this.properties.WebPropSearchPropertyKey,
-        label: this.properties.WebPropSearchPropertyLabel
+        label: this.properties.WebPropSearchPropertyLabel,
+        tabName: this.properties.WebPropSearchPropertyTabName
       },
       siteProps,
       webProps
@@ -254,6 +257,11 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   label: strings.WebPropSearchPropertyKey,
                   description: "The custom property key to set for a site.",
                   value: this.properties.WebPropSearchPropertyKey
+                }),
+                PropertyPaneTextField("WebPropSearchPropertyTabName", {
+                  label: strings.WebPropSearchPropertyTabName,
+                  description: "The custom tab name for this property.",
+                  value: this.properties.WebPropSearchPropertyTabName
                 }),
                 PropertyPaneTextField("WebPropSearchPropertyLabel", {
                   label: strings.WebPropSearchPropertyLabel,

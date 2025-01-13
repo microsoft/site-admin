@@ -11,9 +11,7 @@ export class ManagementTab extends Tab<{
     CustomScriptsEnabled: boolean;
     IncreaseStorage: boolean;
     LockState: string;
-    SensitivityLabel: string;
     ShareByEmailEnabled: boolean;
-    TeamsConnected: boolean;
 }, {
     ContainsAppCatalog: IRequest;
     CustomScriptsEnabled: IRequest;
@@ -33,9 +31,7 @@ export class ManagementTab extends Tab<{
             CustomScriptsEnabled: Helper.hasPermissions(DataSource.Site.RootWeb.EffectiveBasePermissions, SPTypes.BasePermissionTypes.AddAndCustomizePages),
             IncreaseStorage: false,
             LockState: DataSource.Site.ReadOnly && DataSource.Site.WriteLocked ? "ReadOnly" : "Unlock",
-            SensitivityLabel: DataSource.Site.SensitivityLabel == "00000000-0000-0000-0000-000000000000" ? "" : DataSource.Site.SensitivityLabel,
-            ShareByEmailEnabled: DataSource.Site.ShareByEmailEnabled,
-            TeamsConnected: DataSource.Site?.GroupId != "00000000-0000-0000-0000-000000000000" && DataSource.Web.AllProperties["TeamifyHidden"] != "TRUE",
+            ShareByEmailEnabled: DataSource.Site.ShareByEmailEnabled
         }
 
         // Render the tab
@@ -190,30 +186,6 @@ export class ManagementTab extends Tab<{
                         } else {
                             // Remove the value
                             delete this._newValues.ShareByEmailEnabled;
-                        }
-                    }
-                } as Components.IFormControlPropsSwitch,
-                {
-                    name: "TeamsConnected",
-                    label: this._props["TeamsConnected"].label,
-                    description: this._props["TeamsConnected"].description,
-                    isDisabled: this._props["TeamsConnected"].disabled,
-                    type: Components.FormControlTypes.Switch,
-                    value: this._currValues.TeamsConnected,
-                    onChange: item => {
-                        let value = item ? true : false;
-
-                        // See if we are changing the value
-                        if (this._currValues.TeamsConnected != value) {
-                            // Set the value
-                            this._requestItems.TeamsConnected = {
-                                key: RequestTypes.TeamsConnected,
-                                message: `The request to connect the site to teams will be processed within 5 minutes.`,
-                                value
-                            };
-                        } else {
-                            // Remove the value
-                            delete this._requestItems.TeamsConnected;
                         }
                     }
                 } as Components.IFormControlPropsSwitch
