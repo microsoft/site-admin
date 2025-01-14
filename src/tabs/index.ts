@@ -116,10 +116,10 @@ export class Tabs {
 
         // Render the tabs
         Components.ListGroup({
+            colWidth: 12,
             el: this._el,
             isHorizontal: true,
             isTabs: true,
-            colWidth: 12,
             items,
             tabClassName: "mt-2"
         });
