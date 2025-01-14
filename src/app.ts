@@ -143,7 +143,7 @@ export class App {
                         {
                             size: 6,
                             control: {
-                                label: "Site Url:",
+                                label: "Sub Site Url:",
                                 type: Components.FormControlTypes.Dropdown,
                                 items: DataSource.SiteItems,
                                 value: DataSource.Web.Id,
