@@ -43,7 +43,7 @@ export class ManagementTab extends Tab<{
         // Render the form
         Components.Form({
             el: this._el,
-            className: "row mt-2",
+            className: "row",
             groupClassName: "col-4 mb-3",
             controls: [
                 {

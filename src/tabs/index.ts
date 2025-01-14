@@ -120,7 +120,8 @@ export class Tabs {
             isHorizontal: true,
             isTabs: true,
             colWidth: 12,
-            items
+            items,
+            tabClassName: "mt-2"
         });
     }
 

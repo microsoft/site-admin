@@ -62,7 +62,7 @@ export class WebTab extends Tab<{
     private render() {
         Components.Form({
             el: this._el,
-            className: "row mt-2",
+            className: "row",
             groupClassName: "col-4 mb-3",
             onControlRendered: ctrl => {
                 // Set the class name

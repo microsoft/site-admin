@@ -100,7 +100,6 @@ export class SearchPropTab {
         // Render the form
         Components.Form({
             el: this._el,
-            className: "mt-2",
             controls: this.getControls()
         });
     }
