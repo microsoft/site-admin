@@ -8,6 +8,7 @@ import type { IReadonlyTheme } from '@microsoft/sp-component-base';
 import * as strings from 'SiteAdminWebPartStrings';
 
 export interface ISiteAdminWebPartProps {
+  AppTitle: string;
   SitePropCommentsOnSitePagesDisabled: boolean;
   SitePropCommentsOnSitePagesDisabledDescription: string;
   SitePropCommentsOnSitePagesDisabledLabel: string;
@@ -79,6 +80,7 @@ declare const SiteAdmin: {
   render: (props: {
     context?: WebPartContext;
     el: HTMLElement;
+    title?: string;
     searchProp?: {
       description: string;
       key: string;
@@ -160,6 +162,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         values: this.properties.WebPropSearchPropertyValues
       },
       siteProps,
+      title: this.properties.AppTitle,
       webProps
     });
   }
@@ -247,6 +250,16 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       pages: [
         {
           groups: [
+            {
+              groupName: "App Settings",
+              groupFields: [
+                PropertyPaneTextField("AppTitle", {
+                  label: strings.AppTitle,
+                  description: "The title displayed.",
+                  value: this.properties.AppTitle
+                })
+              ]
+            },
             this.generateGroup("Site Properties:", this._siteProps)
           ]
         },

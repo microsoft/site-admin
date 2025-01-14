@@ -19,6 +19,7 @@ export interface IAppProps {
     el: HTMLElement;
     searchProp?: ISearchProp;
     siteProps: { [key: string]: IProp; }
+    title?: string;
     webProps: { [key: string]: IProp; }
 }
 
@@ -113,7 +114,7 @@ export class App {
         // Render the navigation
         new Navigation({
             el: elRow.children[0] as HTMLElement,
-            title: Strings.ProjectName,
+            title: this._props.title || Strings.ProjectName,
             hideFilter: true,
             hideSearch: true,
             itemsEnd

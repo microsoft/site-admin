@@ -1,4 +1,5 @@
 declare interface ISiteAdminWebPartStrings {
+  AppTitle: string;
   SitePropCommentsOnSitePagesDisabled: string;
   SitePropContainsAppCatalog: string;
   SitePropCreated: string;

@@ -1,7 +1,6 @@
 define([], function () {
   return {
-    "AzureFunctionUrlFieldDescription": "The url to trigger the azure function used to process requests",
-    "AzureFunctionUrlFieldLabel": "Azure Function Url",
+    "AppTitle": "App Title",
     "SitePropCommentsOnSitePagesDisabled": "Comments on Site Pages",
     "SitePropContainsAppCatalog": "App Catalog",
     "SitePropCreated": "Date Created",
