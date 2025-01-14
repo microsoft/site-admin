@@ -27,7 +27,7 @@ export class ManagementTab extends Tab<{
 
         // Set the current values
         this._currValues = {
-            ContainsAppCatalog: false,
+            ContainsAppCatalog: DataSource.hasAppCatalog(),
             CustomScriptsEnabled: Helper.hasPermissions(DataSource.Site.RootWeb.EffectiveBasePermissions, SPTypes.BasePermissionTypes.AddAndCustomizePages),
             IncreaseStorage: false,
             LockState: DataSource.Site.ReadOnly && DataSource.Site.WriteLocked ? "ReadOnly" : "Unlock",
@@ -114,20 +114,7 @@ export class ManagementTab extends Tab<{
                     description: this._props["ContainsAppCatalog"].description,
                     isDisabled: this._props["ContainsAppCatalog"].disabled,
                     type: Components.FormControlTypes.Switch,
-                    onControlRendering: ctrl => {
-                        // Return a promise
-                        return new Promise((resolve) => {
-                            // See if an app catalog exists on this site
-                            DataSource.hasAppCatalog(DataSource.Site.Url).then(hasAppCatalog => {
-                                // Set the value
-                                this._currValues.ContainsAppCatalog = hasAppCatalog;
-                                ctrl.value = hasAppCatalog
-
-                                // Resolve the request
-                                resolve(ctrl);
-                            });
-                        });
-                    },
+                    value: this._currValues.ContainsAppCatalog,
                     onChange: item => {
                         let value = item ? true : false;
 

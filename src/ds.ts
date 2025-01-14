@@ -171,7 +171,7 @@ export class DataSource {
         return new Promise((resolve, reject) => {
             // Load the web
             Site(this.SiteContext.SiteFullUrl, { requestDigest: this.SiteContext.FormDigestValue }).query({
-                Expand: ["RootWeb/AllProperties", "RootWeb/EffectiveBasePermissions", "Usage"],
+                Expand: ["Features", "RootWeb/AllProperties", "RootWeb/EffectiveBasePermissions", "Usage"],
                 Select: [
                     "CommentsOnSitePagesDisabled",
                     "DisableCompanyWideSharingLinks",
@@ -306,23 +306,17 @@ export class DataSource {
     }
 
     // Determines if the site collection has an app catalog
-    static hasAppCatalog(url: string): PromiseLike<boolean> {
-        // Return a promise
-        return new Promise((resolve) => {
-            // Query the root web's lists
-            Web(url).Lists().query({ Filter: "BaseTemplate eq " + SPTypes.ListTemplateType.AppCatalog }).execute(
-                // Success
-                (lists) => {
-                    // Exists
-                    resolve(lists.results.length > 0);
-                },
+    static hasAppCatalog(): boolean {
+        // Parse the site features
+        for (let i = 0; i < this.Site.Features.results.length; i++) {
+            let feature = this.Site.Features.results[i];
 
-                () => {
-                    // Doesn't exist
-                    resolve(false);
-                }
-            )
-        });
+            // See if the site collection app catalog feature is enabled
+            if (feature.DefinitionId == "88dc6e04-3256-401b-9851-8e07674bb0d6") { return true; }
+        }
+
+        // Not found
+        return false;
     }
 
     // Initializes the application
