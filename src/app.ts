@@ -1,5 +1,6 @@
 import { Navigation } from "dattatable";
 import { Components } from "gd-sprest-bs";
+import { SharePoint } from "gd-sprest-bs/build/icons/custom/sharePoint";
 import { DataSource } from "./ds";
 import { InstallationModal } from "./install";
 import { LoadForm } from "./loadForm";
@@ -113,6 +114,7 @@ export class App {
 
         // Render the navigation
         new Navigation({
+            iconType: SharePoint,
             el: elRow.children[0] as HTMLElement,
             title: this._props.title || Strings.ProjectName,
             hideFilter: true,
