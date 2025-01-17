@@ -1,1 +1,217 @@
-{"name":"3bf47732-b065-4219-9651-7aa406f20736","id":"/providers/Microsoft.Flow/flows/3bf47732-b065-4219-9651-7aa406f20736","type":"Microsoft.Flow/flows","properties":{"apiId":"/providers/Microsoft.PowerApps/apis/shared_logicflows","displayName":"Site Admin Requests","definition":{"metadata":{"workflowEntityId":null,"processAdvisorMetadata":null,"flowChargedByPaygo":null,"flowclientsuspensionreason":"None","flowclientsuspensiontime":null,"flowclientsuspensionreasondetails":null,"creator":{"id":"4af50d87-e728-484e-874c-3f4536b38fee","type":"User","tenantId":"aecb54e0-7430-409d-86a4-7639c743eee7"},"provisioningMethod":"FromDefinition","failureAlertSubscription":true,"clientLastModifiedTime":"2024-11-20T22:26:18.1043077Z","connectionKeySavedTimeKey":"2024-11-20T22:26:18.1043077Z"},"$schema":"https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#","contentVersion":"1.0.0.0","parameters":{"$authentication":{"defaultValue":{},"type":"SecureObject"},"$connections":{"defaultValue":{},"type":"Object"}},"triggers":{"When_an_item_is_created":{"recurrence":{"interval":3,"frequency":"Minute"},"splitOn":"@triggerOutputs()?['body/value']","type":"OpenApiConnection","inputs":{"parameters":{"dataset":"https://dattaspo.sharepoint.com/sites/Demo/site-admin","table":"c532a3ee-1ac0-4314-a004-523f1471b2cf"},"host":{"apiId":"/providers/Microsoft.PowerApps/apis/shared_sharepointonline","connectionName":"shared_sharepointonline","operationId":"GetOnNewItems"},"authentication":"@parameters('$authentication')"}}},"actions":{"Get_Request_Item":{"runAfter":{},"type":"OpenApiConnection","inputs":{"parameters":{"dataset":"https://dattaspo.sharepoint.com/sites/Demo/site-admin","table":"c532a3ee-1ac0-4314-a004-523f1471b2cf","id":"@triggerBody()?['ID']"},"host":{"apiId":"/providers/Microsoft.PowerApps/apis/shared_sharepointonline","connectionName":"shared_sharepointonline","operationId":"GetItem"},"authentication":"@parameters('$authentication')"}},"Condition":{"actions":{},"runAfter":{"Get_Request_Item":["Succeeded"]},"else":{"actions":{"Send_an_error_email":{"runAfter":{"Update_Item_-_Cancel":["Succeeded"]},"type":"OpenApiConnection","inputs":{"parameters":{"emailMessage/To":"@body('Get_Request_Item')?['Author']?['Email']","emailMessage/Subject":"Site Update Request Denied","emailMessage/Body":"<p class=\"editor-paragraph\">@{body('Get_Request_Item')?['Author']?['DisplayName']},</p><br><p class=\"editor-paragraph\">The request to change a property on this site was denied. Please use the tool to make changes to the site.</p><br><p class=\"editor-paragraph\">Thanks,</p><p class=\"editor-paragraph\">SPO Team</p>","emailMessage/Importance":"Normal"},"host":{"apiId":"/providers/Microsoft.PowerApps/apis/shared_office365","connectionName":"shared_office365","operationId":"SendEmailV2"},"authentication":"@parameters('$authentication')"}},"Update_Item_-_Cancel":{"type":"OpenApiConnection","inputs":{"parameters":{"dataset":"https://dattaspo.sharepoint.com/sites/Demo/site-admin","table":"c532a3ee-1ac0-4314-a004-523f1471b2cf","id":"@outputs('Get_Request_Item')?['body/ID']","item/Title":"@{body('Get_Request_Item')?['Title']}","item/Status/Value":"Cancelled"},"host":{"apiId":"/providers/Microsoft.PowerApps/apis/shared_sharepointonline","connectionName":"shared_sharepointonline","operationId":"PatchItem"},"authentication":"@parameters('$authentication')"}},"Terminate":{"runAfter":{"Send_an_error_email":["Succeeded"]},"type":"Terminate","inputs":{"runStatus":"Cancelled"}}}},"expression":{"and":[{"equals":["@outputs('Get_Request_Item')?['body/ProcessFlag']","@true"]}]},"type":"If"},"Update_item_-_Completed":{"runAfter":{"Condition":["Succeeded"]},"type":"OpenApiConnection","inputs":{"parameters":{"dataset":"https://dattaspo.sharepoint.com/sites/Demo/site-admin","table":"c532a3ee-1ac0-4314-a004-523f1471b2cf","id":"@outputs('Get_Request_Item')?['body/ID']","item/Title":"@{body('Get_Request_Item')?['Title']}","item/Status/Value":"Completed"},"host":{"apiId":"/providers/Microsoft.PowerApps/apis/shared_sharepointonline","connectionName":"shared_sharepointonline","operationId":"PatchItem"},"authentication":"@parameters('$authentication')"}},"Send_an_completed_email":{"runAfter":{"Update_item_-_Completed":["Succeeded"]},"type":"OpenApiConnection","inputs":{"parameters":{"emailMessage/To":"@body('Get_Request_Item')?['Author']?['Email']","emailMessage/Subject":"Custom Script Request Processed","emailMessage/Body":"<p class=\"editor-paragraph\">@{body('Get_Request_Item')?['Author']?['DisplayName']},</p><br><p class=\"editor-paragraph\">The request to the site property was completed successfully.</p><br><p class=\"editor-paragraph\">Thanks,</p><p class=\"editor-paragraph\">SPO Team</p>","emailMessage/Importance":"Normal"},"host":{"apiId":"/providers/Microsoft.PowerApps/apis/shared_office365","connectionName":"shared_office365","operationId":"SendEmailV2"},"authentication":"@parameters('$authentication')"}}},"outputs":{}},"connectionReferences":{"shared_sharepointonline":{"connectionName":"shared-sharepointonl-66a6d844-5e1b-4fa5-a8f1-40d37f28a005","source":"Embedded","id":"/providers/Microsoft.PowerApps/apis/shared_sharepointonline","tier":"NotSpecified"},"shared_office365":{"connectionName":"shared-office365-0f5dbe87-55c2-42fe-acb8-a951635aebe6","source":"Embedded","id":"/providers/Microsoft.PowerApps/apis/shared_office365","tier":"NotSpecified"}},"flowFailureAlertSubscribed":false,"isManaged":false}}
+{
+    "name": "3bf47732-b065-4219-9651-7aa406f20736",
+    "id": "/providers/Microsoft.Flow/flows/3bf47732-b065-4219-9651-7aa406f20736",
+    "type": "Microsoft.Flow/flows",
+    "properties": {
+        "apiId": "/providers/Microsoft.PowerApps/apis/shared_logicflows",
+        "displayName": "Site Admin Requests",
+        "definition": {
+            "metadata": {
+                "workflowEntityId": null,
+                "processAdvisorMetadata": null,
+                "flowChargedByPaygo": null,
+                "flowclientsuspensionreason": "None",
+                "flowclientsuspensiontime": null,
+                "flowclientsuspensionreasondetails": null,
+                "creator": {
+                    "id": "4af50d87-e728-484e-874c-3f4536b38fee",
+                    "type": "User",
+                    "tenantId": "aecb54e0-7430-409d-86a4-7639c743eee7"
+                },
+                "provisioningMethod": "FromDefinition",
+                "failureAlertSubscription": true,
+                "clientLastModifiedTime": "2024-11-20T22:26:18.1043077Z",
+                "connectionKeySavedTimeKey": "2024-11-20T22:26:18.1043077Z"
+            },
+            "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+            "contentVersion": "1.0.0.0",
+            "parameters": {
+                "$authentication": {
+                    "defaultValue": {},
+                    "type": "SecureObject"
+                },
+                "$connections": {
+                    "defaultValue": {},
+                    "type": "Object"
+                }
+            },
+            "triggers": {
+                "When_an_item_is_created": {
+                    "recurrence": {
+                        "interval": 3,
+                        "frequency": "Minute"
+                    },
+                    "splitOn": "@triggerOutputs()?['body/value']",
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                        "parameters": {
+                            "dataset": "https://dattaspo.sharepoint.com/sites/Demo/site-admin",
+                            "table": "c532a3ee-1ac0-4314-a004-523f1471b2cf"
+                        },
+                        "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                            "connectionName": "shared_sharepointonline",
+                            "operationId": "GetOnNewItems"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                    }
+                }
+            },
+            "actions": {
+                "Get_Request_Item": {
+                    "runAfter": {},
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                        "parameters": {
+                            "dataset": "https://dattaspo.sharepoint.com/sites/Demo/site-admin",
+                            "table": "c532a3ee-1ac0-4314-a004-523f1471b2cf",
+                            "id": "@triggerBody()?['ID']"
+                        },
+                        "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                            "connectionName": "shared_sharepointonline",
+                            "operationId": "GetItem"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                    }
+                },
+                "Condition": {
+                    "actions": {},
+                    "runAfter": {
+                        "Get_Request_Item": [
+                            "Succeeded"
+                        ]
+                    },
+                    "else": {
+                        "actions": {
+                            "Send_an_error_email": {
+                                "runAfter": {
+                                    "Update_Item_-_Cancel": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "type": "OpenApiConnection",
+                                "inputs": {
+                                    "parameters": {
+                                        "emailMessage/To": "@body('Get_Request_Item')?['Author']?['Email']",
+                                        "emailMessage/Subject": "Site Update Request Denied",
+                                        "emailMessage/Body": "<p class=\"editor-paragraph\">@{body('Get_Request_Item')?['Author']?['DisplayName']},</p><br><p class=\"editor-paragraph\">The request to change a property on this site was denied. Please use the tool to make changes to the site.</p><br><p class=\"editor-paragraph\">Thanks,</p><p class=\"editor-paragraph\">SPO Team</p>",
+                                        "emailMessage/Importance": "Normal"
+                                    },
+                                    "host": {
+                                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                                        "connectionName": "shared_office365",
+                                        "operationId": "SendEmailV2"
+                                    },
+                                    "authentication": "@parameters('$authentication')"
+                                }
+                            },
+                            "Update_Item_-_Cancel": {
+                                "type": "OpenApiConnection",
+                                "inputs": {
+                                    "parameters": {
+                                        "dataset": "https://dattaspo.sharepoint.com/sites/Demo/site-admin",
+                                        "table": "c532a3ee-1ac0-4314-a004-523f1471b2cf",
+                                        "id": "@outputs('Get_Request_Item')?['body/ID']",
+                                        "item/Title": "@{body('Get_Request_Item')?['Title']}",
+                                        "item/Status/Value": "Cancelled"
+                                    },
+                                    "host": {
+                                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                        "connectionName": "shared_sharepointonline",
+                                        "operationId": "PatchItem"
+                                    },
+                                    "authentication": "@parameters('$authentication')"
+                                }
+                            },
+                            "Terminate": {
+                                "runAfter": {
+                                    "Send_an_error_email": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "type": "Terminate",
+                                "inputs": {
+                                    "runStatus": "Cancelled"
+                                }
+                            }
+                        }
+                    },
+                    "expression": {
+                        "and": [
+                            {
+                                "equals": [
+                                    "@outputs('Get_Request_Item')?['body/ProcessFlag']",
+                                    "@true"
+                                ]
+                            }
+                        ]
+                    },
+                    "type": "If"
+                },
+                "Update_item_-_Completed": {
+                    "runAfter": {
+                        "Condition": [
+                            "Succeeded"
+                        ]
+                    },
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                        "parameters": {
+                            "dataset": "https://dattaspo.sharepoint.com/sites/Demo/site-admin",
+                            "table": "c532a3ee-1ac0-4314-a004-523f1471b2cf",
+                            "id": "@outputs('Get_Request_Item')?['body/ID']",
+                            "item/Title": "@{body('Get_Request_Item')?['Title']}",
+                            "item/Status/Value": "Completed"
+                        },
+                        "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                            "connectionName": "shared_sharepointonline",
+                            "operationId": "PatchItem"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                    }
+                },
+                "Send_an_completed_email": {
+                    "runAfter": {
+                        "Update_item_-_Completed": [
+                            "Succeeded"
+                        ]
+                    },
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                        "parameters": {
+                            "emailMessage/To": "@body('Get_Request_Item')?['Author']?['Email']",
+                            "emailMessage/Subject": "Custom Script Request Processed",
+                            "emailMessage/Body": "<p class=\"editor-paragraph\">@{body('Get_Request_Item')?['Author']?['DisplayName']},</p><br><p class=\"editor-paragraph\">The request to the site property was completed successfully.</p><br><p class=\"editor-paragraph\">Thanks,</p><p class=\"editor-paragraph\">SPO Team</p>",
+                            "emailMessage/Importance": "Normal"
+                        },
+                        "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                            "connectionName": "shared_office365",
+                            "operationId": "SendEmailV2"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                    }
+                }
+            },
+            "outputs": {}
+        },
+        "connectionReferences": {
+            "shared_sharepointonline": {
+                "connectionName": "shared-sharepointonl-66a6d844-5e1b-4fa5-a8f1-40d37f28a005",
+                "source": "Embedded",
+                "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                "tier": "NotSpecified"
+            },
+            "shared_office365": {
+                "connectionName": "shared-office365-0f5dbe87-55c2-42fe-acb8-a951635aebe6",
+                "source": "Embedded",
+                "id": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                "tier": "NotSpecified"
+            }
+        },
+        "flowFailureAlertSubscribed": false,
+        "isManaged": false
+    }
+}
