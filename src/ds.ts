@@ -268,6 +268,28 @@ export class DataSource {
         });
     }
 
+    // Loads the web template
+    private static _webTemplates: { [key: string]: string } = {};
+    static getWebTemplate(key: string): PromiseLike<string> {
+        // Return a promise
+        return new Promise(resolve => {
+            // See if we already have the web template info
+            if (this._webTemplates[key]) { resolve(this._webTemplates[key]); return; }
+
+            // Get the web template
+            this.Web.getAvailableWebTemplates(1033).getByName(key).execute(template => {
+                // Set the value
+                this._webTemplates[key] = template.Title;
+
+                // Resolve the request
+                resolve(template.Title);
+            }, () => {
+                // Resolve the request
+                resolve(key);
+            });
+        });
+    }
+
     // Status Filters
     private static _statusFilters: Components.ICheckboxGroupItem[] = null;
     static get StatusFilters(): Components.ICheckboxGroupItem[] { return this._statusFilters; }

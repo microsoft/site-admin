@@ -43,7 +43,20 @@ export class InfoTab extends Tab {
                     label: this._props["Template"].label,
                     description: this._props["Template"].description,
                     type: Components.FormControlTypes.Readonly,
-                    value: DataSource.Site.RootWeb.WebTemplate
+                    value: DataSource.Site.RootWeb.WebTemplate,
+                    onControlRendering: ctrl => {
+                        // Return a promise
+                        return new Promise(resolve => {
+                            // Get the web template
+                            DataSource.getWebTemplate(DataSource.Site.RootWeb.WebTemplate).then(template => {
+                                // Set the value
+                                ctrl.value = template;
+
+                                // Resolve the request
+                                resolve(ctrl);
+                            });
+                        });
+                    }
                 },
                 {
                     name: "HubSite",

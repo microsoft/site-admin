@@ -75,7 +75,20 @@ export class WebTab extends Tab<{
                     description: this._props["Template"].description,
                     isDisabled: this._props["Template"].disabled,
                     type: Components.FormControlTypes.Readonly,
-                    value: this._currValues.WebTemplate
+                    value: this._currValues.WebTemplate,
+                    onControlRendering: ctrl => {
+                        // Return a promise
+                        return new Promise(resolve => {
+                            // Get the web template
+                            DataSource.getWebTemplate(this._currValues.WebTemplate).then(template => {
+                                // Set the value
+                                ctrl.value = template;
+
+                                // Resolve the request
+                                resolve(ctrl);
+                            });
+                        });
+                    }
                 },
                 {
                     name: "Title",
