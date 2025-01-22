@@ -29,7 +29,7 @@
       "description": {
         "default": "A tool for site admins to make requests for changes that require a SPO admin or Flow/PowerShell."
       },
-      "officeFabricIconFontName": "LocalAdmin",
+      "officeFabricIconFontName": "AdminSLogoInverse32",
       "properties": {
         "AppTitle": "Site Admin App",
         "SitePropCommentsOnSitePagesDisabled": false,
