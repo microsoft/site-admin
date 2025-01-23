@@ -1,7 +1,8 @@
 import { Version } from '@microsoft/sp-core-library';
 import {
   IPropertyPaneConfiguration, IPropertyPaneGroup,
-  PropertyPaneHorizontalRule, PropertyPaneLabel, PropertyPaneLink, PropertyPaneTextField, PropertyPaneToggle
+  PropertyPaneDropdown, PropertyPaneHorizontalRule,
+  PropertyPaneLabel, PropertyPaneLink, PropertyPaneTextField, PropertyPaneToggle
 } from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart, WebPartContext } from '@microsoft/sp-webpart-base';
 import type { IReadonlyTheme } from '@microsoft/sp-component-base';
@@ -9,6 +10,7 @@ import * as strings from 'SiteAdminWebPartStrings';
 
 export interface ISiteAdminWebPartProps {
   AppTitle: string;
+  MaxStorage: number;
   SitePropCommentsOnSitePagesDisabled: boolean;
   SitePropCommentsOnSitePagesDisabledDescription: string;
   SitePropCommentsOnSitePagesDisabledLabel: string;
@@ -81,6 +83,7 @@ declare const SiteAdmin: {
     context?: WebPartContext;
     el: HTMLElement;
     title?: string;
+    maxStorageSize?: number;
     searchProp?: {
       description: string;
       key: string;
@@ -154,6 +157,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     SiteAdmin.render({
       context: this.context,
       el: this.domElement,
+      maxStorageSize: this.properties.MaxStorage,
       searchProp: {
         description: this.properties.WebPropSearchPropertyDescription,
         key: this.properties.WebPropSearchPropertyKey,
@@ -270,6 +274,21 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         },
         {
           groups: [
+            {
+              groupName: "Storage",
+              groupFields: [
+                PropertyPaneDropdown("MaxStorage", {
+                  label: strings.MaxStorage,
+                  options: [
+                    { key: "1", text: "1 TB"},
+                    { key: "10", text: "10 TB"},
+                    { key: "25", text: "25 TB"},
+                    { key: "50", text: "50 TB"},
+                    { key: "100", text: "100 TB"}
+                  ]
+                })
+              ]
+            },
             {
               groupName: "Search Property",
               groupFields: [

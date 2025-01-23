@@ -22,7 +22,7 @@ export class ManagementTab extends Tab<{
     ShareByEmailEnabled: boolean;
 }> {
     // Constructor
-    constructor(el: HTMLElement, props: { [key: string]: IProp; }) {
+    constructor(el: HTMLElement, props: { [key: string]: IProp; }, maxStorageSize: number) {
         super(el, props, "Site");
 
         // Set the current values
@@ -35,11 +35,11 @@ export class ManagementTab extends Tab<{
         }
 
         // Render the tab
-        this.render();
+        this.render(maxStorageSize);
     }
 
     // Renders the tab
-    private render() {
+    private render(maxStorageSize: number = 0) {
         // Render the form
         Components.Form({
             el: this._el,
@@ -139,6 +139,18 @@ export class ManagementTab extends Tab<{
                     isDisabled: this._props["IncreaseStorage"].disabled,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.IncreaseStorage,
+                    onControlRendering: ctrl => {
+                        // See if the max threshold has been reached
+                        // 1 TB = 1024GB = 1024*1024MB = 1024*1024*1024KB = 1024*1024*1024*1024 = 1099511627776
+                        if (Math.round(DataSource.Site.Usage.Storage / DataSource.Site.Usage.StoragePercentageUsed) >= maxStorageSize * 1099511627776) {
+                            // Update the props
+                            ctrl.isDisabled = true;
+                            ctrl.description = "The max threshold has been met. Please contact the helpdesk to request an increase.";
+                        }
+
+                        // Return the control
+                        return ctrl;
+                    },
                     onChange: item => {
                         let value = item ? true : false;
 

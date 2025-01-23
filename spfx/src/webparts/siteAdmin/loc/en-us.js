@@ -1,6 +1,7 @@
 define([], function () {
   return {
     "AppTitle": "App Title",
+    "MaxStorage": "Max Storage Allowed",
     "SitePropCommentsOnSitePagesDisabled": "Comments on Site Pages",
     "SitePropContainsAppCatalog": "App Catalog",
     "SitePropCreated": "Date Created",

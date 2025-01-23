@@ -18,6 +18,7 @@ export interface IProp {
 export interface IAppProps {
     context?: any;
     el: HTMLElement;
+    maxStorageSize?: number;
     searchProp?: ISearchProp;
     siteProps: { [key: string]: IProp; }
     title?: string;
