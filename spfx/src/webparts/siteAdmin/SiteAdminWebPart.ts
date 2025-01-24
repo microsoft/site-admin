@@ -11,6 +11,7 @@ import * as strings from 'SiteAdminWebPartStrings';
 export interface ISiteAdminWebPartProps {
   AppTitle: string;
   MaxStorage: number;
+  MaxStorageDescription: string;
   SitePropCommentsOnSitePagesDisabled: boolean;
   SitePropCommentsOnSitePagesDisabledDescription: string;
   SitePropCommentsOnSitePagesDisabledLabel: string;
@@ -83,6 +84,7 @@ declare const SiteAdmin: {
     context?: WebPartContext;
     el: HTMLElement;
     title?: string;
+    maxStorageDesc?: string;
     maxStorageSize?: number;
     searchProp?: {
       description: string;
@@ -157,6 +159,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     SiteAdmin.render({
       context: this.context,
       el: this.domElement,
+      maxStorageDesc: this.properties.MaxStorageDescription,
       maxStorageSize: this.properties.MaxStorage,
       searchProp: {
         description: this.properties.WebPropSearchPropertyDescription,
@@ -280,13 +283,18 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                 PropertyPaneDropdown("MaxStorage", {
                   label: strings.MaxStorage,
                   options: [
-                    { key: "1", text: "1 TB"},
-                    { key: "10", text: "10 TB"},
-                    { key: "25", text: "25 TB"},
-                    { key: "50", text: "50 TB"},
-                    { key: "100", text: "100 TB"}
+                    { key: "5", text: "5 TB" },
+                    { key: "10", text: "10 TB" },
+                    { key: "15", text: "15 TB" },
+                    { key: "20", text: "20 TB" },
+                    { key: "25", text: "25 TB" }
                   ]
-                })
+                }),
+                PropertyPaneTextField("MaxStorageDescription", {
+                  label: strings.MaxStorageDescription,
+                  description: "The description to display when the max storage threshold has been reached.",
+                  value: this.properties.MaxStorageDescription
+                }),
               ]
             },
             {

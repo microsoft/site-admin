@@ -50,7 +50,7 @@ export class Tabs {
                 tabName: "Management",
                 onRender: (el) => {
                     // Render the tab
-                    this._tabManagement = new ManagementTab(el, appProps.siteProps, appProps.maxStorageSize);
+                    this._tabManagement = new ManagementTab(el, appProps.siteProps, appProps.maxStorageSize, appProps.maxStorageDesc);
                 }
             },
             {

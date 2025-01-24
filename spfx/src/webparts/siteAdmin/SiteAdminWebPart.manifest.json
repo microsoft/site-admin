@@ -33,6 +33,7 @@
       "properties": {
         "AppTitle": "Site Admin App",
         "MaxStorage": 25,
+        "MaxStorageDescription": "The max threshold has been met.",
         "SitePropCommentsOnSitePagesDisabled": false,
         "SitePropCommentsOnSitePagesDisabledDescription": "If true, comments on modern site pages will be disabled.",
         "SitePropCommentsOnSitePagesDisabledLabel": "Comments On Site Pages Disabled:",
