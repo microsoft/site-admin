@@ -214,6 +214,10 @@ export class DataSource {
                             results: ["SPWebUrl", "WebId"]
                         }
                     },
+                    targetInfo: {
+                        requestDigest: this.SiteContext.FormDigestValue,
+                        url: this.SiteContext.SiteFullUrl
+                    }
                 }).then(search => {
                     // Parse the results
                     for (let i = 0; i < search.results.length; i++) {
