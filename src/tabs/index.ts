@@ -70,7 +70,7 @@ export class Tabs {
         ];
 
         // See if we are customizing a search property
-        if (!isEmpty(appProps.searchProp)) {
+        if (!isEmpty(appProps.searchProp) && appProps.searchProp.key) {
             items.splice(1, 0, {
                 tabName: appProps.searchProp.tabName || "Search Property",
                 onRender: (el) => {
