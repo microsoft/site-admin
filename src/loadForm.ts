@@ -24,7 +24,7 @@ export class LoadForm {
             el,
             tooltips: [
                 {
-                    content: "Validates that you are a site collection admin for the site entered.",
+                    content: "Validates that you are an admin for the site entered.",
                     btnProps: {
                         text: "Load Site",
                         onClick: () => {
@@ -46,7 +46,7 @@ export class LoadForm {
                     name: "url",
                     label: "Site Url:",
                     type: Components.FormControlTypes.TextField,
-                    description: "The absolute/relative url to the site collection. (Example: /sites/dev)",
+                    description: "The absolute/relative url to the site. (Example: /sites/dev)",
                     required: true,
                     errorMessage: "The site url is required.",
                     onControlRendered: ctrl => {
