@@ -8,7 +8,8 @@ import { DataSource } from "../ds";
 import { FeaturesTab } from "./features";
 import { InfoTab } from "./info";
 import { ManagementTab } from "./management";
-import { SearchPropTab, ISearchProp } from "./searchProp";
+import { SearchPropTab } from "./searchProp";
+import { ReportsTab } from "./reports";
 import { WebTab } from "./web";
 
 /**
@@ -22,6 +23,7 @@ export class Tabs {
     private _tabChanges: ChangesTab = null;
     private _tabFeatures: FeaturesTab = null;
     private _tabManagement: ManagementTab = null;
+    private _tabReports: ReportsTab = null;
     private _tabSearch: SearchPropTab = null;
     private _tabWeb: WebTab = null;
 
@@ -65,6 +67,13 @@ export class Tabs {
                 onRender: (el) => {
                     // Render the tab
                     this._tabAppPermissions = new AppPermissionsTab(el);
+                }
+            },
+            {
+                tabName: "Reports",
+                onRender: (el) => {
+                    // Render the tab
+                    this._tabReports = new ReportsTab(el);
                 }
             }
         ];

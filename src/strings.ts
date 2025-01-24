@@ -22,6 +22,7 @@ const Strings = {
     ProjectName: "Site Admin",
     ProjectDescription: "Application for adminitrators to make requests for changes on their site collections.",
     SourceUrl: ContextInfo.webServerRelativeUrl,
+    TimeFormat: "YYYY-MMM-DD HH:mm:ss",
     Version: "0.1"
 };
 export default Strings;
