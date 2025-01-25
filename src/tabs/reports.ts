@@ -1,5 +1,4 @@
 import { Components } from "gd-sprest-bs";
-import * as moment from "moment";
 import * as Reports from "../reports";
 
 // Report Types
@@ -116,6 +115,10 @@ export class ReportsTab {
                     case ReportTypes.FindUsers:
                         break;
                     case ReportTypes.ListPermissions:
+                        Reports.ListPermissions.run(this._el, form.getValues(), () => {
+                            // Render this component
+                            this.render();
+                        });
                         break;
                     case ReportTypes.SearchDocs:
                         Reports.SearchDocs.run(this._el, form.getValues(), () => {
