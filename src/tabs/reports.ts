@@ -3,10 +3,10 @@ import * as Reports from "../reports";
 
 // Report Types
 enum ReportTypes {
+    BrokenPermissions = "BrokenPermissions",
     DocRetention = "DocRetention",
     ExternalUsers = "ExternalUsers",
     FindUsers = "FindUsers",
-    ListPermissions = "ListPermissions",
     SearchDocs = "SearchDocs"
 }
 
@@ -41,6 +41,11 @@ export class ReportsTab {
                     value: selectedReport,
                     items: [
                         {
+                            text: "Broken Permissions",
+                            data: "Scans for broken inheritance.",
+                            value: ReportTypes.BrokenPermissions
+                        },
+                        {
                             text: "Document Retention",
                             data: "Find documents older than a specified date.",
                             value: ReportTypes.DocRetention
@@ -54,11 +59,6 @@ export class ReportsTab {
                             text: "Find Users",
                             data: "Find users by keyword or account.",
                             value: ReportTypes.FindUsers
-                        },
-                        {
-                            text: "List Permissions",
-                            data: "Scans the permissions for all lists and libraries.",
-                            value: ReportTypes.ListPermissions
                         },
                         {
                             text: "Search Documents",
@@ -76,14 +76,15 @@ export class ReportsTab {
 
         // Add the controls
         switch (selectedReport) {
+            case ReportTypes.BrokenPermissions:
+                form.appendControls(Reports.BrokenPermissions.getFormFields());
+                break;
             case ReportTypes.DocRetention:
                 form.appendControls(Reports.DocRetention.getFormFields());
                 break;
             case ReportTypes.ExternalUsers:
                 break;
             case ReportTypes.FindUsers:
-                break;
-            case ReportTypes.ListPermissions:
                 break;
             case ReportTypes.SearchDocs:
                 form.appendControls(Reports.SearchDocs.getFormFields());
@@ -104,6 +105,12 @@ export class ReportsTab {
             onClick: () => {
                 // Run the report
                 switch (selectedReport) {
+                    case ReportTypes.BrokenPermissions:
+                        Reports.BrokenPermissions.run(this._el, form.getValues(), () => {
+                            // Render this component
+                            this.render();
+                        });
+                        break;
                     case ReportTypes.DocRetention:
                         Reports.DocRetention.run(this._el, form.getValues(), () => {
                             // Render this component
@@ -113,12 +120,6 @@ export class ReportsTab {
                     case ReportTypes.ExternalUsers:
                         break;
                     case ReportTypes.FindUsers:
-                        break;
-                    case ReportTypes.ListPermissions:
-                        Reports.ListPermissions.run(this._el, form.getValues(), () => {
-                            // Render this component
-                            this.render();
-                        });
                         break;
                     case ReportTypes.SearchDocs:
                         Reports.SearchDocs.run(this._el, form.getValues(), () => {

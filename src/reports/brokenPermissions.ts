@@ -26,7 +26,7 @@ const CSVFields = [
     "SiteGroupId", "SiteGroupName", "SiteGroupPermission", "SiteGroupUrl", "SiteGroupUsers"
 ]
 
-export class ListPermissions {
+export class BrokenPermissions {
     private static _items: IPermission[] = [];
 
     // Analyzes a list

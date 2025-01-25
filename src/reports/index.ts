@@ -1,3 +1,3 @@
 export * from "./docRetention";
-export * from "./listPermissions";
+export * from "./brokenPermissions";
 export * from "./searchDocs";
