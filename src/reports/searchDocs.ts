@@ -23,19 +23,11 @@ interface ISearchItem {
 }
 
 const CSVFields = [
-    "Author",
-    "FileExtension",
-    "HitHighlightedSummary",
-    "LastModifiedTime",
-    "ListId",
-    "Path",
-    "SPSiteUrl",
-    "SPWebUrl",
-    "Title",
-    "WebId"
+    "Author", "FileExtension", "HitHighlightedSummary", "LastModifiedTime",
+    "ListId", "Path", "SPSiteUrl", "SPWebUrl", "Title", "WebId"
 ]
 
-export class DocRetention {
+export class SearchDocs {
     // Deletes a document
     private static deleteDocument(item: ISearchItem) {
         // Display a loading dialog
@@ -65,15 +57,25 @@ export class DocRetention {
 
     // Gets the form fields to display
     static getFormFields(): Components.IFormControlProps[] {
-        return [{
-            name: "SelectedDate",
-            label: "Select Date",
-            description: "The date to find content older than.",
-            errorMessage: "A date is required to run the query.",
-            type: Components.FormControlTypes.DateTime,
-            required: true,
-            value: moment(Date.now()).subtract(36, "months").toISOString()
-        }];
+        return [
+            {
+                label: "Search Terms",
+                name: "SearchTerms",
+                className: "mb-3",
+                description: "Enter the search terms using quotes for phrases [Ex: movie \"social media\" show]",
+                type: Components.FormControlTypes.TextField,
+                required: true,
+                value: Strings.SearchTerms
+            },
+            {
+                label: "File Types",
+                name: "FileTypes",
+                className: "mb-3",
+                type: Components.FormControlTypes.TextField,
+                required: true,
+                value: Strings.SearchFileTypes
+            }
+        ];
     }
 
     // Renders the search summary
@@ -85,7 +87,7 @@ export class DocRetention {
             onRendering: dtProps => {
                 dtProps.columnDefs = [
                     {
-                        "targets": 5,
+                        "targets": 6,
                         "orderable": false,
                         "searchable": false
                     }
@@ -138,10 +140,41 @@ export class DocRetention {
                     }
                 },
                 {
+                    name: "",
+                    title: "Search Result",
+                    onRenderCell: (el, col, item: ISearchItem) => {
+                        // Add the data-filter attribute for searching notes properly
+                        el.setAttribute("data-filter", item.HitHighlightedSummary);
+
+                        // Add the data-order attribute for sorting notes properly
+                        el.setAttribute("data-order", item.HitHighlightedSummary);
+
+                        // Declare a span element
+                        let span = document.createElement("span");
+
+                        // Return the plain text if less than 50 chars
+                        if (el.innerHTML.length < 50) {
+                            span.innerHTML = item.HitHighlightedSummary;
+                        } else {
+                            // Truncate to the last white space character in the text after 50 chars and add an ellipsis
+                            span.innerHTML = item.HitHighlightedSummary.substring(0, 50).replace(/\s([^\s]*)$/, '') + '&#8230';
+
+                            // Add a tooltip containing the text
+                            Components.Tooltip({
+                                content: "<small>" + item.HitHighlightedSummary + "</small>",
+                                target: span
+                            });
+                        }
+
+                        // Append the span
+                        el.appendChild(span);
+                    }
+                },
+                {
                     className: "text-end",
                     name: "",
                     title: "",
-                    onRenderCell: (el, col, row: ISearchItem) => {
+                    onRenderCell: (el, col, item: ISearchItem) => {
                         let btnDelete: Components.IButton = null;
 
                         // Render the buttons
@@ -158,8 +191,8 @@ export class DocRetention {
                                         text: "View",
                                         type: Components.ButtonTypes.OutlinePrimary,
                                         onClick: () => {
-                                            // View the document
-                                            window.open(Documents.isWopi(`${row.Title}.${row.FileExtension}`) ? row.SPWebUrl + "/_layouts/15/WopiFrame.aspx?sourcedoc=" + row.Path + "&action=view" : row.Path, "_blank");
+                                            // Show the security group
+                                            window.open(Documents.isWopi(`${item.Title}.${item.FileExtension}`) ? item.SPWebUrl + "/_layouts/15/WopiFrame.aspx?sourcedoc=" + item.Path + "&action=view" : item.Path, "_blank");
                                         }
                                     }
                                 },
@@ -174,7 +207,7 @@ export class DocRetention {
                                         type: Components.ButtonTypes.OutlinePrimary,
                                         onClick: () => {
                                             // Download the document
-                                            window.open(`${row.SPWebUrl}/_layouts/15/download.aspx?SourceUrl=${row.Path}`, "_blank");
+                                            window.open(`${item.SPWebUrl}/_layouts/15/download.aspx?SourceUrl=${item.Path}`, "_blank");
                                         }
                                     }
                                 },
@@ -195,7 +228,7 @@ export class DocRetention {
                                                 btnDelete.disable();
 
                                                 // Delete the document
-                                                this.deleteDocument(row);
+                                                this.deleteDocument(item);
                                             }
                                         }
                                     }
@@ -212,7 +245,7 @@ export class DocRetention {
     private static renderNavigation(el: HTMLElement, items: ISearchItem[], onClose: () => void) {
         new Navigation({
             el,
-            title: "Document Retention",
+            title: "Search Content",
             items: [{
                 text: "New Search",
                 className: "btn-outline-light",
@@ -227,7 +260,7 @@ export class DocRetention {
                 iconType: OfficeOnline(24, 24, "mx-1"),
                 onClick: () => {
                     // Export the CSV
-                    new ExportCSV("docRetention.csv", CSVFields, items);
+                    new ExportCSV("searchDocs.csv", CSVFields, items);
                 }
             }]
         });
@@ -237,19 +270,18 @@ export class DocRetention {
     static run(el: HTMLElement, values: { [key: string]: string }, onClose: () => void) {
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Site");
-        LoadingDialog.setBody("Searching the site for files...");
+        LoadingDialog.setBody("Searching the content on this site...");
         LoadingDialog.show();
 
-        // Get the start date
-        let startDate = moment(values["SelectedDate"]).format("YYYY-MM-DD");
-
-        // Search the site
-        Search.postQuery<ISearchItem>({
+        Search.postQuery({
             url: DataSource.SiteContext.SiteFullUrl,
-            getAllItems: true,
             targetInfo: { requestDigest: DataSource.SiteContext.FormDigestValue },
             query: {
-                Querytext: `IsDocument: true LastModifiedTime<${startDate} path: ${DataSource.SiteContext.SiteFullUrl}`,
+                Querytext: `${values["SearchTerms"]} IsDocument: true path: ${DataSource.SiteContext.SiteFullUrl}`,
+                RefinementFilters: {
+                    results: [`fileExtension:or("${values["FileTypes"]}")`]
+                },
+                RowLimit: 500,
                 SelectProperties: {
                     results: [
                         "Author", "FileExtension", "HitHighlightedSummary", "LastModifiedTime",

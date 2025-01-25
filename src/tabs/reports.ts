@@ -1,6 +1,6 @@
 import { Components } from "gd-sprest-bs";
 import * as moment from "moment";
-import { DocRetention } from "../reports";
+import * as Reports from "../reports";
 
 // Report Types
 enum ReportTypes {
@@ -68,13 +68,8 @@ export class ReportsTab {
                         }
                     ],
                     onChange: item => {
-                        // See which report was selected
-                        switch (item?.value) {
-                            // Doc Retention
-                            case ReportTypes.DocRetention:
-
-                                break;
-                        }
+                        // Render the form for this report
+                        this.render(item?.value);
                     }
                 } as Components.IFormControlPropsDropdown
             ]
@@ -83,7 +78,7 @@ export class ReportsTab {
         // Add the controls
         switch (selectedReport) {
             case ReportTypes.DocRetention:
-                form.appendControls(DocRetention.getFormFields());
+                form.appendControls(Reports.DocRetention.getFormFields());
                 break;
             case ReportTypes.ExternalUsers:
                 break;
@@ -92,13 +87,15 @@ export class ReportsTab {
             case ReportTypes.ListPermissions:
                 break;
             case ReportTypes.SearchDocs:
+                form.appendControls(Reports.SearchDocs.getFormFields());
                 break;
         }
 
         // Render a footer
         let elFooter = document.createElement("div");
+        elFooter.classList.add("mt-2");
         elFooter.classList.add("d-flex");
-        elFooter.classList.add("align-items-end");
+        elFooter.classList.add("justify-content-end");
         this._el.appendChild(elFooter);
 
         // Add a button
@@ -109,7 +106,7 @@ export class ReportsTab {
                 // Run the report
                 switch (selectedReport) {
                     case ReportTypes.DocRetention:
-                        DocRetention.run(this._el, moment(form.getValues()["SelectedDate"]).format("YYYY-MM-DD"), () => {
+                        Reports.DocRetention.run(this._el, form.getValues(), () => {
                             // Render this component
                             this.render();
                         });
@@ -121,6 +118,10 @@ export class ReportsTab {
                     case ReportTypes.ListPermissions:
                         break;
                     case ReportTypes.SearchDocs:
+                        Reports.SearchDocs.run(this._el, form.getValues(), () => {
+                            // Render this component
+                            this.render();
+                        });
                         break;
                 }
             }
