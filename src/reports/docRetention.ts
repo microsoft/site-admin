@@ -1,6 +1,5 @@
-import { DataTable, Documents, LoadingDialog, Navigation } from "dattatable";
+import { Dashboard, Documents, LoadingDialog } from "dattatable";
 import { Components, Search, Web } from "gd-sprest-bs";
-import { OfficeOnline } from "gd-sprest-bs/build/icons/custom/officeOnline";
 import { fileEarmark } from "gd-sprest-bs/build/icons/svgs/fileEarmark";
 import { fileEarmarkArrowDown } from "gd-sprest-bs/build/icons/svgs/fileEarmarkArrowDown";
 import { trash } from "gd-sprest-bs/build/icons/svgs/trash";
@@ -77,159 +76,158 @@ export class DocRetention {
     }
 
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, rows: ISearchItem[]) {
-        // Render the table
-        new DataTable({
+    private static renderSummary(el: HTMLElement, items: ISearchItem[], onClose: () => void) {
+        // Render the summary
+        new Dashboard({
             el,
-            rows,
-            onRendering: dtProps => {
-                dtProps.columnDefs = [
-                    {
-                        "targets": 5,
-                        "orderable": false,
-                        "searchable": false
+            navigation: {
+                title: "Search Content",
+                showFilter: false,
+                items: [{
+                    text: "New Search",
+                    className: "btn-outline-light",
+                    isButton: true,
+                    onClick: () => {
+                        // Call the close event
+                        onClose();
                     }
-                ];
-
-                // Order by the 2nd column by default; ascending
-                dtProps.order = [[1, "asc"]];
-
-                // Return the properties
-                return dtProps;
+                }],
+                itemsEnd: [{
+                    text: "Export to CSV",
+                    className: "btn-outline-light me-2",
+                    isButton: true,
+                    onClick: () => {
+                        // Export the CSV
+                        new ExportCSV("docRetention.csv", CSVFields, items);
+                    }
+                }]
             },
-            columns: [
-                {
-                    name: "ListId",
-                    title: "List Id"
-                },
-                {
-                    name: "Path",
-                    title: "Document Url"
-                },
-                {
-                    name: "Title",
-                    title: "File Name",
-                    onRenderCell: (el, col, item: ISearchItem) => {
-                        el.innerHTML = item.Title + "." + item.FileExtension;
-                    }
-                },
-                {
-                    name: "Author",
-                    title: "Author(s)",
-                    onRenderCell: (el, col, item: ISearchItem) => {
-                        // Clear the cell
-                        el.innerHTML = "";
+            table: {
+                rows: items,
+                onRendering: dtProps => {
+                    dtProps.columnDefs = [
+                        {
+                            "targets": 5,
+                            "orderable": false,
+                            "searchable": false
+                        }
+                    ];
 
-                        // Validate Author exists & split by ;
-                        let authors = (item.Author && item.Author.split(";")) || [item.Author];
+                    // Order by the 2nd column by default; ascending
+                    dtProps.order = [[1, "asc"]];
 
-                        // Parse the Authors
-                        authors.forEach(author => {
-                            // Append the Author
-                            el.innerHTML += (author + "<br/>");
-                        });
-                    }
+                    // Return the properties
+                    return dtProps;
                 },
-                {
-                    name: "LastModifiedTime",
-                    title: "Modified",
-                    onRenderCell: (el, col, item: ISearchItem) => {
-                        el.innerHTML = item.LastModifiedTime ? moment(item.LastModifiedTime).format(Strings.TimeFormat) : "";
-                    }
-                },
-                {
-                    className: "text-end",
-                    name: "",
-                    title: "",
-                    onRenderCell: (el, col, row: ISearchItem) => {
-                        let btnDelete: Components.IButton = null;
+                columns: [
+                    {
+                        name: "ListId",
+                        title: "List Id"
+                    },
+                    {
+                        name: "Path",
+                        title: "Document Url"
+                    },
+                    {
+                        name: "Title",
+                        title: "File Name",
+                        onRenderCell: (el, col, item: ISearchItem) => {
+                            el.innerHTML = item.Title + "." + item.FileExtension;
+                        }
+                    },
+                    {
+                        name: "Author",
+                        title: "Author(s)",
+                        onRenderCell: (el, col, item: ISearchItem) => {
+                            // Clear the cell
+                            el.innerHTML = "";
 
-                        // Render the buttons
-                        Components.TooltipGroup({
-                            el,
-                            tooltips: [
-                                {
-                                    content: "View Document",
-                                    btnProps: {
-                                        className: "pe-2 py-1",
-                                        iconClassName: "mx-1",
-                                        iconType: fileEarmark,
-                                        iconSize: 24,
-                                        text: "View",
-                                        type: Components.ButtonTypes.OutlinePrimary,
-                                        onClick: () => {
-                                            // View the document
-                                            window.open(Documents.isWopi(`${row.Title}.${row.FileExtension}`) ? row.SPWebUrl + "/_layouts/15/WopiFrame.aspx?sourcedoc=" + row.Path + "&action=view" : row.Path, "_blank");
+                            // Validate Author exists & split by ;
+                            let authors = (item.Author && item.Author.split(";")) || [item.Author];
+
+                            // Parse the Authors
+                            authors.forEach(author => {
+                                // Append the Author
+                                el.innerHTML += (author + "<br/>");
+                            });
+                        }
+                    },
+                    {
+                        name: "LastModifiedTime",
+                        title: "Modified",
+                        onRenderCell: (el, col, item: ISearchItem) => {
+                            el.innerHTML = item.LastModifiedTime ? moment(item.LastModifiedTime).format(Strings.TimeFormat) : "";
+                        }
+                    },
+                    {
+                        className: "text-end",
+                        name: "",
+                        title: "",
+                        onRenderCell: (el, col, row: ISearchItem) => {
+                            let btnDelete: Components.IButton = null;
+
+                            // Render the buttons
+                            Components.TooltipGroup({
+                                el,
+                                tooltips: [
+                                    {
+                                        content: "View Document",
+                                        btnProps: {
+                                            className: "pe-2 py-1",
+                                            iconClassName: "mx-1",
+                                            iconType: fileEarmark,
+                                            iconSize: 24,
+                                            text: "View",
+                                            type: Components.ButtonTypes.OutlinePrimary,
+                                            onClick: () => {
+                                                // View the document
+                                                window.open(Documents.isWopi(`${row.Title}.${row.FileExtension}`) ? row.SPWebUrl + "/_layouts/15/WopiFrame.aspx?sourcedoc=" + row.Path + "&action=view" : row.Path, "_blank");
+                                            }
                                         }
-                                    }
-                                },
-                                {
-                                    content: "Download Document",
-                                    btnProps: {
-                                        className: "pe-2 py-1",
-                                        iconClassName: "mx-1",
-                                        iconType: fileEarmarkArrowDown,
-                                        iconSize: 24,
-                                        text: "Download",
-                                        type: Components.ButtonTypes.OutlinePrimary,
-                                        onClick: () => {
-                                            // Download the document
-                                            window.open(`${row.SPWebUrl}/_layouts/15/download.aspx?SourceUrl=${row.Path}`, "_blank");
+                                    },
+                                    {
+                                        content: "Download Document",
+                                        btnProps: {
+                                            className: "pe-2 py-1",
+                                            iconClassName: "mx-1",
+                                            iconType: fileEarmarkArrowDown,
+                                            iconSize: 24,
+                                            text: "Download",
+                                            type: Components.ButtonTypes.OutlinePrimary,
+                                            onClick: () => {
+                                                // Download the document
+                                                window.open(`${row.SPWebUrl}/_layouts/15/download.aspx?SourceUrl=${row.Path}`, "_blank");
+                                            }
                                         }
-                                    }
-                                },
-                                {
-                                    content: "Delete Document",
-                                    btnProps: {
-                                        assignTo: btn => { btnDelete = btn; },
-                                        className: "pe-2 py-1",
-                                        iconClassName: "mx-1",
-                                        iconType: trash,
-                                        iconSize: 24,
-                                        text: "Delete",
-                                        type: Components.ButtonTypes.OutlineDanger,
-                                        onClick: () => {
-                                            // Confirm the deletion of the group
-                                            if (confirm("Are you sure you want to delete this document?")) {
-                                                // Disable this button
-                                                btnDelete.disable();
+                                    },
+                                    {
+                                        content: "Delete Document",
+                                        btnProps: {
+                                            assignTo: btn => { btnDelete = btn; },
+                                            className: "pe-2 py-1",
+                                            iconClassName: "mx-1",
+                                            iconType: trash,
+                                            iconSize: 24,
+                                            text: "Delete",
+                                            type: Components.ButtonTypes.OutlineDanger,
+                                            onClick: () => {
+                                                // Confirm the deletion of the group
+                                                if (confirm("Are you sure you want to delete this document?")) {
+                                                    // Disable this button
+                                                    btnDelete.disable();
 
-                                                // Delete the document
-                                                this.deleteDocument(row);
+                                                    // Delete the document
+                                                    this.deleteDocument(row);
+                                                }
                                             }
                                         }
                                     }
-                                }
-                            ]
-                        });
+                                ]
+                            });
+                        }
                     }
-                }
-            ]
-        });
-    }
-
-    // Renders the Navigation
-    private static renderNavigation(el: HTMLElement, items: ISearchItem[], onClose: () => void) {
-        new Navigation({
-            el,
-            title: "Document Retention",
-            items: [{
-                text: "New Search",
-                className: "btn-outline-light",
-                isButton: true,
-                onClick: () => {
-                    // Call the close event
-                    onClose();
-                }
-            }],
-            itemsEnd: [{
-                text: "Export to CSV",
-                iconType: OfficeOnline(24, 24, "mx-1"),
-                onClick: () => {
-                    // Export the CSV
-                    new ExportCSV("docRetention.csv", CSVFields, items);
-                }
-            }]
+                ]
+            }
         });
     }
 
@@ -258,11 +256,11 @@ export class DocRetention {
                 }
             }
         }).then(search => {
-            // Render the navigation
-            this.renderNavigation(el, search.results, onClose);
+            // Clear the element
+            while (el.firstChild) { el.removeChild(el.firstChild); }
 
             // Render the summary
-            this.renderSummary(el, search.results);
+            this.renderSummary(el, search.results, onClose);
 
             // Hide the loading dialog
             LoadingDialog.hide();
