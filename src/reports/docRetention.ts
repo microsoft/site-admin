@@ -64,6 +64,19 @@ export class DocRetention {
         )
     }
 
+    // Gets the form fields to display
+    static getFormFields(): Components.IFormControlProps[] {
+        return [{
+            name: "SelectedDate",
+            label: "Select Date",
+            description: "The date to find content older than.",
+            errorMessage: "A date is required to run the query.",
+            type: Components.FormControlTypes.DateTime,
+            required: true,
+            value: moment(Date.now()).subtract(36, "months").toISOString()
+        }];
+    }
+
     // Renders the search summary
     private static renderSummary(el: HTMLElement, rows: ISearchItem[]) {
         // Render the table
@@ -200,7 +213,8 @@ export class DocRetention {
     private static renderFooter(el: HTMLElement, items: ISearchItem[], onClose: () => void) {
         // Set the footer
         let elFooter = document.createElement("div");
-        elFooter.classList.add("d-flex align-items-end");
+        elFooter.classList.add("d-flex");
+        elFooter.classList.add("align-items-end");
         el.appendChild(elFooter);
 
         // Render the buttons

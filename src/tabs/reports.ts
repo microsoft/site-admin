@@ -26,7 +26,7 @@ export class ReportsTab {
     }
 
     // Renders the tab
-    private render() {
+    private render(selectedReport: string = ReportTypes.DocRetention) {
         // Clear the element
         while (this._el.firstChild) { this._el.removeChild(this._el.firstChild); }
 
@@ -39,6 +39,7 @@ export class ReportsTab {
                     label: "Select Report",
                     description: "Select a report to run against this site.",
                     type: Components.FormControlTypes.Dropdown,
+                    value: selectedReport,
                     items: [
                         {
                             text: "Document Retention",
@@ -67,47 +68,38 @@ export class ReportsTab {
                         }
                     ],
                     onChange: item => {
-                        // Hide the controls
-                        form.getControl("SelectedDate").hide();
-
                         // See which report was selected
                         switch (item?.value) {
                             // Doc Retention
                             case ReportTypes.DocRetention:
-                                // Make the control visible
-                                form.getControl("SelectedDate").show();
+
                                 break;
                         }
                     }
-                } as Components.IFormControlPropsDropdown,
-                {
-                    name: "SelectedDate",
-                    label: "Select Date",
-                    description: "The date to find content older than.",
-                    type: Components.FormControlTypes.DateTime,
-                    value: moment(Date.now()).subtract(36, "months").toISOString(),
-                    onValidate: (ctrl, results) => {
-                        // See if this report is selected
-                        if (form.getValues()["ReportType"] == ReportTypes.DocRetention) {
-                            // Ensure a date was selected
-                            if (results.value == null) {
-                                // Update the results
-                                results.isValid = false;
-                                results.invalidMessage = "A date is required to run the query."
-                            }
-                        }
-
-                        // Return the results
-                        return results;
-                    }
-                }
+                } as Components.IFormControlPropsDropdown
             ]
         });
 
+        // Add the controls
+        switch (selectedReport) {
+            case ReportTypes.DocRetention:
+                form.appendControls(DocRetention.getFormFields());
+                break;
+            case ReportTypes.ExternalUsers:
+                break;
+            case ReportTypes.FindUsers:
+                break;
+            case ReportTypes.ListPermissions:
+                break;
+            case ReportTypes.SearchDocs:
+                break;
+        }
+
         // Render a footer
         let elFooter = document.createElement("div");
-        elFooter.classList.add("d-flex align-items-end");
-        elFooter.appendChild(elFooter);
+        elFooter.classList.add("d-flex");
+        elFooter.classList.add("align-items-end");
+        this._el.appendChild(elFooter);
 
         // Add a button
         Components.Button({
@@ -115,13 +107,20 @@ export class ReportsTab {
             text: "Run",
             onClick: () => {
                 // Run the report
-                switch (form.getValues()["ReportType"]) {
-                    // Doc Retention
+                switch (selectedReport) {
                     case ReportTypes.DocRetention:
                         DocRetention.run(this._el, moment(form.getValues()["SelectedDate"]).format("YYYY-MM-DD"), () => {
                             // Render this component
                             this.render();
                         });
+                        break;
+                    case ReportTypes.ExternalUsers:
+                        break;
+                    case ReportTypes.FindUsers:
+                        break;
+                    case ReportTypes.ListPermissions:
+                        break;
+                    case ReportTypes.SearchDocs:
                         break;
                 }
             }
