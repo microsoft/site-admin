@@ -5,6 +5,10 @@ import { DocRetention } from "../reports";
 // Report Types
 enum ReportTypes {
     DocRetention = "DocRetention",
+    ExternalUsers = "ExternalUsers",
+    FindUsers = "FindUsers",
+    ListPermissions = "ListPermissions",
+    SearchDocs = "SearchDocs"
 }
 
 /**
@@ -40,6 +44,26 @@ export class ReportsTab {
                             text: "Document Retention",
                             data: "Find documents older than a specified date.",
                             value: ReportTypes.DocRetention
+                        },
+                        {
+                            text: "External Users",
+                            data: "Scans for external user information.",
+                            value: ReportTypes.ExternalUsers
+                        },
+                        {
+                            text: "Find Users",
+                            data: "Find users by keyword or account.",
+                            value: ReportTypes.FindUsers
+                        },
+                        {
+                            text: "List Permissions",
+                            data: "Scans the permissions for all lists and libraries.",
+                            value: ReportTypes.ListPermissions
+                        },
+                        {
+                            text: "Search Documents",
+                            data: "Find documents by keywords.",
+                            value: ReportTypes.SearchDocs
                         }
                     ],
                     onChange: item => {
