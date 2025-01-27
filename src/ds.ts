@@ -120,6 +120,33 @@ export class DataSource {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
     }
 
+    // Gets all web urls for a site collection
+    static getAllWebs(): PromiseLike<{ SPWebUrl: string; WebId: string; }[]> {
+        // Return a promise
+        return new Promise((resolve, reject) => {
+            // Get all of the sites for this collection
+            Search.postQuery<{
+                SPWebUrl: string;
+                WebId: string;
+            }>({
+                getAllItems: true,
+                query: {
+                    Querytext: "contentClass:STS_Site contentClass:STS_Web path: " + this.SiteContext.SiteFullUrl,
+                    SelectProperties: {
+                        results: ["SPWebUrl", "WebId"]
+                    }
+                },
+                targetInfo: {
+                    requestDigest: this.SiteContext.FormDigestValue,
+                    url: this.SiteContext.SiteFullUrl
+                }
+            }).then(search => {
+                // Resolve the request
+                resolve(search.results);
+            }, reject);
+        });
+    }
+
     // List Items
     static get ListItems(): IListItem[] { return this.List.Items; }
 
@@ -203,42 +230,27 @@ export class DataSource {
                 this._siteItems = [];
 
                 // Get all of the sites for this collection
-                Search.postQuery<{
-                    SPWebUrl: string;
-                    WebId;
-                }>({
-                    getAllItems: true,
-                    query: {
-                        Querytext: "contentClass:STS_Site contentClass:STS_Web path: " + this.SiteContext.SiteFullUrl,
-                        SelectProperties: {
-                            results: ["SPWebUrl", "WebId"]
-                        }
-                    },
-                    targetInfo: {
-                        requestDigest: this.SiteContext.FormDigestValue,
-                        url: this.SiteContext.SiteFullUrl
-                    }
-                }).then(search => {
-                    // Parse the results
-                    for (let i = 0; i < search.results.length; i++) {
-                        let result = search.results[i];
+                this.getAllWebs().then(webs => {
+                    // Parse the webs
+                    for (let i = 0; i < webs.length; i++) {
+                        let web = webs[i];
 
                         // Append the item
                         this._siteItems.push({
-                            text: result.SPWebUrl,
-                            value: result.WebId
+                            text: web.SPWebUrl,
+                            value: web.WebId
                         });
+
+                        // Sort the items
+                        this._siteItems = this._siteItems.sort((a, b) => {
+                            if (a.text < b.text) { return -1; }
+                            if (a.text > b.text) { return 1; }
+                            return 0;
+                        });
+
+                        // Resolve the request
+                        resolve();
                     }
-
-                    // Sort the items
-                    this._siteItems = this._siteItems.sort((a, b) => {
-                        if (a.text < b.text) { return -1; }
-                        if (a.text > b.text) { return 1; }
-                        return 0;
-                    });
-
-                    // Resolve the request
-                    resolve();
                 }, reject);
             }, reject);
         });

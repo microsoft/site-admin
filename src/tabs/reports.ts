@@ -25,7 +25,7 @@ export class ReportsTab {
     }
 
     // Renders the tab
-    private render(selectedReport: string = ReportTypes.DocRetention) {
+    private render(selectedReport: string = ReportTypes.BrokenPermissions) {
         // Clear the element
         while (this._el.firstChild) { this._el.removeChild(this._el.firstChild); }
 
@@ -83,6 +83,7 @@ export class ReportsTab {
                 form.appendControls(Reports.DocRetention.getFormFields());
                 break;
             case ReportTypes.ExternalUsers:
+                form.appendControls(Reports.ExternalUsers.getFormFields());
                 break;
             case ReportTypes.FindUsers:
                 break;
@@ -118,6 +119,10 @@ export class ReportsTab {
                         });
                         break;
                     case ReportTypes.ExternalUsers:
+                        Reports.ExternalUsers.run(this._el, form.getValues(), () => {
+                            // Render this component
+                            this.render();
+                        });
                         break;
                     case ReportTypes.FindUsers:
                         break;
