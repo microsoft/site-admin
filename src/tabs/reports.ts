@@ -11,8 +11,8 @@ export interface IReportProps {
 enum ReportTypes {
     DocRetention = "DocRetention",
     ExternalUsers = "ExternalUsers",
-    FindUsers = "FindUsers",
     SearchDocs = "SearchDocs",
+    SearchUsers = "SearchUsers",
     UniquePermissions = "UniquePermissions"
 }
 
@@ -59,14 +59,14 @@ export class ReportsTab {
                             value: ReportTypes.ExternalUsers
                         },
                         {
-                            text: "Find Users",
-                            data: "Find users by keyword or account.",
-                            value: ReportTypes.FindUsers
-                        },
-                        {
                             text: "Search Documents",
                             data: "Find documents by keywords.",
                             value: ReportTypes.SearchDocs
+                        },
+                        {
+                            text: "Search Users",
+                            data: "Search users by keyword or account.",
+                            value: ReportTypes.SearchUsers
                         },
                         {
                             text: "Unique Permissions",
@@ -90,10 +90,11 @@ export class ReportsTab {
             case ReportTypes.ExternalUsers:
                 form.appendControls(Reports.ExternalUsers.getFormFields());
                 break;
-            case ReportTypes.FindUsers:
-                break;
             case ReportTypes.SearchDocs:
                 form.appendControls(Reports.SearchDocs.getFormFields(this._reportProps?.docSearchFileExt, this._reportProps?.docSearchKeywords));
+                break;
+            case ReportTypes.SearchUsers:
+                form.appendControls(Reports.SearchUsers.getFormFields());
                 break;
             case ReportTypes.UniquePermissions:
                 form.appendControls(Reports.UniquePermissions.getFormFields());
@@ -129,13 +130,33 @@ export class ReportsTab {
                             this.render(selectedReport);
                         });
                         break;
-                    case ReportTypes.FindUsers:
-                        break;
                     case ReportTypes.SearchDocs:
                         Reports.SearchDocs.run(this._el, form.getValues(), () => {
                             // Render this component
                             this.render(selectedReport);
                         });
+                        break;
+                    case ReportTypes.SearchUsers:
+                        // Ensure the values exist
+                        let values = form.getValues();
+                        if (values.UserName || values.PeoplePicker.length > 0) {
+                            Reports.SearchUsers.run(this._el, values, () => {
+                                // Render this component
+                                this.render(selectedReport);
+                            });
+                        } else {
+                            // Update the validation
+                            let ctrl = form.getControl("UserName");
+                            ctrl.updateValidation(ctrl.el, {
+                                isValid: false,
+                                invalidMessage: "A keyword or account is required to perform a search."
+                            });
+                            ctrl = form.getControl("PeoplePicker");
+                            ctrl.updateValidation(ctrl.el, {
+                                isValid: false,
+                                invalidMessage: "A keyword or account is required to perform a search."
+                            });
+                        }
                         break;
                     case ReportTypes.UniquePermissions:
                         Reports.UniquePermissions.run(this._el, form.getValues(), () => {
