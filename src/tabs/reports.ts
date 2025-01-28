@@ -109,13 +109,13 @@ export class ReportsTab {
                     case ReportTypes.DocRetention:
                         Reports.DocRetention.run(this._el, form.getValues(), () => {
                             // Render this component
-                            this.render();
+                            this.render(selectedReport);
                         });
                         break;
                     case ReportTypes.ExternalUsers:
                         Reports.ExternalUsers.run(this._el, form.getValues(), () => {
                             // Render this component
-                            this.render();
+                            this.render(selectedReport);
                         });
                         break;
                     case ReportTypes.FindUsers:
@@ -123,13 +123,13 @@ export class ReportsTab {
                     case ReportTypes.SearchDocs:
                         Reports.SearchDocs.run(this._el, form.getValues(), () => {
                             // Render this component
-                            this.render();
+                            this.render(selectedReport);
                         });
                         break;
                     case ReportTypes.UniquePermissions:
                         Reports.UniquePermissions.run(this._el, form.getValues(), () => {
                             // Render this component
-                            this.render();
+                            this.render(selectedReport);
                         });
                         break;
                 }

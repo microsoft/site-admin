@@ -70,7 +70,7 @@ export class Tabs {
                 }
             },
             {
-                tabName: "Reports (Beta)",
+                tabName: "Audit Tools (Beta)",
                 onRender: (el) => {
                     // Render the tab
                     this._tabReports = new ReportsTab(el);

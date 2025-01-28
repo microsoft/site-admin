@@ -271,13 +271,17 @@ export class SearchDocs {
         LoadingDialog.setBody("Searching the content on this site...");
         LoadingDialog.show();
 
+        // Get the form values
+        let fileExt = (values["FileTypes"]).split(' ');
+        let searchTerms = (values["SearchTerms"] || "").split(' ');
+
         Search.postQuery({
             url: DataSource.SiteContext.SiteFullUrl,
             targetInfo: { requestDigest: DataSource.SiteContext.FormDigestValue },
             query: {
-                Querytext: `${values["SearchTerms"]} IsDocument: true path: ${DataSource.SiteContext.SiteFullUrl}`,
+                Querytext: `${searchTerms.join(" OR ")} IsDocument: true path: ${DataSource.SiteContext.SiteFullUrl}`,
                 RefinementFilters: {
-                    results: [`fileExtension:or("${values["FileTypes"]}")`]
+                    results: [`fileExtension:or("${fileExt.join('", "')}")`]
                 },
                 RowLimit: 500,
                 SelectProperties: {
