@@ -1,5 +1,5 @@
 import { Dashboard, Documents, LoadingDialog } from "dattatable";
-import { Components, Search, Web } from "gd-sprest-bs";
+import { Components, Search, Types, Web } from "gd-sprest-bs";
 import { fileEarmark } from "gd-sprest-bs/build/icons/svgs/fileEarmark";
 import { fileEarmarkArrowDown } from "gd-sprest-bs/build/icons/svgs/fileEarmarkArrowDown";
 import { trash } from "gd-sprest-bs/build/icons/svgs/trash";
@@ -64,14 +64,14 @@ export class SearchDocs {
                 description: "Enter the search terms using quotes for phrases [Ex: movie \"social media\" show]",
                 type: Components.FormControlTypes.TextField,
                 required: true,
-                value: keywords
+                value: keywords,
+                errorMessage: "You must enter at least 1 search term."
             },
             {
                 label: "File Types",
                 name: "FileTypes",
                 className: "mb-3",
                 type: Components.FormControlTypes.TextField,
-                required: true,
                 value: fileExt
             }
         ];
@@ -272,25 +272,34 @@ export class SearchDocs {
         LoadingDialog.show();
 
         // Get the form values
-        let fileExt = (values["FileTypes"]).split(' ');
+        let fileExt = values["FileTypes"] ? values["FileTypes"].split(' ') : null;
         let searchTerms = (values["SearchTerms"] || "").split(' ');
 
+        // Set the query
+        let query: Types.Microsoft.Office.Server.Search.REST.SearchRequest = {
+            Querytext: `${searchTerms.join(" OR ")} IsDocument: true path: ${DataSource.SiteContext.SiteFullUrl}`,
+            RowLimit: 500,
+            SelectProperties: {
+                results: [
+                    "Author", "FileExtension", "HitHighlightedSummary", "LastModifiedTime",
+                    "ListId", "Path", "SPSiteUrl", "SPWebUrl", "Title", "WebId"
+                ]
+            }
+        };
+
+        // See if file extensions exist
+        if (fileExt) {
+            // Set the filter
+            query.RefinementFilters = {
+                results: [`fileExtension:or("${fileExt.join('", "')}")`]
+            };
+        }
+
+        // Search for the content
         Search.postQuery({
             url: DataSource.SiteContext.SiteFullUrl,
             targetInfo: { requestDigest: DataSource.SiteContext.FormDigestValue },
-            query: {
-                Querytext: `${searchTerms.join(" OR ")} IsDocument: true path: ${DataSource.SiteContext.SiteFullUrl}`,
-                RefinementFilters: {
-                    results: [`fileExtension:or("${fileExt.join('", "')}")`]
-                },
-                RowLimit: 500,
-                SelectProperties: {
-                    results: [
-                        "Author", "FileExtension", "HitHighlightedSummary", "LastModifiedTime",
-                        "ListId", "Path", "SPSiteUrl", "SPWebUrl", "Title", "WebId"
-                    ]
-                }
-            }
+            query
         }).then(search => {
             // Clear the element
             while (el.firstChild) { el.removeChild(el.firstChild); }

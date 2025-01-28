@@ -112,6 +112,9 @@ export class ReportsTab {
             el: elFooter,
             text: "Run",
             onClick: () => {
+                // Ensure the form is required
+                if (!form.isValid()) { return; }
+
                 // Run the report
                 switch (selectedReport) {
                     case ReportTypes.DocRetention:
