@@ -73,18 +73,18 @@ export class Tabs {
                 tabName: "Audit Tools (Beta)",
                 onRender: (el) => {
                     // Render the tab
-                    this._tabReports = new ReportsTab(el);
+                    this._tabReports = new ReportsTab(el, appProps.reports);
                 }
             }
         ];
 
         // See if we are customizing a search property
-        if (!isEmpty(appProps.searchProp) && appProps.searchProp.key) {
+        if (!isEmpty(appProps.searchProps) && appProps.searchProps.key) {
             items.splice(1, 0, {
-                tabName: appProps.searchProp.tabName || "Search Property",
+                tabName: appProps.searchProps.tabName || "Search Property",
                 onRender: (el) => {
                     // Render the tab
-                    this._tabSearch = new SearchPropTab(el, appProps.searchProp);
+                    this._tabSearch = new SearchPropTab(el, appProps.searchProps);
                 }
             });
         }

@@ -21,8 +21,6 @@ const Strings = {
     },
     ProjectName: "Site Admin",
     ProjectDescription: "Application for adminitrators to make requests for changes on their site collections.",
-    SearchFileTypes: "csv doc docx dot dotx pdf pot potx pps ppsx ppt pptx txt xls xlsx xlt xltx",
-    SearchTerms: "phi pii ssn",
     SourceUrl: ContextInfo.webServerRelativeUrl,
     TimeFormat: "YYYY-MMM-DD HH:mm:ss",
     Version: "0.1"

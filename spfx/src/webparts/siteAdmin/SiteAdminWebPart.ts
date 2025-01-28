@@ -12,6 +12,8 @@ export interface ISiteAdminWebPartProps {
   AppTitle: string;
   MaxStorage: number;
   MaxStorageDescription: string;
+  ReportsDocSearchFileExt: string;
+  ReportsDocSearchKeywords: string;
   SitePropCommentsOnSitePagesDisabled: boolean;
   SitePropCommentsOnSitePagesDisabledDescription: string;
   SitePropCommentsOnSitePagesDisabledLabel: string;
@@ -86,7 +88,11 @@ declare const SiteAdmin: {
     title?: string;
     maxStorageDesc?: string;
     maxStorageSize?: number;
-    searchProp?: {
+    reportProps?: {
+      docSearchFileExt?: string;
+      docSearchKeywords?: string;
+    }
+    searchProps?: {
       description: string;
       key: string;
       label: string;
@@ -161,7 +167,11 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       el: this.domElement,
       maxStorageDesc: this.properties.MaxStorageDescription,
       maxStorageSize: this.properties.MaxStorage,
-      searchProp: {
+      reportProps: {
+        docSearchFileExt: this.properties.ReportsDocSearchFileExt,
+        docSearchKeywords: this.properties.ReportsDocSearchKeywords
+      },
+      searchProps: {
         description: this.properties.WebPropSearchPropertyDescription,
         key: this.properties.WebPropSearchPropertyKey,
         label: this.properties.WebPropSearchPropertyLabel,
@@ -294,6 +304,21 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   label: strings.MaxStorageDescription,
                   description: "The description to display when the max storage threshold has been reached.",
                   value: this.properties.MaxStorageDescription
+                }),
+              ]
+            },
+            {
+              groupName: "Audit Tools",
+              groupFields: [
+                PropertyPaneTextField("ReportsDocSearchFileExt", {
+                  label: strings.ReportsDocSearchKeywords,
+                  description: "The default file extensions to search.",
+                  value: this.properties.ReportsDocSearchKeywords
+                }),
+                PropertyPaneTextField("ReportsDocSearchKeywords", {
+                  label: strings.ReportsDocSearchKeywords,
+                  description: "The default keywords to search for.",
+                  value: this.properties.ReportsDocSearchKeywords
                 }),
               ]
             },

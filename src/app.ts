@@ -7,7 +7,8 @@ import { LoadForm } from "./loadForm";
 import Strings from "./strings";
 import { Security } from "./security";
 import { Tabs } from "./tabs";
-import { ISearchProp } from "./tabs/searchProp";
+import { IReportProps } from "./tabs/reports";
+import { ISearchProps } from "./tabs/searchProp";
 
 // App Properties
 export interface IProp {
@@ -20,7 +21,8 @@ export interface IAppProps {
     el: HTMLElement;
     maxStorageDesc?: string;
     maxStorageSize?: number;
-    searchProp?: ISearchProp;
+    reports?: IReportProps;
+    searchProps?: ISearchProps;
     siteProps: { [key: string]: IProp; }
     title?: string;
     webProps: { [key: string]: IProp; }

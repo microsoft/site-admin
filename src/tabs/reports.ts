@@ -1,6 +1,12 @@
 import { Components } from "gd-sprest-bs";
 import * as Reports from "../reports";
 
+// Report Properties
+export interface IReportProps {
+    docSearchFileExt?: string;
+    docSearchKeywords?: string;
+}
+
 // Report Types
 enum ReportTypes {
     DocRetention = "DocRetention",
@@ -15,10 +21,12 @@ enum ReportTypes {
  */
 export class ReportsTab {
     private _el: HTMLElement = null;
+    private _reportProps: IReportProps = null;
 
     // Constructor
-    constructor(el: HTMLElement) {
+    constructor(el: HTMLElement, reportProps: IReportProps) {
         this._el = el;
+        this._reportProps = reportProps;
 
         // Render the tab
         this.render();
@@ -85,7 +93,7 @@ export class ReportsTab {
             case ReportTypes.FindUsers:
                 break;
             case ReportTypes.SearchDocs:
-                form.appendControls(Reports.SearchDocs.getFormFields());
+                form.appendControls(Reports.SearchDocs.getFormFields(this._reportProps?.docSearchFileExt, this._reportProps?.docSearchKeywords));
                 break;
             case ReportTypes.UniquePermissions:
                 form.appendControls(Reports.UniquePermissions.getFormFields());

@@ -2,6 +2,8 @@ declare interface ISiteAdminWebPartStrings {
   AppTitle: string;
   MaxStorage: string;
   MaxStorageDescription: string;
+  ReportsDocSearchFileExt: string;
+  ReportsDocSearchKeywords: string;
   SitePropCommentsOnSitePagesDisabled: string;
   SitePropContainsAppCatalog: string;
   SitePropCreated: string;

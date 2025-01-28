@@ -1,7 +1,7 @@
 import { Components } from "gd-sprest-bs";
-import { DataSource, IRequest } from "../ds";
+import { DataSource } from "../ds";
 
-export interface ISearchProp {
+export interface ISearchProps {
     description: string;
     key: string;
     label: string;
@@ -16,15 +16,15 @@ export class SearchPropTab {
     private _currValue: string = null;
     private _el: HTMLElement = null;
     private _newValue: string = null;
-    private _searchProp: ISearchProp = null;
+    private _searchProps: ISearchProps = null;
 
     // Constructor
-    constructor(el: HTMLElement, searchProp: ISearchProp) {
+    constructor(el: HTMLElement, searchProps: ISearchProps) {
         this._el = el;
-        this._searchProp = searchProp;
+        this._searchProps = searchProps;
 
         // Set the current value
-        this._currValue = DataSource.Site.RootWeb.AllProperties[this._searchProp.key];
+        this._currValue = DataSource.Site.RootWeb.AllProperties[this._searchProps.key];
 
         // Render the tab
         this.render();
@@ -33,14 +33,14 @@ export class SearchPropTab {
     // Gets the controls to render
     private getControls() {
         // See if the key doesn't exists
-        if (this._searchProp.key == null) { return []; }
+        if (this._searchProps.key == null) { return []; }
 
         // See if the values were provided
-        if (this._searchProp.values) {
+        if (this._searchProps.values) {
             let items: Components.IDropdownItem[] = [{ text: "" }];
 
             // Parse the values
-            let values = this._searchProp.values.split(',');
+            let values = this._searchProps.values.split(',');
             for (let i = 0; i < values.length; i++) {
                 let value = values[i].trim();
                 if (value) {
@@ -54,10 +54,10 @@ export class SearchPropTab {
 
             // Return a dropdown
             return [{
-                className: this._searchProp.key ? "" : "d-none",
+                className: this._searchProps.key ? "" : "d-none",
                 name: "SearchProp",
-                label: this._searchProp.label || "Search Property",
-                description: this._searchProp.description || "The custom property to set for search.",
+                label: this._searchProps.label || "Search Property",
+                description: this._searchProps.description || "The custom property to set for search.",
                 type: Components.FormControlTypes.Dropdown,
                 items,
                 value: this._currValue,
@@ -75,10 +75,10 @@ export class SearchPropTab {
         } else {
             // Add a textbox
             return [{
-                className: this._searchProp.key ? "" : "d-none",
+                className: this._searchProps.key ? "" : "d-none",
                 name: "SearchProp",
-                label: this._searchProp.label || "Search Property",
-                description: this._searchProp.description || "The custom property to set for search.",
+                label: this._searchProps.label || "Search Property",
+                description: this._searchProps.description || "The custom property to set for search.",
                 type: Components.FormControlTypes.TextField,
                 value: this._currValue,
                 onChange: value => {

@@ -5,8 +5,8 @@ import { fileEarmarkArrowDown } from "gd-sprest-bs/build/icons/svgs/fileEarmarkA
 import { trash } from "gd-sprest-bs/build/icons/svgs/trash";
 import * as moment from "moment";
 import { DataSource } from "../ds";
-import Strings from "../strings";
 import { ExportCSV } from "./exportCSV";
+import Strings from "../strings";
 
 interface ISearchItem {
     Author: string;
@@ -55,7 +55,7 @@ export class SearchDocs {
     }
 
     // Gets the form fields to display
-    static getFormFields(): Components.IFormControlProps[] {
+    static getFormFields(fileExt: string = "", keywords: string = ""): Components.IFormControlProps[] {
         return [
             {
                 label: "Search Terms",
@@ -64,7 +64,7 @@ export class SearchDocs {
                 description: "Enter the search terms using quotes for phrases [Ex: movie \"social media\" show]",
                 type: Components.FormControlTypes.TextField,
                 required: true,
-                value: Strings.SearchTerms
+                value: keywords
             },
             {
                 label: "File Types",
@@ -72,7 +72,7 @@ export class SearchDocs {
                 className: "mb-3",
                 type: Components.FormControlTypes.TextField,
                 required: true,
-                value: Strings.SearchFileTypes
+                value: fileExt
             }
         ];
     }
