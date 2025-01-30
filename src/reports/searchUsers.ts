@@ -89,34 +89,60 @@ export class SearchUsers {
     private static getUserInfo(web: Types.SP.WebOData, userInfo: IUserInfo) {
         // Return a promise
         return new Promise((resolve) => {
-            // Parse the groups
-            Helper.Executor(web.SiteGroups.results, group => {
-                // Parse the roles
-                for (let i = 0; i < web.RoleAssignments.results.length; i++) {
-                    let role: Types.SP.RoleAssignmentOData = web.RoleAssignments.results[i] as any;
+            // Parse the roles
+            for (let i = 0; i < web.RoleAssignments.results.length; i++) {
+                let role: Types.SP.RoleAssignmentOData = web.RoleAssignments.results[i] as any;
 
-                    // See if the user belongs to this role
-                    if (role.Member.LoginName == group.LoginName) {
-                        // Add the user information
-                        this._items.push({
-                            WebUrl: web.Url,
-                            WebTitle: web.Title,
-                            Id: userInfo.Id,
-                            LoginName: userInfo.Name,
-                            Name: userInfo.Title || userInfo.Name,
-                            Email: userInfo.EMail,
-                            Group: group.Title,
-                            GroupId: group.Id,
-                            GroupInfo: group.Description || "",
-                            Role: role.RoleDefinitionBindings.results[0].Name,
-                            RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
-                        });
-                    }
+                // See if this role is the user
+                if (role.Member.LoginName == userInfo.Name) {
+                    // Add the user information
+                    this._items.push({
+                        WebUrl: web.Url,
+                        WebTitle: web.Title,
+                        Id: userInfo.Id,
+                        LoginName: userInfo.Name,
+                        Name: userInfo.Title || userInfo.Name,
+                        Email: userInfo.EMail,
+                        Group: "",
+                        GroupId: 0,
+                        GroupInfo: "",
+                        Role: role.RoleDefinitionBindings.results[0].Name,
+                        RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
+                    });
+
+                    // Check the next role
+                    continue;
                 }
-            }).then(() => {
-                // Resolve the promise
-                resolve(null);
-            });
+            }
+
+            // Get the groups the user is associated with
+            Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).SiteUsers(userInfo.Id).Groups().execute(groups => {
+                // Parse the groups the member belongs to
+                Helper.Executor(groups.results, group => {
+                    // Parse the roles
+                    for (let i = 0; i < web.RoleAssignments.results.length; i++) {
+                        let role: Types.SP.RoleAssignmentOData = web.RoleAssignments.results[i] as any;
+
+                        // See if the user belongs to this role
+                        if (role.Member.LoginName == group.LoginName) {
+                            // Add the user information
+                            this._items.push({
+                                WebUrl: web.Url,
+                                WebTitle: web.Title,
+                                Id: userInfo.Id,
+                                LoginName: userInfo.Name,
+                                Name: userInfo.Title || userInfo.Name,
+                                Email: userInfo.EMail,
+                                Group: group.Title,
+                                GroupId: group.Id,
+                                GroupInfo: group.Description || "",
+                                Role: role.RoleDefinitionBindings.results[0].Name,
+                                RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
+                            });
+                        }
+                    }
+                }).then(resolve);
+            }, resolve);
         });
     }
 
@@ -153,28 +179,21 @@ export class SearchUsers {
                     resolve(users);
                 }, reject);
             } else {
-                // Get the users
-                // TODO - See if we can use the filter option
+                // Get the user
                 Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists("User Information List").Items().query({
-                    GetAllItems: true,
-                    Select: ["Id", "Name", "EMail", "Title", "UserName"],
-                    Top: 5000
+                    Filter: "Id eq " + user.Id,
+                    Select: ["Id", "Name", "EMail", "Title", "UserName"]
                 }).execute(items => {
-                    // Parse the items
-                    for (let i = 0; i < items.results.length; i++) {
-                        let item = items.results[i];
-
-                        // See if this is the target user
-                        if (item["EMail"] == user.Email || item["Name"] == user.LoginName || item["UserName"] == user.UserPrincipalName) {
-                            // Add the user
-                            users.push({
-                                EMail: item["EMail"],
-                                Id: item.Id,
-                                Name: item["Name"],
-                                Title: item.Title,
-                                UserName: item["UserName"]
-                            });
-                        }
+                    let item = items.results[0];
+                    if (item) {
+                        // Add the user
+                        users.push({
+                            EMail: item["EMail"],
+                            Id: item.Id,
+                            Name: item["Name"],
+                            Title: item.Title,
+                            UserName: item["UserName"]
+                        });
                     }
 
                     // Resolve the request
@@ -209,6 +228,30 @@ export class SearchUsers {
         )
     }
 
+    // Removes a user from a group
+    private static removeUserFromGroup(user: string, userId: number, groupId: number) {
+        // Display a loading dialog
+        LoadingDialog.setHeader("Removing User");
+        LoadingDialog.setBody(`Removing the site user '${user}' from the group. This will close after the request completes.`);
+        LoadingDialog.show();
+
+        // Remove the user from the site
+        Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).SiteGroups().getById(groupId).Users().removeById(userId).execute(
+            // Success
+            () => {
+                // Close the dialog
+                LoadingDialog.hide();
+            },
+
+            // Error
+            () => {
+                // Close the dialog
+                LoadingDialog.hide();
+
+                // TODO
+            }
+        )
+    }
     // Renders the search summary
     private static renderSummary(el: HTMLElement, items: ISearchItem[], onClose: () => void) {
         // Render the summary
@@ -241,7 +284,7 @@ export class SearchUsers {
                 onRendering: dtProps => {
                     dtProps.columnDefs = [
                         {
-                            "targets": 7,
+                            "targets": 6,
                             "orderable": false,
                             "searchable": false
                         }
@@ -259,12 +302,16 @@ export class SearchUsers {
                         title: "User Name"
                     },
                     {
-                        name: "LoginName",
-                        title: "Login"
-                    },
-                    {
-                        name: "Email",
-                        title: "User Email"
+                        name: "",
+                        title: "Login/Email",
+                        onRenderCell: (el, col, item: ISearchItem) => {
+                            // Render the login and email information
+                            el.innerHTML = `
+                                <b>EMail: </b><span>${item.Email || ""}</span>
+                                <br/>
+                                <b>Login: </b><span>${item.LoginName || ""}</span>
+                            `;
+                        }
                     },
                     {
                         name: "Group",
@@ -347,62 +394,60 @@ export class SearchUsers {
                         onRenderCell: (el, col, row: ISearchItem) => {
                             let btnDelete: Components.IButton = null;
 
-                            // Ensure this is a group
-                            if (row.Group) {
-                                // Render the buttons
-                                Components.TooltipGroup({
-                                    el,
-                                    tooltips: [
-                                        {
-                                            content: "View Group",
-                                            btnProps: {
-                                                className: "pe-2 py-1",
-                                                //iconType: GetIcon(24, 24, "PeopleTeam", "mx-1"),
-                                                text: "View",
-                                                type: Components.ButtonTypes.OutlinePrimary,
-                                                isDisabled: !(row.GroupId > 0),
-                                                onClick: () => {
-                                                    // View the group
-                                                    window.open(`${row.WebUrl}/${ContextInfo.layoutsUrl}/people.aspx?MembershipGroupId=${row.GroupId}`);
-                                                }
-                                            }
-                                        },
-                                        {
-                                            content: "Remove User",
-                                            btnProps: {
-                                                assignTo: btn => { btnDelete = btn; },
-                                                className: "pe-2 py-1",
-                                                //iconType: GetIcon(24, 24, "PersonDelete", "mx-1"),
-                                                text: "Remove",
-                                                type: Components.ButtonTypes.OutlineDanger,
-                                                isDisabled: !(row.Id > 0),
-                                                onClick: () => {
-                                                    // Confirm the removal of the user
-                                                    if (confirm("Are you sure you want to remove the user from this site?")) {
-                                                        // Disable this button
-                                                        btnDelete.disable();
+                            // Render the tooltips
+                            let tooltips = Components.TooltipGroup({ el });
 
-                                                        // Remove the user
-                                                        this.removeUser(row.Name, row.Id);
-                                                    }
-                                                }
-                                            }
+                            // Ensure this is a group
+                            if (row.GroupId > 0) {
+                                // Add the view button
+                                tooltips.add({
+                                    content: "View Group",
+                                    btnProps: {
+                                        className: "pe-2 py-1",
+                                        //iconType: GetIcon(24, 24, "PeopleTeam", "mx-1"),
+                                        text: "View",
+                                        type: Components.ButtonTypes.OutlinePrimary,
+                                        isDisabled: !(row.GroupId > 0),
+                                        onClick: () => {
+                                            // View the group
+                                            window.open(`${row.WebUrl}/${ContextInfo.layoutsUrl}/people.aspx?MembershipGroupId=${row.GroupId}`);
                                         }
-                                    ]
+                                    }
                                 });
-                            } else {
-                                // Render the delete button
-                                Components.Tooltip({
-                                    el,
-                                    content: "Remove User",
+
+                                // Add the remove button
+                                tooltips.add({
+                                    content: "Removes the user from the group",
                                     btnProps: {
                                         assignTo: btn => { btnDelete = btn; },
                                         className: "pe-2 py-1",
                                         //iconType: GetIcon(24, 24, "PersonDelete", "mx-1"),
-                                        text: "Remove",
+                                        text: "Remove From Group",
                                         type: Components.ButtonTypes.OutlineDanger,
                                         onClick: () => {
-                                            // Confirm the deletion of the group
+                                            // Confirm the removal of the user
+                                            if (confirm("Are you sure you want to remove the user from this group?")) {
+                                                // Disable this button
+                                                btnDelete.disable();
+
+                                                // Remove the user
+                                                this.removeUserFromGroup(row.Name, row.Id, row.GroupId);
+                                            }
+                                        }
+                                    }
+                                });
+                            } else {
+                                // Add the remove button
+                                tooltips.add({
+                                    content: "Removes the user from the site",
+                                    btnProps: {
+                                        assignTo: btn => { btnDelete = btn; },
+                                        className: "pe-2 py-1",
+                                        //iconType: GetIcon(24, 24, "PersonDelete", "mx-1"),
+                                        text: "Remove From Site",
+                                        type: Components.ButtonTypes.OutlineDanger,
+                                        onClick: () => {
+                                            // Confirm the removal of the user
                                             if (confirm("Are you sure you want to remove the user from this site?")) {
                                                 // Disable this button
                                                 btnDelete.disable();
@@ -439,7 +484,8 @@ export class SearchUsers {
         Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).query({
             Expand: [
                 "RoleAssignments", "RoleAssignments/Groups", "RoleAssignments/Member",
-                "RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings"
+                "RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings",
+                "SiteGroups"
             ]
         }).execute(web => {
             // Analyze the site

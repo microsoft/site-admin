@@ -21,7 +21,7 @@ export interface IAppProps {
     el: HTMLElement;
     maxStorageDesc?: string;
     maxStorageSize?: number;
-    reports?: IReportProps;
+    reportProps?: IReportProps;
     searchProps?: ISearchProps;
     siteProps: { [key: string]: IProp; }
     title?: string;

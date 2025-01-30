@@ -311,9 +311,9 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
               groupName: "Audit Tools",
               groupFields: [
                 PropertyPaneTextField("ReportsDocSearchFileExt", {
-                  label: strings.ReportsDocSearchKeywords,
+                  label: strings.ReportsDocSearchFileExt,
                   description: "The default file extensions to search.",
-                  value: this.properties.ReportsDocSearchKeywords
+                  value: this.properties.ReportsDocSearchFileExt
                 }),
                 PropertyPaneTextField("ReportsDocSearchKeywords", {
                   label: strings.ReportsDocSearchKeywords,
