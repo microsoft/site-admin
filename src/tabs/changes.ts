@@ -9,7 +9,7 @@ export interface IChangeRequest {
     oldValue: string | boolean | number;
     request?: IRequest
     response?: string;
-    scope: "Site" | "Web",
+    scope: "Search" | "Site" | "Web",
     url: string;
 }
 
@@ -218,22 +218,40 @@ export class ChangesTab {
             Helper.Executor(requests, request => {
                 // Return a promise
                 return new Promise(resolve => {
-                    let props = {};
-                    props[request.property] = request.newValue;
+                    // See if this is a request to update search
+                    if (request.scope == "Search") {
+                        // Update the search property
+                        Helper.setWebProperty(request.property, request.newValue as string, true, request.url).then(
+                            () => {
+                                // Update the request
+                                request.response = "The request was completed successfully.";
+                                resolve(null);
+                            },
+                            () => {
+                                // Update the request
+                                request.response = "The request failed to be updated.";
+                                resolve(null);
+                            }
+                        );
+                    } else {
+                        // Set the property to update
+                        let props = {};
+                        props[request.property] = request.newValue;
 
-                    // Save the changes
-                    Web(request.url, { requestDigest: DataSource.SiteContext.FormDigestValue }).update(props).execute(
-                        () => {
-                            // Update the request
-                            request.response = "The request was completed successfully.";
-                            resolve(null);
-                        },
-                        () => {
-                            // Update the request
-                            request.response = "The request failed to be updated.";
-                            resolve(null);
-                        }
-                    );
+                        // Save the changes
+                        Web(request.url, { requestDigest: DataSource.SiteContext.FormDigestValue }).update(props).execute(
+                            () => {
+                                // Update the request
+                                request.response = "The request was completed successfully.";
+                                resolve(null);
+                            },
+                            () => {
+                                // Update the request
+                                request.response = "The request failed to be updated.";
+                                resolve(null);
+                            }
+                        );
+                    }
                 });
             }).then(resolve);
         });

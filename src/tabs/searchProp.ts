@@ -1,5 +1,6 @@
 import { Components } from "gd-sprest-bs";
 import { DataSource } from "../ds";
+import { IChangeRequest } from "./changes";
 
 export interface ISearchProps {
     description: string;
@@ -93,6 +94,26 @@ export class SearchPropTab {
                 }
             } as Components.IFormControlPropsTextField];
         }
+    }
+
+    // Returns the new request items to create
+    getRequests(): IChangeRequest[] {
+        let requests: IChangeRequest[] = [];
+
+        // See if we are changing the value
+        if (this._currValue != this._newValue) {
+            // Add the request
+            requests.push({
+                oldValue: this._currValue,
+                newValue: this._newValue,
+                scope: "Search",
+                property: this._searchProps.key,
+                url: DataSource.SiteContext.SiteFullUrl
+            });
+        }
+
+        // Return the requests
+        return requests;
     }
 
     // Renders the tab

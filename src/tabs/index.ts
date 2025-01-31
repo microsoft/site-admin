@@ -113,10 +113,17 @@ export class Tabs {
             onClick: () => {
                 // Get the changes
                 let changes = this._tabFeatures.getRequests().concat(
+                    this._tabFeatures.getRequests(),
                     this._tabManagement.getRequests(),
                     this._webRequests,
                     this._tabWeb.getRequests()
                 );
+
+                // See if the search tab exists
+                if(this._tabSearch) {
+                    // Append the search request
+                    changes = changes.concat(this._tabSearch.getRequests());
+                }
 
                 // Set the changes
                 this._tabChanges.setChanges(changes);
