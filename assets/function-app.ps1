@@ -13,9 +13,10 @@ param($Request, $TriggerMetadata)
 # listName - The list name containing the requests
 ###########################################################################################################
 $appUrl = "https://tenant.sharepoint.com/sites/admin";
-$azureEnv = "USGovernmentDoD";
+#$azureEnv = "USGovernmentDoD";
 $cert = $env:WEBSITE_LOAD_CERTIFICATES;
 $clientId = $env:CLIENT_ID;
+#$clientSecret = $env:CLIENT_SECRET
 $tenant = $env:TENANT_ID;
 $listName = "Site Admin Requests";
 ############################################### Global Vars ###############################################
@@ -50,6 +51,7 @@ Write-Host "App Url: $appUrl";
 Write-Host "List Name: $listName";
 Write-Host "Connecting with PnP PowerShell..."
 Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert -AzureEnvironment $azureEnv;
+#Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -ClientSecret $clientSecret -AzureEnvironment $azureEnv;
 ############################################### SP Connection ###############################################
 
 ############################################### Main App ###############################################
