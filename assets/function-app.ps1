@@ -6,13 +6,14 @@ param($Request, $TriggerMetadata)
 ############################################### Global Vars ###############################################
 # The variables need to be filled out for the PnP Auth connection to work
 # appUrl - The site containing the app and list
+# azureEnv - The environment the tenant belongs to
 # cert - The thumbprint of the certificate
 # clientId - The client id of the app registration
 # tenant - The domain of the tenant
 # listName - The list name containing the requests
 ###########################################################################################################
-$appUrl = "https://tenant.sharepoint.com/sites/dev";
-$azureEnv = "[The azure environment]";
+$appUrl = "https://tenant.sharepoint.com/sites/admin";
+$azureEnv = "USGovernmentDoD";
 $cert = $env:WEBSITE_LOAD_CERTIFICATES;
 $clientId = $env:CLIENT_ID;
 $tenant = $env:TENANT_ID;
@@ -79,18 +80,18 @@ if ($item -ne $null) {
                     # Add the site collection app catalog
                     Add-PnPSiteCollectionAppCatalog -site $siteUrl;
 
-                    # Allow this to work over Flow3
-                    Set-PnPList -Identity "Client Side Assets" -ExemptFromBlockDownloadOfNonViewableFiles $true
+                    # Add Client Site Asset library exception
+                    Set-PnPList -Identity "Client Side Assets" -ExemptFromBlockDownloadOfNonViewableFiles $true;
 
                     # Set the output
                     $output = "The app catalog has been enabled for this site collection.";
                 }
                 else {
-                    # Allow this to work over Flow3
-                    Set-PnPList -Identity "Client Side Assets" -ExemptFromBlockDownloadOfNonViewableFiles $false
-
                     # Remove the site collection app catalog
                     Remove-PnPSiteCollectionAppCatalog -site $siteUrl;
+
+                    # Remove Client Site Asset library exception
+                    Set-PnPList -Identity "Client Side Assets" -ExemptFromBlockDownloadOfNonViewableFiles $false;
 
                     # Set the output
                     $output = "The app catalog has been disabled for this site collection.";
@@ -133,12 +134,8 @@ if ($item -ne $null) {
             "Increase Storage" {
                 # See if we are enabling custom scripts
                 if ($value -eq "true") {
-                    # Enable the setting
-                    #Set-SPOSite -Identity $OneDriveSite -StorageQuota $OneDriveStorageQuota -StorageQuotaWarningLevel $OneDriveStorageQuotaWarningLevel;
-                }
-                else {
-                    # Disable the setting
-                    #Set-PnPSite -Identity $siteUrl -NoScriptSite $true;
+                    # Set the max to 25TB
+                    Set-PnPSite -Identity $siteUrl -StorageMaximumLevel 26214400 -StorageWarningLevel 24136192;
                 }
             }
             "Lock State" {
