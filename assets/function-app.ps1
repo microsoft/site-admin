@@ -46,12 +46,14 @@ if (-not($itemId -gt 0)) {
 Write-Host "Item Id was validated";
 
 ############################################### SP Connection ###############################################
-Write-Host "Tenant: $tenant";
 Write-Host "App Url: $appUrl";
+Write-Host "Azure Environment: $azureEnv";
+Write-Host "Client ID: $clientId";
+Write-Host "Tenant: $tenant";
 Write-Host "List Name: $listName";
 Write-Host "Connecting with PnP PowerShell..."
-Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert -AzureEnvironment $azureEnv;
-#Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -ClientSecret $clientSecret -AzureEnvironment $azureEnv;
+Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert;
+#Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert -AzureEnvironment $azureEnv;
 ############################################### SP Connection ###############################################
 
 ############################################### Main App ###############################################
