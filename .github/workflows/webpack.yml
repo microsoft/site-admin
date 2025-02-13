@@ -41,5 +41,5 @@ jobs:
       with:
         name: artifacts
         path: |
-          assets/index.html
+          assets
           dist
