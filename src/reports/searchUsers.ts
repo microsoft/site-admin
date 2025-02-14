@@ -79,7 +79,8 @@ export class SearchUsers {
                 className: "mb-3",
                 description: "Enter a minimum of 3 characters to search for a user",
                 errorMessage: "No user was selected...",
-                allowGroups: false,
+                allowGroups: true,
+                searchUrl: DataSource.Site.Url,
                 type: Components.FormControlTypes.PeoplePicker
             } as Components.IFormControlPropsPeoplePicker
         ];

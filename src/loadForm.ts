@@ -15,14 +15,48 @@ export class LoadForm {
 
         // Render the form and footer
         this.renderForm(elForm);
-        this.renderFooter(elFooter);
+        this.renderFooter(elForm, elFooter);
+    }
+
+    // Loads the sites for the user
+    private loadSites(elForm: HTMLElement, elFooter: HTMLElement) {
+        // Show a loading dialog
+        LoadingDialog.setHeader("Loading Sites");
+        LoadingDialog.setBody("Loading all of the site collections the user has access to.");
+        LoadingDialog.show();
+
+        // Load the sites
+        DataSource.loadSites().then((sites) => {
+            // Load the form again
+            new LoadForm(elForm, elFooter, this._onSuccess);
+
+            // Hide the form
+            LoadingDialog.hide();
+        }, () => {
+            // TODO - Error getting the sites
+        });
     }
 
     // Renders the footer
-    private renderFooter(el: HTMLElement) {
+    private renderFooter(elForm: HTMLElement, elFooter: HTMLElement) {
+        // Clear the element
+        while (elFooter.firstChild) { elFooter.removeChild(elFooter.firstChild); }
+
+        // Render the footer
         Components.TooltipGroup({
-            el,
+            el: elFooter,
             tooltips: [
+                {
+                    content: "Loads the available sites for the user.",
+                    btnProps: {
+                        className: DataSource.MySiteItems ? "d-none" : "",
+                        text: "Load My Sites",
+                        onClick: () => {
+                            // Get all of the site for the user
+                            this.loadSites(elForm, elFooter);
+                        }
+                    }
+                },
                 {
                     content: "Validates that you are an admin for the site entered.",
                     btnProps: {
@@ -39,29 +73,42 @@ export class LoadForm {
 
     // Renders the form
     private renderForm(el: HTMLElement) {
+        // Clear the element
+        while (el.firstChild) { el.removeChild(el.firstChild); }
+
+        // Render the form
         this._form = Components.Form({
             el,
             controls: [
-                {
-                    name: "url",
-                    label: "Site Url:",
-                    type: Components.FormControlTypes.TextField,
-                    description: "The absolute/relative url to the site. (Example: /sites/dev)",
-                    required: true,
-                    errorMessage: "The site url is required.",
-                    onControlRendered: ctrl => {
-                        // Set the key down event
-                        ctrl.textbox.elTextbox.addEventListener("keypress", ev => {
-                            // See if they hit the enter button
-                            if (ev["keyCode"] === 13) {
-                                ev.preventDefault();
+                DataSource.MySiteItems ?
+                    {
+                        name: "url",
+                        label: "Select Site:",
+                        description: "Select the site from the dropdown.",
+                        type: Components.FormControlTypes.Dropdown,
+                        items: DataSource.MySiteItems
+                    } as Components.IFormControlPropsDropdown
+                    :
+                    {
+                        name: "url",
+                        label: "Site Url:",
+                        type: Components.FormControlTypes.TextField,
+                        description: "The absolute/relative url to the site. (Example: /sites/dev)",
+                        required: true,
+                        errorMessage: "The site url is required.",
+                        onControlRendered: ctrl => {
+                            // Set the key down event
+                            ctrl.textbox.elTextbox.addEventListener("keypress", ev => {
+                                // See if they hit the enter button
+                                if (ev["keyCode"] === 13) {
+                                    ev.preventDefault();
 
-                                // Submit the request
-                                this.submitForm();
-                            }
-                        });
+                                    // Submit the request
+                                    this.submitForm();
+                                }
+                            });
+                        }
                     }
-                }
             ]
         });
     }
@@ -94,7 +141,7 @@ export class LoadForm {
             LoadingDialog.show();
 
             // Validate the url
-            DataSource.validate(url).then(
+            DataSource.validate(typeof (url) === "string" ? url : url.value).then(
                 // Success
                 () => {
                     // Close the dialogs

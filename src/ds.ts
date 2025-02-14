@@ -1,5 +1,5 @@
 import { List } from "dattatable";
-import { Components, ContextInfo, Helper, Site, SPTypes, Types, Web, v2, Search } from "gd-sprest-bs";
+import { Components, ContextInfo, Helper, Site, Types, Web, Search } from "gd-sprest-bs";
 import { Security } from "./security";
 import Strings from "./strings";
 
@@ -45,6 +45,15 @@ export enum RequestTypes {
     IncreaseStorage = "Increase Storage",
     LockState = "Lock State",
     TeamsConnected = "Teams Connected"
+}
+
+/**
+ * Site Information
+ */
+export interface ISiteInfo {
+    Path: string;
+    SiteId: string;
+    Title: string;
 }
 
 /**
@@ -183,6 +192,59 @@ export class DataSource {
                     resolve();
                 }
             });
+        });
+    }
+
+    // Loads the site collections for the current user
+    private static _sites: ISiteInfo[] = null;
+    static get MySites(): ISiteInfo[] { return this._sites; }
+    private static _mySiteItems: Components.IDropdownItem[] = null;
+    static get MySiteItems(): Components.IDropdownItem[] { return this._mySiteItems; }
+    static loadSites(): PromiseLike<void> {
+        // Return a promise
+        return new Promise((resolve, reject) => {
+            // See if the sites have been loaded
+            if (this._sites) { resolve(); }
+
+            // Search for the sites
+            Search.postQuery<ISiteInfo>({
+                getAllItems: true,
+                query: {
+                    Querytext: "contentclass=sts_site",
+                    SelectProperties: {
+                        results: [
+                            "Path", "SiteId", "Title"
+                        ]
+                    }
+                }
+            }).then(search => {
+                // Set the sites
+                this._sites = search.results;
+
+                // Clear the items
+                this._mySiteItems = [];
+
+                // Parse the items
+                for (let i = 0; i < search.results.length; i++) {
+                    let item = search.results[i];
+
+                    // Add the item
+                    this._mySiteItems.push({
+                        text: item.Path.replace(document.location.origin, ""),
+                        value: item.Path
+                    });
+                }
+
+                // Sort the items
+                this._mySiteItems = this._mySiteItems.sort((a, b) => {
+                    if (a.text < b.text) { return -1; }
+                    if (a.text > b.text) { return 1; }
+                    return 0;
+                });
+
+                // Resolve the request
+                resolve();
+            }, reject);
         });
     }
 
