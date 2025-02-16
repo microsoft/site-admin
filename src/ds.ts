@@ -1,5 +1,5 @@
 import { List } from "dattatable";
-import { Components, ContextInfo, Helper, Site, Types, Web, Search } from "gd-sprest-bs";
+import { Components, ContextInfo, Helper, Site, Types, Web, Search, SPTypes } from "gd-sprest-bs";
 import { Security } from "./security";
 import Strings from "./strings";
 
@@ -253,6 +253,7 @@ export class DataSource {
     static get Site(): Types.SP.SiteOData { return this._site; }
     private static _siteContext: Types.SP.ContextWebInformation = null;
     static get SiteContext(): Types.SP.ContextWebInformation { return this._siteContext; }
+    static get SiteCustomScriptsEnabled(): boolean { return Helper.hasPermissions(DataSource.Site.RootWeb.EffectiveBasePermissions, SPTypes.BasePermissionTypes.AddAndCustomizePages); }
     private static _siteItems: Components.IDropdownItem[] = null;
     static get SiteItems(): Components.IDropdownItem[] { return this._siteItems; }
     private static loadSiteInfo(): PromiseLike<void> {

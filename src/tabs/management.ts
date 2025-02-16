@@ -1,4 +1,4 @@
-import { Components, Helper, SPTypes } from "gd-sprest-bs";
+import { Components } from "gd-sprest-bs";
 import { Tab } from "./base";
 import { IProp } from "../app";
 import { DataSource, IRequest, RequestTypes } from "../ds";
@@ -28,7 +28,7 @@ export class ManagementTab extends Tab<{
         // Set the current values
         this._currValues = {
             ContainsAppCatalog: DataSource.hasAppCatalog(),
-            CustomScriptsEnabled: Helper.hasPermissions(DataSource.Site.RootWeb.EffectiveBasePermissions, SPTypes.BasePermissionTypes.AddAndCustomizePages),
+            CustomScriptsEnabled: DataSource.SiteCustomScriptsEnabled,
             IncreaseStorage: false,
             LockState: DataSource.Site.ReadOnly && DataSource.Site.WriteLocked ? "ReadOnly" : "Unlock",
             ShareByEmailEnabled: DataSource.Site.ShareByEmailEnabled
