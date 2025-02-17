@@ -123,7 +123,6 @@ export class WebTab extends Tab<{
                     label: this._props["ExcludeFromOfflineClient"].label,
                     description: this._props["ExcludeFromOfflineClient"].description,
                     isDisabled: this._props["ExcludeFromOfflineClient"].disabled,
-                    className: DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "" : "d-none",
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.ExcludeFromOfflineClient,
                     onChange: item => {
