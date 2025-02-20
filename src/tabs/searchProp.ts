@@ -26,6 +26,7 @@ export class SearchPropTab {
 
         // Set the current value
         this._currValue = DataSource.Site.RootWeb.AllProperties[this._searchProps.key];
+        this._newValue = this._currValue;
 
         // Render the tab
         this.render();

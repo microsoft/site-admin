@@ -303,17 +303,17 @@ export class DataSource {
                             text: web.SPWebUrl,
                             value: web.WebId
                         });
-
-                        // Sort the items
-                        this._siteItems = this._siteItems.sort((a, b) => {
-                            if (a.text < b.text) { return -1; }
-                            if (a.text > b.text) { return 1; }
-                            return 0;
-                        });
-
-                        // Resolve the request
-                        resolve();
                     }
+
+                    // Sort the items
+                    this._siteItems = this._siteItems.sort((a, b) => {
+                        if (a.text < b.text) { return -1; }
+                        if (a.text > b.text) { return 1; }
+                        return 0;
+                    });
+
+                    // Resolve the request
+                    resolve();
                 }, reject);
             }, reject);
         });
