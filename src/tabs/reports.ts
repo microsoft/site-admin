@@ -10,6 +10,7 @@ export interface IReportProps {
 // Report Types
 enum ReportTypes {
     DocRetention = "DocRetention",
+    ExternalShares = "ExternalShares",
     ExternalUsers = "ExternalUsers",
     SearchDocs = "SearchDocs",
     SearchUsers = "SearchUsers",
@@ -54,6 +55,11 @@ export class ReportsTab {
                             value: ReportTypes.DocRetention
                         },
                         {
+                            text: "External Shares",
+                            data: "Scans for documents that have been shared externally.",
+                            value: ReportTypes.ExternalShares
+                        },
+                        {
                             text: "External Users",
                             data: "Scans for external user information.",
                             value: ReportTypes.ExternalUsers
@@ -86,6 +92,9 @@ export class ReportsTab {
         switch (selectedReport) {
             case ReportTypes.DocRetention:
                 form.appendControls(Reports.DocRetention.getFormFields());
+                break;
+            case ReportTypes.ExternalShares:
+                form.appendControls(Reports.ExternalShares.getFormFields());
                 break;
             case ReportTypes.ExternalUsers:
                 form.appendControls(Reports.ExternalUsers.getFormFields());
@@ -120,6 +129,12 @@ export class ReportsTab {
                 switch (selectedReport) {
                     case ReportTypes.DocRetention:
                         Reports.DocRetention.run(this._el, form.getValues(), () => {
+                            // Render this component
+                            this.render(selectedReport);
+                        });
+                        break;
+                    case ReportTypes.ExternalShares:
+                        Reports.ExternalShares.run(this._el, form.getValues(), () => {
                             // Render this component
                             this.render(selectedReport);
                         });

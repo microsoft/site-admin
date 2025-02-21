@@ -22,11 +22,11 @@ interface ISearchItem {
 }
 
 const CSVFields = [
-    "Author", "FileExtension", "HitHighlightedSummary", "LastModifiedTime",
+    "Author", "FileExtension", "ViewsLifeTime", "LastModifiedTime",
     "ListId", "Path", "SPSiteUrl", "SPWebUrl", "Title", "WebId"
 ]
 
-export class SearchDocs {
+export class ExternalShares {
     // Deletes a document
     private static deleteDocument(item: ISearchItem) {
         // Display a loading dialog
@@ -55,27 +55,7 @@ export class SearchDocs {
     }
 
     // Gets the form fields to display
-    static getFormFields(fileExt: string = "", keywords: string = ""): Components.IFormControlProps[] {
-        return [
-            {
-                label: "Search Terms",
-                name: "SearchTerms",
-                className: "mb-3",
-                description: "Enter the search terms using quotes for phrases [Ex: movie \"social media\" show]",
-                type: Components.FormControlTypes.TextField,
-                required: true,
-                value: keywords,
-                errorMessage: "You must enter at least 1 search term."
-            },
-            {
-                label: "File Types",
-                name: "FileTypes",
-                className: "mb-3",
-                type: Components.FormControlTypes.TextField,
-                value: fileExt
-            }
-        ];
-    }
+    static getFormFields(fileExt: string = "", keywords: string = ""): Components.IFormControlProps[] { return []; }
 
     // Renders the search summary
     private static renderSummary(el: HTMLElement, items: ISearchItem[], onClose: () => void) {
@@ -109,7 +89,7 @@ export class SearchDocs {
                 onRendering: dtProps => {
                     dtProps.columnDefs = [
                         {
-                            "targets": 6,
+                            "targets": 7,
                             "orderable": false,
                             "searchable": false
                         }
@@ -138,6 +118,14 @@ export class SearchDocs {
                         }
                     },
                     {
+                        name: "FileExtension",
+                        title: "File Extension"
+                    },
+                    {
+                        name: "ViewsLifeTime",
+                        title: "Views"
+                    },
+                    {
                         name: "Author",
                         title: "Author(s)",
                         onRenderCell: (el, col, item: ISearchItem) => {
@@ -159,37 +147,6 @@ export class SearchDocs {
                         title: "Modified",
                         onRenderCell: (el, col, item: ISearchItem) => {
                             el.innerHTML = item.LastModifiedTime ? moment(item.LastModifiedTime).format(Strings.TimeFormat) : "";
-                        }
-                    },
-                    {
-                        name: "",
-                        title: "Search Result",
-                        onRenderCell: (el, col, item: ISearchItem) => {
-                            // Add the data-filter attribute for searching notes properly
-                            el.setAttribute("data-filter", item.HitHighlightedSummary);
-
-                            // Add the data-order attribute for sorting notes properly
-                            el.setAttribute("data-order", item.HitHighlightedSummary);
-
-                            // Declare a span element
-                            let span = document.createElement("span");
-
-                            // Return the plain text if less than 50 chars
-                            if (el.innerHTML.length < 50) {
-                                span.innerHTML = item.HitHighlightedSummary;
-                            } else {
-                                // Truncate to the last white space character in the text after 50 chars and add an ellipsis
-                                span.innerHTML = item.HitHighlightedSummary.substring(0, 50).replace(/\s([^\s]*)$/, '') + '&#8230';
-
-                                // Add a tooltip containing the text
-                                Components.Tooltip({
-                                    content: "<small>" + item.HitHighlightedSummary + "</small>",
-                                    target: span
-                                });
-                            }
-
-                            // Append the span
-                            el.appendChild(span);
                         }
                     },
                     {
@@ -271,29 +228,17 @@ export class SearchDocs {
         LoadingDialog.setBody("Searching the content on this site...");
         LoadingDialog.show();
 
-        // Get the form values
-        let fileExt = values["FileTypes"] ? values["FileTypes"].split(' ') : null;
-        let searchTerms = (values["SearchTerms"] || "").split(' ');
-
         // Set the query
         let query: Types.Microsoft.Office.Server.Search.REST.SearchRequest = {
-            Querytext: `${searchTerms.join(" OR ")} IsDocument: true path: ${DataSource.SiteContext.SiteFullUrl}`,
+            Querytext: `ViewableByExternalUsers: true IsDocument: true path: ${DataSource.SiteContext.SiteFullUrl}`,
             RowLimit: 500,
             SelectProperties: {
                 results: [
-                    "Author", "FileExtension", "HitHighlightedSummary", "LastModifiedTime",
-                    "ListId", "Path", "SPSiteUrl", "SPWebUrl", "Title", "WebId"
+                    "Author", "FileExtension", "LastModifiedTime", "ListId",
+                    "Path", "SPSiteUrl", "SPWebUrl", "Title", "WebId", "ViewsLifeTime"
                 ]
             }
         };
-
-        // See if file extensions exist
-        if (fileExt) {
-            // Set the filter
-            query.RefinementFilters = {
-                results: [`fileExtension:or("${fileExt.join('", "')}")`]
-            };
-        }
 
         // Search for the content
         Search.postQuery({
