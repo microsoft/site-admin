@@ -9,6 +9,7 @@ declare interface ISiteAdminWebPartStrings {
   SitePropCreated: string;
   SitePropCustomScriptsEnabled: string;
   SitePropDisableCompanyWideSharingLinks: string;
+  SitePropExcludeFromOfflineClient: string;
   SitePropHubSite: string;
   SitePropHubSiteConnected: string;
   SitePropIncreaseStorage: string;

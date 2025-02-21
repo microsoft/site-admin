@@ -61,6 +61,9 @@ export class Tab<IProps = { [key: string]: string | number | boolean }, IRequest
         }
 
         // Return the requests
-        return requests;
+        return requests.concat(this.onGetRequests());
     }
+
+    // Event for getting custom requests
+    onGetRequests(): IChangeRequest[] { return []; }
 }

@@ -29,6 +29,9 @@ export interface ISiteAdminWebPartProps {
   SitePropDisableCompanyWideSharingLinks: boolean;
   SitePropDisableCompanyWideSharingLinksDescription: string;
   SitePropDisableCompanyWideSharingLinksLabel: string;
+  SitePropExcludeFromOfflineClient: boolean;
+  SitePropExcludeFromOfflineClientDescription: string;
+  SitePropExcludeFromOfflineClientLabel: string;
   SitePropHubSite: boolean;
   SitePropHubSiteDescription: string;
   SitePropHubSiteLabel: string;
@@ -205,6 +208,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     "SitePropCreated",
     "SitePropCustomScriptsEnabled",
     "SitePropDisableCompanyWideSharingLinks",
+    "SitePropExcludeFromOfflineClient",
     "SitePropHubSite",
     "SitePropHubSiteConnected",
     "SitePropIncreaseStorage",

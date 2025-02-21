@@ -10,6 +10,7 @@ define([], function () {
     "SitePropCreated": "Date Created",
     "SitePropCustomScriptsEnabled": "Custom Scripts",
     "SitePropDisableCompanyWideSharingLinks": "Company Wide Sharing Links",
+    "SitePropExcludeFromOfflineClient": "Exclude From Offline Client",
     "SitePropHubSite": "Hub Site",
     "SitePropHubSiteConnected": "Connected Hub Site",
     "SitePropIncreaseStorage": "Increase Site Storage",

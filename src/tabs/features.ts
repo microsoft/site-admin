@@ -2,6 +2,7 @@ import { Components } from "gd-sprest-bs";
 import { IProp } from "../app";
 import { DataSource, IRequest, RequestTypes } from "../ds";
 import { Tab } from "./base";
+import { IChangeRequest } from "./changes";
 
 /**
  * Features Tab
@@ -9,6 +10,7 @@ import { Tab } from "./base";
 export class FeaturesTab extends Tab<{
     CommentsOnSitePagesDisabled: boolean;
     DisableCompanyWideSharingLinks: boolean;
+    ExcludeFromOfflineClient: string;
     SocialBarOnSitePagesDisabled: boolean;
 }, {
     DisableCompanyWideSharingLinks: IRequest
@@ -24,11 +26,39 @@ export class FeaturesTab extends Tab<{
         this._currValues = {
             CommentsOnSitePagesDisabled: DataSource.Site.CommentsOnSitePagesDisabled,
             DisableCompanyWideSharingLinks: DataSource.Site.DisableCompanyWideSharingLinks,
+            ExcludeFromOfflineClient: null,
             SocialBarOnSitePagesDisabled: DataSource.Site.SocialBarOnSitePagesDisabled
         }
 
         // Render the tab
         this.render();
+    }
+
+    // Add the custom requests
+    onGetRequests(): IChangeRequest[] {
+        let requests: IChangeRequest[] = [];
+
+        // Check the search property
+        if (this._currValues.ExcludeFromOfflineClient) {
+            let hideContent = this._currValues.ExcludeFromOfflineClient == "Hide";
+
+            // Parse the webs
+            for (let i = 0; i < DataSource.SiteItems.length; i++) {
+                let item = DataSource.SiteItems[i];
+
+                // Add the request
+                requests.push({
+                    oldValue: "",
+                    newValue: hideContent,
+                    scope: this._scope,
+                    property: "ExcludeFromOfflineClient",
+                    url: item.value
+                });
+            }
+        }
+
+        // Return the requests
+        return requests;
     }
 
     // Renders the tab
@@ -83,6 +113,22 @@ export class FeaturesTab extends Tab<{
                         }
                     }
                 } as Components.IFormControlPropsSwitch,
+                {
+                    name: "ExcludeFromOfflineClient",
+                    label: this._props["ExcludeFromOfflineClient"].label,
+                    description: "This will apply to all sites.",
+                    isDisabled: this._props["ExcludeFromOfflineClient"].disabled,
+                    type: Components.FormControlTypes.Dropdown,
+                    items: [
+                        { text: "", value: "" },
+                        { text: "Show", value: "Show" },
+                        { text: "Hide", value: "Hide" }
+                    ],
+                    onChange: item => {
+                        // Set the value
+                        this._currValues.ExcludeFromOfflineClient = item ? item.value : null;
+                    }
+                } as Components.IFormControlPropsDropdown,
                 {
                     name: "SocialBarOnSitePagesDisabled",
                     label: this._props["SocialBarOnSitePagesDisabled"].label,
