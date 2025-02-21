@@ -149,7 +149,7 @@ export class DataSource {
                     // Return a promise
                     return new Promise(resolve => {
                         // Get the sub sites
-                        this.getAllWebs(web.Url).then(resolve, resolve);
+                        this.getAllWebs(web.ServerRelativeUrl).then(resolve, resolve);
                     });
                 }).then(resolve);
             });
