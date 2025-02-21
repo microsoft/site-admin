@@ -130,29 +130,29 @@ export class DataSource {
     }
 
     // Gets all web urls for a site collection
-    static getAllWebs(): PromiseLike<{ SPWebUrl: string; WebId: string; }[]> {
+    static getAllWebs(url: string): PromiseLike<void> {
         // Return a promise
-        return new Promise((resolve, reject) => {
-            // Get all of the sites for this collection
-            Search.postQuery<{
-                SPWebUrl: string;
-                WebId: string;
-            }>({
-                getAllItems: true,
-                query: {
-                    Querytext: "contentClass:STS_Site contentClass:STS_Web path: " + this.SiteContext.SiteFullUrl,
-                    SelectProperties: {
-                        results: ["SPWebUrl", "WebId"]
-                    }
-                },
-                targetInfo: {
-                    requestDigest: this.SiteContext.FormDigestValue,
-                    url: this.SiteContext.SiteFullUrl
-                }
-            }).then(search => {
-                // Resolve the request
-                resolve(search.results);
-            }, reject);
+        return new Promise((resolve) => {
+            // Get all the sub sites
+            Web(url, { requestDigest: this.SiteContext.FormDigestValue }).query({
+                Expand: ["Webs"],
+                Select: ["Webs/Id", "Webs/ServerRelativeUrl"]
+            }).execute(resp => {
+                // Parse the webs
+                Helper.Executor(resp.Webs.results, web => {
+                    // Append the item
+                    this._siteItems.push({
+                        text: web.ServerRelativeUrl,
+                        value: web.Id
+                    });
+
+                    // Return a promise
+                    return new Promise(resolve => {
+                        // Get the sub sites
+                        this.getAllWebs(web.Url).then(resolve, resolve);
+                    });
+                }).then(resolve);
+            });
         });
     }
 
@@ -277,6 +277,7 @@ export class DataSource {
                     "RootWeb/WebTemplate",
                     "SandboxedCodeActivationCapability",
                     "SecondaryContact",
+                    "ServerRelativeUrl",
                     "ShareByEmailEnabled",
                     "ShowPeoplePickerSuggestionsForGuestUsers",
                     "SocialBarOnSitePagesDisabled",
@@ -290,21 +291,13 @@ export class DataSource {
                 this._site = site;
 
                 // Clear the items
-                this._siteItems = [];
+                this._siteItems = [{
+                    text: this._site.ServerRelativeUrl,
+                    value: this._site.RootWeb.Id
+                }];
 
                 // Get all of the sites for this collection
-                this.getAllWebs().then(webs => {
-                    // Parse the webs
-                    for (let i = 0; i < webs.length; i++) {
-                        let web = webs[i];
-
-                        // Append the item
-                        this._siteItems.push({
-                            text: web.SPWebUrl,
-                            value: web.WebId
-                        });
-                    }
-
+                this.getAllWebs(site.Url).then(() => {
                     // Sort the items
                     this._siteItems = this._siteItems.sort((a, b) => {
                         if (a.text < b.text) { return -1; }

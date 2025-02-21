@@ -85,7 +85,7 @@ export class LoadForm {
                         name: "url",
                         label: "Select Site:",
                         description: "Select the site from the dropdown.",
-                        type: Components.FormControlTypes.Dropdown,
+                        type: Components.FormControlTypes.Datalist,
                         items: DataSource.MySiteItems
                     } as Components.IFormControlPropsDropdown
                     :
