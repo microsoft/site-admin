@@ -14,6 +14,7 @@ declare interface ISiteAdminWebPartStrings {
   SitePropHubSiteConnected: string;
   SitePropIncreaseStorage: string;
   SitePropLockState: string;
+  SitePropSensitivityLabelId: string;
   SitePropShareByEmailEnabled: string;
   SitePropSocialBarOnSitePagesDisabled: string;
   SitePropStorageUsed: string;

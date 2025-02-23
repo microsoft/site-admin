@@ -1,5 +1,5 @@
 import { List } from "dattatable";
-import { Components, ContextInfo, Helper, Site, Types, Web, Search, SPTypes } from "gd-sprest-bs";
+import { Components, ContextInfo, Graph, Helper, Site, Types, Web, Search, SPTypes } from "gd-sprest-bs";
 import { Security } from "./security";
 import Strings from "./strings";
 
@@ -33,6 +33,14 @@ export interface IResponse {
     key: string;
     message: string;
     value: any;
+}
+
+/**
+ * Sensitivity Label
+ */
+export interface ISensitivityLabel {
+    id: string;
+    name: string;
 }
 
 /**
@@ -248,6 +256,63 @@ export class DataSource {
         });
     }
 
+    // Loads the sensitivity labels for the current user
+    private static _sensitivityLabels: ISensitivityLabel[] = null;
+    static HasSensitivityLabels(): boolean { return this._sensitivityLabels != null; }
+    static get SensitivityLabels(): ISensitivityLabel[] { return this._sensitivityLabels; }
+    private static _sensitivityLabelItems: Components.IDropdownItem[] = null;
+    static get SensitivityLabelItems(): Components.IDropdownItem[] { return this._sensitivityLabelItems; }
+    private static loadSensitivityLabels() {
+        // Return a promise
+        return new Promise(resolve => {
+            // Get the graph token
+            Graph.getAccessToken(Strings.CloudEnvironment).execute(token => {
+                // Get the sensitivity labels for this user
+                Graph({
+                    accessToken: token.access_token,
+                    url: "me/informationprotection/sensitivityLabels"
+                }).execute((labels: any) => {
+                    // Clear the labels
+                    this._sensitivityLabels = [];
+                    this._sensitivityLabelItems = [
+                        {
+                            text: "",
+                            value: null
+                        }
+                    ];
+
+                    // Parse the labels
+                    Helper.Executor(labels.results, result => {
+                        // Append the label and item
+                        this._sensitivityLabels.push({
+                            id: result.id,
+                            name: result.displayName
+                        });
+                        this._sensitivityLabelItems.push({
+                            text: result.displayName,
+                            value: result.id
+                        });
+
+                        // Parse the sub labels
+                        for (let i = 0; i < result.sublabels.length; i++) {
+                            let subLabel = result.sublabels[i];
+
+                            // Append the label and item
+                            this._sensitivityLabels.push({
+                                id: subLabel.id,
+                                name: `${result.displayName}//${subLabel.displayName}`
+                            });
+                            this._sensitivityLabelItems.push({
+                                text: `${result.displayName}//${subLabel.displayName}`,
+                                value: subLabel.id
+                            });
+                        }
+                    }).then(resolve);
+                }, resolve);
+            }, resolve);
+        });
+    }
+
     // Loads the site collection information
     private static _site: Types.SP.SiteOData = null;
     static get Site(): Types.SP.SiteOData { return this._site; }
@@ -277,6 +342,7 @@ export class DataSource {
                     "RootWeb/WebTemplate",
                     "SandboxedCodeActivationCapability",
                     "SecondaryContact",
+                    "SensitivityLabelId",
                     "ServerRelativeUrl",
                     "ShareByEmailEnabled",
                     "ShowPeoplePickerSuggestionsForGuestUsers",
@@ -328,6 +394,7 @@ export class DataSource {
                     "ExcludeFromOfflineClient",
                     "Id",
                     "SearchScope",
+                    "SensitivityLabelId",
                     "Title",
                     "Url",
                     "WebTemplate"
@@ -420,8 +487,12 @@ export class DataSource {
         return new Promise((resolve, reject) => {
             // Init the security
             Security.init().then(() => {
-                // Load the list
-                this.loadList().then(resolve, reject);
+                Promise.all([
+                    // Load the list
+                    this.loadList(),
+                    // Load the sensitivity labels
+                    this.loadSensitivityLabels()
+                ]).then(resolve, reject);
             }, reject);
         });
     }
@@ -478,8 +549,20 @@ export class DataSource {
                                 this.loadSiteInfo().then(resolve, reject);
                             }, reject);
                         } else {
-                            // Not the SCA of the site
-                            reject("Site exists, but you are not the administrator. Please have the site administrator submit the request.");
+                            // Get the user's permissions for the site
+                            Web(this.SiteContext.SiteFullUrl).query({ Expand: ["EffectiveBasePermissions"] }).execute(web => {
+                                // See if this user has full rights
+                                if (Helper.hasPermissions(web.EffectiveBasePermissions, SPTypes.BasePermissionTypes.FullMask)) {
+                                    // Resolve the request
+                                    resolve();
+                                } else {
+                                    // Not the SCA of the site
+                                    reject("Site exists, but you are not the administrator. Please have the site administrator submit the request.");
+                                }
+                            }, () => {
+                                // Not the SCA of the site
+                                reject("Site exists, but you are not the administrator. Please have the site administrator submit the request.");
+                            });
                         }
                     });
                 },

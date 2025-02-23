@@ -113,7 +113,6 @@ export class Tabs {
             onClick: () => {
                 // Get the changes
                 let changes = this._tabFeatures.getRequests().concat(
-                    this._tabFeatures.getRequests(),
                     this._tabManagement.getRequests(),
                     this._webRequests,
                     this._tabWeb.getRequests()

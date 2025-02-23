@@ -218,8 +218,10 @@ export class ChangesTab {
             Helper.Executor(requests, request => {
                 // Return a promise
                 return new Promise(resolve => {
-                    // See if this is a request to update search
-                    if (request.scope == "Search") {
+                    // Skip site props
+                    if (request.scope == "Site") { resolve(null); }
+                    // Else, see if this is a request to update search
+                    else if (request.scope == "Search") {
                         // Update the search property
                         Helper.setWebProperty(request.property, request.newValue as string, true, request.url).then(
                             () => {

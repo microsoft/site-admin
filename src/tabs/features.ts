@@ -50,7 +50,7 @@ export class FeaturesTab extends Tab<{
                 requests.push({
                     oldValue: "",
                     newValue: hideContent,
-                    scope: this._scope,
+                    scope: "Web",
                     property: "ExcludeFromOfflineClient",
                     url: item.value
                 });

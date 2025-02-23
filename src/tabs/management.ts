@@ -11,6 +11,7 @@ export class ManagementTab extends Tab<{
     CustomScriptsEnabled: boolean;
     IncreaseStorage: boolean;
     LockState: string;
+    SensitivityLabelId: string;
     ShareByEmailEnabled: boolean;
 }, {
     ContainsAppCatalog: IRequest;
@@ -19,6 +20,7 @@ export class ManagementTab extends Tab<{
     LockState: IRequest;
     TeamsConnected: IRequest;
 }, {
+    SensitivityLabelId: string;
     ShareByEmailEnabled: boolean;
 }> {
     // Constructor
@@ -31,6 +33,7 @@ export class ManagementTab extends Tab<{
             CustomScriptsEnabled: DataSource.SiteCustomScriptsEnabled,
             IncreaseStorage: false,
             LockState: DataSource.Site.ReadOnly && DataSource.Site.WriteLocked ? "ReadOnly" : "Unlock",
+            SensitivityLabelId: DataSource.Site.SensitivityLabelId,
             ShareByEmailEnabled: DataSource.Site.ShareByEmailEnabled
         }
 
@@ -187,7 +190,26 @@ export class ManagementTab extends Tab<{
                             delete this._newValues.ShareByEmailEnabled;
                         }
                     }
-                } as Components.IFormControlPropsSwitch
+                } as Components.IFormControlPropsSwitch,
+                {
+                    name: "SensitivityLabelId",
+                    label: this._props["SensitivityLabelId"].label,
+                    description: this._props["SensitivityLabelId"].description,
+                    isDisabled: !DataSource.HasSensitivityLabels || this._props["SensitivityLabelId"].disabled,
+                    type: Components.FormControlTypes.Dropdown,
+                    value: this._currValues.SensitivityLabelId,
+                    items: DataSource.SensitivityLabelItems,
+                    onChange: item => {
+                        // See if we are changing the value
+                        if (this._currValues.SensitivityLabelId != item?.value) {
+                            // Set the value
+                            this._newValues.SensitivityLabelId = item.value;
+                        } else {
+                            // Remove the value
+                            delete this._newValues.SensitivityLabelId;
+                        }
+                    }
+                } as Components.IFormControlPropsDropdown,
             ]
         });
     }

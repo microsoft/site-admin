@@ -15,6 +15,7 @@ define([], function () {
     "SitePropHubSiteConnected": "Connected Hub Site",
     "SitePropIncreaseStorage": "Increase Site Storage",
     "SitePropLockState": "Lock State",
+    "SitePropSensitivityLabelId": "Sensitivity Label",
     "SitePropShareByEmailEnabled": "Shared By Email",
     "SitePropSocialBarOnSitePagesDisabled": "Social Bar on Site Pages",
     "SitePropStorageUsed": "Storage Used",

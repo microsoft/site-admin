@@ -15,6 +15,7 @@ export const setContext = (context, sourceUrl?: string) => {
  */
 const Strings = {
     AppElementId: "site-admin",
+    CloudEnvironment: "",
     GlobalVariable: "SiteAdmin",
     Lists: {
         Main: "Site Admin Requests"
