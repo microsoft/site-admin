@@ -1,5 +1,5 @@
 import { List } from "dattatable";
-import { Components, ContextInfo, Graph, Helper, Site, Types, Web, Search, SPTypes } from "gd-sprest-bs";
+import { Components, ContextInfo, Graph, GroupSiteManager, Helper, Site, Types, Web, Search, SPTypes } from "gd-sprest-bs";
 import { Security } from "./security";
 import Strings from "./strings";
 
@@ -39,6 +39,7 @@ export interface IResponse {
  * Sensitivity Label
  */
 export interface ISensitivityLabel {
+    desc: string;
     id: string;
     name: string;
 }
@@ -266,50 +267,36 @@ export class DataSource {
     private static loadSensitivityLabels() {
         // Return a promise
         return new Promise(resolve => {
-            // Get the graph token
-            Graph.getAccessToken(Strings.CloudEnvironment).execute(token => {
-                // Get the sensitivity labels for this user
-                Graph({
-                    accessToken: token.access_token,
-                    url: "me/informationprotection/sensitivityLabels"
-                }).execute((labels: any) => {
-                    // Clear the labels
-                    this._sensitivityLabels = [];
-                    this._sensitivityLabelItems = [
-                        {
-                            text: "",
-                            value: null
-                        }
-                    ];
+            // Load the group context
+            GroupSiteManager().getGroupCreationContext().execute(resp => {
+                // Clear the labels
+                this._sensitivityLabels = [];
+                this._sensitivityLabelItems = [
+                    {
+                        text: "",
+                        value: null
+                    }
+                ];
 
-                    // Parse the labels
-                    Helper.Executor(labels.results, result => {
-                        // Append the label and item
-                        this._sensitivityLabels.push({
-                            id: result.id,
-                            name: result.displayName
-                        });
-                        this._sensitivityLabelItems.push({
-                            text: result.displayName,
-                            value: result.id
-                        });
+                // Parse the sensitivity labels
+                for (let i = 0; i < resp.DataClassificationOptionsNew.results.length; i++) {
+                    let result = resp.DataClassificationOptionsNew.results[i];
+                    let desc = resp.ClassificationDescriptionsNew.results.filter(i => { return i.Key == result.Value; })[0];
 
-                        // Parse the sub labels
-                        for (let i = 0; i < result.sublabels.length; i++) {
-                            let subLabel = result.sublabels[i];
+                    // Append the label and item
+                    this._sensitivityLabels.push({
+                        desc: desc ? desc.Value : "",
+                        id: result.Key,
+                        name: result.Value
+                    });
+                    this._sensitivityLabelItems.push({
+                        text: result.Value,
+                        value: result.Key
+                    });
+                }
 
-                            // Append the label and item
-                            this._sensitivityLabels.push({
-                                id: subLabel.id,
-                                name: `${result.displayName}//${subLabel.displayName}`
-                            });
-                            this._sensitivityLabelItems.push({
-                                text: `${result.displayName}//${subLabel.displayName}`,
-                                value: subLabel.id
-                            });
-                        }
-                    }).then(resolve);
-                }, resolve);
+                // Resolve the request
+                resolve(null);
             }, resolve);
         });
     }

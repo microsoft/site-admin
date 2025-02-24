@@ -7,7 +7,6 @@ export const setContext = (context, cloudEnv?:string, sourceUrl?: string) => {
     ContextInfo.setPageContext(context.pageContext);
 
     // Update the cloud enivronment and source url
-    Strings.CloudEnvironment = cloudEnv || Strings.CloudEnvironment;
     Strings.SourceUrl = sourceUrl || ContextInfo.webServerRelativeUrl;
 }
 
@@ -16,7 +15,6 @@ export const setContext = (context, cloudEnv?:string, sourceUrl?: string) => {
  */
 const Strings = {
     AppElementId: "site-admin",
-    CloudEnvironment: "",
     GlobalVariable: "SiteAdmin",
     Lists: {
         Main: "Site Admin Requests"
