@@ -192,13 +192,7 @@ export class DataSource {
                     Select: ["*", "Author/Id", "Author/Title"]
                 },
                 onInitError: reject,
-                onInitialized: () => {
-                    // Load the status filters
-                    this.loadStatusFilters();
-
-                    // Resolve the request
-                    resolve();
-                }
+                onInitialized: resolve
             });
         });
     }
@@ -434,26 +428,6 @@ export class DataSource {
                 resolve(key);
             });
         });
-    }
-
-    // Status Filters
-    private static _statusFilters: Components.ICheckboxGroupItem[] = null;
-    static get StatusFilters(): Components.ICheckboxGroupItem[] { return this._statusFilters; }
-    static loadStatusFilters() {
-        let items: Components.ICheckboxGroupItem[] = [];
-
-        // Parse the choices
-        let fld: Types.SP.FieldChoice = this.List.getField("Status");
-        for (let i = 0; i < fld.Choices.results.length; i++) {
-            // Add an item
-            items.push({
-                label: fld.Choices.results[i],
-                type: Components.CheckboxGroupTypes.Switch
-            });
-        }
-
-        // Set the filters and resolve the promise
-        this._statusFilters = items;
     }
 
     // Gets the item id from the query string
