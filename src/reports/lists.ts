@@ -188,7 +188,6 @@ export class Lists {
         Helper.Executor(DataSource.SiteItems, siteItem => {
             // Set the loading dialog element
             let elLoadingDialog = document.createElement("div");
-            elLoadingDialog.classList.add("d-flex", "justify-content-center");
             elLoadingDialog.innerHTML = `<span>Search ${++counter} of ${DataSource.SiteItems.length}...</span><br/><span></span>`;
             let elStatus = elLoadingDialog.childNodes[2] as HTMLElement;
 
