@@ -12,6 +12,7 @@ enum ReportTypes {
     DocRetention = "DocRetention",
     ExternalShares = "ExternalShares",
     ExternalUsers = "ExternalUsers",
+    Lists = "Lists",
     SearchDocs = "SearchDocs",
     SearchUsers = "SearchUsers",
     UniquePermissions = "UniquePermissions"
@@ -65,6 +66,11 @@ export class ReportsTab {
                             value: ReportTypes.ExternalUsers
                         },
                         {
+                            text: "Lists",
+                            data: "Scans all of the lists.",
+                            value: ReportTypes.Lists
+                        },
+                        {
                             text: "Search Documents",
                             data: "Find documents by keywords.",
                             value: ReportTypes.SearchDocs
@@ -98,6 +104,9 @@ export class ReportsTab {
                 break;
             case ReportTypes.ExternalUsers:
                 form.appendControls(Reports.ExternalUsers.getFormFields());
+                break;
+            case ReportTypes.Lists:
+                form.appendControls(Reports.Lists.getFormFields());
                 break;
             case ReportTypes.SearchDocs:
                 form.appendControls(Reports.SearchDocs.getFormFields(this._reportProps?.docSearchFileExt, this._reportProps?.docSearchKeywords));
@@ -141,6 +150,12 @@ export class ReportsTab {
                         break;
                     case ReportTypes.ExternalUsers:
                         Reports.ExternalUsers.run(this._el, form.getValues(), () => {
+                            // Render this component
+                            this.render(selectedReport);
+                        });
+                        break;
+                    case ReportTypes.Lists:
+                        Reports.Lists.run(this._el, form.getValues(), () => {
                             // Render this component
                             this.render(selectedReport);
                         });

@@ -262,6 +262,13 @@ export class DataSource {
     static get SensitivityLabels(): ISensitivityLabel[] { return this._sensitivityLabels; }
     private static _sensitivityLabelItems: Components.IDropdownItem[] = null;
     static get SensitivityLabelItems(): Components.IDropdownItem[] { return this._sensitivityLabelItems; }
+    static getSensitivityLabel(labelId: string): string {
+        // Find the item
+        let item = this.SensitivityLabels.filter(a => { return a.id == labelId; })[0];
+
+        // Return the value
+        return item ? item.name : labelId;
+    }
     private static loadSensitivityLabels() {
         // Return a promise
         return new Promise(resolve => {
