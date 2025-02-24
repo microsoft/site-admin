@@ -2,11 +2,12 @@ import { ContextInfo } from "gd-sprest-bs";
 
 // Sets the context information
 // This is for SPFx or Teams solutions
-export const setContext = (context, sourceUrl?: string) => {
+export const setContext = (context, cloudEnv?:string, sourceUrl?: string) => {
     // Set the context
     ContextInfo.setPageContext(context.pageContext);
 
-    // Update the source url
+    // Update the cloud enivronment and source url
+    Strings.CloudEnvironment = cloudEnv || Strings.CloudEnvironment;
     Strings.SourceUrl = sourceUrl || ContextInfo.webServerRelativeUrl;
 }
 

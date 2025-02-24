@@ -10,6 +10,7 @@ import * as strings from 'SiteAdminWebPartStrings';
 
 export interface ISiteAdminWebPartProps {
   AppTitle: string;
+  CloudEnvironment: string;
   MaxStorage: number;
   MaxStorageDescription: string;
   ReportsDocSearchFileExt: string;
@@ -89,6 +90,7 @@ import "main-lib";
 declare const SiteAdmin: {
   appDescription: string;
   render: (props: {
+    cloudEnv?: string;
     context?: WebPartContext;
     el: HTMLElement;
     title?: string;
@@ -169,6 +171,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
 
     // Render the solution
     SiteAdmin.render({
+      cloudEnv: this.properties.CloudEnvironment,
       context: this.context,
       el: this.domElement,
       maxStorageDesc: this.properties.MaxStorageDescription,
@@ -285,6 +288,25 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                 })
               ]
             },
+            {
+              groupName: "Cloud Environment",
+              groupFields: [
+                PropertyPaneDropdown("CloudEnvironment", {
+                  label: strings.CloudEnvironment,
+                  selectedKey: this.properties.CloudEnvironment,
+                  options: [
+                    { key: "https://graph.microsoft.com", text: "Default" },
+                    { key: "https://microsoftgraph.chinacloudapi.cn", text: "China" },
+                    { key: "https://graph.microsoft.us", text: "USL4" },
+                    { key: "https://dod-graph.microsoft.us", text: "USL5" }
+                  ]
+                })
+              ]
+            }
+          ]
+        },
+        {
+          groups: [
             this.generateGroup("Site Properties:", this._siteProps)
           ]
         },
