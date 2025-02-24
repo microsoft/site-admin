@@ -66,8 +66,8 @@ export class ReportsTab {
                             value: ReportTypes.ExternalUsers
                         },
                         {
-                            text: "Lists",
-                            data: "Scans all of the lists.",
+                            text: "Lists/Libraries",
+                            data: "Scans all of the lists/libraries for this site.",
                             value: ReportTypes.Lists
                         },
                         {

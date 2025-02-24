@@ -7,6 +7,7 @@ import { ExportCSV } from "./exportCSV";
 interface IList {
     DefaultSensitivityLabel: string;
     HasUniqueRoleAssignments: boolean;
+    ItemCount: number;
     ListName: string;
     ListTemplateType: number;
     ListTemplate: string;
@@ -16,7 +17,7 @@ interface IList {
 }
 
 const CSVFields = [
-    "WebUrl", "ListType", "ListName", "ListUrl", "HasUniqueRoleAssignments", "DefaultSensitivityLabel"
+    "WebUrl", "ListType", "ListName", "ListUrl", "HasUniqueRoleAssignments", "ItemCount", "DefaultSensitivityLabel"
 ]
 
 export class Lists {
@@ -31,6 +32,7 @@ export class Lists {
         this._items.push({
             DefaultSensitivityLabel: list.DefaultSensitivityLabelForLibrary,
             HasUniqueRoleAssignments: list.HasUniqueRoleAssignments,
+            ItemCount: list.ItemCount,
             ListName: list.Title,
             ListTemplate: this._listTemplates[list.BaseTemplate],
             ListTemplateType: list.BaseTemplate,
@@ -45,7 +47,8 @@ export class Lists {
         return [
             {
                 name: "ShowHiddenLists",
-                title: "Show Hidden Lists?",
+                label: "Show Hidden Lists?",
+                description: "Select this option to include hidden lists.",
                 type: Components.FormControlTypes.Switch,
                 value: false
             }
@@ -102,12 +105,20 @@ export class Lists {
                         title: "Url"
                     },
                     {
-                        name: "ListName",
-                        title: "List Name"
+                        name: "",
+                        title: "List Info",
+                        onRenderCell: (el, col, item: IList) => {
+                            // Render the list information
+                            el.innerHTML = `
+                                <span><b>Name: </b>${item.ListName}</span>
+                                <br/>
+                                <span><b>Type: </b>${item.ListTemplate}</span>
+                            `;
+                        }
                     },
                     {
-                        name: "ListTemplate",
-                        title: "List Template"
+                        name: "ItemCount",
+                        title: "# of Items"
                     },
                     {
                         name: "DefaultSensitivityLabel",
@@ -149,15 +160,28 @@ export class Lists {
                                         }
                                     },
                                     {
-                                        content: "Click set the default sensitivity label.",
+                                        content: "Click to set the default sensitivity label.",
                                         btnProps: {
                                             className: "pe-2 py-1",
                                             //iconType: GetIcon(24, 24, "PeopleTeamDelete", "mx-1"),
-                                            text: "Sensitivity Label",
+                                            text: "Default Label",
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
                                                 // Show the form
                                                 this.setDefaultSensitivityLabel(item);
+                                            }
+                                        }
+                                    },
+                                    {
+                                        content: "Click to set the default sensitivity label for any files that aren't currently labelled.",
+                                        btnProps: {
+                                            className: "pe-2 py-1",
+                                            //iconType: GetIcon(24, 24, "PeopleTeamDelete", "mx-1"),
+                                            text: "Label Files",
+                                            type: Components.ButtonTypes.OutlinePrimary,
+                                            onClick: () => {
+                                                // Show the form
+                                                this.setDefaultSensitivityLabelForFiles(item);
                                             }
                                         }
                                     }
@@ -218,7 +242,10 @@ export class Lists {
                 web.Lists().query({
                     Filter,
                     Expand: ["DefaultViewFormUrl", "RootFolder"],
-                    Select: ["BaseTemplate", "DefaultSensitivityLabelForLibrary", "Id", "Title", "HasUniqueRoleAssignments", "RootFolder/ServerRelativeUrl"]
+                    Select: [
+                        "BaseTemplate", "DefaultSensitivityLabelForLibrary", "Id",
+                        "ItemCount", "Title", "HasUniqueRoleAssignments", "RootFolder/ServerRelativeUrl"
+                    ]
                 }).execute(lists => {
                     let ctrList = 0;
 
@@ -258,6 +285,90 @@ export class Lists {
                     name: "SensitivityLabel",
                     label: "Select Sensitivity Label:",
                     description: "This will set the default sensitivity label for this library.",
+                    items: DataSource.SensitivityLabelItems,
+                    type: Components.FormControlTypes.Dropdown,
+                    required: true,
+                    value: item.DefaultSensitivityLabel
+                } as Components.IFormControlPropsDropdown
+            ]
+        });
+
+        // Set the footmer
+        Components.TooltipGroup({
+            el: Modal.FooterElement,
+            tooltips: [
+                {
+                    content: "Sets the default sensitivity label to the selected option.",
+                    btnProps: {
+                        text: "Update",
+                        type: Components.ButtonTypes.OutlinePrimary,
+                        onClick: () => {
+                            // Ensure the form is valid
+                            if (form.isValid()) {
+                                let labelId = form.getValues()["SensitivityLabel"].value;
+
+                                // Show a loading dialog
+                                LoadingDialog.setHeader("Updating List");
+                                LoadingDialog.setBody("This dialog will close after the list is updated...");
+                                LoadingDialog.show();
+
+                                // Set the logic to run after the update completes
+                                let onComplete = () => {
+                                    // Hide the dialogs
+                                    LoadingDialog.hide();
+                                    Modal.hide();
+                                }
+
+                                // Restore the permissions
+                                Web(item.WebUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
+                                    .Lists(item.ListName).update({
+                                        DefaultSensitivityLabelForLibrary: labelId
+                                    }).execute(() => {
+                                        // Update the item
+                                        item.DefaultSensitivityLabel = labelId;
+
+                                        // Update the data table
+                                        // TODO
+
+                                        // Run the complete logic
+                                        onComplete();
+                                    }, onComplete);
+                            }
+                        }
+                    }
+                },
+                {
+                    content: "Closes the dialog.",
+                    btnProps: {
+                        text: "Close",
+                        type: Components.ButtonTypes.OutlineSecondary,
+                        onClick: () => {
+                            // Close the modal
+                            Modal.hide();
+                        }
+                    }
+                }
+            ]
+        });
+
+        // Show the modal
+        Modal.show();
+    }
+
+    // Reverts the item permissions
+    private static setDefaultSensitivityLabelForFiles(item: IList) {
+        // Set the modal header
+        Modal.clear();
+        Modal.setHeader("Set Default Sensitivity Label");
+
+        // Set the form
+        let form = Components.Form({
+            el: Modal.BodyElement,
+            controls: [
+                {
+                    name: "SensitivityLabel",
+                    label: "Select Sensitivity Label:",
+                    description: "This will set any file that isn't currently labelled.",
                     items: DataSource.SensitivityLabelItems,
                     type: Components.FormControlTypes.Dropdown,
                     required: true,
