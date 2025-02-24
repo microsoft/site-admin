@@ -285,12 +285,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   label: strings.AppTitle,
                   description: "The title displayed.",
                   value: this.properties.AppTitle
-                })
-              ]
-            },
-            {
-              groupName: "Cloud Environment",
-              groupFields: [
+                }),
                 PropertyPaneDropdown("CloudEnvironment", {
                   label: strings.CloudEnvironment,
                   selectedKey: this.properties.CloudEnvironment,
@@ -307,12 +302,12 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         },
         {
           groups: [
-            this.generateGroup("Site Properties:", this._siteProps)
+            this.generateGroup("Site Properties", this._siteProps)
           ]
         },
         {
           groups: [
-            this.generateGroup("Web Properties:", this._webProps)
+            this.generateGroup("Web Properties", this._webProps)
           ]
         },
         {
