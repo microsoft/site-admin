@@ -1,6 +1,5 @@
 import { Dashboard, DataTable, Modal, LoadingDialog } from "dattatable";
 import { Components, Helper, Types, Web } from "gd-sprest-bs";
-import { cardList } from "gd-sprest-bs/build/icons/svgs/cardList";
 import { DataSource } from "../ds";
 import { ExportCSV } from "./exportCSV";
 
@@ -159,9 +158,7 @@ export class Lists {
                                         btnProps: {
                                             className: "pe-2 py-1",
                                             iconClassName: "mx-1",
-                                            iconSize: 24,
-                                            iconType: cardList,
-                                            text: "View",
+                                            text: "View File",
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
                                                 // Show the security group
@@ -173,7 +170,6 @@ export class Lists {
                                         content: "Click to set the default sensitivity label.",
                                         btnProps: {
                                             className: "pe-2 py-1",
-                                            //iconType: GetIcon(24, 24, "PeopleTeamDelete", "mx-1"),
                                             text: "Default Label",
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
@@ -186,7 +182,6 @@ export class Lists {
                                         content: "Click to set the default sensitivity label for any files that aren't currently labelled.",
                                         btnProps: {
                                             className: "pe-2 py-1",
-                                            //iconType: GetIcon(24, 24, "PeopleTeamDelete", "mx-1"),
                                             text: "Label Files",
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
