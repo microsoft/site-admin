@@ -1,5 +1,5 @@
 import { List } from "dattatable";
-import { Components, ContextInfo, Graph, GroupSiteManager, Helper, Site, Types, Web, Search, SPTypes } from "gd-sprest-bs";
+import { Components, ContextInfo, GroupSiteManager, Helper, Site, Types, Web, Search, SPTypes, v2 } from "gd-sprest-bs";
 import { Security } from "./security";
 import Strings from "./strings";
 
@@ -195,6 +195,68 @@ export class DataSource {
                 onInitError: reject,
                 onInitialized: resolve
             });
+        });
+    }
+
+    // Loads the files for a drive
+    static loadFiles(webId: string, listName?: string): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
+        let files = [];
+
+        // Loads the files for a drive
+        let getFiles = (driveId: string, folder: string = "") => {
+            let drive = v2.sites({ siteId: this.Site.Id, webId }).drives(driveId);
+
+            // Return a promise
+            return new Promise(resolve => {
+                // Get the files for the folder
+                let driveFolder = folder ? drive.getFolder(folder) : drive.root();
+                driveFolder.children().query({
+                    GetAllItems: true,
+                    Select: ["driveId", "file", "folder", "name", "sensitivityLabel", "webUrl"],
+                    Top: 5000
+                }).execute(resp => {
+                    // Parse the items
+                    Helper.Executor(resp.results, driveItem => {
+                        // See if this is a file
+                        if (driveItem.file) {
+                            // Append the file
+                            files.push(driveItem);
+                        } else {
+                            // Get the items for this folder
+                            return getFiles(driveId, (folder ? folder + "/" : "") + driveItem.name);
+                        }
+                    }).then(() => {
+                        // Resolve the request
+                        resolve(files);
+                    });
+                });
+            });
+        }
+
+        // Return a promise
+        return new Promise((resolve, reject) => {
+            // Get the libraries for this site
+            v2.sites({ siteId: DataSource.Site.Id, webId }).drives().execute(resp => {
+                let drives: Types.Microsoft.Graph.drive[] = [];
+
+                // See if we are searching for a specific library
+                if (listName) {
+                    // Find the target drive
+                    let drive = resp.results.find(a => { return a.name == listName; });
+                    if (drive) { drives.push(drive); }
+                } else {
+                    // Parse the drives
+                    for (let i = 0; i < resp.results.length; i++) {
+                        let drive = resp.results.find(a => { return a.name == drives[i].name; });
+                        if (drive) { drives.push(drive); }
+                    }
+                }
+
+                // Parse the drives
+                Helper.Executor(drives, drive => {
+                    return getFiles(drive.id);
+                }).then(() => { resolve(files); });
+            }, reject);
         });
     }
 

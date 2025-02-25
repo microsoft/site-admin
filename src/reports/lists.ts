@@ -1,4 +1,4 @@
-import { Dashboard, Modal, LoadingDialog } from "dattatable";
+import { Dashboard, DataTable, Modal, LoadingDialog } from "dattatable";
 import { Components, Helper, Types, Web } from "gd-sprest-bs";
 import { cardList } from "gd-sprest-bs/build/icons/svgs/cardList";
 import { DataSource } from "../ds";
@@ -13,11 +13,20 @@ interface IList {
     ListTemplate: string;
     ListUrl: string;
     ListViewUrl: string;
+    WebId: string;
     WebUrl: string;
 }
 
+interface ISetSensitivityLabelResponse {
+    errorFl: boolean;
+    error?: any;
+    fileName: string;
+    message: string;
+    url: string;
+}
+
 const CSVFields = [
-    "WebUrl", "ListType", "ListName", "ListUrl", "HasUniqueRoleAssignments", "ItemCount", "DefaultSensitivityLabel"
+    "WebUrl", "WebId", "ListType", "ListName", "ListUrl", "HasUniqueRoleAssignments", "ItemCount", "DefaultSensitivityLabel"
 ]
 
 export class Lists {
@@ -27,7 +36,7 @@ export class Lists {
     private static _listTemplates: { [key: number]: string } = {};
 
     // Analyzes a list
-    private static analyzeList(webUrl: string, list: Types.SP.ListOData) {
+    private static analyzeList(webUrl: string, webId: string, list: Types.SP.ListOData) {
         // Add a row for this entry
         this._items.push({
             DefaultSensitivityLabel: list.DefaultSensitivityLabelForLibrary,
@@ -38,6 +47,7 @@ export class Lists {
             ListTemplateType: list.BaseTemplate,
             ListUrl: list.RootFolder.ServerRelativeUrl,
             ListViewUrl: list.DefaultDisplayFormUrl,
+            WebId: webId,
             WebUrl: webUrl
         });
     }
@@ -255,7 +265,7 @@ export class Lists {
                         elStatus.innerHTML = `Analyzing List ${++ctrList} of ${lists.results.length}...`;
 
                         // Analyze the list
-                        return this.analyzeList(siteItem.text, list);
+                        return this.analyzeList(siteItem.text, siteItem.value, list);
                     }).then(resolve);
                 }, true);
             });
@@ -377,7 +387,7 @@ export class Lists {
             ]
         });
 
-        // Set the footmer
+        // Set the footer
         Components.TooltipGroup({
             el: Modal.FooterElement,
             tooltips: [
@@ -389,38 +399,142 @@ export class Lists {
                         onClick: () => {
                             // Ensure the form is valid
                             if (form.isValid()) {
-                                let labelId = form.getValues()["SensitivityLabel"].value;
+                                let label: Components.IDropdownItem = form.getValues()["SensitivityLabel"];
+                                let responses: ISetSensitivityLabelResponse[] = [];
 
                                 // Show a loading dialog
-                                LoadingDialog.setHeader("Updating List");
-                                LoadingDialog.setBody("This dialog will close after the list is updated...");
+                                LoadingDialog.setHeader("Loading Items");
+                                LoadingDialog.setBody("Loading the files for this library...");
                                 LoadingDialog.show();
 
-                                // Set the logic to run after the update completes
-                                let onComplete = () => {
-                                    // Hide the dialogs
-                                    LoadingDialog.hide();
-                                    Modal.hide();
-                                }
+                                // Load the files for this drive
+                                DataSource.loadFiles(item.WebId, item.ListName).then(files => {
+                                    // Update the loading dialog
+                                    LoadingDialog.setBody("Applying the sensitivity labels to the files...");
 
-                                // Restore the permissions
-                                Web(item.WebUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
-                                    .Lists(item.ListName).update({
-                                        DefaultSensitivityLabelForLibrary: labelId
-                                    }).execute(() => {
-                                        // Update the item
-                                        item.DefaultSensitivityLabel = labelId;
+                                    // Parse the files
+                                    let counter = 0;
+                                    Helper.Executor(files, file => {
+                                        // Update the loading dialog
+                                        LoadingDialog.setBody(`Processing ${++counter} of ${files.length} files...`);
 
-                                        // Update the data table
-                                        // TODO
+                                        // See if this file has a sensitivity label
+                                        if (file.sensitivityLabel?.id) {
+                                            // Add a response
+                                            responses.push({
+                                                errorFl: false,
+                                                fileName: file.name,
+                                                message: `Skipping file, it's already labelled: '${file.sensitivityLabel.displayName}'.`,
+                                                url: file.webUrl
+                                            });
+                                            return;
+                                        }
 
-                                        // Run the complete logic
-                                        onComplete();
-                                    }, onComplete);
+                                        // Update the sensitivity label for this file
+                                        return new Promise(resolve => {
+                                            // Update the sensitivity label
+                                            file.setSensitivityLabel("", "", label.value, "").execute(
+                                                // Success
+                                                () => {
+                                                    // Add the response
+                                                    responses.push({
+                                                        errorFl: false,
+                                                        fileName: file.name,
+                                                        message: `The file was successfully labelled: ${label.text}.`,
+                                                        url: file.webUrl
+                                                    });
+
+                                                    // Check the next file
+                                                    resolve(null);
+                                                },
+
+                                                // Error
+                                                err => {
+                                                    // Add the response
+                                                    responses.push({
+                                                        errorFl: true,
+                                                        error: err,
+                                                        fileName: file.name,
+                                                        message: "There was an error tagging this file.",
+                                                        url: file.webUrl
+                                                    });
+
+                                                    // Check the next file
+                                                    resolve(null);
+                                                }
+                                            );
+                                        });
+                                    }).then(() => {
+                                        // Show the responses
+                                        this.showResponses(responses);
+
+                                        // Hide the dialog
+                                        LoadingDialog.hide();
+                                    });
+                                });
                             }
                         }
                     }
                 },
+                {
+                    content: "Closes the dialog.",
+                    btnProps: {
+                        text: "Close",
+                        type: Components.ButtonTypes.OutlineSecondary,
+                        onClick: () => {
+                            // Close the modal
+                            Modal.hide();
+                        }
+                    }
+                }
+            ]
+        });
+
+        // Show the modal
+        Modal.show();
+    }
+
+    // Shows the responses for setting the sensitivity labels
+    private static showResponses(responses: ISetSensitivityLabelResponse[]) {
+        // Clear the modal and set the header
+        Modal.clear();
+        Modal.setType(Components.ModalTypes.Full);
+        Modal.setHeader("Set Sensitivity Label Results");
+
+        // Set the body
+        new DataTable({
+            el: Modal.BodyElement,
+            rows: responses,
+            columns: [
+                {
+                    name: "errorFl",
+                    title: "Error?"
+                },
+                {
+                    name: "",
+                    title: "File Name",
+                    onRenderCell: (el, col, item: ISetSensitivityLabelResponse) => {
+                        // Render a link to the file
+                        Components.Button({
+                            el,
+                            text: item.fileName,
+                            href: item.url,
+                            target: "_blank",
+                            type: Components.ButtonTypes.OutlineLink
+                        });
+                    }
+                },
+                {
+                    name: "message",
+                    title: "Status Message"
+                }
+            ]
+        });
+
+        // Set the footer
+        Components.TooltipGroup({
+            el: Modal.FooterElement,
+            tooltips: [
                 {
                     content: "Closes the dialog.",
                     btnProps: {
