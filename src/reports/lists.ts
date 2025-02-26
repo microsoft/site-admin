@@ -458,7 +458,7 @@ export class Lists {
                                                         errorFl: true,
                                                         error: err,
                                                         fileName: file.name,
-                                                        message: `There was an error tagging this file:\n${error}`,
+                                                        message: `There was an error tagging this file: ${error}`,
                                                         url: file.webUrl
                                                     });
 
