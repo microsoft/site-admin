@@ -448,12 +448,17 @@ export class Lists {
 
                                                 // Error
                                                 err => {
+                                                    // Get the error
+                                                    let error = null;
+                                                    try { error = JSON.parse(err["response"])?.error?.message; }
+                                                    catch { error = err; }
+
                                                     // Add the response
                                                     responses.push({
                                                         errorFl: true,
                                                         error: err,
                                                         fileName: file.name,
-                                                        message: "There was an error tagging this file.",
+                                                        message: `There was an error tagging this file:\n${error}`,
                                                         url: file.webUrl
                                                     });
 
