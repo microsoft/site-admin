@@ -212,7 +212,7 @@ export class DataSource {
                 let driveFolder = folder ? drive.getFolder(folder) : drive.root();
                 driveFolder.children().query({
                     GetAllItems: true,
-                    Select: ["driveId", "file", "folder", "name", "sensitivityLabel", "webUrl"],
+                    Select: ["driveId", "file", "folder", "name", "parentReference", "sensitivityLabel", "webUrl"],
                     Top: 5000
                 }).execute(resp => {
                     // Parse the items

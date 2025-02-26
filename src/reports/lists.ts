@@ -1,5 +1,5 @@
 import { Dashboard, DataTable, Modal, LoadingDialog } from "dattatable";
-import { Components, Helper, Types, Web } from "gd-sprest-bs";
+import { Components, Helper, Types, Web, v2 } from "gd-sprest-bs";
 import { DataSource } from "../ds";
 import { ExportCSV } from "./exportCSV";
 
@@ -428,7 +428,10 @@ export class Lists {
                                         // Update the sensitivity label for this file
                                         return new Promise(resolve => {
                                             // Update the sensitivity label
-                                            file.setSensitivityLabel("", "", label.value, "").execute(
+                                            v2.drive({
+                                                driveId: file.parentReference.driveId,
+                                                siteId: file.parentReference.siteId
+                                            }).items(file.id).setSensitivityLabel("Manual", "Privileged", label.value, "").execute(
                                                 // Success
                                                 () => {
                                                     // Add the response
