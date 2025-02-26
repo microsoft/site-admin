@@ -128,6 +128,7 @@ export class LoadForm {
                                 query: {
                                     Querytext: `Path:${pathQuery}* contentclass=sts_site`,
                                     RowLimit: 15,
+                                    TrimDuplicates: true,
                                     SelectProperties: {
                                         results: [
                                             "Path", "SiteId", "Title"
