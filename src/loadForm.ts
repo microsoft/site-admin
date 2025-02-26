@@ -1,5 +1,5 @@
 import { LoadingDialog, Modal } from "dattatable";
-import { Components } from "gd-sprest-bs";
+import { Components, Search } from "gd-sprest-bs";
 import { DataSource } from "./ds";
 
 /**
@@ -15,48 +15,18 @@ export class LoadForm {
 
         // Render the form and footer
         this.renderForm(elForm);
-        this.renderFooter(elForm, elFooter);
-    }
-
-    // Loads the sites for the user
-    private loadSites(elForm: HTMLElement, elFooter: HTMLElement) {
-        // Show a loading dialog
-        LoadingDialog.setHeader("Loading Sites");
-        LoadingDialog.setBody("Loading all of the site collections the user has access to.");
-        LoadingDialog.show();
-
-        // Load the sites
-        DataSource.loadSites().then((sites) => {
-            // Load the form again
-            new LoadForm(elForm, elFooter, this._onSuccess);
-
-            // Hide the form
-            LoadingDialog.hide();
-        }, () => {
-            // TODO - Error getting the sites
-        });
+        this.renderFooter(elFooter);
     }
 
     // Renders the footer
-    private renderFooter(elForm: HTMLElement, elFooter: HTMLElement) {
+    private renderFooter(el: HTMLElement) {
         // Clear the element
-        while (elFooter.firstChild) { elFooter.removeChild(elFooter.firstChild); }
+        while (el.firstChild) { el.removeChild(el.firstChild); }
 
         // Render the footer
         Components.TooltipGroup({
-            el: elFooter,
+            el,
             tooltips: [
-                {
-                    content: "Loads the available sites for the user.",
-                    btnProps: {
-                        className: DataSource.MySiteItems ? "d-none" : "",
-                        text: "Load My Sites",
-                        onClick: () => {
-                            // Get all of the site for the user
-                            this.loadSites(elForm, elFooter);
-                        }
-                    }
-                },
                 {
                     content: "Validates that you are an admin for the site entered.",
                     btnProps: {
@@ -73,6 +43,10 @@ export class LoadForm {
 
     // Renders the form
     private renderForm(el: HTMLElement) {
+        let disableEvent = false;
+        let popover: Components.IPopover = null;
+        let tb: Components.IInputGroup = null;
+
         // Clear the element
         while (el.firstChild) { el.removeChild(el.firstChild); }
 
@@ -80,35 +54,137 @@ export class LoadForm {
         this._form = Components.Form({
             el,
             controls: [
-                DataSource.MySiteItems ?
-                    {
-                        name: "url",
-                        label: "Select Site:",
-                        description: "Select the site from the dropdown.",
-                        type: Components.FormControlTypes.ListBox,
-                        items: DataSource.MySiteItems
-                    } as Components.IFormControlPropsListBox
-                    :
-                    {
-                        name: "url",
-                        label: "Site Url:",
-                        type: Components.FormControlTypes.TextField,
-                        description: "The absolute/relative url to the site. (Example: /sites/dev)",
-                        required: true,
-                        errorMessage: "The site url is required.",
-                        onControlRendered: ctrl => {
-                            // Set the key down event
-                            ctrl.textbox.elTextbox.addEventListener("keypress", ev => {
-                                // See if they hit the enter button
-                                if (ev["keyCode"] === 13) {
-                                    ev.preventDefault();
+                {
+                    name: "url",
+                    label: "Site Url:",
+                    type: Components.FormControlTypes.TextField,
+                    description: "The absolute/relative url to the site. (Example: /sites/dev)<br/>Type in a minimum of 3 characters to search for sites.",
+                    required: true,
+                    errorMessage: "The site url is required.",
+                    onControlRendered: ctrl => {
+                        // Set the key down event
+                        ctrl.textbox.elTextbox.addEventListener("keypress", ev => {
+                            // See if they hit the enter button
+                            if (ev["keyCode"] === 13) {
+                                ev.preventDefault();
 
-                                    // Submit the request
-                                    this.submitForm();
+                                // Submit the request
+                                this.submitForm();
+                            }
+                        });
+
+                        // Create a popover menu
+                        tb = ctrl.textbox;
+                        popover = Components.Popover({
+                            className: "search-sites",
+                            target: tb.elTextbox,
+                            placement: Components.PopoverPlacements.BottomStart,
+                            options: {
+                                showOnCreate: false,
+                                trigger: ""
+                            }
+                        });
+                    },
+                    onChange: (value) => {
+                        // See if we are disabling the event
+                        if (disableEvent) { return; }
+
+                        // Ensure 3 characters exist
+                        if (value.length < 3) { return; }
+
+                        // Wait for the user to stop typing
+                        let prevValue = value;
+                        setTimeout(() => {
+                            // See if the value changed
+                            if (prevValue != value) { return; }
+
+                            // Show the popover
+                            popover.setBody("Searching for sites...");
+                            popover.show();
+
+                            // Determine the path query
+                            let pathQuery = "";
+                            if (value.indexOf("http") == 0) {
+                                // Search for the absolute url
+                                pathQuery = value;
+                            } else {
+                                // Add the origin
+                                pathQuery = document.location.origin;
+
+                                // See if this is a relative url
+                                pathQuery += value[0] == "/" ? "" : "/*";
+
+                                // Append the value
+                                pathQuery += value;
+                            }
+
+                            // Query the search api for sites
+                            Search.postQuery<{
+                                Path: string;
+                                SiteId: string;
+                                Title: string;
+                            }>({
+                                getAllItems: true,
+                                query: {
+                                    Querytext: `Path:${pathQuery}* contentclass=sts_site`,
+                                    RowLimit: 15,
+                                    SelectProperties: {
+                                        results: [
+                                            "Path", "SiteId", "Title"
+                                        ]
+                                    }
                                 }
+                            }).then(search => {
+                                // Parse the results
+                                let items: Components.IDropdownItem[] = [];
+                                if (search.results.length == 0) {
+                                    // Set the default value
+                                    items.push({
+                                        text: "No sites were found for: " + value,
+                                        value: ""
+                                    });
+                                } else {
+                                    // Parse the results
+                                    for (let i = 0; i < search.results.length; i++) {
+                                        let result = search.results[i];
+
+                                        // Append the site suggestion
+                                        items.push({
+                                            data: result,
+                                            text: result.Path,
+                                            value: result.Path
+                                        });
+                                    }
+                                }
+
+                                // Sort the items
+                                items.sort((a, b) => {
+                                    if (a.text < b.text) { return -1; }
+                                    if (a.text > b.text) { return 1; }
+                                    return 0;
+                                });
+
+                                // Update the popover
+                                popover.setBody(Components.Dropdown({
+                                    menuOnly: true,
+                                    items,
+                                    onChange: ((item: Components.IDropdownItem) => {
+                                        // Set the value
+                                        disableEvent = true;
+                                        tb.setValue(item?.value);
+                                        disableEvent = false;
+
+                                        // Hide the popover
+                                        popover.hide();
+                                    })
+                                }).el);
+                            }, () => {
+                                // Error searching for sites
+                                popover.hide();
                             });
-                        }
+                        }, 100);
                     }
+                } as Components.IFormControlPropsTextField
             ]
         });
     }

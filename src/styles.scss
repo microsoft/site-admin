@@ -7,3 +7,9 @@
         }
     }
 }
+
+/** Set the popover width */
+.search-sites > .popover {
+    max-width: fit-content;
+    width: fit-content;
+}
