@@ -25,7 +25,10 @@ interface ISetSensitivityLabelResponse {
 }
 
 const CSVFields = [
-    "WebUrl", "WebId", "ListType", "ListName", "ListUrl", "HasUniqueRoleAssignments", "ItemCount", "DefaultSensitivityLabel"
+    "WebUrl", "WebId", "ListName", "ListTemplateType", "ListTemplate", "ListUrl", "ListViewUrl", "HasUniqueRoleAssignments", "ItemCount", "DefaultSensitivityLabel"
+]
+const CSVSensitivityLabelResponseFields = [
+    "errorFl", "url", "fileName", "message"
 ]
 
 export class Lists {
@@ -538,6 +541,17 @@ export class Lists {
         Components.TooltipGroup({
             el: Modal.FooterElement,
             tooltips: [
+                {
+                    content: "Exports the report as a csv.",
+                    btnProps: {
+                        text: "Export to CSV",
+                        type: Components.ButtonTypes.OutlinePrimary,
+                        onClick: () => {
+                            // Export the CSV
+                            new ExportCSV("senstivity_labels.csv", CSVSensitivityLabelResponseFields, this._items);
+                        }
+                    }
+                },
                 {
                     content: "Closes the dialog.",
                     btnProps: {
