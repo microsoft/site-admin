@@ -62,6 +62,13 @@ export class LoadForm {
                     description: "The absolute/relative url to the site. (Example: /sites/dev)<br/>Type in a minimum of 3 characters to search for sites.",
                     required: true,
                     errorMessage: "The site url is required.",
+                    prependedDropdown: {
+                        updateLabel: true,
+                        items: [
+                            { text: "/sites/", value: "/sites/", isSelected: true },
+                            { text: "/teams/", value: "/teams/" }
+                        ]
+                    },
                     onControlRendered: ctrl => {
                         // Set the key down event
                         ctrl.textbox.elTextbox.addEventListener("keypress", ev => {
@@ -91,7 +98,7 @@ export class LoadForm {
                         if (disableEvent) { return; }
 
                         // Ensure 3 characters exist
-                        if (value.length < 3) { return; }
+                        if (tb.elTextbox.value.length < 3) { return; }
 
                         // Wait for the user to stop typing
                         let prevValue = value;
@@ -104,20 +111,9 @@ export class LoadForm {
                             popover.show();
 
                             // Determine the path query
-                            let pathQuery = "";
-                            if (value.indexOf("http") == 0) {
-                                // Search for the absolute url
-                                pathQuery = value;
-                            } else {
-                                // Add the origin
-                                pathQuery = document.location.origin;
-
-                                // See if this is a relative url
-                                pathQuery += value[0] == "/" ? "" : "/*";
-
-                                // Append the value
-                                pathQuery += value;
-                            }
+                            let selectedItem = tb.prependedDropdown.getValue() as Components.IDropdownItem;
+                            let siteUrl = `${document.location.origin}${selectedItem.value}`
+                            let pathQuery = `${siteUrl}${tb.elTextbox.value}*`;
 
                             // Query the search api for sites
                             Search.postQuery<{
@@ -127,7 +123,7 @@ export class LoadForm {
                             }>({
                                 getAllItems: true,
                                 query: {
-                                    Querytext: `Path:${pathQuery}* contentclass=sts_site`,
+                                    Querytext: `Path:${pathQuery} contentclass=sts_site`,
                                     RowLimit: 15,
                                     TrimDuplicates: true,
                                     SelectProperties: {
@@ -154,7 +150,7 @@ export class LoadForm {
                                         items.push({
                                             data: result,
                                             text: result.Path,
-                                            value: result.Path
+                                            value: result.Path.replace(siteUrl, '')
                                         });
                                     }
                                 }
