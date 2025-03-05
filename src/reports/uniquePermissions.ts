@@ -298,14 +298,8 @@ export class UniquePermissions {
         // Parse all the webs
         let counter = 0;
         Helper.Executor(DataSource.SiteItems, siteItem => {
-            // Set the loading dialog element
-            let elLoadingDialog = document.createElement("div");
-            elLoadingDialog.classList.add("d-flex", "justify-content-center");
-            elLoadingDialog.innerHTML = `<span>Search ${++counter} of ${DataSource.SiteItems.length}...</span><br/><span></span>`;
-            let elStatus = elLoadingDialog.childNodes[2] as HTMLElement;
-
             // Update the loading dialog
-            LoadingDialog.setBody(elLoadingDialog);
+            LoadingDialog.setHeader(`Site ${++counter} of ${DataSource.SiteItems.length}`);
 
             // Return a promise
             return new Promise(resolve => {
@@ -320,7 +314,7 @@ export class UniquePermissions {
                     // Parse the lists
                     Helper.Executor(lists.results, list => {
                         // Update the status
-                        elStatus.innerHTML = `Analyzing List ${++ctrList} of ${lists.results.length}...`;
+                        LoadingDialog.setBody(`Analyzing List ${++ctrList} of ${lists.results.length}...`);
 
                         // Analyze the list
                         return this.analyzeList(siteItem.text, list);
