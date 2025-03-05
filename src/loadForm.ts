@@ -6,8 +6,9 @@ import { DataSource } from "./ds";
  * Load Form
  */
 export class LoadForm {
-    _form: Components.IForm = null;
-    _onSuccess: () => void = null;
+    private _form: Components.IForm = null;
+    private _popover: Components.IPopover = null;
+    private _onSuccess: () => void = null;
 
     // Renders the modal
     constructor(elForm: HTMLElement, elFooter: HTMLElement, onSuccess: () => void) {
@@ -44,7 +45,6 @@ export class LoadForm {
     // Renders the form
     private renderForm(el: HTMLElement) {
         let disableEvent = false;
-        let popover: Components.IPopover = null;
         let tb: Components.IInputGroup = null;
 
         // Clear the element
@@ -83,7 +83,7 @@ export class LoadForm {
 
                         // Create a popover menu
                         tb = ctrl.textbox;
-                        popover = Components.Popover({
+                        this._popover = Components.Popover({
                             className: "search-sites",
                             target: tb.elTextbox,
                             placement: Components.PopoverPlacements.BottomStart,
@@ -107,8 +107,8 @@ export class LoadForm {
                             if (prevValue != value) { return; }
 
                             // Show the popover
-                            popover.setBody("Searching for sites...");
-                            popover.show();
+                            this._popover.setBody("Searching for sites...");
+                            this._popover.show();
 
                             // Determine the path query
                             let selectedItem = tb.prependedDropdown.getValue() as Components.IDropdownItem;
@@ -163,7 +163,7 @@ export class LoadForm {
                                 });
 
                                 // Update the popover
-                                popover.setBody(Components.Dropdown({
+                                this._popover.setBody(Components.Dropdown({
                                     menuOnly: true,
                                     items,
                                     onChange: ((item: Components.IDropdownItem) => {
@@ -173,12 +173,12 @@ export class LoadForm {
                                         disableEvent = false;
 
                                         // Hide the popover
-                                        popover.hide();
+                                        this._popover.hide();
                                     })
                                 }).el);
                             }, () => {
                                 // Error searching for sites
-                                popover.hide();
+                                this._popover.hide();
                             });
                         }, 100);
                     }
@@ -204,6 +204,9 @@ export class LoadForm {
 
     // Submits the form
     private submitForm() {
+        // Ensure the popover is hidden
+        this._popover.hide();
+
         // Validate the form
         if (this._form.isValid()) {
             let ctrl = this._form.getControl("url");

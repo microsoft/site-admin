@@ -1,4 +1,4 @@
-import { Dashboard, Documents, LoadingDialog } from "dattatable";
+import { Dashboard, LoadingDialog } from "dattatable";
 import { Components, ContextInfo, Helper, Search, Types, Web } from "gd-sprest-bs";
 import { fileEarmark } from "gd-sprest-bs/build/icons/svgs/fileEarmark";
 import { personX } from "gd-sprest-bs/build/icons/svgs/personX";
@@ -33,6 +33,108 @@ const CSVFields = [
 export class ExternalUsers {
     private static _items: IGroupInfo[] = [];
 
+    // Analyzes a group
+    private static analyzeGroup(rootWeb: Types.SP.WebOData, userInfo: IUserInfo, group: Types.SP.Group): PromiseLike<void> {
+        // Return a promise
+        return new Promise(resolve => {
+            // Parse the roles
+            for (let i = 0; i < rootWeb.RoleAssignments.results.length; i++) {
+                let role: Types.SP.RoleAssignmentOData = rootWeb.RoleAssignments.results[i] as any;
+
+                // See if the user belongs to this role
+                if (role.Member.LoginName == group.LoginName) {
+                    // Add the user information
+                    this._items.push({
+                        WebUrl: rootWeb.Url,
+                        WebTitle: rootWeb.Title,
+                        Id: userInfo.Id,
+                        Name: userInfo.Title || userInfo.Name,
+                        Email: userInfo.EMail,
+                        Group: group.Title,
+                        GroupId: group.Id,
+                        GroupInfo: group.Description || "",
+                        Role: role.RoleDefinitionBindings.results[0].Name,
+                        RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
+                    });
+
+                    // Resolve the request and return
+                    resolve(null);
+                    return;
+                }
+            }
+
+            // See if this is not a sharing link
+            if (!group.Title.startsWith("SharingLinks.")) {
+                // Add the user information
+                this._items.push({
+                    WebUrl: rootWeb.Url,
+                    WebTitle: rootWeb.Title,
+                    Name: userInfo.Title || userInfo.Name,
+                    Email: userInfo.EMail,
+                    Group: group.Title,
+                    GroupId: group.Id,
+                    GroupInfo: group.Description || "",
+                    Role: "Unknown",
+                    RoleInfo: "Unable to determine the role for this group"
+                });
+
+                // Resolve the promise
+                resolve(null);
+                return;
+            }
+
+            // Set the role name
+            let info = group.Title.split('.');
+            let docId = info.length > 2 ? info[1] : "";
+            let roleName = info.length > 3 ? info[2] : "";
+
+            // See if the doc id exists
+            if (docId) {
+                // Find the document by its id
+                Search.postQuery<{ Path: string; SPWebUrl: string; Title: string }>({
+                    url: DataSource.SiteContext.SiteFullUrl,
+                    query: {
+                        Querytext: "UniqueID: " + docId,
+                        SelectProperties: {
+                            results: ["Path", "SPWebUrl", "Title"]
+                        }
+                    },
+                    targetInfo: { requestDigest: DataSource.SiteContext.FormDigestValue }
+                }).then(search => {
+                    let result = search.results[0];
+
+                    // Set the role information
+                    let roleInfo = "";
+                    if (result) {
+                        // Set the role information
+                        roleInfo = "Has '" + roleName + "' access to the file <a target='_blank' " +
+                            "href='" + result.Path + "'>" + result.Title + "</a>.";
+                    }
+
+                    // Add the user information
+                    this._items.push({
+                        DocUrl: result?.Path,
+                        WebUrl: result?.SPWebUrl || rootWeb.Url,
+                        WebTitle: "",
+                        Name: userInfo.Title || userInfo.Name,
+                        Email: userInfo.EMail,
+                        Group: group.Title,
+                        GroupId: group.Id,
+                        GroupInfo: group.Description,
+                        Role: roleName,
+                        RoleInfo: roleInfo
+                    });
+
+                    // Resolve the promise
+                    resolve(null);
+                });
+            } else {
+                // Resolve the promise
+                resolve(null);
+            }
+        });
+    }
+
     // Analyzes the users
     private static analyzeUsers(rootWeb: Types.SP.WebOData, users: IUserInfo[]): PromiseLike<void> {
         // Return a promise
@@ -66,101 +168,17 @@ export class ExternalUsers {
             }).execute(user => {
                 // Parse the groups
                 Helper.Executor(user.Groups.results, group => {
-                    // Return a promise
-                    return new Promise((resolve) => {
-                        // Parse the roles
-                        for (let i = 0; i < rootWeb.RoleAssignments.results.length; i++) {
-                            let role: Types.SP.RoleAssignmentOData = rootWeb.RoleAssignments.results[i] as any;
-
-                            // See if the user belongs to this role
-                            if (role.Member.LoginName == group.LoginName) {
-                                // Add the user information
-                                this._items.push({
-                                    WebUrl: rootWeb.Url,
-                                    WebTitle: rootWeb.Title,
-                                    Id: userInfo.Id,
-                                    Name: userInfo.Title || userInfo.Name,
-                                    Email: userInfo.EMail,
-                                    Group: group.Title,
-                                    GroupId: group.Id,
-                                    GroupInfo: group.Description || "",
-                                    Role: role.RoleDefinitionBindings.results[0].Name,
-                                    RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
-                                });
-
-                                // Resolve the request and return
-                                resolve(null);
-                                return;
-                            }
-                        }
-
-                        // See if this is not a sharing link
-                        if (!group.Title.startsWith("SharingLinks.")) {
-                            // Add the user information
-                            this._items.push({
-                                WebUrl: rootWeb.Url,
-                                WebTitle: rootWeb.Title,
-                                Name: userInfo.Title || userInfo.Name,
-                                Email: userInfo.EMail,
-                                Group: group.Title,
-                                GroupId: group.Id,
-                                GroupInfo: group.Description || "",
-                                Role: "Unknown",
-                                RoleInfo: "Unable to determine the role for this group"
-                            });
-
-                            // Resolve the promise
-                            resolve(null);
-                            return;
-                        }
-
-                        // Set the role name
-                        let info = group.Title.split('.');
-                        let docId = info.length > 2 ? info[1] : "";
-                        let roleName = info.length > 3 ? info[2] : "";
-
-                        // See if the doc id exists
-                        if (docId) {
-                            // Find the document by its id
-                            Search.postQuery<{ Path: string; SPWebUrl: string; Title: string }>({
-                                url: DataSource.SiteContext.SiteFullUrl,
-                                query: {
-                                    Querytext: "UniqueID: " + docId,
-                                    SelectProperties: {
-                                        results: ["Path", "SPWebUrl", "Title"]
-                                    }
-                                },
-                                targetInfo: { requestDigest: DataSource.SiteContext.FormDigestValue }
-                            }).then(search => {
-                                let result = search.results[0];
-
-                                // Set the role information
-                                let roleInfo = "";
-                                if (result) {
-                                    // Set the role information
-                                    roleInfo = "Has '" + roleName + "' access to the file <a target='_blank' " +
-                                        "href='" + result.Path + "'>" + result.Title + "</a>.";
-                                }
-
-                                // Add the user information
-                                this._items.push({
-                                    DocUrl: result?.Path,
-                                    WebUrl: result?.SPWebUrl,
-                                    WebTitle: "",
-                                    Name: userInfo.Title || userInfo.Name,
-                                    Email: userInfo.EMail,
-                                    Group: group.Title,
-                                    GroupId: group.Id,
-                                    GroupInfo: group.Description,
-                                    Role: roleName,
-                                    RoleInfo: roleInfo
-                                });
-                            });
-                        }
-                    });
+                    // Analyze the group
+                    return this.analyzeGroup(rootWeb, userInfo, group);
                 }).then(() => {
                     // Resolve the promise
                     resolve();
+                });
+            }, () => {
+                // Get the group
+                Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).SiteGroups().getById(userInfo.Id).execute(group => {
+                    // Analyze the group
+                    this.analyzeGroup(rootWeb, userInfo, group).then(resolve);
                 });
             });
         });
@@ -451,7 +469,7 @@ export class ExternalUsers {
 
             // Get the users for this site
             Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists("User Information List").Items().query({
-                Filter: "substringof('%23ext%23', Name)",
+                Filter: "substringof('%23ext%23', Name) or substringof('SharingLinks', Name)",
                 Select: ["Id", "Name", "EMail", "Title"],
                 GetAllItems: true,
                 Top: 5000

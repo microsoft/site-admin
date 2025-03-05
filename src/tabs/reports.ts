@@ -62,7 +62,7 @@ export class ReportsTab {
                         },
                         {
                             text: "External Users",
-                            data: "Scans for external user information.",
+                            data: "Scans the user information list for 'external' user accounts.",
                             value: ReportTypes.ExternalUsers
                         },
                         {
