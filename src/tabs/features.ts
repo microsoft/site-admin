@@ -52,7 +52,7 @@ export class FeaturesTab extends Tab<{
                     newValue: hideContent,
                     scope: "Web",
                     property: "ExcludeFromOfflineClient",
-                    url: item.value
+                    url: item.text
                 });
             }
         }
