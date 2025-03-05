@@ -372,6 +372,7 @@ export class Lists {
         // Set the form
         let form = Components.Form({
             el: Modal.BodyElement,
+            groupClassName: "mb-3",
             controls: [
                 {
                     name: "SensitivityLabel",
@@ -381,7 +382,25 @@ export class Lists {
                     type: Components.FormControlTypes.Dropdown,
                     required: true,
                     value: item.DefaultSensitivityLabel
-                } as Components.IFormControlPropsDropdown
+                } as Components.IFormControlPropsDropdown,
+                {
+                    name: "AssignmentMethod",
+                    label: "Assignment Method:",
+                    description: "",
+                    type: Components.FormControlTypes.Dropdown,
+                    required: true,
+                    items: [
+                        { text: "Standard", value: "Standard" },
+                        { text: "Privileged", value: "Privileged", isSelected: true }
+                    ]
+                } as Components.IFormControlPropsDropdown,
+                {
+                    name: "Justification",
+                    label: "Justification:",
+                    description: "",
+                    type: Components.FormControlTypes.TextArea,
+                    required: true
+                } as Components.IFormControlPropsTextField,
             ]
         });
 
@@ -397,7 +416,10 @@ export class Lists {
                         onClick: () => {
                             // Ensure the form is valid
                             if (form.isValid()) {
-                                let label: Components.IDropdownItem = form.getValues()["SensitivityLabel"];
+                                let values = form.getValues();
+                                let assignmentMethod = values["Justification"];
+                                let justification = values["AssignmentMethod"].value;
+                                let label: Components.IDropdownItem = values["SensitivityLabel"];
                                 let responses: ISetSensitivityLabelResponse[] = [];
 
                                 // Show a loading dialog
@@ -434,7 +456,7 @@ export class Lists {
                                             v2.drive({
                                                 driveId: file.parentReference.driveId,
                                                 siteId: file.parentReference.siteId
-                                            }).items(file.id).setSensitivityLabel("Manual", "Privileged", label.value, "").execute(
+                                            }).items(file.id).setSensitivityLabel("Site Admin Tool", assignmentMethod, label.value, justification).execute(
                                                 // Success
                                                 () => {
                                                     // Add the response
