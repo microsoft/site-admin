@@ -253,7 +253,7 @@ export class DataSource {
 
     // Loads the sensitivity labels for the current user
     private static _sensitivityLabels: ISensitivityLabel[] = null;
-    static HasSensitivityLabels(): boolean { return this._sensitivityLabels != null; }
+    static get HasSensitivityLabels(): boolean { return this._sensitivityLabels?.length > 0; }
     static get SensitivityLabels(): ISensitivityLabel[] { return this._sensitivityLabels; }
     private static _sensitivityLabelItems: Components.IDropdownItem[] = null;
     static get SensitivityLabelItems(): Components.IDropdownItem[] { return this._sensitivityLabelItems; }

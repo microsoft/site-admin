@@ -173,6 +173,7 @@ export class Lists {
                                         content: "Click to set the default sensitivity label.",
                                         btnProps: {
                                             className: "pe-2 py-1",
+                                            isDisabled: !DataSource.HasSensitivityLabels,
                                             text: "Default Label",
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
@@ -185,6 +186,7 @@ export class Lists {
                                         content: "Click to set the default sensitivity label for any files that aren't currently labelled.",
                                         btnProps: {
                                             className: "pe-2 py-1",
+                                            isDisabled: !DataSource.HasSensitivityLabels,
                                             text: "Label Files",
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
@@ -378,28 +380,60 @@ export class Lists {
                     name: "SensitivityLabel",
                     label: "Select Sensitivity Label:",
                     description: "This will set any file that isn't currently labelled.",
+                    errorMessage: "A sensitivity label is required.",
                     items: DataSource.SensitivityLabelItems,
                     type: Components.FormControlTypes.Dropdown,
                     required: true,
-                    value: item.DefaultSensitivityLabel
-                } as Components.IFormControlPropsDropdown,
-                {
-                    name: "AssignmentMethod",
-                    label: "Assignment Method:",
-                    description: "",
-                    type: Components.FormControlTypes.Dropdown,
-                    required: true,
-                    items: [
-                        { text: "Standard", value: "Standard" },
-                        { text: "Privileged", value: "Privileged", isSelected: true }
-                    ]
+                    value: item.DefaultSensitivityLabel,
+                    onValidate: (ctrl, results) => {
+                        // Ensure a selection exists
+                        results.isValid = results.value && results.value.text ? true : false;
+                        return results;
+                    }
                 } as Components.IFormControlPropsDropdown,
                 {
                     name: "Justification",
                     label: "Justification:",
-                    description: "",
-                    type: Components.FormControlTypes.TextArea,
-                    required: true
+                    description: "Your organization requires justification to change this label.",
+                    type: Components.FormControlTypes.Dropdown,
+                    required: true,
+                    items: [
+                        { text: "Previous label no longer applies" },
+                        { text: "Previous label was incorrect" },
+                        { text: "Other" }
+                    ],
+                    onChange: (item) => {
+                        let ctrlTextbox = form.getControl("JustificationOther");
+
+                        // See if we are showing it
+                        if (item.text == "Other") {
+                            // Show it
+                            ctrlTextbox.show();
+                        } else {
+                            // Hide it
+                            ctrlTextbox.hide();
+                        }
+                    }
+                } as Components.IFormControlPropsDropdown,
+                {
+                    name: "JustificationOther",
+                    label: "Explain Justification:",
+                    description: "Do not enter sensitive information",
+                    className: "d-none",
+                    type: Components.FormControlTypes.TextField,
+                    errorMessage: "A justification is required.",
+                    onValidate: (ctrl, results) => {
+                        let item = form.getValues()["Justification"] as Components.IDropdownItem;
+
+                        // See if we are expecting a justification
+                        if (item.text == "Other") {
+                            // Set the falg
+                            results.isValid = results.value ? true : false;
+                        }
+
+                        // Return the results
+                        return results;
+                    }
                 } as Components.IFormControlPropsTextField,
             ]
         });
@@ -417,8 +451,6 @@ export class Lists {
                             // Ensure the form is valid
                             if (form.isValid()) {
                                 let values = form.getValues();
-                                let assignmentMethod = values["Justification"];
-                                let justification = values["AssignmentMethod"].value;
                                 let label: Components.IDropdownItem = values["SensitivityLabel"];
                                 let responses: ISetSensitivityLabelResponse[] = [];
 
@@ -426,6 +458,10 @@ export class Lists {
                                 LoadingDialog.setHeader("Loading Items");
                                 LoadingDialog.setBody("Loading the files for this library...");
                                 LoadingDialog.show();
+
+                                // Update the justification
+                                let justification = values["Justification"].text;
+                                justification = justification == "Other" ? values["JustificationOther"] : justification;
 
                                 // Load the files for this drive
                                 DataSource.loadFiles(item.WebId, item.ListName).then(files => {
@@ -456,7 +492,7 @@ export class Lists {
                                             v2.drive({
                                                 driveId: file.parentReference.driveId,
                                                 siteId: file.parentReference.siteId
-                                            }).items(file.id).setSensitivityLabel("Site Admin Tool", assignmentMethod, label.value, justification).execute(
+                                            }).items(file.id).setSensitivityLabel("Site Admin App", "Privileged", label.value, justification).execute(
                                                 // Success
                                                 () => {
                                                     // Add the response
