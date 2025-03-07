@@ -492,7 +492,7 @@ export class Lists {
                                             v2.drive({
                                                 driveId: file.parentReference.driveId,
                                                 siteId: file.parentReference.siteId
-                                            }).items(file.id).setSensitivityLabel("Site Admin App", "Privileged", label.value, justification).execute(
+                                            }).items(file.id).setSensitivityLabel("Site Admin Tool", "Privileged", label.value, justification).execute(
                                                 // Success
                                                 () => {
                                                     // Add the response

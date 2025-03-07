@@ -31,7 +31,7 @@
       },
       "officeFabricIconFontName": "AdminSLogoInverse32",
       "properties": {
-        "AppTitle": "Site Admin App",
+        "AppTitle": "Site Admin Tool",
         "CloudEnvironment": "Default",
         "MaxStorage": 25,
         "MaxStorageDescription": "The max threshold has been met.",
