@@ -166,7 +166,7 @@ else {
     $output = "Unable to find the item by id: $itemId";
 
     # Set the status code
-    $statusCode = [HttpStatusCode]::NotFound;
+    $statusCode = 503;
 }
 
 ############################################### Main App ###############################################
