@@ -224,6 +224,17 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     "SitePropTitle"
   ];
 
+  private _readOnlyProps: string[] = [
+    "SitePropCreated",
+    "SitePropHubSite",
+    "SitePropHubSiteConnected",
+    "SitePropStorageUsed",
+    "SitePropTemplate",
+    "SitePropTitle",
+    "WebPropTemplate",
+    "WebPropTitle"
+  ]
+
   private _webProps: string[] = [
     "WebPropCommentsOnSitePagesDisabled",
     "WebPropExcludeFromOfflineClient",
@@ -244,14 +255,9 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       const propName = props[i];
       const hideProp = (this.properties as any)[propName] as boolean;
 
-      // Add the property fields
-      groups.groupFields.push(PropertyPaneToggle(propName, {
-        label: (strings as any)[propName],
-        checked: hideProp,
-        onText: "The admin will not be able to change this value.",
-        offText: "The admin can make changes to this property"
-      }));
-      if (!hideProp) {
+      // See if this is a readonly property
+      if (this._readOnlyProps.indexOf(propName) >= 0) {
+        // Add the property fields
         groups.groupFields.push(PropertyPaneTextField(propName + "Label", {
           label: (strings as any)[propName] + " Label",
           description: "The label displayed in the form.",
@@ -263,6 +269,27 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
           multiline: true,
           value: (this.properties as any)[propName + "Description"]
         }));
+      } else {
+        // Add the property fields
+        groups.groupFields.push(PropertyPaneToggle(propName, {
+          label: (strings as any)[propName],
+          checked: hideProp,
+          onText: "The admin will not be able to change this value.",
+          offText: "The admin can make changes to this property"
+        }));
+        if (!hideProp) {
+          groups.groupFields.push(PropertyPaneTextField(propName + "Label", {
+            label: (strings as any)[propName] + " Label",
+            description: "The label displayed in the form.",
+            value: (this.properties as any)[propName + "Label"]
+          }));
+          groups.groupFields.push(PropertyPaneTextField(propName + "Description", {
+            label: (strings as any)[propName] + " Description",
+            description: "The description displayed in the form",
+            multiline: true,
+            value: (this.properties as any)[propName + "Description"]
+          }));
+        }
       }
     }
 
