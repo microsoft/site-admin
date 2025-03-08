@@ -1,5 +1,5 @@
 import { Dashboard, DataTable, Modal, LoadingDialog } from "dattatable";
-import { Components, Helper, Types, Web, v2 } from "gd-sprest-bs";
+import { Components, Helper, SPTypes, Types, Web, v2 } from "gd-sprest-bs";
 import { DataSource } from "../ds";
 import { ExportCSV } from "./exportCSV";
 
@@ -159,9 +159,7 @@ export class Lists {
                                     {
                                         content: "Click to view the list.",
                                         btnProps: {
-                                            className: "pe-2 py-1",
-                                            iconClassName: "mx-1",
-                                            text: "View File",
+                                            text: "View List",
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
                                                 // Show the security group
@@ -172,8 +170,7 @@ export class Lists {
                                     {
                                         content: "Click to set the default sensitivity label.",
                                         btnProps: {
-                                            className: "pe-2 py-1",
-                                            isDisabled: !DataSource.HasSensitivityLabels,
+                                            isDisabled: item.ListTemplateType != SPTypes.ListTemplateType.DocumentLibrary || !DataSource.HasSensitivityLabels,
                                             text: "Default Label",
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
@@ -185,8 +182,7 @@ export class Lists {
                                     {
                                         content: "Click to set the default sensitivity label for any files that aren't currently labelled.",
                                         btnProps: {
-                                            className: "pe-2 py-1",
-                                            isDisabled: !DataSource.HasSensitivityLabels,
+                                            isDisabled: item.ListTemplateType != SPTypes.ListTemplateType.DocumentLibrary || !DataSource.HasSensitivityLabels,
                                             text: "Label Files",
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
