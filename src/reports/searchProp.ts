@@ -138,7 +138,7 @@ export class SearchProp {
 
         // Set the query
         let query: Types.Microsoft.Office.Server.Search.REST.SearchRequest = {
-            Querytext: `contentclass=sts_site ${searchProp}${searchEmpty ? "<>" : "="}'${searchValue}'`,
+            Querytext: `contentclass=sts_site ${searchProp}${searchEmpty ? "<>*" : "='" + searchValue + "'"}`,
             RowLimit: 500,
             SelectProperties: {
                 results: CSVFields.concat([searchProp])
