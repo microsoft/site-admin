@@ -502,6 +502,11 @@ export class Lists {
                                             // * Automatic - The label was applied automatically based on pre-defined rules or conditions.
                                             // * Default - The label was applied as the default label for a document library or location.
                                             // * Policy - The label was applied as part of a policy configuration.
+                                            // The assignment method allowed values are:
+                                            // * Standard - The label was applied manually by a user or through a standard process.
+                                            // * Privileged - The label was applied by an administrator or through a privileged operation.
+                                            // * Auto - The label was applied automatically by the system based on predefined rules or policies, such as auto-classification of sensitive content.
+                                            // * UnknownFutureValue - A placeholder for future use, indicating an unknown or unsupported assignment method.
                                             v2.drive({
                                                 driveId: file.parentReference.driveId,
                                                 siteId: file.parentReference.siteId
