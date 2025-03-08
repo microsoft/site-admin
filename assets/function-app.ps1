@@ -16,7 +16,6 @@ $appUrl = "https://tenant.sharepoint.com/sites/admin";
 #$azureEnv = "USGovernmentDoD";
 $cert = $env:WEBSITE_LOAD_CERTIFICATES;
 $clientId = $env:CLIENT_ID;
-#$clientSecret = $env:CLIENT_SECRET
 $tenant = $env:TENANT_ID;
 $listName = "Site Admin Requests";
 ############################################### Global Vars ###############################################
