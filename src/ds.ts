@@ -480,6 +480,27 @@ export class DataSource {
         });
     }
 
+    // Search Property
+    private static _searchPropItems: Components.IDropdownItem[] = null;
+    static get SearchPropItems(): Components.IDropdownItem[] { return this._searchPropItems; }
+    static set SearchPropItems(strCSV: string) {
+        // Clear the items
+        this._searchPropItems = [];
+
+        // Parse the values
+        let values = strCSV.split(',');
+        for (let i = 0; i < values.length; i++) {
+            let value = values[i].trim();
+            if (value) {
+                // add the item
+                this._searchPropItems.push({
+                    text: value,
+                    value
+                });
+            }
+        }
+    }
+
     // Updates the search property
     static updateSearchProp(key: string, value: string): PromiseLike<void> {
         // Return a promise

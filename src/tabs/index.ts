@@ -32,6 +32,12 @@ export class Tabs {
         this._el = el;
         this._webRequests = [];
 
+        // See if the search properties exist
+        if (appProps.searchProps?.values) {
+            // Set the data source
+            DataSource.SearchPropItems = appProps.searchProps.values;
+        }
+
         // Render the tabs
         this.render(appProps);
     }
@@ -73,7 +79,7 @@ export class Tabs {
                 tabName: "Audit Tools",
                 onRender: (el) => {
                     // Render the tab
-                    this._tabReports = new ReportsTab(el, appProps.reportProps);
+                    this._tabReports = new ReportsTab(el, appProps.reportProps, appProps.searchProps);
                 }
             }
         ];
@@ -119,7 +125,7 @@ export class Tabs {
                 );
 
                 // See if the search tab exists
-                if(this._tabSearch) {
+                if (this._tabSearch) {
                     // Append the search request
                     changes = changes.concat(this._tabSearch.getRequests());
                 }

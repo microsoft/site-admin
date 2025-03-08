@@ -71,6 +71,7 @@ export interface ISiteAdminWebPartProps {
   WebPropSearchPropertyDescription: string;
   WebPropSearchPropertyKey: string;
   WebPropSearchPropertyLabel: string;
+  WebPropSearchPropertyManagedProperty: string;
   WebPropSearchPropertyTabName: string;
   WebPropSearchPropertyValues: string;
   WebPropSearchScope: boolean;
@@ -102,6 +103,7 @@ declare const SiteAdmin: {
       description: string;
       key: string;
       label: string;
+      managedProperty: string;
       tabName: string;
       values: string;
     }
@@ -181,6 +183,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         description: this.properties.WebPropSearchPropertyDescription,
         key: this.properties.WebPropSearchPropertyKey,
         label: this.properties.WebPropSearchPropertyLabel,
+        managedProperty: this.properties.WebPropSearchPropertyManagedProperty,
         tabName: this.properties.WebPropSearchPropertyTabName,
         values: this.properties.WebPropSearchPropertyValues
       },
@@ -354,6 +357,11 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   label: strings.WebPropSearchPropertyKey,
                   description: "The custom property key to set for a site.",
                   value: this.properties.WebPropSearchPropertyKey
+                }),
+                PropertyPaneTextField("WebPropSearchPropertyManagedProperty", {
+                  label: strings.WebPropSearchPropertyManagedProperty,
+                  description: "The mapped managed property for this custom property.",
+                  value: this.properties.WebPropSearchPropertyManagedProperty
                 }),
                 PropertyPaneTextField("WebPropSearchPropertyTabName", {
                   label: strings.WebPropSearchPropertyTabName,

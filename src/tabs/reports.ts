@@ -1,5 +1,7 @@
 import { Components } from "gd-sprest-bs";
+import { DataSource } from "../ds";
 import * as Reports from "../reports";
+import { ISearchProps } from "./searchProp";
 
 // Report Properties
 export interface IReportProps {
@@ -14,6 +16,7 @@ enum ReportTypes {
     ExternalUsers = "ExternalUsers",
     Lists = "Lists",
     SearchDocs = "SearchDocs",
+    SearchProp = "SearchProp",
     SearchUsers = "SearchUsers",
     UniquePermissions = "UniquePermissions"
 }
@@ -24,11 +27,13 @@ enum ReportTypes {
 export class ReportsTab {
     private _el: HTMLElement = null;
     private _reportProps: IReportProps = null;
+    private _searchProps: ISearchProps = null;
 
     // Constructor
-    constructor(el: HTMLElement, reportProps: IReportProps) {
+    constructor(el: HTMLElement, reportProps: IReportProps, searchProps: ISearchProps) {
         this._el = el;
         this._reportProps = reportProps;
+        this._searchProps = searchProps;
 
         // Render the tab
         this.render();
@@ -76,6 +81,12 @@ export class ReportsTab {
                             value: ReportTypes.SearchDocs
                         },
                         {
+                            text: "Search Property",
+                            data: "Find sites by search property.",
+                            value: ReportTypes.SearchProp,
+                            isDisabled: this._searchProps.managedProperty && DataSource.SearchPropItems ? false : true
+                        },
+                        {
                             text: "Search Users",
                             data: "Search users by keyword or account.",
                             value: ReportTypes.SearchUsers
@@ -110,6 +121,9 @@ export class ReportsTab {
                 break;
             case ReportTypes.SearchDocs:
                 form.appendControls(Reports.SearchDocs.getFormFields(this._reportProps?.docSearchFileExt, this._reportProps?.docSearchKeywords));
+                break;
+            case ReportTypes.SearchProp:
+                form.appendControls(Reports.SearchProp.getFormFields(DataSource.Site.RootWeb.AllProperties[this._searchProps.key]));
                 break;
             case ReportTypes.SearchUsers:
                 form.appendControls(Reports.SearchUsers.getFormFields());
@@ -162,6 +176,13 @@ export class ReportsTab {
                         break;
                     case ReportTypes.SearchDocs:
                         Reports.SearchDocs.run(this._el, form.getValues(), () => {
+                            // Render this component
+                            this.render(selectedReport);
+                        });
+                        break;
+                    case ReportTypes.SearchProp:
+                        let searchValue = form.getValues()["value"];
+                        Reports.SearchProp.run(this._el, this._searchProps.managedProperty, typeof (searchValue) === "string" ? searchValue : searchValue?.value, () => {
                             // Render this component
                             this.render(selectedReport);
                         });

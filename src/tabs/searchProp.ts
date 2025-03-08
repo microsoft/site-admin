@@ -6,6 +6,7 @@ export interface ISearchProps {
     description: string;
     key: string;
     label: string;
+    managedProperty: string;
     tabName: string;
     values: string;
 }
@@ -38,22 +39,7 @@ export class SearchPropTab {
         if (this._searchProps.key == null) { return []; }
 
         // See if the values were provided
-        if (this._searchProps.values) {
-            let items: Components.IDropdownItem[] = [{ text: "" }];
-
-            // Parse the values
-            let values = this._searchProps.values.split(',');
-            for (let i = 0; i < values.length; i++) {
-                let value = values[i].trim();
-                if (value) {
-                    // add the item
-                    items.push({
-                        text: value,
-                        value
-                    });
-                }
-            }
-
+        if (DataSource.SearchPropItems) {
             // Return a dropdown
             return [{
                 className: this._searchProps.key ? "" : "d-none",
@@ -62,7 +48,7 @@ export class SearchPropTab {
                 description: DataSource.SiteCustomScriptsEnabled ? this._searchProps.description || "The custom property to set for search." : "<span style='color:red'>You must enable custom scripts to update this property.</span>",
                 isDisabled: !DataSource.SiteCustomScriptsEnabled,
                 type: Components.FormControlTypes.Dropdown,
-                items,
+                items: DataSource.SearchPropItems,
                 value: this._currValue,
                 onChange: value => {
                     // See if we are changing the value

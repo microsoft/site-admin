@@ -55,7 +55,7 @@ export class ExternalShares {
     }
 
     // Gets the form fields to display
-    static getFormFields(fileExt: string = "", keywords: string = ""): Components.IFormControlProps[] { return []; }
+    static getFormFields(): Components.IFormControlProps[] { return []; }
 
     // Renders the search summary
     private static renderSummary(el: HTMLElement, items: ISearchItem[], onClose: () => void) {
