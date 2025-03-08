@@ -70,7 +70,7 @@ export class Tabs {
                 }
             },
             {
-                tabName: "Audit Tools (Beta)",
+                tabName: "Audit Tools",
                 onRender: (el) => {
                     // Render the tab
                     this._tabReports = new ReportsTab(el, appProps.reportProps);
