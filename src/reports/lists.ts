@@ -497,10 +497,15 @@ export class Lists {
                                         // Update the sensitivity label for this file
                                         return new Promise(resolve => {
                                             // Update the sensitivity label
+                                            // The action source allowed values are:
+                                            // * Manual - The label was applied manually by a user.
+                                            // * Automatic - The label was applied automatically based on pre-defined rules or conditions.
+                                            // * Default - The label was applied as the default label for a document library or location.
+                                            // * Policy - The label was applied as part of a policy configuration.
                                             v2.drive({
                                                 driveId: file.parentReference.driveId,
                                                 siteId: file.parentReference.siteId
-                                            }).items(file.id).setSensitivityLabel("Site Admin Tool", "Privileged", label.value, justification).execute(
+                                            }).items(file.id).setSensitivityLabel("Manual", "Privileged", label.value, justification).execute(
                                                 // Success
                                                 () => {
                                                     // Add the response
