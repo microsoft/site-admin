@@ -59,7 +59,7 @@ export class SearchPropTab {
                 className: this._searchProps.key ? "" : "d-none",
                 name: "SearchProp",
                 label: this._searchProps.label || "Search Property",
-                description: DataSource.SiteCustomScriptsEnabled ? this._searchProps.description || "The custom property to set for search." : "You must enable custom scripts to update this property.",
+                description: DataSource.SiteCustomScriptsEnabled ? this._searchProps.description || "The custom property to set for search." : "<span style='color:red'>You must enable custom scripts to update this property.</span>",
                 isDisabled: !DataSource.SiteCustomScriptsEnabled,
                 type: Components.FormControlTypes.Dropdown,
                 items,
