@@ -152,6 +152,9 @@ export class Lists {
                         name: "",
                         title: "",
                         onRenderCell: (el, col, item: IList) => {
+                            let isLibrary = item.ListTemplateType == SPTypes.ListTemplateType.DocumentLibrary ||
+                                item.ListTemplateType == SPTypes.ListTemplateType.WebPageLibrary
+
                             // Render the buttons
                             Components.TooltipGroup({
                                 el,
@@ -170,7 +173,7 @@ export class Lists {
                                     {
                                         content: "Click to set the default sensitivity label.",
                                         btnProps: {
-                                            isDisabled: item.ListTemplateType != SPTypes.ListTemplateType.DocumentLibrary || !DataSource.HasSensitivityLabels,
+                                            isDisabled: !isLibrary || !DataSource.HasSensitivityLabels,
                                             text: "Default Label",
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
@@ -182,7 +185,7 @@ export class Lists {
                                     {
                                         content: "Click to set the default sensitivity label for any files that aren't currently labelled.",
                                         btnProps: {
-                                            isDisabled: item.ListTemplateType != SPTypes.ListTemplateType.DocumentLibrary || !DataSource.HasSensitivityLabels,
+                                            isDisabled: !isLibrary || !DataSource.HasSensitivityLabels,
                                             text: "Label Files",
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
