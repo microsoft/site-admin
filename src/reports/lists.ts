@@ -392,6 +392,13 @@ export class Lists {
                     }
                 } as Components.IFormControlPropsDropdown,
                 {
+                    name: "OverrideLabel",
+                    label: "Override Label?",
+                    description: "If a label already exists, it will attempt to override it.",
+                    type: Components.FormControlTypes.Switch,
+                    value: false
+                },
+                {
                     name: "Justification",
                     label: "Justification:",
                     description: "Your organization requires justification to change this label.",
@@ -452,6 +459,7 @@ export class Lists {
                             if (form.isValid()) {
                                 let values = form.getValues();
                                 let label: Components.IDropdownItem = values["SensitivityLabel"];
+                                let overrideLabelFl: boolean = values["OverrideLabel"];
                                 let responses: ISetSensitivityLabelResponse[] = [];
 
                                 // Show a loading dialog
@@ -475,7 +483,7 @@ export class Lists {
                                         LoadingDialog.setBody(`Processing ${++counter} of ${files.length} files...`);
 
                                         // See if this file has a sensitivity label
-                                        if (file.sensitivityLabel?.id) {
+                                        if (file.sensitivityLabel?.id && !overrideLabelFl) {
                                             // Add a response
                                             responses.push({
                                                 errorFl: false,
