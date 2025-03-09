@@ -149,6 +149,8 @@ export class SearchProp {
 
     // Runs the report
     static run(el: HTMLElement, searchProp: string, searchValue: string, onClose: () => void) {
+        let searchEmpty = searchValue ? false : true;
+
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Tenant");
         LoadingDialog.setBody(searchValue ? "Searching the sites tagged with '" + searchValue + "'..." : "Searching for sites not tagged...");
@@ -156,7 +158,7 @@ export class SearchProp {
 
         // Set the query
         let query: Types.Microsoft.Office.Server.Search.REST.SearchRequest = {
-            Querytext: `contentclass=sts_site ${searchProp}${searchValue ? "='" + searchValue + "'" : "<>'*'"}`,
+            Querytext: `contentclass=sts_site ${searchProp}${searchEmpty ? "<>'*'" : "='" + searchValue + "'"}`,
             RowLimit: 500,
             SelectProperties: {
                 results: CSVFields.concat([searchProp])
@@ -172,6 +174,20 @@ export class SearchProp {
         }).then(search => {
             // Clear the element
             while (el.firstChild) { el.removeChild(el.firstChild); }
+
+            // See if we are searching for empty values
+            if (searchEmpty) {
+                // Parse the results
+                let results = [];
+                for (let i = 0; i < search.results.length; i++) {
+                    // Add the result if it doesn't exist
+                    if (search.results[i][searchProp]) { continue; }
+                    results.push(search.results[i]);
+                }
+
+                // Update the results
+                search.results = results;
+            }
 
             // Render the summary
             this.renderSummary(el, searchProp, search.results, onClose);
