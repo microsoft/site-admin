@@ -1,5 +1,5 @@
 import { List } from "dattatable";
-import { Components, ContextInfo, GroupSiteManager, Helper, Site, Types, Web, Search, SPTypes, v2 } from "gd-sprest-bs";
+import { Components, ContextInfo, Graph, GroupSiteManager, Helper, Site, Types, Web, SPTypes, v2 } from "gd-sprest-bs";
 import { Security } from "./security";
 import Strings from "./strings";
 
@@ -485,7 +485,7 @@ export class DataSource {
     static get SearchPropItems(): Components.IDropdownItem[] { return this._searchPropItems; }
     static set SearchPropItems(strCSV: string) {
         // Clear the items
-        this._searchPropItems = [];
+        this._searchPropItems = [{ text: "", value: null }];
 
         // Parse the values
         let values = strCSV.split(',');
@@ -523,37 +523,92 @@ export class DataSource {
     static validate(webUrl: string): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve, reject) => {
+            // Gets the graph token
+            let graphToken = null;
+            let getGraphToken = (): PromiseLike<string> => {
+                // Return a promise
+                return new Promise((resolve, reject) => {
+                    // See if we got it already
+                    if (graphToken) { resolve(graphToken); return; }
+
+                    // Get the graph token
+                    Graph.getAccessToken(Strings.CloudEnvironment).execute(token => {
+                        // Set the token
+                        graphToken = token.access_token;
+                        resolve(graphToken);
+                    }, reject);
+                })
+            }
+
             // Get the web context
             ContextInfo.getWeb(webUrl).execute(
                 context => {
+                    let errorMessage = "Site exists, but you are not the administrator. Please have the site administrator submit the request.";
+
+                    // Set the site context
                     this._siteContext = context.GetContextWebInformation;
 
-                    // Check to see if the user is a SCA
-                    Web(this.SiteContext.SiteFullUrl).SiteUsers().getByEmail(ContextInfo.userEmail).execute(user => {
-                        // Ensure this is an SCA
-                        if (user.IsSiteAdmin) {
-                            // Load the web information
-                            this.loadWebInfo(this.SiteContext.WebFullUrl).then(() => {
-                                // Load the site information
-                                this.loadSiteInfo().then(resolve, reject);
-                            }, reject);
-                        } else {
-                            // Get the user's permissions for the site
-                            Web(this.SiteContext.SiteFullUrl).query({ Expand: ["EffectiveBasePermissions"] }).execute(web => {
-                                // See if this user has full rights
-                                if (Helper.hasPermissions(web.EffectiveBasePermissions, SPTypes.BasePermissionTypes.FullMask)) {
-                                    // Resolve the request
-                                    resolve();
-                                } else {
-                                    // Not the SCA of the site
-                                    reject("Site exists, but you are not the administrator. Please have the site administrator submit the request.");
-                                }
-                            }, () => {
-                                // Not the SCA of the site
-                                reject("Site exists, but you are not the administrator. Please have the site administrator submit the request.");
-                            });
-                        }
-                    });
+                    // Get the site admins, ordering by the type (User being the lowest value at 1)
+                    Web(this.SiteContext.SiteFullUrl).SiteUsers().query({
+                        Filter: "IsSiteAdmin eq true",
+                        OrderBy: ["PrincipalType desc"]
+                    }).execute(users => {
+                        let isSiteAdmin = false;
+
+                        // Parse the users/groups
+                        Helper.Executor(users.results, user => {
+                            // Check the flag
+                            if (isSiteAdmin) { return; }
+
+                            // See if this is a user
+                            if (user.PrincipalType == SPTypes.PrincipalTypes.User) {
+                                // Set the flag
+                                isSiteAdmin = user.Email == ContextInfo.userEmail;
+                            }
+                            // See if this is a M365 Group
+                            else if (user.PrincipalType == SPTypes.PrincipalTypes.SecurityGroup) {
+                                // Get the group id
+                                let userInfo = user.LoginName.split('|');
+                                let groupId = userInfo[userInfo.length - 1].split('_')[0];
+
+                                // Return a promise
+                                return new Promise(resolve => {
+                                    // Get the graph token
+                                    getGraphToken().then(accessToken => {
+                                        // Get the owners of the group
+                                        Graph({ accessToken, url: `groups/${groupId}/owners` }).execute(resp => {
+                                            // Parse the results
+                                            let results = resp["results"] || [];
+                                            for (let i = 0; i < results.length; i++) {
+                                                let user = results[i] as Types.Microsoft.Graph.user;
+
+                                                // See if the user is a member
+                                                if (user.mail == ContextInfo.userEmail) {
+                                                    // Set the flag
+                                                    isSiteAdmin = true;
+                                                    break;
+                                                }
+                                            }
+
+                                            // Check the next group/user
+                                            resolve(null);
+                                        }, resolve);
+                                    }, resolve);
+                                });
+                            }
+                        }).then(() => {
+                            // See if this is the site admin
+                            if (isSiteAdmin) {
+                                // Load the web information
+                                this.loadWebInfo(this.SiteContext.WebFullUrl).then(() => {
+                                    // Load the site information
+                                    this.loadSiteInfo().then(resolve, reject);
+                                }, reject);
+                            } else {
+                                reject(errorMessage);
+                            }
+                        });
+                    }, () => { reject(errorMessage); });
                 },
 
                 (ex: any) => {

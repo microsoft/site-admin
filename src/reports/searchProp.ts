@@ -27,7 +27,7 @@ export class SearchProp {
                     label: "Value:",
                     type: Components.FormControlTypes.Dropdown,
                     description: "Select a value to search for.",
-                    items: [{ text: "", value: null } as Components.IDropdownItem].concat(DataSource.SearchPropItems),
+                    items: DataSource.SearchPropItems,
                     value: siteValue
                 } as Components.IFormControlPropsDropdown
                 :

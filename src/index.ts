@@ -1,4 +1,4 @@
-import { ContextInfo, ThemeManager } from "gd-sprest-bs";
+import { ContextInfo, SPTypes, ThemeManager } from "gd-sprest-bs";
 import { App, IAppProps } from "./app";
 import { Configuration } from "./cfg";
 import { DataSource } from "./ds";
@@ -17,7 +17,7 @@ const GlobalVariable = {
         // See if the page context exists
         if (props.context) {
             // Set the context
-            setContext(props.context);
+            setContext(props.context, props.cloudEnv);
 
             // Update the configuration
             Configuration.setWebUrl(ContextInfo.webServerRelativeUrl);
