@@ -1,20 +1,20 @@
-import { Dashboard, Documents, LoadingDialog } from "dattatable";
-import { Components, Search, Types, Web } from "gd-sprest-bs";
-import { fileEarmark } from "gd-sprest-bs/build/icons/svgs/fileEarmark";
-import { fileEarmarkArrowDown } from "gd-sprest-bs/build/icons/svgs/fileEarmarkArrowDown";
-import { trash } from "gd-sprest-bs/build/icons/svgs/trash";
+import { Dashboard, LoadingDialog } from "dattatable";
+import { Components, Search, Types } from "gd-sprest-bs";
 import * as moment from "moment";
 import { DataSource } from "../ds";
-import { ExportCSV } from "./exportCSV";
 import Strings from "../strings";
+import { ExportCSV } from "./exportCSV";
 
 interface ISearchItem {
+    LastModifiedTime: string;
     Path: string;
     Title: string;
+    ViewsLifeTime: number;
+    ViewsRecent: number;
 }
 
 const CSVFields = [
-    "Path", "Title"
+    "Path", "Title", "ViewsLifeTime", "ViewsRecent", "LastModifiedTime"
 ]
 
 export class SearchProp {
@@ -73,30 +73,50 @@ export class SearchProp {
                 onRendering: dtProps => {
                     dtProps.columnDefs = [
                         {
-                            "targets": 3,
+                            "targets": 4,
                             "orderable": false,
                             "searchable": false
                         }
                     ];
 
                     // Order by the 2nd column by default; ascending
-                    dtProps.order = [[1, "asc"]];
+                    dtProps.order = [[0, "asc"]];
 
                     // Return the properties
                     return dtProps;
                 },
                 columns: [
                     {
-                        name: "Path",
-                        title: "Site Url"
+                        name: "",
+                        title: "Site Information",
+                        onRenderCell: (el, col, item: ISearchItem) => {
+                            // Set the sort/filter values
+                            el.setAttribute("data-filter", item.Path);
+                            el.setAttribute("data-sort", item.Path);
+
+                            // Render the activity
+                            el.innerHTML = `
+                                <div><b>Title: </b>${item.Title}</div>
+                                <div><b>Url: </b>${item.Path}</div>
+                                <div><b>${searchProp}: </b>${item[searchProp] || ""}</div>
+                            `;
+                        }
                     },
                     {
-                        name: "Title",
-                        title: "Site Title"
+                        name: "ViewsRecent",
+                        title: "Recent Views"
                     },
                     {
-                        name: searchProp,
-                        title: "Property Value"
+                        name: "ViewsLifeTime",
+                        title: "Life Time Views"
+                    },
+                    {
+                        name: "",
+                        title: "Last Modified Time",
+                        onRenderCell: (el, col, item: ISearchItem) => {
+                            // Render the date
+                            el.innerHTML = item.LastModifiedTime ? moment(item.LastModifiedTime).format(Strings.TimeFormat) : "";
+                        }
                     },
                     {
                         className: "text-end",
@@ -129,8 +149,6 @@ export class SearchProp {
 
     // Runs the report
     static run(el: HTMLElement, searchProp: string, searchValue: string, onClose: () => void) {
-        let searchEmpty = searchValue ? false : true;
-
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Tenant");
         LoadingDialog.setBody(searchValue ? "Searching the sites tagged with '" + searchValue + "'..." : "Searching for sites not tagged...");
@@ -138,7 +156,7 @@ export class SearchProp {
 
         // Set the query
         let query: Types.Microsoft.Office.Server.Search.REST.SearchRequest = {
-            Querytext: `contentclass=sts_site ${searchProp}${searchValue ? "='" + searchValue + "'" : "<>*"}`,
+            Querytext: `contentclass=sts_site ${searchProp}${searchValue ? "='" + searchValue + "'" : "<>'*'"}`,
             RowLimit: 500,
             SelectProperties: {
                 results: CSVFields.concat([searchProp])
