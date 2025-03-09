@@ -47,7 +47,7 @@ export class SearchProp {
         new Dashboard({
             el,
             navigation: {
-                title: "Search Content",
+                title: "Search Sites",
                 showFilter: false,
                 items: [{
                     text: "New Search",
