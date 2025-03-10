@@ -575,7 +575,7 @@ export class DataSource {
 
                                         // Check the next group/user
                                         resolve(null);
-                                    });
+                                    }, resolve);
                                 });
                             }
                         }).then(() => {
