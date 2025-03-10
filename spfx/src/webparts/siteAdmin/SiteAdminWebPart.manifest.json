@@ -32,7 +32,6 @@
       "officeFabricIconFontName": "AdminSLogoInverse32",
       "properties": {
         "AppTitle": "Site Admin Tool",
-        "CloudEnvironment": "Default",
         "MaxStorage": 25,
         "MaxStorageDescription": "The max threshold has been met.",
         "ReportsDocSearchFileExt": "csv doc docx dot dotx pdf pot potx pps ppsx ppt pptx txt xls xlsx xlt xltx",

@@ -1,6 +1,5 @@
 declare interface ISiteAdminWebPartStrings {
   AppTitle: string;
-  CloudEnvironment: string;
   MaxStorage: string;
   MaxStorageDescription: string;
   ReportsDocSearchFileExt: string;

@@ -1,5 +1,5 @@
 import { List } from "dattatable";
-import { Components, ContextInfo, Graph, GroupSiteManager, Helper, Site, Types, Web, SPTypes, v2 } from "gd-sprest-bs";
+import { Components, ContextInfo, DirectorySession, GroupSiteManager, Helper, Site, Types, Web, SPTypes, v2 } from "gd-sprest-bs";
 import { Security } from "./security";
 import Strings from "./strings";
 
@@ -523,23 +523,6 @@ export class DataSource {
     static validate(webUrl: string): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve, reject) => {
-            // Gets the graph token
-            let graphToken = null;
-            let getGraphToken = (): PromiseLike<string> => {
-                // Return a promise
-                return new Promise((resolve, reject) => {
-                    // See if we got it already
-                    if (graphToken) { resolve(graphToken); return; }
-
-                    // Get the graph token
-                    Graph.getAccessToken(Strings.CloudEnvironment).execute(token => {
-                        // Set the token
-                        graphToken = token.access_token;
-                        resolve(graphToken);
-                    }, reject);
-                })
-            }
-
             // Get the web context
             ContextInfo.getWeb(webUrl).execute(
                 context => {
@@ -551,7 +534,7 @@ export class DataSource {
                     // Get the site admins, ordering by the type (User being the lowest value at 1)
                     Web(this.SiteContext.SiteFullUrl).SiteUsers().query({
                         Filter: "IsSiteAdmin eq true",
-                        OrderBy: ["PrincipalType desc"]
+                        OrderBy: ["PrincipalType"]
                     }).execute(users => {
                         let isSiteAdmin = false;
 
@@ -573,27 +556,26 @@ export class DataSource {
 
                                 // Return a promise
                                 return new Promise(resolve => {
-                                    // Get the graph token
-                                    getGraphToken().then(accessToken => {
-                                        // Get the owners of the group
-                                        Graph({ accessToken, url: `groups/${groupId}/owners` }).execute(resp => {
-                                            // Parse the results
-                                            let results = resp["results"] || [];
-                                            for (let i = 0; i < results.length; i++) {
-                                                let user = results[i] as Types.Microsoft.Graph.user;
+                                    // Get the owners and members of the group
+                                    DirectorySession().group(groupId).query({
+                                        Expand: ["owners", "members"]
+                                    }).execute(group => {
+                                        // Parse the users for this group
+                                        let users = group.owners.results.concat(group.members.results);
+                                        for (let i = 0; i < users.length; i++) {
+                                            let user = users[i];
 
-                                                // See if the user is a member
-                                                if (user.mail == ContextInfo.userEmail) {
-                                                    // Set the flag
-                                                    isSiteAdmin = true;
-                                                    break;
-                                                }
+                                            // See if this is the user
+                                            if (user.mail == ContextInfo.userEmail || user.principalName == ContextInfo.userPrincipalName) {
+                                                // Set the flag
+                                                isSiteAdmin = true;
+                                                break;
                                             }
+                                        }
 
-                                            // Check the next group/user
-                                            resolve(null);
-                                        }, resolve);
-                                    }, resolve);
+                                        // Check the next group/user
+                                        resolve(null);
+                                    });
                                 });
                             }
                         }).then(() => {

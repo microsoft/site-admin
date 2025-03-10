@@ -17,7 +17,7 @@ const GlobalVariable = {
         // See if the page context exists
         if (props.context) {
             // Set the context
-            setContext(props.context, props.cloudEnv);
+            setContext(props.context);
 
             // Update the configuration
             Configuration.setWebUrl(ContextInfo.webServerRelativeUrl);

@@ -1,7 +1,6 @@
 define([], function () {
   return {
     "AppTitle": "App Title",
-    "CloudEnvironment": "Cloud Environment",
     "MaxStorage": "Max Storage Allowed",
     "MaxStorageDescription": "Max Storage Description",
     "ReportsDocSearchFileExt": "Document Search Default File Extensions",

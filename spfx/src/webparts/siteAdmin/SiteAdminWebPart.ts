@@ -10,7 +10,6 @@ import * as strings from 'SiteAdminWebPartStrings';
 
 export interface ISiteAdminWebPartProps {
   AppTitle: string;
-  CloudEnvironment: string;
   MaxStorage: number;
   MaxStorageDescription: string;
   ReportsDocSearchFileExt: string;
@@ -91,7 +90,6 @@ import "main-lib";
 declare const SiteAdmin: {
   appDescription: string;
   render: (props: {
-    cloudEnv?: string;
     context?: WebPartContext;
     el: HTMLElement;
     title?: string;
@@ -314,14 +312,6 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   label: strings.AppTitle,
                   description: "The title displayed.",
                   value: this.properties.AppTitle
-                }),
-                PropertyPaneDropdown("CloudEnvironment", {
-                  label: strings.CloudEnvironment,
-                  options: [
-                    { key: "Default", text: "Default" },
-                    { key: "USL4", text: "USL4" },
-                    { key: "USL5", text: "USL5" }
-                  ]
                 })
               ]
             },

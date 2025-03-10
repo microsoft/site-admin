@@ -2,12 +2,11 @@ import { ContextInfo, SPTypes } from "gd-sprest-bs";
 
 // Sets the context information
 // This is for SPFx or Teams solutions
-export const setContext = (context, cloudEnv: string, sourceUrl?: string) => {
+export const setContext = (context, sourceUrl?: string) => {
     // Set the context
     ContextInfo.setPageContext(context.pageContext);
 
-    // Update the cloud enivronment and source url
-    Strings.CloudEnvironment = SPTypes.CloudEnvironment[cloudEnv] || SPTypes.CloudEnvironment.Default;
+    // Update the source url
     Strings.SourceUrl = sourceUrl || ContextInfo.webServerRelativeUrl;
 }
 
@@ -16,7 +15,6 @@ export const setContext = (context, cloudEnv: string, sourceUrl?: string) => {
  */
 const Strings = {
     AppElementId: "site-admin",
-    CloudEnvironment: SPTypes.CloudEnvironment.Default,
     GlobalVariable: "SiteAdmin",
     Lists: {
         Main: "Site Admin Requests"

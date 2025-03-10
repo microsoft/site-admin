@@ -17,7 +17,6 @@ export interface IProp {
     label: string;
 }
 export interface IAppProps {
-    cloudEnv?: string;
     context?: any;
     el: HTMLElement;
     maxStorageDesc?: string;
