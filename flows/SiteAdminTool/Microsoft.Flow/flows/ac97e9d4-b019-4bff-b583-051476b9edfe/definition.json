@@ -20,8 +20,8 @@
                 },
                 "provisioningMethod": "FromDefinition",
                 "failureAlertSubscription": true,
-                "clientLastModifiedTime": "2025-03-07T22:27:16.6640802Z",
-                "connectionKeySavedTimeKey": "2025-03-07T22:27:16.6640802Z",
+                "clientLastModifiedTime": "2025-03-10T19:18:24.2982156Z",
+                "connectionKeySavedTimeKey": "2025-03-10T19:18:24.2982156Z",
                 "creationSource": null,
                 "modifiedSources": "Portal"
             },
@@ -41,7 +41,7 @@
                 "When_an_item_is_created": {
                     "recurrence": {
                         "frequency": "Minute",
-                        "interval": 1
+                        "interval": 5
                     },
                     "splitOn": "@triggerOutputs()?['body/value']",
                     "type": "OpenApiConnection",
@@ -86,7 +86,7 @@
                     },
                     "else": {
                         "actions": {
-                            "Send_an_error_email": {
+                            "Send_a_cancelled_email": {
                                 "runAfter": {
                                     "Update_Item_-_Cancel": [
                                         "Succeeded"
@@ -128,7 +128,7 @@
                             },
                             "Terminate": {
                                 "runAfter": {
-                                    "Send_an_error_email": [
+                                    "Send_a_cancelled_email": [
                                         "Succeeded"
                                     ]
                                 },
@@ -151,51 +151,6 @@
                     },
                     "type": "If"
                 },
-                "Update_item_-_Completed": {
-                    "runAfter": {
-                        "Call_Azure_Function": [
-                            "Succeeded"
-                        ]
-                    },
-                    "type": "OpenApiConnection",
-                    "inputs": {
-                        "parameters": {
-                            "dataset": "https://dattaspo.sharepoint.com/sites/Demo/site-admin",
-                            "table": "1d4b1510-1ac5-4fd4-8a4f-1108327f2a41",
-                            "id": "@outputs('Get_Request_Item')?['body/ID']",
-                            "item/Title": "@{body('Get_Request_Item')?['Title']}",
-                            "item/Status/Value": "Completed"
-                        },
-                        "host": {
-                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
-                            "connectionName": "shared_sharepointonline",
-                            "operationId": "PatchItem"
-                        },
-                        "authentication": "@parameters('$authentication')"
-                    }
-                },
-                "Send_an_completed_email": {
-                    "runAfter": {
-                        "Update_item_-_Completed": [
-                            "Succeeded"
-                        ]
-                    },
-                    "type": "OpenApiConnection",
-                    "inputs": {
-                        "parameters": {
-                            "emailMessage/To": "@body('Get_Request_Item')?['Author']?['Email']",
-                            "emailMessage/Subject": "Custom Script Request Processed",
-                            "emailMessage/Body": "<p class=\"editor-paragraph\">@{body('Get_Request_Item')?['Author']?['DisplayName']},</p><br><p class=\"editor-paragraph\">The request to the site property was completed successfully.</p><br><p class=\"editor-paragraph\">Thanks,</p><p class=\"editor-paragraph\">SPO Team</p>",
-                            "emailMessage/Importance": "Normal"
-                        },
-                        "host": {
-                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
-                            "connectionName": "shared_office365",
-                            "operationId": "SendEmailV2"
-                        },
-                        "authentication": "@parameters('$authentication')"
-                    }
-                },
                 "Call_Azure_Function": {
                     "runAfter": {
                         "Condition": [
@@ -204,7 +159,7 @@
                     },
                     "type": "Http",
                     "inputs": {
-                        "uri": "https://site-admin-tool.azurewebsites.net/api/ProcessSiteAdminRequest?code=MRLH3MvmcDEcCqNPbCiuIshpVUPvBP1kgfNDSBVRF3PrAzFuM1F9LQ%3D%3D",
+                        "uri": "https://replace-with-your-azure-function-uri",
                         "method": "POST",
                         "body": {
                             "requestId": "@triggerBody()?['ID']"
@@ -215,6 +170,111 @@
                             "transferMode": "Chunked"
                         }
                     }
+                },
+                "Check_Azure_Function_Response": {
+                    "actions": {
+                        "Update_item_-_Completed": {
+                            "type": "OpenApiConnection",
+                            "inputs": {
+                                "parameters": {
+                                    "dataset": "https://dattaspo.sharepoint.com/sites/Demo/site-admin",
+                                    "table": "1d4b1510-1ac5-4fd4-8a4f-1108327f2a41",
+                                    "id": "@outputs('Get_Request_Item')?['body/ID']",
+                                    "item/Title": "@{body('Get_Request_Item')?['Title']}",
+                                    "item/Status/Value": "Completed"
+                                },
+                                "host": {
+                                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                    "connectionName": "shared_sharepointonline",
+                                    "operationId": "PatchItem"
+                                },
+                                "authentication": "@parameters('$authentication')"
+                            }
+                        },
+                        "Send_an_completed_email": {
+                            "runAfter": {
+                                "Update_item_-_Completed": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "OpenApiConnection",
+                            "inputs": {
+                                "parameters": {
+                                    "emailMessage/To": "@body('Get_Request_Item')?['Author']?['Email']",
+                                    "emailMessage/Subject": "Site Admin Request Completed - @{triggerBody()?['ID']}",
+                                    "emailMessage/Body": "<p class=\"editor-paragraph\">@{body('Get_Request_Item')?['Author']?['DisplayName']},</p><br><p class=\"editor-paragraph\">The request to the site property was completed successfully.</p><br><p class=\"editor-paragraph\">Thanks,</p><p class=\"editor-paragraph\">SPO Team</p>",
+                                    "emailMessage/Importance": "Normal"
+                                },
+                                "host": {
+                                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                                    "connectionName": "shared_office365",
+                                    "operationId": "SendEmailV2"
+                                },
+                                "authentication": "@parameters('$authentication')"
+                            }
+                        }
+                    },
+                    "runAfter": {
+                        "Call_Azure_Function": [
+                            "Succeeded",
+                            "Failed"
+                        ]
+                    },
+                    "else": {
+                        "actions": {
+                            "Update_item_-_Failed": {
+                                "type": "OpenApiConnection",
+                                "inputs": {
+                                    "parameters": {
+                                        "dataset": "https://dattaspo.sharepoint.com/sites/Demo/site-admin",
+                                        "table": "1d4b1510-1ac5-4fd4-8a4f-1108327f2a41",
+                                        "id": "@outputs('Get_Request_Item')?['body/ID']",
+                                        "item/Title": "@{body('Get_Request_Item')?['Title']}",
+                                        "item/Status/Value": "Error"
+                                    },
+                                    "host": {
+                                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                        "connectionName": "shared_sharepointonline",
+                                        "operationId": "PatchItem"
+                                    },
+                                    "authentication": "@parameters('$authentication')"
+                                }
+                            },
+                            "Send_an_error_email": {
+                                "runAfter": {
+                                    "Update_item_-_Failed": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "type": "OpenApiConnection",
+                                "inputs": {
+                                    "parameters": {
+                                        "emailMessage/To": "gunjan@dattaspo.onmicrosoft.com",
+                                        "emailMessage/Subject": "Site Admin Request Failed - @{triggerBody()?['ID']}",
+                                        "emailMessage/Body": "<p class=\"editor-paragraph\">@{body('Get_Request_Item')?['Author']?['DisplayName']},</p><br><p class=\"editor-paragraph\">Please review the flow for item @{triggerBody()?['ID']}. Output from Azure Function:</p><br><p class=\"editor-paragraph\">@{body('Call_Azure_Function')}</p><br><p class=\"editor-paragraph\">-Site Admin Tool</p>",
+                                        "emailMessage/Importance": "Normal"
+                                    },
+                                    "host": {
+                                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                                        "connectionName": "shared_office365",
+                                        "operationId": "SendEmailV2"
+                                    },
+                                    "authentication": "@parameters('$authentication')"
+                                }
+                            }
+                        }
+                    },
+                    "expression": {
+                        "and": [
+                            {
+                                "equals": [
+                                    "@outputs('Call_Azure_Function')?['statusCode']",
+                                    200
+                                ]
+                            }
+                        ]
+                    },
+                    "type": "If"
                 }
             },
             "outputs": {}
