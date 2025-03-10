@@ -45,9 +45,9 @@ export interface ISiteAdminWebPartProps {
   SitePropLockState: boolean;
   SitePropLockStateDescription: string;
   SitePropLockStateLabel: string;
-  SitePropSensitivityLabelIdEnabled: boolean;
-  SitePropSensitivityLabelIdEnabledDescription: string;
-  SitePropSensitivityLabelIdEnabledLabel: string;
+  SitePropSensitivityLabelId: boolean;
+  SitePropSensitivityLabelIdDescription: string;
+  SitePropSensitivityLabelIdLabel: string;
   SitePropShareByEmailEnabled: boolean;
   SitePropShareByEmailEnabledDescription: string;
   SitePropShareByEmailEnabledLabel: string;
