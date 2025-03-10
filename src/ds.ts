@@ -526,71 +526,24 @@ export class DataSource {
             // Get the web context
             ContextInfo.getWeb(webUrl).execute(
                 context => {
-                    let errorMessage = "Site exists, but you are not the administrator. Please have the site administrator submit the request.";
-
                     // Set the site context
                     this._siteContext = context.GetContextWebInformation;
 
-                    // Get the site admins, ordering by the type (User being the lowest value at 1)
-                    Web(this.SiteContext.SiteFullUrl).SiteUsers().query({
-                        Filter: "IsSiteAdmin eq true",
-                        OrderBy: ["PrincipalType"]
-                    }).execute(users => {
-                        let isSiteAdmin = false;
-
-                        // Parse the users/groups
-                        Helper.Executor(users.results, user => {
-                            // Check the flag
-                            if (isSiteAdmin) { return; }
-
-                            // See if this is a user
-                            if (user.PrincipalType == SPTypes.PrincipalTypes.User) {
-                                // Set the flag
-                                isSiteAdmin = user.Email == ContextInfo.userEmail;
-                            }
-                            // See if this is a M365 Group
-                            else if (user.PrincipalType == SPTypes.PrincipalTypes.SecurityGroup) {
-                                // Get the group id
-                                let userInfo = user.LoginName.split('|');
-                                let groupId = userInfo[userInfo.length - 1].split('_')[0];
-
-                                // Return a promise
-                                return new Promise(resolve => {
-                                    // Get the owners and members of the group
-                                    DirectorySession().group(groupId).query({
-                                        Expand: ["owners", "members"]
-                                    }).execute(group => {
-                                        // Parse the users for this group
-                                        let users = group.owners.results.concat(group.members.results);
-                                        for (let i = 0; i < users.length; i++) {
-                                            let user = users[i];
-
-                                            // See if this is the user
-                                            if (user.mail == ContextInfo.userEmail || user.principalName == ContextInfo.userPrincipalName) {
-                                                // Set the flag
-                                                isSiteAdmin = true;
-                                                break;
-                                            }
-                                        }
-
-                                        // Check the next group/user
-                                        resolve(null);
-                                    }, resolve);
-                                });
-                            }
-                        }).then(() => {
-                            // See if this is the site admin
-                            if (isSiteAdmin) {
-                                // Load the web information
-                                this.loadWebInfo(this.SiteContext.WebFullUrl).then(() => {
-                                    // Load the site information
-                                    this.loadSiteInfo().then(resolve, reject);
-                                }, reject);
-                            } else {
-                                reject(errorMessage);
-                            }
-                        });
-                    }, () => { reject(errorMessage); });
+                    // Get the sharing settings for the web
+                    Web.getSharingSettings({
+                        objectUrl: this.SiteContext.SiteFullUrl
+                    }).execute(settings => {
+                        // See if this is the site admin
+                        if (settings.IsUserSiteAdmin) {
+                            // Load the web information
+                            this.loadWebInfo(this.SiteContext.WebFullUrl).then(() => {
+                                // Load the site information
+                                this.loadSiteInfo().then(resolve, reject);
+                            }, reject);
+                        } else {
+                            reject("Site exists, but you are not the administrator. Please have the site administrator submit the request.");
+                        }
+                    });
                 },
 
                 (ex: any) => {
