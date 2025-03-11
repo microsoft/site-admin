@@ -18,6 +18,7 @@ enum ReportTypes {
     SearchDocs = "SearchDocs",
     SearchProp = "SearchProp",
     SearchUsers = "SearchUsers",
+    SharingLinks = "SharingLinks",
     UniquePermissions = "UniquePermissions"
 }
 
@@ -92,6 +93,11 @@ export class ReportsTab {
                             value: ReportTypes.SearchUsers
                         },
                         {
+                            text: "Sharing Links",
+                            data: "Scans for any 'Sharing Link' groups.",
+                            value: ReportTypes.SharingLinks
+                        },
+                        {
                             text: "Unique Permissions",
                             data: "Scans for items that have unique permissions.",
                             value: ReportTypes.UniquePermissions
@@ -127,6 +133,9 @@ export class ReportsTab {
                 break;
             case ReportTypes.SearchUsers:
                 form.appendControls(Reports.SearchUsers.getFormFields());
+                break;
+            case ReportTypes.SharingLinks:
+                form.appendControls(Reports.SharingLinks.getFormFields());
                 break;
             case ReportTypes.UniquePermissions:
                 form.appendControls(Reports.UniquePermissions.getFormFields());
@@ -208,6 +217,12 @@ export class ReportsTab {
                                 invalidMessage: "A keyword or account is required to perform a search."
                             });
                         }
+                        break;
+                    case ReportTypes.SharingLinks:
+                        Reports.SharingLinks.run(this._el, form.getValues(), () => {
+                            // Render this component
+                            this.render(selectedReport);
+                        });
                         break;
                     case ReportTypes.UniquePermissions:
                         Reports.UniquePermissions.run(this._el, form.getValues(), () => {

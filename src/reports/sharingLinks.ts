@@ -15,7 +15,6 @@ interface IGroupInfo {
     GroupId?: number;
     GroupInfo?: string;
     Id?: number;
-    WebTitle: string;
     WebUrl: string;
 }
 
@@ -27,100 +26,120 @@ interface IUserInfo {
 }
 
 const CSVFields = [
-    "WebTitle", "WebUrl", "Name", "Email", "Group", "GroupInfo", "Role", "RoleInfo"
+    "WebUrl", "Name", "Email", "Group", "GroupId", "GroupInfo", "Role", "RoleInfo", "DocUrl"
 ]
 
-export class ExternalUsers {
+export class SharingLinks {
     private static _items: IGroupInfo[] = [];
 
-    // Analyzes the user information
-    private static analyzeUserInformation(rootWeb: Types.SP.WebOData, user: Types.SP.UserOData, userInfo: IUserInfo) {
-        // Parse the groups the user belongs to
-        Helper.Executor(user.Groups.results, group => {
-            // Parse the roles
-            for (let i = 0; i < rootWeb.RoleAssignments.results.length; i++) {
-                let role: Types.SP.RoleAssignmentOData = rootWeb.RoleAssignments.results[i] as any;
+    // Gets the associated file for this sharing link
+    private static analyzeDocInfo(rootWeb: Types.SP.WebOData, docInfo: { docId: string, group: Types.SP.Group, roleName: string, userInfo: IUserInfo }): PromiseLike<void> {
+        // Return a promise
+        return new Promise(resolve => {
+            // Find the document by its id
+            Search.postQuery<{ Path: string; SPWebUrl: string; Title: string }>({
+                url: DataSource.SiteContext.SiteFullUrl,
+                query: {
+                    Querytext: "UniqueID: " + docInfo.docId,
+                    SelectProperties: {
+                        results: ["Path", "SPWebUrl", "Title"]
+                    }
+                },
+                targetInfo: { requestDigest: DataSource.SiteContext.FormDigestValue }
+            }).then(search => {
+                let result = search.results[0];
 
-                // See if the user belongs to this role
-                if (role.Member.LoginName == group.LoginName) {
-                    // Add the user information
-                    this._items.push({
-                        WebUrl: rootWeb.Url,
-                        WebTitle: rootWeb.Title,
-                        Id: userInfo.Id,
-                        Name: userInfo.Title || userInfo.Name,
-                        Email: userInfo.EMail,
-                        Group: group.Title,
-                        GroupId: group.Id,
-                        GroupInfo: group.Description || "",
-                        Role: role.RoleDefinitionBindings.results[0].Name,
-                        RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
-                    });
-
-                    // Check the next user
-                    return;
+                // Set the role information
+                let roleInfo = "";
+                if (result) {
+                    // Set the role information
+                    roleInfo = "Has '" + docInfo.roleName + "' access to the file <a target='_blank' " +
+                        "href='" + result.Path + "'>" + result.Title + "</a>.";
                 }
-            }
 
-            // Add the user information
-            this._items.push({
-                WebUrl: rootWeb.Url,
-                WebTitle: rootWeb.Title,
-                Name: userInfo.Title || userInfo.Name,
-                Email: userInfo.EMail,
-                Group: group.Title,
-                GroupId: group.Id,
-                GroupInfo: group.Description || "",
-                Role: "Unknown",
-                RoleInfo: "Unable to determine the role for this group"
+                // Add the user information
+                this._items.push({
+                    DocUrl: result?.Path,
+                    WebUrl: result?.SPWebUrl || rootWeb.Url,
+                    Name: docInfo.userInfo.Title || docInfo.userInfo.Name,
+                    Email: docInfo.userInfo.EMail,
+                    Group: docInfo.group.Title,
+                    GroupId: docInfo.group.Id,
+                    GroupInfo: docInfo.group.Description,
+                    Role: docInfo.roleName,
+                    RoleInfo: roleInfo
+                });
+
+                // Resolve the promise
+                resolve(null);
             });
         });
     }
 
-    // Analyzes the users
-    private static analyzeUsers(rootWeb: Types.SP.WebOData, externalUsers: IUserInfo[]): PromiseLike<void> {
+    // Analyzes the groups
+    private static analyzeGroups(rootWeb: Types.SP.WebOData, groups: IUserInfo[]): PromiseLike<void> {
         // Return a promise
         return new Promise(resolve => {
+            let docInfo: { docId: string, group: Types.SP.Group, roleName: string, userInfo: IUserInfo }[] = [];
             let web = Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
 
             // Update the loading dialog
-            LoadingDialog.setBody(`Creating the batch job to get the user information...`);
+            LoadingDialog.setBody(`Creating the batch job to get the group information...`);
 
-            // Get the user ids
-            let userIds: number[] = [];
-            let userIdMapper: { [key: number]: IUserInfo } = {};
-            externalUsers.forEach(userInfo => {
+            // Get the group ids
+            let groupIds: number[] = [];
+            let groupMapper: { [key: number]: IUserInfo } = {};
+            groups.forEach(group => {
                 // Add the group id
-                userIds.push(userInfo.Id);
-                userIdMapper[userInfo.Id] = userInfo;
+                groupIds.push(group.Id);
+                groupMapper[group.Id] = group;
             });
 
-            // Parse the user ids
-            let users: Types.SP.UserOData[] = [];
-            userIds.forEach(userId => {
-                // Get the user
-                web.getUserById(userId).query({
-                    Expand: ["Groups"]
-                }).batch(user => {
-                    // Add the user
-                    users.push(user);
+            // Parse the group ids
+            groupIds.forEach(groupId => {
+                // Get the group
+                web.SiteGroups().getById(groupId).batch(group => {
+                    // Set the role name
+                    let info = group.Title.split('.');
+                    let docId = info.length > 2 ? info[1] : "";
+                    let roleName = info.length > 3 ? info[2] : "";
+
+                    // See if the doc id exists
+                    if (docId) {
+                        // Add the doc info
+                        docInfo.push({ docId, group, roleName, userInfo: groupMapper[group.Id] });
+                    } else {
+                        let groupInfo = groupMapper[group.Id];
+
+                        // Add the group information
+                        this._items.push({
+                            DocUrl: null,
+                            WebUrl: rootWeb.Url,
+                            Name: groupInfo.Title || groupInfo.Name,
+                            Email: groupInfo.EMail,
+                            Group: group.Title,
+                            GroupId: group.Id,
+                            GroupInfo: group.Description,
+                            Role: roleName,
+                            RoleInfo: null
+                        });
+                    }
                 });
             });
 
             // Update the loading dialog
-            LoadingDialog.setBody(`Executing the batch job for the user information...`);
+            LoadingDialog.setBody(`Executing the batch job for the group information...`);
 
             // Execute the batch job
             web.execute(() => {
+                // Parse the doc information
                 let counter = 0;
-
-                // Parse the users
-                Helper.Executor(users, user => {
+                Helper.Executor(docInfo, docInfo => {
                     // Update the loading dialog
-                    LoadingDialog.setBody(`Analyzing User ${++counter} of ${users.length}`);
+                    LoadingDialog.setBody(`Analyzing Sharing Link ${++counter} of ${groups.length}`);
 
-                    // Analyze the user information
-                    this.analyzeUserInformation(rootWeb, user, userIdMapper[user.Id]);
+                    // Analyze the group
+                    return this.analyzeDocInfo(rootWeb, docInfo).then(resolve);
                 }).then(() => {
                     // Resolve the request
                     resolve();
@@ -132,16 +151,16 @@ export class ExternalUsers {
     // Gets the form fields to display
     static getFormFields(): Components.IFormControlProps[] { return []; }
 
-    // Removes a user from a group
-    private static removeUser(user: string, userId: number, group: string) {
+    // Removes a group
+    private static removeGroup(group: string, groupId: number) {
         // Display a loading dialog
-        LoadingDialog.setHeader("Removing User");
-        LoadingDialog.setBody(`Removing '${user}' from the '${group}' group...`);
+        LoadingDialog.setHeader("Removing Site User");
+        LoadingDialog.setBody(`Removing the group '${group}' group. This will close after the request completes.`);
         LoadingDialog.show();
 
         // Remove the user from the group
         Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
-            .SiteGroups(group).Users().removeById(userId).execute(
+            .SiteGroups().removeById(groupId).execute(
                 // Success
                 () => {
                     // Close the dialog
@@ -156,16 +175,16 @@ export class ExternalUsers {
             )
     }
 
-    // Removes a group
-    private static removeUserFromSite(user: string, userId: number) {
+    // Removes a user from a group
+    private static removeUser(user: string, userId: number, group: string) {
         // Display a loading dialog
-        LoadingDialog.setHeader("Removing User");
-        LoadingDialog.setBody(`Removing ${user} from the site...`);
+        LoadingDialog.setHeader("Removing Site User");
+        LoadingDialog.setBody(`Removing the site user '${user}' from the '${group}' group. This will close after the request completes.`);
         LoadingDialog.show();
 
         // Remove the user from the group
         Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
-            .SiteUsers().removeById(userId).execute(
+            .SiteGroups(group).Users().removeById(userId).execute(
                 // Success
                 () => {
                     // Close the dialog
@@ -212,7 +231,7 @@ export class ExternalUsers {
                 onRendering: dtProps => {
                     dtProps.columnDefs = [
                         {
-                            "targets": 7,
+                            "targets": 5,
                             "orderable": false,
                             "searchable": false
                         }
@@ -228,14 +247,6 @@ export class ExternalUsers {
                     {
                         name: "WebUrl",
                         title: "Url"
-                    },
-                    {
-                        name: "Name",
-                        title: "User Name"
-                    },
-                    {
-                        name: "Email",
-                        title: "User Email"
                     },
                     {
                         name: "Group",
@@ -318,79 +329,47 @@ export class ExternalUsers {
                         title: "",
                         onRenderCell: (el, col, row: IGroupInfo) => {
                             let btnDelete: Components.IButton = null;
-                            let btnRemove: Components.IButton = null;
-                            let tooltips: Components.ITooltipProps[] = [];
-
-                            // Ensure a group exists
-                            if (row.Group) {
-                                // Add the view group button
-                                tooltips.push({
-                                    content: "Click to view the group containing the user.",
-                                    btnProps: {
-                                        className: "pe-2 py-1",
-                                        iconType: fileEarmark(24, 24, "mx-1"),
-                                        text: "View",
-                                        type: Components.ButtonTypes.OutlinePrimary,
-                                        isDisabled: !(row.GroupId > 0),
-                                        onClick: () => {
-                                            // View the group
-                                            window.open(`${row.WebUrl}/${ContextInfo.layoutsUrl}/people.aspx?MembershipGroupId=${row.GroupId}`);
-                                        }
-                                    }
-                                });
-
-                                // Add the Remove User button
-                                tooltips.push({
-                                    content: "Click to remove the user from the group.",
-                                    btnProps: {
-                                        assignTo: btn => { btnRemove = btn; },
-                                        className: "pe-2 py-1",
-                                        iconType: personX(24, 24, "mx-1"),
-                                        text: "Remove",
-                                        type: Components.ButtonTypes.OutlineDanger,
-                                        isDisabled: !(row.Id > 0),
-                                        onClick: () => {
-                                            // Confirm the deletion of the group
-                                            if (confirm("Are you sure you want to remove the user from this group?")) {
-                                                // Disable this button
-                                                btnRemove.disable();
-
-                                                // Delete the site group
-                                                this.removeUser(row.Name, row.Id, row.Group);
-                                            }
-                                        }
-                                    }
-                                });
-                            }
-
-                            // Add the delete button
-                            Components.Tooltip({
-                                el,
-                                content: "Click to delete the user from the site and all groups.",
-                                btnProps: {
-                                    assignTo: btn => { btnDelete = btn; },
-                                    className: "pe-2 py-1",
-                                    iconType: personX(24, 24, "mx-1"),
-                                    text: "Delete",
-                                    type: Components.ButtonTypes.OutlineDanger,
-                                    onClick: () => {
-                                        // Confirm the deletion of the group
-                                        if (confirm("Are you sure you want to remove this user from the site?")) {
-                                            // Disable this button
-                                            btnDelete.disable();
-
-                                            // Delete the site group
-                                            this.removeUserFromSite(row.Name, row.Id);
-                                        }
-                                    }
-                                }
-                            });
-
 
                             // Render the buttons
                             Components.TooltipGroup({
                                 el,
-                                tooltips
+                                tooltips: [
+                                    {
+                                        content: "View Group",
+                                        btnProps: {
+                                            className: "pe-2 py-1",
+                                            iconType: fileEarmark(24, 24, "mx-1"),
+                                            text: "View",
+                                            type: Components.ButtonTypes.OutlinePrimary,
+                                            isDisabled: !(row.GroupId > 0),
+                                            onClick: () => {
+                                                // View the group
+                                                window.open(`${row.WebUrl}/${ContextInfo.layoutsUrl}/people.aspx?MembershipGroupId=${row.GroupId}`);
+                                            }
+                                        }
+                                    },
+                                    {
+                                        el,
+                                        content: "Delete Group",
+                                        btnProps: {
+                                            assignTo: btn => { btnDelete = btn; },
+                                            className: "pe-2 py-1",
+                                            iconType: personX(24, 24, "mx-1"),
+                                            text: "Delete",
+                                            type: Components.ButtonTypes.OutlineDanger,
+                                            onClick: () => {
+                                                // Confirm the deletion of the group
+                                                if (confirm("Are you sure you want to delete this group?")) {
+                                                    // Disable this button
+                                                    btnDelete.disable();
+
+                                                    // Delete the site group
+                                                    this.removeGroup(row.Group, row.GroupId);
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
                             });
                         }
                     }
@@ -419,11 +398,11 @@ export class ExternalUsers {
             ]
         }).execute(web => {
             // Update the loading dialog
-            LoadingDialog.setBody("Loading the site users...");
+            LoadingDialog.setBody("Loading the sharing link groups...");
 
             // Get the users for this site
             Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists("User Information List").Items().query({
-                Filter: "substringof('%23ext%23', Name)",
+                Filter: "substringof('SharingLinks', Name)",
                 Select: ["Id", "Name", "EMail", "Title"],
                 GetAllItems: true,
                 Top: 5000
@@ -442,10 +421,10 @@ export class ExternalUsers {
                 }
 
                 // Update the loading dialog
-                LoadingDialog.setHeader("Analyzing Users/Groups");
+                LoadingDialog.setHeader("Analyzing Sharing Link Groups");
 
-                // Analyze the users
-                this.analyzeUsers(web, users).then(() => {
+                // Analyze the groups
+                this.analyzeGroups(web, users).then(() => {
                     // Clear the element
                     while (el.firstChild) { el.removeChild(el.firstChild); }
 
