@@ -1,4 +1,4 @@
-import { Dashboard, LoadingDialog } from "dattatable";
+import { Dashboard, Documents, LoadingDialog } from "dattatable";
 import { Components, ContextInfo, Helper, Search, Types, Web } from "gd-sprest-bs";
 import { fileEarmark } from "gd-sprest-bs/build/icons/svgs/fileEarmark";
 import { personX } from "gd-sprest-bs/build/icons/svgs/personX";
@@ -6,7 +6,9 @@ import { DataSource } from "../ds";
 import { ExportCSV } from "./exportCSV";
 
 interface IGroupInfo {
-    DocUrl?: string;
+    FileExtension?: string;
+    FileName?: string;
+    FileUrl?: string;
     Role?: string;
     RoleInfo?: string;
     Name: string;
@@ -26,7 +28,7 @@ interface IUserInfo {
 }
 
 const CSVFields = [
-    "WebUrl", "Name", "Email", "Group", "GroupId", "GroupInfo", "Role", "RoleInfo", "DocUrl"
+    "WebUrl", "Name", "Email", "Group", "GroupId", "GroupInfo", "Role", "RoleInfo", "FileName", "FileExtension", "FileUrl"
 ]
 
 export class SharingLinks {
@@ -37,12 +39,12 @@ export class SharingLinks {
         // Return a promise
         return new Promise(resolve => {
             // Find the document by its id
-            Search.postQuery<{ Path: string; SPWebUrl: string; Title: string }>({
+            Search.postQuery<{ FileExtension: string; Path: string; SPWebUrl: string; Title: string }>({
                 url: DataSource.SiteContext.SiteFullUrl,
                 query: {
                     Querytext: "UniqueID: " + docInfo.docId,
                     SelectProperties: {
-                        results: ["Path", "SPWebUrl", "Title"]
+                        results: ["FileExtension", "Path", "SPWebUrl", "Title"]
                     }
                 },
                 targetInfo: { requestDigest: DataSource.SiteContext.FormDigestValue }
@@ -59,7 +61,9 @@ export class SharingLinks {
 
                 // Add the user information
                 this._items.push({
-                    DocUrl: result?.Path,
+                    FileExtension: result?.Path,
+                    FileName: result?.Title,
+                    FileUrl: result?.Path,
                     WebUrl: result?.SPWebUrl || rootWeb.Url,
                     Name: docInfo.userInfo.Title || docInfo.userInfo.Name,
                     Email: docInfo.userInfo.EMail,
@@ -113,15 +117,13 @@ export class SharingLinks {
 
                         // Add the group information
                         this._items.push({
-                            DocUrl: null,
                             WebUrl: rootWeb.Url,
                             Name: groupInfo.Title || groupInfo.Name,
                             Email: groupInfo.EMail,
                             Group: group.Title,
                             GroupId: group.Id,
                             GroupInfo: group.Description,
-                            Role: roleName,
-                            RoleInfo: null
+                            Role: roleName
                         });
                     }
                 });
@@ -308,7 +310,7 @@ export class SharingLinks {
                             let tooltips: Components.ITooltipProps[] = [];
 
                             // See if a file is associated with this sharing link
-                            if (row.DocUrl) {
+                            if (row.FileUrl) {
                                 // Add the view file button
                                 tooltips.push({
                                     content: "Click to view the file.",
@@ -319,7 +321,7 @@ export class SharingLinks {
                                         type: Components.ButtonTypes.OutlinePrimary,
                                         onClick: () => {
                                             // View the file
-                                            window.open(row.DocUrl);
+                                            window.open(Documents.isWopi(`${row.FileName}.${row.FileExtension}`) ? row.WebUrl + "/_layouts/15/WopiFrame.aspx?sourcedoc=" + row.FileUrl + "&action=view" : row.FileUrl, "_blank");
                                         }
                                     }
                                 });

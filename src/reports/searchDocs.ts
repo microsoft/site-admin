@@ -204,7 +204,7 @@ export class SearchDocs {
                                 el,
                                 tooltips: [
                                     {
-                                        content: "View Document",
+                                        content: "Click to view the document.",
                                         btnProps: {
                                             className: "pe-2 py-1",
                                             iconClassName: "mx-1",
@@ -213,13 +213,13 @@ export class SearchDocs {
                                             text: "View",
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
-                                                // Show the security group
+                                                // View the file
                                                 window.open(Documents.isWopi(`${item.Title}.${item.FileExtension}`) ? item.SPWebUrl + "/_layouts/15/WopiFrame.aspx?sourcedoc=" + item.Path + "&action=view" : item.Path, "_blank");
                                             }
                                         }
                                     },
                                     {
-                                        content: "Download Document",
+                                        content: "Click to download the document.",
                                         btnProps: {
                                             className: "pe-2 py-1",
                                             iconClassName: "mx-1",
@@ -234,7 +234,7 @@ export class SearchDocs {
                                         }
                                     },
                                     {
-                                        content: "Delete Document",
+                                        content: "Click to delete the document.",
                                         btnProps: {
                                             assignTo: btn => { btnDelete = btn; },
                                             className: "pe-2 py-1",
