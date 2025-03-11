@@ -325,7 +325,7 @@ export class ExternalUsers {
                             if (row.Group) {
                                 // Add the view group button
                                 tooltips.push({
-                                    content: "Click to view the group containing the user.",
+                                    content: "Click to view the site group containing the user.",
                                     btnProps: {
                                         className: "pe-2 py-1",
                                         iconType: fileEarmark(24, 24, "mx-1"),
@@ -351,7 +351,7 @@ export class ExternalUsers {
                                         isDisabled: !(row.Id > 0),
                                         onClick: () => {
                                             // Confirm the deletion of the group
-                                            if (confirm("Are you sure you want to remove the user from this group?")) {
+                                            if (confirm("Are you sure you want to remove the user from this site group?")) {
                                                 // Disable this button
                                                 btnRemove.disable();
 
@@ -365,7 +365,7 @@ export class ExternalUsers {
 
                             // Add the delete button
                             tooltips.push({
-                                content: "Click to delete the user from the site and all groups.",
+                                content: "Click to delete the user from all site groups and site.",
                                 btnProps: {
                                     assignTo: btn => { btnDelete = btn; },
                                     className: "pe-2 py-1",

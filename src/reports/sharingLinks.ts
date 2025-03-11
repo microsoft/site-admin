@@ -305,47 +305,68 @@ export class SharingLinks {
                         title: "",
                         onRenderCell: (el, col, row: IGroupInfo) => {
                             let btnDelete: Components.IButton = null;
+                            let tooltips: Components.ITooltipProps[] = [];
+
+                            // See if a file is associated with this sharing link
+                            if (row.DocUrl) {
+                                // Add the view file button
+                                tooltips.push({
+                                    content: "Click to view the file.",
+                                    btnProps: {
+                                        className: "pe-2 py-1",
+                                        iconType: fileEarmark(24, 24, "mx-1"),
+                                        text: "View File",
+                                        type: Components.ButtonTypes.OutlinePrimary,
+                                        onClick: () => {
+                                            // View the file
+                                            window.open(row.DocUrl);
+                                        }
+                                    }
+                                });
+                            }
+
+                            // Add the view group button
+                            tooltips.push({
+                                content: "Click to view the site group",
+                                btnProps: {
+                                    className: "pe-2 py-1",
+                                    iconType: fileEarmark(24, 24, "mx-1"),
+                                    text: "View Group",
+                                    type: Components.ButtonTypes.OutlinePrimary,
+                                    onClick: () => {
+                                        // View the group
+                                        window.open(`${row.WebUrl}/${ContextInfo.layoutsUrl}/people.aspx?MembershipGroupId=${row.GroupId}`);
+                                    }
+                                }
+                            });
+
+                            // Add the delete group button
+                            tooltips.push({
+                                el,
+                                content: "Click to delete the site group.",
+                                btnProps: {
+                                    assignTo: btn => { btnDelete = btn; },
+                                    className: "pe-2 py-1",
+                                    iconType: personX(24, 24, "mx-1"),
+                                    text: "Delete",
+                                    type: Components.ButtonTypes.OutlineDanger,
+                                    onClick: () => {
+                                        // Confirm the deletion of the group
+                                        if (confirm("Are you sure you want to delete this group?")) {
+                                            // Disable this button
+                                            btnDelete.disable();
+
+                                            // Delete the site group
+                                            this.removeGroup(row.Group, row.GroupId);
+                                        }
+                                    }
+                                }
+                            });
 
                             // Render the buttons
                             Components.TooltipGroup({
                                 el,
-                                tooltips: [
-                                    {
-                                        content: "View Group",
-                                        btnProps: {
-                                            className: "pe-2 py-1",
-                                            iconType: fileEarmark(24, 24, "mx-1"),
-                                            text: "View",
-                                            type: Components.ButtonTypes.OutlinePrimary,
-                                            isDisabled: !(row.GroupId > 0),
-                                            onClick: () => {
-                                                // View the group
-                                                window.open(`${row.WebUrl}/${ContextInfo.layoutsUrl}/people.aspx?MembershipGroupId=${row.GroupId}`);
-                                            }
-                                        }
-                                    },
-                                    {
-                                        el,
-                                        content: "Delete Group",
-                                        btnProps: {
-                                            assignTo: btn => { btnDelete = btn; },
-                                            className: "pe-2 py-1",
-                                            iconType: personX(24, 24, "mx-1"),
-                                            text: "Delete",
-                                            type: Components.ButtonTypes.OutlineDanger,
-                                            onClick: () => {
-                                                // Confirm the deletion of the group
-                                                if (confirm("Are you sure you want to delete this group?")) {
-                                                    // Disable this button
-                                                    btnDelete.disable();
-
-                                                    // Delete the site group
-                                                    this.removeGroup(row.Group, row.GroupId);
-                                                }
-                                            }
-                                        }
-                                    }
-                                ]
+                                tooltips
                             });
                         }
                     }
