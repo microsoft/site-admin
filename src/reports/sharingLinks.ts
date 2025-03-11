@@ -175,30 +175,6 @@ export class SharingLinks {
             )
     }
 
-    // Removes a user from a group
-    private static removeUser(user: string, userId: number, group: string) {
-        // Display a loading dialog
-        LoadingDialog.setHeader("Removing Site User");
-        LoadingDialog.setBody(`Removing the site user '${user}' from the '${group}' group. This will close after the request completes.`);
-        LoadingDialog.show();
-
-        // Remove the user from the group
-        Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
-            .SiteGroups(group).Users().removeById(userId).execute(
-                // Success
-                () => {
-                    // Close the dialog
-                    LoadingDialog.hide();
-                },
-
-                // Error
-                () => {
-                    // Close the dialog
-                    LoadingDialog.hide();
-                }
-            )
-    }
-
     // Renders the search summary
     private static renderSummary(el: HTMLElement, onClose: () => void) {
         // Render the summary

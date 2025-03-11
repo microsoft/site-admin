@@ -364,8 +364,7 @@ export class ExternalUsers {
                             }
 
                             // Add the delete button
-                            Components.Tooltip({
-                                el,
+                            tooltips.push({
                                 content: "Click to delete the user from the site and all groups.",
                                 btnProps: {
                                     assignTo: btn => { btnDelete = btn; },
@@ -385,7 +384,6 @@ export class ExternalUsers {
                                     }
                                 }
                             });
-
 
                             // Render the buttons
                             Components.TooltipGroup({
