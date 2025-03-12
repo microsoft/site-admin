@@ -345,11 +345,11 @@ export class SearchEEEU {
                             if (row.GroupId > 0) {
                                 // Add the view button
                                 tooltips.add({
-                                    content: "View Group",
+                                    content: "Click to view the site group.",
                                     btnProps: {
                                         className: "pe-2 py-1",
                                         //iconType: GetIcon(24, 24, "PeopleTeam", "mx-1"),
-                                        text: "View",
+                                        text: "View Group",
                                         type: Components.ButtonTypes.OutlinePrimary,
                                         isDisabled: !(row.GroupId > 0),
                                         onClick: () => {
@@ -361,7 +361,7 @@ export class SearchEEEU {
 
                                 // Add the remove button
                                 tooltips.add({
-                                    content: "Removes the user from the group",
+                                    content: "Click to remove the account from the group",
                                     btnProps: {
                                         assignTo: btn => { btnDelete = btn; },
                                         className: "pe-2 py-1",
@@ -370,7 +370,7 @@ export class SearchEEEU {
                                         type: Components.ButtonTypes.OutlineDanger,
                                         onClick: () => {
                                             // Confirm the removal of the user
-                                            if (confirm("Are you sure you want to remove the user from this group?")) {
+                                            if (confirm("Are you sure you want to remove the account from this group?")) {
                                                 // Disable this button
                                                 btnDelete.disable();
 
@@ -383,7 +383,7 @@ export class SearchEEEU {
                             } else {
                                 // Add the remove button
                                 tooltips.add({
-                                    content: "Removes the user from the site",
+                                    content: "Click to remove the account from all site groups and the site",
                                     btnProps: {
                                         assignTo: btn => { btnDelete = btn; },
                                         className: "pe-2 py-1",
@@ -392,7 +392,7 @@ export class SearchEEEU {
                                         type: Components.ButtonTypes.OutlineDanger,
                                         onClick: () => {
                                             // Confirm the removal of the user
-                                            if (confirm("Are you sure you want to remove the user from this site?")) {
+                                            if (confirm("Are you sure you want to remove the account from this site?")) {
                                                 // Disable this button
                                                 btnDelete.disable();
 
