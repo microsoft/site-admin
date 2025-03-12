@@ -317,7 +317,7 @@ export class SharingLinks {
                                     btnProps: {
                                         className: "pe-2 py-1",
                                         iconType: fileEarmark(24, 24, "mx-1"),
-                                        text: "View File",
+                                        text: "File",
                                         type: Components.ButtonTypes.OutlinePrimary,
                                         onClick: () => {
                                             // View the file
@@ -333,7 +333,7 @@ export class SharingLinks {
                                 btnProps: {
                                     className: "pe-2 py-1",
                                     iconType: fileEarmark(24, 24, "mx-1"),
-                                    text: "View Group",
+                                    text: "Group",
                                     type: Components.ButtonTypes.OutlinePrimary,
                                     onClick: () => {
                                         // View the group

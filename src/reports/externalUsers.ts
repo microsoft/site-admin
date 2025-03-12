@@ -35,6 +35,17 @@ export class ExternalUsers {
 
     // Analyzes the user information
     private static analyzeUserInformation(rootWeb: Types.SP.WebOData, user: Types.SP.UserOData, userInfo: IUserInfo) {
+        // Add the user information
+        this._items.push({
+            WebUrl: rootWeb.Url,
+            WebTitle: rootWeb.Title,
+            Name: userInfo.Title || userInfo.Name,
+            Email: userInfo.EMail,
+            Group: "User does not belong to any group",
+            Role: "Unknown",
+            RoleInfo: "Unable to determine the role for this group"
+        });
+
         // Parse the groups the user belongs to
         Helper.Executor(user.Groups.results, group => {
             // Parse the roles
@@ -61,19 +72,6 @@ export class ExternalUsers {
                     return;
                 }
             }
-
-            // Add the user information
-            this._items.push({
-                WebUrl: rootWeb.Url,
-                WebTitle: rootWeb.Title,
-                Name: userInfo.Title || userInfo.Name,
-                Email: userInfo.EMail,
-                Group: group.Title,
-                GroupId: group.Id,
-                GroupInfo: group.Description || "",
-                Role: "Unknown",
-                RoleInfo: "Unable to determine the role for this group"
-            });
         });
     }
 
@@ -322,7 +320,7 @@ export class ExternalUsers {
                             let tooltips: Components.ITooltipProps[] = [];
 
                             // Ensure a group exists
-                            if (row.Group) {
+                            if (row.GroupId) {
                                 // Add the view group button
                                 tooltips.push({
                                     content: "Click to view the site group containing the user.",
