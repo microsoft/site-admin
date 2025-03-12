@@ -85,7 +85,7 @@ export class ReportsTab {
                         {
                             text: "Search EEEU",
                             data: "Search for the 'Every' and 'Everyone exception external users' accounts.",
-                            value: ReportTypes.SearchUsers
+                            value: ReportTypes.SearchEEEU
                         },
                         {
                             text: "Search Property",
