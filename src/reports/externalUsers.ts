@@ -41,7 +41,6 @@ export class ExternalUsers {
             WebTitle: rootWeb.Title,
             Name: userInfo.Title || userInfo.Name,
             Email: userInfo.EMail,
-            Group: "User does not belong to any group",
             Role: "Unknown",
             RoleInfo: "Unable to determine the role for this group"
         });
