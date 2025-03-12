@@ -16,6 +16,7 @@ enum ReportTypes {
     ExternalUsers = "ExternalUsers",
     Lists = "Lists",
     SearchDocs = "SearchDocs",
+    SearchEEEU = "SearchEEEU",
     SearchProp = "SearchProp",
     SearchUsers = "SearchUsers",
     SharingLinks = "SharingLinks",
@@ -82,6 +83,11 @@ export class ReportsTab {
                             value: ReportTypes.SearchDocs
                         },
                         {
+                            text: "Search EEEU",
+                            data: "Search for the 'Every' and 'Everyone exception external users' accounts.",
+                            value: ReportTypes.SearchUsers
+                        },
+                        {
                             text: "Search Property",
                             data: "Find sites by search property.",
                             value: ReportTypes.SearchProp,
@@ -127,6 +133,9 @@ export class ReportsTab {
                 break;
             case ReportTypes.SearchDocs:
                 form.appendControls(Reports.SearchDocs.getFormFields(this._reportProps?.docSearchFileExt, this._reportProps?.docSearchKeywords));
+                break;
+            case ReportTypes.SearchEEEU:
+                form.appendControls(Reports.SearchEEEU.getFormFields());
                 break;
             case ReportTypes.SearchProp:
                 form.appendControls(Reports.SearchProp.getFormFields(DataSource.Site.RootWeb.AllProperties[this._searchProps.key]));
@@ -185,6 +194,12 @@ export class ReportsTab {
                         break;
                     case ReportTypes.SearchDocs:
                         Reports.SearchDocs.run(this._el, form.getValues(), () => {
+                            // Render this component
+                            this.render(selectedReport);
+                        });
+                        break;
+                    case ReportTypes.SearchEEEU:
+                        Reports.SearchEEEU.run(this._el, form.getValues(), () => {
                             // Render this component
                             this.render(selectedReport);
                         });
