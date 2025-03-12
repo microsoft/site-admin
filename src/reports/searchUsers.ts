@@ -259,7 +259,7 @@ export class SearchUsers {
         new Dashboard({
             el,
             navigation: {
-                title: "Search Content",
+                title: "Search Users",
                 showFilter: false,
                 items: [{
                     text: "New Search",

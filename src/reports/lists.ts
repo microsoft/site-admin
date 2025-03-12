@@ -73,7 +73,7 @@ export class Lists {
         new Dashboard({
             el,
             navigation: {
-                title: "Search Content",
+                title: "Lists/Libraries",
                 showFilter: false,
                 items: [{
                     text: "New Search",

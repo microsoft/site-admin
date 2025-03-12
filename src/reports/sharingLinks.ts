@@ -141,7 +141,7 @@ export class SharingLinks {
                     LoadingDialog.setBody(`Analyzing Sharing Link ${++counter} of ${groups.length}`);
 
                     // Analyze the group
-                    return this.analyzeDocInfo(rootWeb, docInfo).then(resolve);
+                    return this.analyzeDocInfo(rootWeb, docInfo);
                 }).then(() => {
                     // Resolve the request
                     resolve();
@@ -183,7 +183,7 @@ export class SharingLinks {
         new Dashboard({
             el,
             navigation: {
-                title: "Search Content",
+                title: "Sharing Links",
                 showFilter: false,
                 items: [{
                     text: "New Search",

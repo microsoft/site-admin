@@ -186,7 +186,7 @@ export class ExternalUsers {
         new Dashboard({
             el,
             navigation: {
-                title: "Search Content",
+                title: "External Users",
                 showFilter: false,
                 items: [{
                     text: "New Search",

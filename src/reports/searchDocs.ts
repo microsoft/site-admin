@@ -83,7 +83,7 @@ export class SearchDocs {
         new Dashboard({
             el,
             navigation: {
-                title: "Search Content",
+                title: "Search Documents",
                 showFilter: false,
                 items: [{
                     text: "New Search",

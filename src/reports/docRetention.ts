@@ -81,7 +81,7 @@ export class DocRetention {
         new Dashboard({
             el,
             navigation: {
-                title: "Search Content",
+                title: "Doc Retention",
                 showFilter: false,
                 items: [{
                     text: "New Search",

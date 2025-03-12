@@ -63,7 +63,7 @@ export class ExternalShares {
         new Dashboard({
             el,
             navigation: {
-                title: "Search Content",
+                title: "External Shares",
                 showFilter: false,
                 items: [{
                     text: "New Search",

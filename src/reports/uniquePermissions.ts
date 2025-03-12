@@ -141,7 +141,7 @@ export class UniquePermissions {
         new Dashboard({
             el,
             navigation: {
-                title: "Search Content",
+                title: "Unique Permissions",
                 showFilter: false,
                 items: [{
                     text: "New Search",
