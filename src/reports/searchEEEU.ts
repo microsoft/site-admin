@@ -254,7 +254,7 @@ export class SearchEEEU {
                 },
                 columns: [
                     {
-                        name: "Title",
+                        name: "Name",
                         title: "User Name"
                     },
                     {
