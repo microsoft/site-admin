@@ -1,5 +1,5 @@
 import { Dashboard, LoadingDialog } from "dattatable";
-import { Components, ContextInfo, Helper, Search, Types, Web } from "gd-sprest-bs";
+import { Components, ContextInfo, Helper, Types, Web } from "gd-sprest-bs";
 import { fileEarmark } from "gd-sprest-bs/build/icons/svgs/fileEarmark";
 import { personX } from "gd-sprest-bs/build/icons/svgs/personX";
 import { DataSource } from "../ds";

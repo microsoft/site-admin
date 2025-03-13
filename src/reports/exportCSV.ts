@@ -34,7 +34,11 @@ export class ExportCSV {
                 let col = this._columns[i];
 
                 // Add the column value
-                row.push(data[col] || "");
+                if (typeof (data[col]) === "boolean" || typeof (data[col]) === "number" || typeof (data[col]) === "string") {
+                    row.push(data[col] || "");
+                } else {
+                    row.push(data[col] ? data[col].join(', ') : "");
+                }
             }
 
             // Add the row to the csv

@@ -2,6 +2,7 @@ export * from "./docRetention";
 export * from "./externalShares";
 export * from "./externalUsers";
 export * from "./lists";
+export * from "./permissions";
 export * from "./searchDocs";
 export * from "./searchEEEU";
 export * from "./searchProp";
