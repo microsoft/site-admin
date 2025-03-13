@@ -134,7 +134,7 @@ export class SearchEEEU {
 
             // Get the user information list
             Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists("User Information List").Items().query({
-                Filter: `Title eq 'Every' or substringof('spo-grid-all-users', Name)`,
+                Filter: `Title eq 'Everyone' or substringof('spo-grid-all-users', Name)`,
                 Select: ["Id", "Name", "EMail", "Title", "UserName"],
                 GetAllItems: true,
                 Top: 5000
