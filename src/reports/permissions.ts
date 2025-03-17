@@ -79,6 +79,7 @@ export class Permissions {
                     ds.group(groupId).query({
                         Expand: ["members", "owners"],
                         Select: [
+                            "id",
                             "members/principalName", "members/id", "members/displayName", "members/mail",
                             "owners/principalName", "owners/id", "owners/displayName", "owners/mail"
                         ]
