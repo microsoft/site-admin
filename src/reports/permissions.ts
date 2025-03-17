@@ -77,30 +77,15 @@ export class Permissions {
                 validGroupIds.forEach(groupId => {
                     // Get the owners
                     ds.group(groupId).query({
-                        Expand: ["owners"],
+                        Expand: ["members", "owners"],
                         Select: [
+                            "members/principalName", "members/id", "members/displayName", "members/mail",
                             "owners/principalName", "owners/id", "owners/displayName", "owners/mail"
                         ]
                     }).batch(group => {
-                        // Ensure the group was found
-                        if (group.id) {
-                            // Add it to the mapper
-                            this._groupIds[group.id].owners = group.owners;
-                        }
-                    });
-
-                    // Get the members
-                    ds.group(groupId).query({
-                        Expand: ["members"],
-                        Select: [
-                            "members/principalName", "members/id", "members/displayName", "members/mail"
-                        ]
-                    }).batch(group => {
-                        // Ensure the group was found
-                        if (group.id) {
-                            // Add it to the mapper
-                            this._groupIds[group.id].members = group.members;
-                        }
+                        // Update the group
+                        this._groupIds[group.id].members = group.members;
+                        this._groupIds[group.id].owners = group.owners;
                     });
                 });
 
