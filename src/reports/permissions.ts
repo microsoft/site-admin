@@ -50,7 +50,7 @@ export class Permissions {
                 // Return a promise
                 return new Promise(resolve => {
                     // Get the group information
-                    DirectorySession().group(groupId).execute(group => {
+                    DirectorySession().group(groupId).query({ Select: ["id"] }).execute(group => {
                         // Append the group
                         validGroupIds.push(group.id);
                     }, () => {
