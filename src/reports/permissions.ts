@@ -66,7 +66,7 @@ export class Permissions {
                 let ds = DirectorySession();
 
                 // Parse the group ids
-                groupIds.forEach(groupId => {
+                validGroupIds.forEach(groupId => {
                     // Get the M365 group information
                     ds.group(groupId).query({
                         Expand: ["members", "owners"],
