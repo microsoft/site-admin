@@ -53,6 +53,9 @@ export class Permissions {
                     DirectorySession().group(groupId).query({ Select: ["id"] }).execute(group => {
                         // Append the group
                         validGroupIds.push(group.id);
+
+                        // Try the next group
+                        resolve(null);
                     }, () => {
                         // Try the next group
                         resolve(null);
