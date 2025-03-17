@@ -50,8 +50,13 @@ export class Permissions {
                 // Return a promise
                 return new Promise(resolve => {
                     // Get the group information
-                    DirectorySession().group(groupId).query({ Select: ["id"] }).execute(group => {
-                        // Append the group
+                    DirectorySession().group(groupId).query({
+                        Select: ["calendarUrl", "displayName", "id", "isPublic", "mail"]
+                    }).execute(group => {
+                        // Add the group information to the mapper
+                        this._groupIds[group.id] = group;
+
+                        // Add the group id for the batch job
                         validGroupIds.push(group.id);
 
                         // Try the next group
@@ -70,19 +75,31 @@ export class Permissions {
 
                 // Parse the group ids
                 validGroupIds.forEach(groupId => {
-                    // Get the M365 group information
+                    // Get the owners
                     ds.group(groupId).query({
-                        Expand: ["members", "owners"],
+                        Expand: ["owners"],
                         Select: [
-                            "calendarUrl", "displayName", "id", "isPublic", "mail",
-                            "members/principalName", "members/id", "members/displayName", "members/mail",
                             "owners/principalName", "owners/id", "owners/displayName", "owners/mail"
                         ]
                     }).batch(group => {
                         // Ensure the group was found
                         if (group.id) {
                             // Add it to the mapper
-                            this._groupIds[group.id] = group;
+                            this._groupIds[group.id].owners = group.owners;
+                        }
+                    });
+
+                    // Get the members
+                    ds.group(groupId).query({
+                        Expand: ["members"],
+                        Select: [
+                            "members/principalName", "members/id", "members/displayName", "members/mail"
+                        ]
+                    }).batch(group => {
+                        // Ensure the group was found
+                        if (group.id) {
+                            // Add it to the mapper
+                            this._groupIds[group.id].members = group.members;
                         }
                     });
                 });
