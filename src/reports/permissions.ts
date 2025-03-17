@@ -35,6 +35,140 @@ export class Permissions {
     private static _groupIds: { [key: string]: Types.SP.Directory.GroupOData } = null;
     private static _items: IPermissionItem[] = null;
 
+    // Analyze the group ids
+    private static analyzeGroupIds(groupIds: string[]): PromiseLike<void> {
+        // Return a promise
+        return new Promise(resolve => {
+            let validGroupIds = [];
+
+            // Try to get the groups
+            let counter = 0;
+            Helper.Executor(groupIds, groupId => {
+                // Update the loading dialog
+                LoadingDialog.setBody(`Trying to get M365 Group information ${++counter} of ${groupIds.length}`);
+
+                // Return a promise
+                return new Promise(resolve => {
+                    // Get the group information
+                    DirectorySession().group(groupId).execute(group => {
+                        // Append the group
+                        validGroupIds.push(group.id);
+                    }, () => {
+                        // Try the next group
+                        resolve(null);
+                    });
+                });
+            }).then(() => {
+                // Update the loading dialog
+                LoadingDialog.setBody(`Creating the batch request to get M365 Group information`);
+
+                // Create the request
+                let ds = DirectorySession();
+
+                // Parse the group ids
+                groupIds.forEach(groupId => {
+                    // Get the M365 group information
+                    ds.group(groupId).query({
+                        Expand: ["members", "owners"],
+                        Select: [
+                            "calendarUrl", "displayName", "id", "isPublic", "mail",
+                            "members/principalName", "members/id", "members/displayName", "members/mail",
+                            "owners/principalName", "owners/id", "owners/displayName", "owners/mail"
+                        ]
+                    }).batch(group => {
+                        // Ensure the group was found
+                        if (group.id) {
+                            // Add it to the mapper
+                            this._groupIds[group.id] = group;
+                        }
+                    });
+                });
+
+                // Update the loading dialog
+                LoadingDialog.setBody(`Executing the batch request to get M365 Group information`);
+
+                // Execute the batch job
+                ds.execute(() => {
+                    // Update the loading dialog
+                    LoadingDialog.setBody(`Updating the role assignments with the M365 Group information`);
+
+                    // Parse the items
+                    this._items.forEach(item => {
+                        // Clear the groups
+                        item.GroupMembers = [];
+                        item.GroupMembersAsString = [];
+                        item.GroupOwners = [];
+                        item.GroupOwnersAsString = [];
+                        item.SiteMembersAsString = [];
+                        item.SiteOwnersAsString = [];
+
+                        // Ensure groups exist
+                        if (item.GroupIds.length == 0) { return; }
+
+                        // Parse the group ids
+                        item.GroupIds.forEach(groupId => {
+                            // Get the group
+                            let group = this._groupIds[groupId];
+                            if (group) {
+                                // Add the members/owners
+                                item.GroupMembers = item.GroupMembers.concat(group.members.results);
+                                item.GroupOwners = item.GroupOwners.concat(group.owners.results);
+                                item.GroupUrl = group.calendarUrl.replace("calendar/group", "groups") + "/members";
+                            }
+                        });
+
+                        // Parse the group members
+                        item.GroupMembers.forEach(member => {
+                            // Add the member name
+                            item.GroupMembersAsString.push(member.mail);
+                        });
+
+                        // Remove duplicates
+                        item.GroupMembersAsString = item.GroupMembersAsString.filter((value, idx, self) => {
+                            return self.indexOf(value) === idx;
+                        });
+
+                        // Parse the group owners
+                        item.GroupOwners.forEach(owner => {
+                            // Add the member name
+                            item.GroupOwnersAsString.push(owner.mail);
+                        });
+
+                        // Remove duplicates
+                        item.GroupOwnersAsString = item.GroupOwnersAsString.filter((value, idx, self) => {
+                            return self.indexOf(value) === idx;
+                        });
+
+                        // Parse the site members
+                        item.SiteMembers.forEach(member => {
+                            // Add the member name
+                            item.SiteMembersAsString.push(member.Email || member.UserPrincipalName || member.LoginName);
+                        });
+
+                        // Remove duplicates
+                        item.SiteMembersAsString = item.SiteMembersAsString.filter((value, idx, self) => {
+                            return self.indexOf(value) === idx;
+                        });
+
+                        // Parse the site owners
+                        item.SiteOwners.forEach(owner => {
+                            // Add the member name
+                            item.SiteOwnersAsString.push(owner.Email || owner.UserPrincipalName || owner.LoginName);
+                        });
+
+                        // Remove duplicates
+                        item.SiteOwnersAsString = item.SiteOwnersAsString.filter((value, idx, self) => {
+                            return self.indexOf(value) === idx;
+                        });
+                    });
+
+                    // Resolve the request
+                    resolve();
+                });
+            });
+        });
+    }
+
     // Analyze the role
     private static analyzeRole(role: Types.SP.RoleAssignmentOData): string[] {
         let item: IPermissionItem = null;
@@ -111,7 +245,7 @@ export class Permissions {
     }
 
     // Analyzes the roles
-    private static analyzeRoles(roles: Types.SP.RoleAssignmentOData[]) {
+    private static analyzeRoles(roles: Types.SP.RoleAssignmentOData[]): PromiseLike<void> {
         // Return a promise
         return new Promise(resolve => {
             let counter = 0;
@@ -128,115 +262,18 @@ export class Permissions {
                 // Analyze the role
                 groupIds = groupIds.concat(this.analyzeRole(role));
             }).then(() => {
-                // Update the loading dialog
-                LoadingDialog.setBody(`Creating the batch request to get M365 Group information`);
-
                 // Remove duplicates from the array
                 groupIds = groupIds.filter((value, idx, self) => {
                     return self.indexOf(value) === idx;
                 });
 
-                // Create the request
-                let ds = DirectorySession();
-
-                // Parse the group ids
-                groupIds.forEach(groupId => {
-                    // Get the M365 group information
-                    ds.group(groupId).query({
-                        Expand: ["members", "owners"],
-                        Select: [
-                            "calendarUrl", "displayName", "id", "isPublic", "mail",
-                            "members/principalName", "members/id", "members/displayName", "members/mail",
-                            "owners/principalName", "owners/id", "owners/displayName", "owners/mail"
-                        ]
-                    }).batch(group => {
-                        // Add it to the mapper
-                        this._groupIds[group.id] = group;
-                    });
-                });
-
-                // Update the loading dialog
-                LoadingDialog.setBody(`Executing the batch request to get M365 Group information`);
-
-                // Execute the batch job
-                ds.execute(() => {
-                    // Update the loading dialog
-                    LoadingDialog.setBody(`Updating the role assignments with the M365 Group information`);
-
-                    // Parse the items
-                    this._items.forEach(item => {
-                        // Clear the groups
-                        item.GroupMembers = [];
-                        item.GroupMembersAsString = [];
-                        item.GroupOwners = [];
-                        item.GroupOwnersAsString = [];
-                        item.SiteMembersAsString = [];
-                        item.SiteOwnersAsString = [];
-
-                        // Ensure groups exist
-                        if (item.GroupIds.length == 0) { return; }
-
-                        // Parse the group ids
-                        item.GroupIds.forEach(groupId => {
-                            // Get the group
-                            let group = this._groupIds[groupId];
-
-                            // Add the members/owners
-                            item.GroupMembers = item.GroupMembers.concat(group.members.results);
-                            item.GroupOwners = item.GroupOwners.concat(group.owners.results);
-                            item.GroupUrl = group.calendarUrl.replace("calendar/group", "groups") + "/members";
-                        });
-
-                        // Parse the group members
-                        item.GroupMembers.forEach(member => {
-                            // Add the member name
-                            item.GroupMembersAsString.push(member.mail);
-                        });
-
-                        // Remove duplicates
-                        item.GroupMembersAsString = item.GroupMembersAsString.filter((value, idx, self) => {
-                            return self.indexOf(value) === idx;
-                        });
-
-                        // Parse the group owners
-                        item.GroupOwners.forEach(owner => {
-                            // Add the member name
-                            item.GroupOwnersAsString.push(owner.mail);
-                        });
-
-                        // Remove duplicates
-                        item.GroupOwnersAsString = item.GroupOwnersAsString.filter((value, idx, self) => {
-                            return self.indexOf(value) === idx;
-                        });
-
-                        // Parse the site members
-                        item.SiteMembers.forEach(member => {
-                            // Add the member name
-                            item.SiteMembersAsString.push(member.Email || member.UserPrincipalName || member.LoginName);
-                        });
-
-                        // Remove duplicates
-                        item.SiteMembersAsString = item.SiteMembersAsString.filter((value, idx, self) => {
-                            return self.indexOf(value) === idx;
-                        });
-
-                        // Parse the site owners
-                        item.SiteOwners.forEach(owner => {
-                            // Add the member name
-                            item.SiteOwnersAsString.push(owner.Email || owner.UserPrincipalName || owner.LoginName);
-                        });
-
-                        // Remove duplicates
-                        item.SiteOwnersAsString = item.SiteOwnersAsString.filter((value, idx, self) => {
-                            return self.indexOf(value) === idx;
-                        });
-                    });
-
+                // Analyze the group ids
+                this.analyzeGroupIds(groupIds).then(() => {
                     // Hide the loading dialog
                     LoadingDialog.hide();
 
-                    // Resolve the request
-                    resolve(null);
+                    // Resolve the values
+                    resolve();
                 });
             });
         });
