@@ -77,7 +77,7 @@ export class InfoTab extends Tab {
                     label: this._props["StorageUsed"].label,
                     description: this._props["StorageUsed"].description,
                     type: Components.FormControlTypes.Readonly,
-                    value: `${DataSource.formatBytes(DataSource.Site.Usage.Storage)} of ${DataSource.formatBytes(DataSource.Site.Usage.Storage / DataSource.Site.Usage.StoragePercentageUsed)} (${Math.round(DataSource.Site.Usage.StoragePercentageUsed * 100) / 100 + "%"} Used)`
+                    value: `${DataSource.formatBytes(DataSource.Site.Usage.Storage)} of ${DataSource.formatBytes(DataSource.Site.Usage.Storage / DataSource.Site.Usage.StoragePercentageUsed)} (${Math.round(DataSource.Site.Usage.StoragePercentageUsed * 100) + "%"} Used)`
                 }
             ]
         });
