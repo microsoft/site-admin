@@ -90,7 +90,7 @@ export class Tabs {
                 tabName: appProps.searchProps.tabName || "Search Property",
                 onRender: (el) => {
                     // Render the tab
-                    this._tabSearch = new SearchPropTab(el, appProps.searchProps);
+                    this._tabSearch = new SearchPropTab(el, appProps.searchProps, appProps.siteProps["CustomScriptsEnabled"].disabled);
                 }
             });
         }
