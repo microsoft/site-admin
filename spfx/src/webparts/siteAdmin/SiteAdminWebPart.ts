@@ -416,17 +416,17 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                 }),
                 PropertyPaneHorizontalRule(),
                 PropertyPaneLink('requestEnhancement', {
-                  href: "https://github.com/spsprinkles/site-admin/issues",
+                  href: "https://github.com/microsoft/site-admin/issues",
                   text: "Request an Enhancement",
                   target: "_blank"
                 }),
                 PropertyPaneLink('supportLink', {
-                  href: "https://github.com/spsprinkles/site-admin/issues",
+                  href: "https://github.com/microsoft/site-admin/issues",
                   text: "Submit an Issue",
                   target: "_blank"
                 }),
                 PropertyPaneLink('sourceLink', {
-                  href: "https://github.com/spsprinkles/site-admin",
+                  href: "https://github.com/microsoft/site-admin",
                   text: "View Source on GitHub",
                   target: "_blank"
                 })
