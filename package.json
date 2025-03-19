@@ -13,7 +13,7 @@
     "test": "npm run build && cd spfx && gulp serve --nobrowser"
   },
   "keywords": [],
-  "author": "",
+  "author": "Gunjan Datta <gudatta@microsoft.com>",
   "license": "ISC",
   "dependencies": {
     "datatables.net": "^2.1.8",
