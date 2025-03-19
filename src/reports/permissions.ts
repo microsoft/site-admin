@@ -189,11 +189,13 @@ export class Permissions {
                 Id: role.Member.Id,
                 LoginName: role.Member.LoginName,
                 Name: role.Member.Title,
-                WebTitle: DataSource.Site.RootWeb.Title,
-                WebUrl: DataSource.Site.Url,
                 Roles: [],
                 RoleInfo: [],
-                Type: "User"
+                SiteMembers: [],
+                SiteOwners: [],
+                Type: "User",
+                WebTitle: DataSource.Site.RootWeb.Title,
+                WebUrl: DataSource.Site.Url
             };
         }
         // Else, see if this is a site group
@@ -477,27 +479,6 @@ export class Permissions {
                     },
                     {
                         name: "",
-                        title: "Site Users",
-                        onRenderCell: (el, col, item: IPermissionItem) => {
-                            if (item.Type == "User") {
-                                el.innerHTML = "1";
-                            } else {
-                                // Get the members and owners and filter for duplicates
-                                let users = (item.SiteMembersAsString.concat(item.SiteOwnersAsString)).filter((value, idx, self) => {
-                                    return self.indexOf(value) === idx;
-                                });
-
-                                // Set the value
-                                el.innerHTML = users.length.toString();
-                            }
-
-                            // Set the filter and order values
-                            el.setAttribute("data-filter", el.innerHTML);
-                            el.setAttribute("data-order", el.innerHTML);
-                        }
-                    },
-                    {
-                        name: "",
                         title: "M365 Groups",
                         onRenderCell: (el, col, item: IPermissionItem) => {
                             // Set the value
@@ -512,11 +493,45 @@ export class Permissions {
                         name: "",
                         title: "M365 Users",
                         onRenderCell: (el, col, item: IPermissionItem) => {
-                            if (item.Type == "M365 Group") {
-                                // Set the value
-                                el.innerHTML = (item.GroupMembersAsString.length + item.GroupOwnersAsString.length).toString();
-                            } else {
+                            // Set the value
+                            el.innerHTML = item.GroupMembersAsString.length.toString();
+
+                            // Set the filter and order values
+                            el.setAttribute("data-filter", el.innerHTML);
+                            el.setAttribute("data-order", el.innerHTML);
+                        }
+                    },
+                    {
+                        name: "",
+                        title: "AD Accounts",
+                        onRenderCell: (el, col, item: IPermissionItem) => {
+                            // Get the non user accounts
+                            let users = item.SiteMembers.filter(value => {
+                                return value.PrincipalType == SPTypes.PrincipalTypes.User || this.getGroupId(value.LoginName) ? false : true;
+                            });
+
+                            // Set the value
+                            el.innerHTML = users.length.toString();
+
+                            // Set the filter and order values
+                            el.setAttribute("data-filter", el.innerHTML);
+                            el.setAttribute("data-order", el.innerHTML);
+                        }
+                    },
+                    {
+                        name: "",
+                        title: "Site Users",
+                        onRenderCell: (el, col, item: IPermissionItem) => {
+                            if (item.Type == "User") {
                                 el.innerHTML = "1";
+                            } else {
+                                // Get the users
+                                let users = item.SiteMembers.filter((value, idx, self) => {
+                                    return value.PrincipalType == SPTypes.PrincipalTypes.User;
+                                });
+
+                                // Set the value
+                                el.innerHTML = users.length.toString();
                             }
 
                             // Set the filter and order values
@@ -712,4 +727,4 @@ export class Permissions {
         // View the modal
         Modal.show();
     }
-} 
+}
