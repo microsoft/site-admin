@@ -53,6 +53,7 @@ export enum RequestTypes {
     DisableCompanyWideSharingLinks = "Company Wide Sharing Links",
     IncreaseStorage = "Increase Storage",
     LockState = "Lock State",
+    SearchProperty = "Custom Search Property",
     TeamsConnected = "Teams Connected"
 }
 

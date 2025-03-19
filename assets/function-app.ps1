@@ -11,6 +11,7 @@ param($Request, $TriggerMetadata)
 # clientId - The client id of the app registration
 # tenant - The domain of the tenant
 # listName - The list name containing the requests
+# searchProp - The custom search property used to tag sites
 ###########################################################################################################
 $appUrl = "https://tenant.sharepoint.com/sites/admin";
 #$azureEnv = "USGovernmentDoD";
@@ -18,6 +19,7 @@ $cert = $env:WEBSITE_LOAD_CERTIFICATES;
 $clientId = $env:CLIENT_ID;
 $tenant = $env:TENANT_ID;
 $listName = "Site Admin Requests";
+$searchProp = "BusinessUnit";
 ############################################### Global Vars ###############################################
 
 # Write to the Azure Functions log stream.
@@ -117,6 +119,23 @@ if ($item -ne $null) {
                     $output = "Custom Script feature has been disabled on your site. Please note that the setting will revert after 24 hours.";
                 }
             }
+            "Custom Search Property" {
+                # Enable custom scripts
+                Set-PnPSite -Identity $siteUrl -NoScriptSite $false;
+
+                # See if a value exists
+                if ([string]::IsNullOrEmpty($value)) {
+                    # Remove the site property
+                    Remove-PnPPropertyBagValue -Key $searchProp;
+                }
+                else {
+                    # Update the site property
+                    Set-PnPPropertyBagValue -Key $searchProp -Value $value -Indexed;
+                }
+
+                # Disable custom scripts
+                Set-PnPSite -Identity $siteUrl -NoScriptSite $true;
+            }
             "Company Wide Sharing Links" {
                 # See if we are disabling company wide sharing links
                 if ($value -eq "true") {
@@ -176,6 +195,6 @@ Disconnect-PnPOnline;
 
 # Associate values to output bindings by calling 'Push-OutputBinding'.
 Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
-    StatusCode = $statusCode
-    Body       = $output
-});
+        StatusCode = $statusCode
+        Body       = $output
+    });
