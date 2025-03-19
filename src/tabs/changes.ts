@@ -222,6 +222,13 @@ export class ChangesTab {
                     if (request.scope == "Site") { resolve(null); }
                     // Else, see if this is a request to update search
                     else if (request.scope == "Search") {
+                        // See if this is a request
+                        if (request.request) {
+                            // Check the next request
+                            resolve(null);
+                            return;
+                        }
+
                         // Update the search property
                         Helper.setWebProperty(request.property, request.newValue as string, true, request.url).then(
                             () => {
