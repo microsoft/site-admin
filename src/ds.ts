@@ -191,7 +191,7 @@ export class DataSource {
     }
 
     // Loads the files for a drive
-    static loadFiles(webId: string, listName?: string): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
+    static loadFiles(webId: string, listName?: string, folder?: Types.SP.Folder): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
         let files = [];
 
         // Loads the files for a drive
@@ -246,7 +246,7 @@ export class DataSource {
 
                 // Parse the drives
                 Helper.Executor(drives, drive => {
-                    return getFiles(drive.id);
+                    return getFiles(drive.id, folder?.Name);
                 }).then(() => { resolve(files); });
             }, reject);
         });
