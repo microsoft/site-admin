@@ -68,6 +68,33 @@ export class Lists {
         ];
     }
 
+    // Loads the root folders for the list
+    private static loadFolders(item: IList): PromiseLike<Components.IDropdownItem[]> {
+        // Return a promise
+        return new Promise(resolve => {
+            let items: Components.IDropdownItem[] = [{ text: "All Files in Library", value: null }];
+
+            // Load the folders for this list
+            Web(item.WebUrl).Lists(item.ListName).RootFolder().Folders().query({ OrderBy: ["Name"] }).execute(folders => {
+                // Parse the folders
+                folders.results.forEach(folder => {
+                    // Add the item
+                    items.push({
+                        data: folder,
+                        text: folder.Name,
+                        value: folder.Name
+                    });
+                });
+
+                // Resolve the request
+                resolve(items);
+            }, () => {
+                // Shouldn't happen but we'll render a blank list
+                resolve(items);
+            });
+        });
+    }
+
     // Renders the search summary
     private static renderSummary(el: HTMLElement, onClose: () => void) {
         // Render the summary
@@ -190,8 +217,11 @@ export class Lists {
                                             text: "Label Files",
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
-                                                // Show the form
-                                                this.setDefaultSensitivityLabelForFiles(item);
+                                                // Load the folders for this list
+                                                this.loadFolders(item).then(folders => {
+                                                    // Show the form
+                                                    this.setDefaultSensitivityLabelForFiles(item, folders);
+                                                });
                                             }
                                         }
                                     }
@@ -369,7 +399,7 @@ export class Lists {
     }
 
     // Reverts the item permissions
-    private static setDefaultSensitivityLabelForFiles(item: IList) {
+    private static setDefaultSensitivityLabelForFiles(item: IList, folders: Components.IDropdownItem[]) {
         // Set the modal header
         Modal.clear();
         Modal.setHeader("Set Default Sensitivity Label");
@@ -393,6 +423,13 @@ export class Lists {
                         results.isValid = results.value && results.value.text ? true : false;
                         return results;
                     }
+                } as Components.IFormControlPropsDropdown,
+                {
+                    name: "ListFolder",
+                    label: "Select a Folder:",
+                    description: "Targets a specific folder to tag, otherwise will apply to all files in the library.",
+                    type: Components.FormControlTypes.Dropdown,
+                    items: folders
                 } as Components.IFormControlPropsDropdown,
                 {
                     name: "OverrideLabel",
@@ -462,6 +499,7 @@ export class Lists {
                             // Ensure the form is valid
                             if (form.isValid()) {
                                 let values = form.getValues();
+                                let folder = values["ListFolder"].data;
                                 let label: Components.IDropdownItem = values["SensitivityLabel"];
                                 let overrideLabelFl: boolean = values["OverrideLabel"];
                                 let responses: ISetSensitivityLabelResponse[] = [];
@@ -476,7 +514,7 @@ export class Lists {
                                 justification = justification == "Other" ? values["JustificationOther"] : justification;
 
                                 // Load the files for this drive
-                                DataSource.loadFiles(item.WebId, item.ListName).then(files => {
+                                DataSource.loadFiles(item.WebId, item.ListName, folder).then(files => {
                                     // Update the loading dialog
                                     LoadingDialog.setBody("Applying the sensitivity labels to the files...");
 
