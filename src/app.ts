@@ -18,6 +18,7 @@ export interface IProp {
 }
 export interface IAppProps {
     context?: any;
+    disableSensitivityLabelOverride?: boolean;
     el: HTMLElement;
     maxStorageDesc?: string;
     maxStorageSize?: number;
