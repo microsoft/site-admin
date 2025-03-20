@@ -420,9 +420,14 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   text: "Request an Enhancement",
                   target: "_blank"
                 }),
-                PropertyPaneLink('supportLink', {
+                PropertyPaneLink('reportIssue', {
                   href: "https://github.com/microsoft/site-admin/issues",
                   text: "Submit an Issue",
+                  target: "_blank"
+                }),
+                PropertyPaneLink('discussions', {
+                  href: "https://github.com/microsoft/site-admin/discussions",
+                  text: "Ask a Question",
                   target: "_blank"
                 }),
                 PropertyPaneLink('sourceLink', {
