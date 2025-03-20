@@ -1,5 +1,6 @@
 import { Components } from "gd-sprest-bs";
 import { DataSource } from "../ds";
+import { IAppProps } from "../app";
 import * as Reports from "../reports";
 import { ISearchProps } from "./searchProp";
 
@@ -29,14 +30,16 @@ enum ReportTypes {
  */
 export class ReportsTab {
     private _el: HTMLElement = null;
+    private _disableSensitivityLabelOverride: boolean = null;
     private _reportProps: IReportProps = null;
     private _searchProps: ISearchProps = null;
 
     // Constructor
-    constructor(el: HTMLElement, reportProps: IReportProps, searchProps: ISearchProps) {
+    constructor(el: HTMLElement, appProps: IAppProps) {
         this._el = el;
-        this._reportProps = reportProps;
-        this._searchProps = searchProps;
+        this._disableSensitivityLabelOverride = appProps.disableSensitivityLabelOverride;
+        this._reportProps = appProps.reportProps;
+        this._searchProps = appProps.searchProps;
 
         // Render the tab
         this.render();
@@ -196,7 +199,7 @@ export class ReportsTab {
                         });
                         break;
                     case ReportTypes.Lists:
-                        Reports.Lists.run(this._el, form.getValues(), () => {
+                        Reports.Lists.run(this._el, form.getValues(), this._disableSensitivityLabelOverride, () => {
                             // Render this component
                             this.render(selectedReport);
                         });

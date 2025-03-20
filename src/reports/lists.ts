@@ -32,6 +32,7 @@ const CSVSensitivityLabelResponseFields = [
 ]
 
 export class Lists {
+    private static _disableLabelOverride: boolean = null;
     private static _items: IList[] = [];
 
     // List Template Types
@@ -204,11 +205,14 @@ export class Lists {
     }
 
     // Runs the report
-    static run(el: HTMLElement, values: { [key: string]: string }, onClose: () => void) {
+    static run(el: HTMLElement, values: { [key: string]: string }, disableLabelOverride: boolean, onClose: () => void) {
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Lists");
         LoadingDialog.setBody("Searching the site...");
         LoadingDialog.show();
+
+        // Set the flag
+        this._disableLabelOverride = disableLabelOverride;
 
         // Clear the items
         this._items = [];
@@ -394,6 +398,7 @@ export class Lists {
                     name: "OverrideLabel",
                     label: "Override Label?",
                     description: "If a label already exists, it will attempt to override it.",
+                    isDisabled: this._disableLabelOverride,
                     type: Components.FormControlTypes.Switch,
                     value: false
                 },

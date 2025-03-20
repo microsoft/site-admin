@@ -10,6 +10,7 @@ import * as strings from 'SiteAdminWebPartStrings';
 
 export interface ISiteAdminWebPartProps {
   AppTitle: string;
+  DisableSensitivityLabelOverride: boolean;
   MaxStorage: number;
   MaxStorageDescription: string;
   ReportsDocSearchFileExt: string;
@@ -93,6 +94,7 @@ declare const SiteAdmin: {
     context?: WebPartContext;
     el: HTMLElement;
     title?: string;
+    disableSensitivityLabelOverride?: boolean;
     maxStorageDesc?: string;
     maxStorageSize?: number;
     reportProps?: {
@@ -173,6 +175,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     SiteAdmin.render({
       context: this.context,
       el: this.domElement,
+      disableSensitivityLabelOverride: this.properties.DisableSensitivityLabelOverride,
       maxStorageDesc: this.properties.MaxStorageDescription,
       maxStorageSize: this.properties.MaxStorage,
       reportProps: {
@@ -312,6 +315,17 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   label: strings.AppTitle,
                   description: "The title displayed.",
                   value: this.properties.AppTitle
+                })
+              ]
+            },
+            {
+              groupName: "Sensitivity Labels",
+              groupFields: [
+                PropertyPaneToggle("DisableSensitivityLabelOverride", {
+                  label: "Disable Sensivitity Label Override:",
+                  checked: this.properties.DisableSensitivityLabelOverride,
+                  onText: "The admins will only be allowed to apply sensitivity labels to files that haven't been labeled.",
+                  offText: "The admins will be allowed to attempt to override sensitivity labels."
                 })
               ]
             },
