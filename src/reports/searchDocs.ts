@@ -109,23 +109,19 @@ export class SearchDocs {
                 onRendering: dtProps => {
                     dtProps.columnDefs = [
                         {
-                            "targets": 6,
+                            "targets": 5,
                             "orderable": false,
                             "searchable": false
                         }
                     ];
 
-                    // Order by the 2nd column by default; ascending
-                    dtProps.order = [[1, "asc"]];
+                    // Order by the 1st column by default; ascending
+                    dtProps.order = [[0, "asc"]];
 
                     // Return the properties
                     return dtProps;
                 },
                 columns: [
-                    {
-                        name: "ListId",
-                        title: "List Id"
-                    },
                     {
                         name: "Path",
                         title: "Document Url"
