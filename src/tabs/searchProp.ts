@@ -106,7 +106,7 @@ export class SearchPropTab {
                     request: {
                         key: "SearchProperty",
                         message: `The request set the site property to '${this._newValue}', will be processed within 5 minutes.`,
-                        value: this._searchProps.key
+                        value: this._newValue
                     },
                     url: DataSource.SiteContext.SiteFullUrl
                 });
