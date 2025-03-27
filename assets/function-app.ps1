@@ -74,11 +74,15 @@ if ($item -ne $null) {
         $output = "The item has already been processed.";
     }
     else {
-        # Host
-        Write-Host "Processing site $siteUrl";
+        $requestType = $item["RequestType"];
 
+        # Log
+        Write-Host "Processing site $siteUrl";
+        Write-Host "Request Type: $requestType";
+        Write-Host "Request Value: $value";
+        
         # Process the setting, based on the request type
-        switch ($item["RequestType"]) {
+        switch ($requestType) {
             "App Catalog" {
                 # See if we are enabling the app catalog
                 if ($value -eq "true") {
@@ -156,8 +160,14 @@ if ($item -ne $null) {
             "Increase Storage" {
                 # See if we are enabling custom scripts
                 if ($value -eq "true") {
-                    # Set the max to 25TB
-                    Set-PnPSite -Identity $siteUrl -StorageMaximumLevel 26214400 -StorageWarningLevel 24136192;
+                    # Set the max and warning value (80%)
+                    # 1GB  = 1024 * 1024      = 1048576  (838860)
+                    # 5GB  = 5 * 1024 * 1024  = 5242880  (4194304)
+                    # 10GB = 10 * 1024 * 1024 = 10485760 (8388608)
+                    # 15GB = 15 * 1024 * 1024 = 15728640 (12582912)
+                    # 20GB = 20 * 1024 * 1024 = 20971520 (16777216)
+                    # 25GB = 25 * 1024 * 1024 = 26214400 (20971520)
+                    Set-PnPSite -Identity $siteUrl -StorageMaximumLevel 26214400 -StorageWarningLevel 20971520;
                 }
             }
             "Lock State" {
