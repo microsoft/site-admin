@@ -9,12 +9,24 @@ interface ISearchItem {
     LastModifiedTime: string;
     Path: string;
     Title: string;
-    ViewsLifeTime: number;
-    ViewsRecent: number;
+    ViewsLast1Days: string;
+    ViewsLast2Days: string;
+    ViewsLast3Days: string;
+    ViewsLast4Days: string;
+    ViewsLast5Days: string;
+    ViewsLast6Days: string;
+    ViewsLast7Days: string;
+    ViewsLastMonths1: string;
+    ViewsLastMonths2: string;
+    ViewsLastMonths3: string;
+    ViewsLifeTime: string;
+    ViewsRecent: string;
 }
 
 const CSVFields = [
-    "Path", "Title", "ViewsLifeTime", "ViewsRecent", "LastModifiedTime"
+    "Path", "Title", "LastModifiedTime", "ViewsLast1Days", "ViewsLast2Days", "ViewsLast3Days",
+    "ViewsLast4Days", "ViewsLast5Days", "ViewsLast6Days", "ViewsLast7Days", "ViewsRecent",
+    "ViewsLastMonths1", "ViewsLastMonths2", "ViewsLastMonths3", "ViewsLifeTime"
 ]
 
 export class SearchProp {
@@ -73,7 +85,7 @@ export class SearchProp {
                 onRendering: dtProps => {
                     dtProps.columnDefs = [
                         {
-                            "targets": 4,
+                            "targets": 8,
                             "orderable": false,
                             "searchable": false
                         }
@@ -103,12 +115,55 @@ export class SearchProp {
                         }
                     },
                     {
-                        name: "ViewsRecent",
-                        title: "Recent Views"
+                        name: "",
+                        title: "Views (7 Days)",
+                        onRenderCell: (el, col, item: ISearchItem) => {
+                            // Set the value
+                            el.innerHTML = [
+                                item.ViewsLast1Days, item.ViewsLast2Days, item.ViewsLast3Days,
+                                item.ViewsLast4Days, item.ViewsLast5Days, item.ViewsLast6Days,
+                                item.ViewsLast7Days].reduce((value, sum) => { return (parseInt(value) + parseInt(sum)).toString(); });
+                        }
                     },
                     {
-                        name: "ViewsLifeTime",
-                        title: "Life Time Views"
+                        name: "",
+                        title: "Views (14 Days)",
+                        onRenderCell: (el, col, item: ISearchItem) => {
+                            // Set the value
+                            el.innerHTML = item.ViewsRecent || "0";
+                        }
+                    },
+                    {
+                        name: "ViewsLastMonths1",
+                        title: "Views (30 Days)"
+                    },
+                    {
+                        name: "",
+                        title: "Views (60 Days)",
+                        onRenderCell: (el, col, item: ISearchItem) => {
+                            // Set the value
+                            el.innerHTML = [
+                                item.ViewsLastMonths1, item.ViewsLastMonths2
+                            ].reduce((value, sum) => { return (parseInt(value) + parseInt(sum)).toString(); });
+                        }
+                    },
+                    {
+                        name: "",
+                        title: "Views (90 Days)",
+                        onRenderCell: (el, col, item: ISearchItem) => {
+                            // Set the value
+                            el.innerHTML = [
+                                item.ViewsLastMonths1, item.ViewsLastMonths2, item.ViewsLastMonths3
+                            ].reduce((value, sum) => { return (parseInt(value) + parseInt(sum)).toString(); });
+                        }
+                    },
+                    {
+                        name: "",
+                        title: "Life Time Views",
+                        onRenderCell: (el, col, item: ISearchItem) => {
+                            // Set the value
+                            el.innerHTML = item.ViewsLifeTime || "0";
+                        }
                     },
                     {
                         name: "",
