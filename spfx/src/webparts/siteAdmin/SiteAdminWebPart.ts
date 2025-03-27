@@ -335,6 +335,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                 PropertyPaneDropdown("MaxStorage", {
                   label: strings.MaxStorage,
                   options: [
+                    { key: "1", text: "1 TB" },
                     { key: "5", text: "5 TB" },
                     { key: "10", text: "10 TB" },
                     { key: "15", text: "15 TB" },
