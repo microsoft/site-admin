@@ -1,6 +1,5 @@
 import { Components } from "gd-sprest-bs";
-import { DataSource } from "../ds";
-import { IProp } from "../app";
+import { DataSource, RequestTypes } from "../ds";
 import { IChangeRequest } from "./changes";
 
 export interface ISearchProps {
@@ -104,7 +103,7 @@ export class SearchPropTab {
                     newValue: this._newValue,
                     scope: "Search",
                     request: {
-                        key: "SearchProperty",
+                        key: RequestTypes.SearchProperty,
                         message: `The request set the site property to '${this._newValue}', will be processed within 5 minutes.`,
                         value: this._newValue
                     },
