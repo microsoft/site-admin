@@ -1,4 +1,5 @@
-import { ContextInfo, SPTypes, ThemeManager } from "gd-sprest-bs";
+import { LoadingDialog } from "dattatable";
+import { ContextInfo, ThemeManager } from "gd-sprest-bs";
 import { App, IAppProps } from "./app";
 import { Configuration } from "./cfg";
 import { DataSource } from "./ds";
@@ -23,6 +24,11 @@ const GlobalVariable = {
             Configuration.setWebUrl(ContextInfo.webServerRelativeUrl);
         }
 
+        // Show a loading dialog
+        LoadingDialog.setHeader("Loading Application");
+        LoadingDialog.setBody("The site admin tool is loading...");
+        LoadingDialog.show();
+
         // Initialize the application and load the theme
         Promise.all([
             ThemeManager.load(true),
@@ -35,10 +41,17 @@ const GlobalVariable = {
 
                 // Create the application
                 new App(props);
+
+                // Hide the dialog
+                LoadingDialog.hide();
             },
 
             // Error
             () => {
+                // Update the loading dialog
+                LoadingDialog.setHeader("Error Loading Application");
+                LoadingDialog.setBody("Doing some more checks...");
+
                 // See if the user has the correct permissions
                 Security.hasPermissions().then(hasPermissions => {
                     // See if the user has permissions
@@ -46,6 +59,12 @@ const GlobalVariable = {
                         // Show the installation modal
                         InstallationModal.show();
                     }
+
+                    // Hide the dialog
+                    LoadingDialog.hide();
+                }, () => {
+                    // Hide the dialog
+                    LoadingDialog.hide();
                 });
             }
         );
