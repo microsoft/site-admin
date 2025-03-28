@@ -155,6 +155,9 @@ if ($item -ne $null) {
 
                     # Remove the site property
                     Remove-PnPPropertyBagValue -Key $searchProp;
+
+                    # Set the output
+                    $output = "The property bag $searchProp value was removed.";
                 }
                 else {
                     # Log
@@ -162,6 +165,9 @@ if ($item -ne $null) {
 
                     # Update the site property
                     Set-PnPPropertyBagValue -Key $searchProp -Value $value -Indexed;
+
+                    # Set the output
+                    $output = "The property bag $searchProp value was set to $value.";
                 }
 
                 # Log
@@ -207,6 +213,9 @@ if ($item -ne $null) {
                     # 20GB = 20 * 1024 * 1024 = 20971520 (16777216)
                     # 25GB = 25 * 1024 * 1024 = 26214400 (20971520)
                     Set-PnPSite -Identity $siteUrl -StorageMaximumLevel 26214400 -StorageWarningLevel 20971520;
+
+                    # Set the output
+                    $output = "The site storage size has increased to 25TB.";
                 }
             }
             "Lock State" {
