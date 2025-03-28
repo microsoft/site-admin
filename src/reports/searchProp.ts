@@ -83,14 +83,6 @@ export class SearchProp {
             table: {
                 rows: items,
                 onRendering: dtProps => {
-                    dtProps.columnDefs = [
-                        {
-                            "targets": 8,
-                            "orderable": false,
-                            "searchable": false
-                        }
-                    ];
-
                     // Order by the 2nd column by default; ascending
                     dtProps.order = [[0, "asc"]];
 
@@ -108,7 +100,7 @@ export class SearchProp {
 
                             // Render the activity
                             el.innerHTML = `
-                                <div><b>Title: </b>${item.Title}</div>
+                                <div><b>Title: </b><a href="${item.Path}" target="_blank">${item.Title}</a></div>
                                 <div><b>Url: </b>${item.Path}</div>
                                 <div><b>${searchProp}: </b>${item[searchProp] || ""}</div>
                             `;
@@ -171,30 +163,6 @@ export class SearchProp {
                         onRenderCell: (el, col, item: ISearchItem) => {
                             // Render the date
                             el.innerHTML = item.LastModifiedTime ? moment(item.LastModifiedTime).format(Strings.TimeFormat) : "";
-                        }
-                    },
-                    {
-                        className: "text-end",
-                        name: "",
-                        title: "",
-                        onRenderCell: (el, col, item: ISearchItem) => {
-                            // Render the buttons
-                            Components.TooltipGroup({
-                                el,
-                                tooltips: [
-                                    {
-                                        content: "Click to view the site in a new tab.",
-                                        btnProps: {
-                                            text: "View Site",
-                                            type: Components.ButtonTypes.OutlinePrimary,
-                                            onClick: () => {
-                                                // Show the site
-                                                window.open(item.Path, "_blank");
-                                            }
-                                        }
-                                    }
-                                ]
-                            });
                         }
                     }
                 ]
