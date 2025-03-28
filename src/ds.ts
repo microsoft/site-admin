@@ -1,5 +1,5 @@
-import { List } from "dattatable";
-import { Components, ContextInfo, DirectorySession, GroupSiteManager, Helper, Site, Types, Web, SPTypes, v2 } from "gd-sprest-bs";
+import { List, LoadingDialog } from "dattatable";
+import { Components, ContextInfo, GroupSiteManager, Helper, Site, Types, Web, SPTypes, v2 } from "gd-sprest-bs";
 import { Security } from "./security";
 import Strings from "./strings";
 
@@ -418,20 +418,20 @@ export class DataSource {
         });
     }
 
-    // Gets the item id from the query string
-    static getItemIdFromQS() {
+    // Gets the url from the query string
+    static getUrlFromQS() {
         // Get the id from the querystring
         let qs = document.location.search.split('?');
         qs = qs.length > 1 ? qs[1].split('&') : [];
         for (let i = 0; i < qs.length; i++) {
             let qsItem = qs[i].split('=');
-            let key = qsItem[0];
+            let key = qsItem[0].toLowerCase();
             let value = qsItem[1];
 
-            // See if this is the "id" key
-            if (key == "ID") {
-                // Return the item
-                return parseInt(value);
+            // See if this is the "site" key
+            if (key == "site") {
+                // Return the url
+                return value;
             }
         }
     }
@@ -451,7 +451,7 @@ export class DataSource {
     }
 
     // Initializes the application
-    static init(): PromiseLike<any> {
+    static init(): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve, reject) => {
             // Init the security
@@ -461,7 +461,21 @@ export class DataSource {
                     this.loadList(),
                     // Load the sensitivity labels
                     this.loadSensitivityLabels()
-                ]).then(resolve, reject);
+                ]).then(() => {
+                    // See if a url exists in the query string
+                    let url = this.getUrlFromQS();
+                    if (url) {
+                        // Update the loading dialog
+                        LoadingDialog.setHeader("Loading Site");
+                        LoadingDialog.setBody("Validating the site '" + url + "'");
+
+                        // Validate the url and resolve the request
+                        this.validate(url).then(resolve, resolve);
+                    } else {
+                        // Resolve the request
+                        resolve();
+                    }
+                }, reject);
             }, reject);
         });
     }
