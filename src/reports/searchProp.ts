@@ -100,10 +100,16 @@ export class SearchProp {
 
                             // Render the activity
                             el.innerHTML = `
-                                <div><b>Title: </b><a href="${item.Path}" target="_blank">${item.Title}</a></div>
+                                <div><b>Title: </b><a href="#" target="_blank">${item.Title}</a></div>
                                 <div><b>Url: </b>${item.Path}</div>
                                 <div><b>${searchProp}: </b>${item[searchProp] || ""}</div>
                             `;
+
+                            // Set the click event
+                            el.querySelector("a").addEventListener("click", () => {
+                                // Show the link in a new window
+                                window.open(item.Path, "_blank");
+                            });
                         }
                     },
                     {
