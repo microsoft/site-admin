@@ -86,8 +86,14 @@ if ($item -ne $null) {
             "App Catalog" {
                 # See if we are enabling the app catalog
                 if ($value -eq "true") {
+                    # Log
+                    Write-Host "Enabling the app catalog...";
+
                     # Add the site collection app catalog
                     Add-PnPSiteCollectionAppCatalog -site $siteUrl;
+
+                    # Log
+                    Write-Host "Setting exemption for download...";
 
                     # Add Client Site Asset library exception
                     Set-PnPList -Identity "Client Side Assets" -ExemptFromBlockDownloadOfNonViewableFiles $true;
@@ -96,8 +102,14 @@ if ($item -ne $null) {
                     $output = "The app catalog has been enabled for this site collection.";
                 }
                 else {
+                    # Log
+                    Write-Host "Disabling the app catalog...";
+
                     # Remove the site collection app catalog
                     Remove-PnPSiteCollectionAppCatalog -site $siteUrl;
+
+                    # Log
+                    Write-Host "Removing exemption for download...";
 
                     # Remove Client Site Asset library exception
                     Set-PnPList -Identity "Client Side Assets" -ExemptFromBlockDownloadOfNonViewableFiles $false;
@@ -109,6 +121,9 @@ if ($item -ne $null) {
             "Custom Script" {
                 # See if we are enabling custom scripts
                 if ($value -eq "true") {
+                    # Log
+                    Write-Host "Setting NoScriptSite property to false...";
+
                     # Enable custom scripts
                     Set-PnPSite -Identity $siteUrl -NoScriptSite $false;
 
@@ -116,6 +131,9 @@ if ($item -ne $null) {
                     $output = "Custom Script feature has been enabled on your site. Please note that the setting will revert after 24 hours.";
                 }
                 else {
+                    # Log
+                    Write-Host "Setting NoScriptSite property to true...";
+
                     # Disable custom scripts
                     Set-PnPSite -Identity $siteUrl -NoScriptSite $true;
 
@@ -124,18 +142,30 @@ if ($item -ne $null) {
                 }
             }
             "Custom Search Property" {
+                # Log
+                Write-Host "Setting NoScriptSite to false...";
+
                 # Enable custom scripts
                 Set-PnPSite -Identity $siteUrl -NoScriptSite $false;
 
                 # See if a value exists
                 if ([string]::IsNullOrEmpty($value)) {
+                    # Log
+                    Write-Host "Removing the key $searchProp from the property bag...";
+
                     # Remove the site property
                     Remove-PnPPropertyBagValue -Key $searchProp;
                 }
                 else {
+                    # Log
+                    Write-Host "Adding the key $searchProp to the property bag with value $value...";
+
                     # Update the site property
                     Set-PnPPropertyBagValue -Key $searchProp -Value $value -Indexed;
                 }
+
+                # Log
+                Write-Host "Setting NoScriptSite to true...";
 
                 # Disable custom scripts
                 Set-PnPSite -Identity $siteUrl -NoScriptSite $true;
@@ -143,6 +173,9 @@ if ($item -ne $null) {
             "Company Wide Sharing Links" {
                 # See if we are disabling company wide sharing links
                 if ($value -eq "true") {
+                    # Log
+                    Write-Host "Setting the DisableCompanyWideSharingLinks to true...";
+
                     # Disable the company wide sharing links
                     Set-PnPSite -Identity $siteUrl -DisableCompanyWideSharingLinks $true;
 
@@ -150,8 +183,11 @@ if ($item -ne $null) {
                     $output = "The company wide sharing links has been disabled for this site collection.";
                 }
                 else {
+                    # Log
+                    Write-Host "Setting the DisableCompanyWideSharingLinks to false...";
+
                     # Enable the company wide sharing links
-                    Set-PnPSite -Identity $siteUrl -DisableCompanyWideSharingLinks $true;
+                    Set-PnPSite -Identity $siteUrl -DisableCompanyWideSharingLinks $false;
 
                     # Set the output
                     $output = "The company wide sharing links has been enabled for this site collection.";
@@ -160,6 +196,9 @@ if ($item -ne $null) {
             "Increase Storage" {
                 # See if we are enabling custom scripts
                 if ($value -eq "true") {
+                    # Log
+                    Write-Host "Increasing the storage size to 25TB...";
+
                     # Set the max and warning value (80%)
                     # 1GB  = 1024 * 1024      = 1048576  (838860)
                     # 5GB  = 5 * 1024 * 1024  = 5242880  (4194304)
@@ -171,6 +210,9 @@ if ($item -ne $null) {
                 }
             }
             "Lock State" {
+                # Log
+                Write-Host "Setting LockState to $value...";
+
                 # Set the lock state
                 Set-PnPSite -Identity $siteUrl -LockState $value;
 
@@ -178,6 +220,9 @@ if ($item -ne $null) {
                 $output = "The lock state has been set to '$value' for this site collection.";
             }
         }
+
+        # Log
+        Write-Host "Setting the request item status to Completed...";
 
         # Update the item status
         Set-PnpListItem -List $listName -Identity $item.Id -Values @{ "Status" = "Completed" };
@@ -205,6 +250,6 @@ Disconnect-PnPOnline;
 
 # Associate values to output bindings by calling 'Push-OutputBinding'.
 Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
-        StatusCode = $statusCode
-        Body       = $output
-    });
+    StatusCode = $statusCode
+    Body       = $output
+});
