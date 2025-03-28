@@ -94,6 +94,7 @@
         "WebPropSearchPropertyDescription": "The custom property to set for search.",
         "WebPropSearchPropertyKey": "",
         "WebPropSearchPropertyLabel": "Search Property:",
+        "WebPropSearchPropertyReportName": "Search Property",
         "WebPropSearchPropertyTabName": "",
         "WebPropSearchScope": false,
         "WebPropSearchScopeDescription": "The search scope for the site to target. Default is 'Site'.",
