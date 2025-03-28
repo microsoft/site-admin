@@ -97,7 +97,7 @@ export class ReportsTab {
                             value: ReportTypes.SearchEEEU
                         },
                         {
-                            text: "Search Property",
+                            text: this._searchProps.reportName || "Search Property",
                             data: "Find sites by search property.",
                             value: ReportTypes.SearchProp,
                             isDisabled: this._searchProps.managedProperty && DataSource.SearchPropItems ? false : true

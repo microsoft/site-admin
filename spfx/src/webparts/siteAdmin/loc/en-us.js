@@ -26,6 +26,7 @@ define([], function () {
     "WebPropSearchPropertyDescription": "Description",
     "WebPropSearchPropertyLabel": "Label",
     "WebPropSearchPropertyManagedProperty": "Managed Property",
+    "WebPropSearchPropertyReportName": "Report Name",
     "WebPropSearchPropertyTabName": "Tab Name",
     "WebPropSearchPropertyValues": "Values",
     "WebPropExcludeFromOfflineClient": "Exclude From Offline Client",
