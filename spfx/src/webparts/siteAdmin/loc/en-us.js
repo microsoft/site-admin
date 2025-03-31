@@ -3,6 +3,7 @@ define([], function () {
     "AppTitle": "App Title",
     "MaxStorage": "Max Storage Allowed",
     "MaxStorageDescription": "Max Storage Description",
+    "ReportsDocRententionYears": "Document Retention Default Years",
     "ReportsDocSearchFileExt": "Document Search Default File Extensions",
     "ReportsDocSearchKeywords": "Document Search Default Keywords",
     "SitePropCommentsOnSitePagesDisabled": "Comments on Site Pages",

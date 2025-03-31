@@ -13,6 +13,7 @@ export interface ISiteAdminWebPartProps {
   DisableSensitivityLabelOverride: boolean;
   MaxStorage: number;
   MaxStorageDescription: string;
+  ReportsDocRententionYears: string;
   ReportsDocSearchFileExt: string;
   ReportsDocSearchKeywords: string;
   SitePropCommentsOnSitePagesDisabled: boolean;
@@ -99,6 +100,7 @@ declare const SiteAdmin: {
     maxStorageDesc?: string;
     maxStorageSize?: number;
     reportProps?: {
+      docRententionYears?: string;
       docSearchFileExt?: string;
       docSearchKeywords?: string;
     }
@@ -181,6 +183,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       maxStorageDesc: this.properties.MaxStorageDescription,
       maxStorageSize: this.properties.MaxStorage,
       reportProps: {
+        docRententionYears: this.properties.ReportsDocRententionYears,
         docSearchFileExt: this.properties.ReportsDocSearchFileExt,
         docSearchKeywords: this.properties.ReportsDocSearchKeywords
       },
@@ -356,6 +359,24 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
             {
               groupName: "Audit Tools",
               groupFields: [
+                PropertyPaneDropdown("ReportsDocRententionYears", {
+                  label: strings.ReportsDocRententionYears,
+                  selectedKey: this.properties.ReportsDocRententionYears,
+                  options: [
+                    { key: "1", text: "1" },
+                    { key: "2", text: "2" },
+                    { key: "3", text: "3" },
+                    { key: "4", text: "4" },
+                    { key: "5", text: "5" },
+                    { key: "6", text: "6" },
+                    { key: "7", text: "7" },
+                    { key: "8", text: "8" },
+                    { key: "9", text: "9" },
+                    { key: "10", text: "10" },
+                    { key: "15", text: "15" },
+                    { key: "20", text: "20" }
+                  ]
+                }),
                 PropertyPaneTextField("ReportsDocSearchFileExt", {
                   label: strings.ReportsDocSearchFileExt,
                   description: "The default file extensions to search.",
