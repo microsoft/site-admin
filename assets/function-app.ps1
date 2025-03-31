@@ -125,6 +125,7 @@ if ($item -ne $null) {
                     Write-Host "Setting NoScriptSite property to false...";
 
                     # Enable custom scripts
+                    #Set-PnPTenantSite -Identity $siteUrl -DenyAddAndCustomizePages $false;
                     Set-PnPSite -Identity $siteUrl -NoScriptSite $false;
 
                     # Set the output
@@ -135,6 +136,7 @@ if ($item -ne $null) {
                     Write-Host "Setting NoScriptSite property to true...";
 
                     # Disable custom scripts
+                    #Set-PnPTenantSite -Identity $siteUrl -DenyAddAndCustomizePages $true;
                     Set-PnPSite -Identity $siteUrl -NoScriptSite $true;
 
                     # Set the output
@@ -146,6 +148,7 @@ if ($item -ne $null) {
                 Write-Host "Setting NoScriptSite to false...";
 
                 # Enable custom scripts
+                #Set-PnPTenantSite -Identity $siteUrl -DenyAddAndCustomizePages $true;
                 Set-PnPSite -Identity $siteUrl -NoScriptSite $false;
 
                 # See if a value exists
@@ -174,6 +177,7 @@ if ($item -ne $null) {
                 Write-Host "Setting NoScriptSite to true...";
 
                 # Disable custom scripts
+                #Set-PnPTenantSite -Identity $siteUrl -DenyAddAndCustomizePages $true;
                 Set-PnPSite -Identity $siteUrl -NoScriptSite $true;
             }
             "Company Wide Sharing Links" {
