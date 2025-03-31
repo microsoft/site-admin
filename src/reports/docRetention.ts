@@ -63,7 +63,10 @@ export class DocRetention {
     }
 
     // Gets the form fields to display
-    static getFormFields(): Components.IFormControlProps[] {
+    static getFormFields(years?: string): Components.IFormControlProps[] {
+        // Set the default # of months to search for
+        let numbOfMonths = parseInt(years) > 0 ? parseInt(years) * 12 : 36;
+
         return [{
             name: "SelectedDate",
             label: "Select Date",
@@ -71,7 +74,7 @@ export class DocRetention {
             errorMessage: "A date is required to run the query.",
             type: Components.FormControlTypes.DateTime,
             required: true,
-            value: moment(Date.now()).subtract(36, "months").toISOString()
+            value: moment(Date.now()).subtract(numbOfMonths, "months").toISOString()
         }];
     }
 

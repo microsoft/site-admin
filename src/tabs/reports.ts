@@ -6,6 +6,7 @@ import { ISearchProps } from "./searchProp";
 
 // Report Properties
 export interface IReportProps {
+    docRententionYears?: string;
     docSearchFileExt?: string;
     docSearchKeywords?: string;
 }
@@ -129,7 +130,7 @@ export class ReportsTab {
         // Add the controls
         switch (selectedReport) {
             case ReportTypes.DocRetention:
-                form.appendControls(Reports.DocRetention.getFormFields());
+                form.appendControls(Reports.DocRetention.getFormFields(this._reportProps.docRententionYears));
                 break;
             case ReportTypes.ExternalShares:
                 form.appendControls(Reports.ExternalShares.getFormFields());
