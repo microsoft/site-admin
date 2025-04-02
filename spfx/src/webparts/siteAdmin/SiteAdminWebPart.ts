@@ -8,6 +8,31 @@ import { BaseClientSideWebPart, WebPartContext } from '@microsoft/sp-webpart-bas
 import type { IReadonlyTheme } from '@microsoft/sp-component-base';
 import * as strings from 'SiteAdminWebPartStrings';
 
+// Include the asset files for the page generator
+const imageReferences = [
+  require("./assets/956444907.png"),
+  require("./assets/704156399.png"),
+  require("./assets/1439995666.png"),
+  require("./assets/2403381788.png"),
+  require("./assets/2009954068.png"),
+  require("./assets/394511437.png"),
+  require("./assets/178240801.png"),
+  require("./assets/2492974796.png"),
+  require("./assets/878621426.png"),
+  require("./assets/3639654909.png"),
+  require("./assets/3423846637.png"),
+  require("./assets/734992370.png"),
+  require("./assets/3614134656.png"),
+  require("./assets/1004145298.png"),
+  require("./assets/3707825808.png"),
+  require("./assets/3194998129.png"),
+  require("./assets/782453716.png"),
+  require("./assets/926485291.png"),
+  require("./assets/2498076700.png"),
+  require("./assets/3608935117.png"),
+  require("./assets/4193189816.png")
+]
+
 export interface ISiteAdminWebPartProps {
   AppTitle: string;
   DisableSensitivityLabelOverride: boolean;
@@ -97,6 +122,7 @@ declare const SiteAdmin: {
     el: HTMLElement;
     title?: string;
     disableSensitivityLabelOverride?: boolean;
+    imageReferences: string[];
     maxStorageDesc?: string;
     maxStorageSize?: number;
     reportProps?: {
@@ -180,6 +206,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       context: this.context,
       el: this.domElement,
       disableSensitivityLabelOverride: this.properties.DisableSensitivityLabelOverride,
+      imageReferences,
       maxStorageDesc: this.properties.MaxStorageDescription,
       maxStorageSize: this.properties.MaxStorage,
       reportProps: {

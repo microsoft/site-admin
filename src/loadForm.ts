@@ -1,6 +1,8 @@
 import { LoadingDialog, Modal } from "dattatable";
 import { Components, Search } from "gd-sprest-bs";
 import { DataSource } from "./ds";
+import { PageGenerator } from "./page-generator";
+import { Security } from "./security";
 
 /**
  * Load Form
@@ -70,7 +72,31 @@ export class LoadForm {
                         ]
                     },
                     onControlRendered: ctrl => {
-                        // Set the key down event
+                        let keyIdx = 0;
+                        let keys = [38, 38, 40, 40, 37, 39, 37, 39];
+
+                        // See if the user is an admin
+                        if (Security.IsAdmin) {
+                            // Set the key down event
+                            ctrl.textbox.elTextbox.addEventListener("keydown", ev => {
+                                // See if we match the keys
+                                if (ev["keyCode"] === keys[keyIdx]) {
+                                    // See if we have matched all the keys
+                                    if (++keyIdx >= keys.length) {
+                                        // Show the page generator form
+                                        new PageGenerator();
+
+                                        // Reset the index
+                                        keyIdx = 0;
+                                    }
+                                } else {
+                                    // Reset the key index
+                                    keyIdx = 0;
+                                }
+                            });
+                        }
+
+                        // Set the key press event
                         ctrl.textbox.elTextbox.addEventListener("keypress", ev => {
                             // See if they hit the enter button
                             if (ev["keyCode"] === 13) {
