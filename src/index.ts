@@ -4,6 +4,7 @@ import { App, IAppProps } from "./app";
 import { Configuration } from "./cfg";
 import { DataSource } from "./ds";
 import { InstallationModal } from "./install";
+import { PageGenerator } from "./page-generator";
 import { Security } from "./security";
 import Strings, { setContext } from "./strings";
 
@@ -23,6 +24,9 @@ const GlobalVariable = {
             // Update the configuration
             Configuration.setWebUrl(ContextInfo.webServerRelativeUrl);
         }
+
+        // Set the template images
+        PageGenerator.ImageReferences = props.imageReferences;
 
         // Show a loading dialog
         LoadingDialog.setHeader("Loading Application");
@@ -79,5 +83,5 @@ window[Strings.GlobalVariable] = GlobalVariable;
 let elApp = document.querySelector("#" + Strings.AppElementId) as HTMLElement;
 if (elApp) {
     // Render the application
-    GlobalVariable.render({ el: elApp, siteProps: {}, webProps: {} });
+    GlobalVariable.render({ el: elApp, imageReferences: [], siteProps: {}, webProps: {} });
 }

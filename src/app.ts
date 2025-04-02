@@ -4,7 +4,6 @@ import { generateIcon } from "gd-sprest-bs/build/icons/generate.js";
 import { DataSource } from "./ds";
 import { InstallationModal } from "./install";
 import { LoadForm } from "./loadForm";
-import { PageGenerator } from "./page-generator";
 import Strings from "./strings";
 import { Security } from "./security";
 import { Tabs } from "./tabs";
@@ -20,6 +19,7 @@ export interface IProp {
 export interface IAppProps {
     context?: any;
     disableSensitivityLabelOverride?: boolean;
+    imageReferences: string[];
     el: HTMLElement;
     maxStorageDesc?: string;
     maxStorageSize?: number;
@@ -114,17 +114,6 @@ export class App {
                 onClick: () => {
                     // Show the app settings
                     InstallationModal.show(true);
-                }
-            });
-
-            // Add the page generator
-            itemsEnd.push({
-                className: "btn-outline-light ms-2",
-                isButton: true,
-                text: "Page Generator",
-                onClick: () => {
-                    // Show the page generator
-                    new PageGenerator();
                 }
             });
         }
