@@ -216,10 +216,10 @@ export class ChangesTab {
         return new Promise(resolve => {
             // Parse the requests
             Helper.Executor(requests, request => {
-                // Return a promise
-                return new Promise(resolve => {
-                    // Process Web scope
-                    if (request.scope == "Web") {
+                // Process Web scope
+                if (request.scope == "Web") {
+                    // Return a promise
+                    return new Promise(resolve => {
                         // Set the property to update
                         let props = {};
                         props[request.property] = request.newValue;
@@ -237,8 +237,8 @@ export class ChangesTab {
                                 resolve(null);
                             }
                         );
-                    }
-                });
+                    });
+                }
             }).then(resolve);
         });
     }
