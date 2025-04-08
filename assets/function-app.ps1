@@ -93,6 +93,12 @@ if ($item -ne $null) {
                     Add-PnPSiteCollectionAppCatalog -site $siteUrl;
 
                     # Log
+                    Write-Host "Waiting 10 seconds for the client side assets library to be available...";
+
+                    # Wait for the library to be created
+                    Start-Sleep -Seconds 10;
+
+                    # Log
                     Write-Host "Setting exemption for download...";
 
                     # Add Client Site Asset library exception
@@ -263,6 +269,6 @@ Disconnect-PnPOnline;
 
 # Associate values to output bindings by calling 'Push-OutputBinding'.
 Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
-    StatusCode = $statusCode
-    Body       = $output
-});
+        StatusCode = $statusCode
+        Body       = $output
+    });
