@@ -75,15 +75,18 @@ export class Lists {
             let items: Components.IDropdownItem[] = [{ text: "All Files in Library", value: null }];
 
             // Load the folders for this list
-            Web(item.WebUrl).Lists(item.ListName).RootFolder().Folders().query({ OrderBy: ["Name"] }).execute(folders => {
+            Web(item.WebUrl).Lists(item.ListName).RootFolder().Folders().query({ Expand: ["ListItemAllFields"], OrderBy: ["Name"] }).execute(folders => {
                 // Parse the folders
                 folders.results.forEach(folder => {
-                    // Add the item
-                    items.push({
-                        data: folder,
-                        text: folder.Name,
-                        value: folder.Name
-                    });
+                    // Ensure an item exists for this folder
+                    if (folder.ListItemAllFields?.Id > 0) {
+                        // Add the item
+                        items.push({
+                            data: folder,
+                            text: folder.Name,
+                            value: folder.Name
+                        });
+                    }
                 });
 
                 // Resolve the request
