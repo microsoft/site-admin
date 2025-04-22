@@ -6,6 +6,7 @@ define([], function () {
     "ReportsDocRententionYears": "Document Retention Default Years",
     "ReportsDocSearchFileExt": "Document Search Default File Extensions",
     "ReportsDocSearchKeywords": "Document Search Default Keywords",
+    "SitePropClientSideAssets": "Client Side Assets",
     "SitePropCommentsOnSitePagesDisabled": "Comments on Site Pages",
     "SitePropContainsAppCatalog": "App Catalog",
     "SitePropCreated": "Date Created",

@@ -41,6 +41,9 @@ export interface ISiteAdminWebPartProps {
   ReportsDocRententionYears: string;
   ReportsDocSearchFileExt: string;
   ReportsDocSearchKeywords: string;
+  SitePropClientSideAssets: boolean;
+  SitePropClientSideAssetsDescription: string;
+  SitePropClientSideAssetsLabel: string;
   SitePropCommentsOnSitePagesDisabled: boolean;
   SitePropCommentsOnSitePagesDisabledDescription: string;
   SitePropCommentsOnSitePagesDisabledLabel: string;
@@ -251,6 +254,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
   protected get disableReactivePropertyChanges(): boolean { return true; }
 
   private _siteProps: string[] = [
+    "SitePropClientSideAssets",
     "SitePropCommentsOnSitePagesDisabled",
     "SitePropContainsAppCatalog",
     "SitePropCreated",

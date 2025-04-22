@@ -49,6 +49,7 @@ export interface ISensitivityLabel {
  */
 export enum RequestTypes {
     AppCatalog = "App Catalog",
+    ClientSideAssets = "Client Side Assets",
     CustomScript = "Custom Script",
     DisableCompanyWideSharingLinks = "Company Wide Sharing Links",
     IncreaseStorage = "Increase Storage",
@@ -352,8 +353,13 @@ export class DataSource {
                     value: this._site.RootWeb.Id
                 }];
 
-                // Get all of the sites for this collection
-                this.getAllWebs(site.Url).then(() => {
+                // Load additional information
+                Promise.all([
+                    // Load the client side assets
+                    this.loadClientSideAssets(),
+                    // Get all of the sites for this collection
+                    this.getAllWebs(site.Url)
+                ]).then(() => {
                     // Sort the items
                     this._siteItems = this._siteItems.sort((a, b) => {
                         if (a.text < b.text) { return -1; }
@@ -363,7 +369,7 @@ export class DataSource {
 
                     // Resolve the request
                     resolve();
-                }, reject);
+                }).catch(reject);
             }, reject);
         });
     }
@@ -436,6 +442,26 @@ export class DataSource {
                 return value;
             }
         }
+    }
+
+    // Determines if the app catalog has bypassed the block download policy
+    private static _hasBypassBlockDownloadPolicy: boolean;
+    static get HasBypassBlockDownloadPolicy(): boolean { return this._hasBypassBlockDownloadPolicy; }
+    private static loadClientSideAssets(): PromiseLike<any> {
+        // Clear the flag
+        this._hasBypassBlockDownloadPolicy = false;
+
+        // Return a promise
+        return new Promise((resolve) => {
+            // Get the client side assets library
+            Web(this.SiteContext.SiteFullUrl).Lists("Client Side Assets").query({ Select: ["ExemptFromBlockDownloadOfNonViewableFiles"] }).execute(list => {
+                // Set the flag
+                this._hasBypassBlockDownloadPolicy = list.ExemptFromBlockDownloadOfNonViewableFiles;
+
+                // Resolve the request
+                resolve(null);
+            }, resolve);
+        });
     }
 
     // Determines if the site collection has an app catalog
