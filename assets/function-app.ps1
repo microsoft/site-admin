@@ -238,6 +238,26 @@ if ($item -ne $null) {
                 # Set the output
                 $output = "The lock state has been set to '$value' for this site collection.";
             }
+            "No Crawl" {
+                # Log
+                Write-Host "Enabling custom scripts...";
+
+                # Enable custom scripts
+                Set-PnPSite -Identity $siteUrl -NoScriptSite $false;
+
+                # Log
+                Write-Host "Setting NoCrawl to $value...";
+
+                # Set the no crawl property0
+                Connect-PnPOnline -Url $siteUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert;
+                Set-PnPWeb -NoCrawl:$value;
+
+                # Log
+                Write-Host "Disabling custom scripts...";
+
+                # Disable custom scripts
+                Set-PnPSite -Identity $siteUrl -NoScriptSite $true;
+            }
         }
 
         # Log
