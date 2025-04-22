@@ -80,6 +80,9 @@ if ($item -ne $null) {
         Write-Host "Processing site $siteUrl";
         Write-Host "Request Type: $requestType";
         Write-Host "Request Value: $value";
+
+        # Connect to the site        
+        Connect-PnPOnline -Url $item["Title"] -Tenant $tenant -ClientId $clientId -Thumbprint $cert;
         
         # Process the setting, based on the request type
         switch ($requestType) {
@@ -248,8 +251,7 @@ if ($item -ne $null) {
                 # Log
                 Write-Host "Setting NoCrawl to $value...";
 
-                # Set the no crawl property0
-                Connect-PnPOnline -Url $siteUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert;
+                # Set the no crawl property
                 Set-PnPWeb -NoCrawl:$value;
 
                 # Log
@@ -262,6 +264,9 @@ if ($item -ne $null) {
 
         # Log
         Write-Host "Setting the request item status to Completed...";
+
+        # Connect to the main site
+        Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert;
 
         # Update the item status
         Set-PnpListItem -List $listName -Identity $item.Id -Values @{ "Status" = "Completed" };
@@ -289,6 +294,6 @@ Disconnect-PnPOnline;
 
 # Associate values to output bindings by calling 'Push-OutputBinding'.
 Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
-        StatusCode = $statusCode
-        Body       = $output
-    });
+    StatusCode = $statusCode
+    Body       = $output
+});

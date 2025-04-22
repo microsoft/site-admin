@@ -59,9 +59,6 @@ export interface ISiteAdminWebPartProps {
   SitePropExcludeFromOfflineClient: boolean;
   SitePropExcludeFromOfflineClientDescription: string;
   SitePropExcludeFromOfflineClientLabel: string;
-  SitePropExcludeFromSearch: boolean;
-  SitePropExcludeFromSearchDescription: string;
-  SitePropExcludeFromSearchLabel: string;
   SitePropHubSite: boolean;
   SitePropHubSiteDescription: string;
   SitePropHubSiteLabel: string;
@@ -74,6 +71,9 @@ export interface ISiteAdminWebPartProps {
   SitePropLockState: boolean;
   SitePropLockStateDescription: string;
   SitePropLockStateLabel: string;
+  SitePropNoCrawl: boolean;
+  SitePropNoCrawlDescription: string;
+  SitePropNoCrawlLabel: string;
   SitePropSensitivityLabelId: boolean;
   SitePropSensitivityLabelIdDescription: string;
   SitePropSensitivityLabelIdLabel: string;
@@ -98,9 +98,9 @@ export interface ISiteAdminWebPartProps {
   WebPropExcludeFromOfflineClient: boolean;
   WebPropExcludeFromOfflineClientDescription: string;
   WebPropExcludeFromOfflineClientLabel: string;
-  WebPropExcludeFromSearch: boolean;
-  WebPropExcludeFromSearchDescription: string;
-  WebPropExcludeFromSearchLabel: string;
+  WebPropNoCrawl: boolean;
+  WebPropNoCrawlDescription: string;
+  WebPropNoCrawlLabel: string;
   WebPropSearchPropertyDescription: string;
   WebPropSearchPropertyKey: string;
   WebPropSearchPropertyLabel: string;
@@ -257,11 +257,11 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     "SitePropCustomScriptsEnabled",
     "SitePropDisableCompanyWideSharingLinks",
     "SitePropExcludeFromOfflineClient",
-    "SitePropExcludeFromSearch",
     "SitePropHubSite",
     "SitePropHubSiteConnected",
     "SitePropIncreaseStorage",
     "SitePropLockState",
+    "SitePropNoCrawl",
     "SitePropSensitivityLabelId",
     "SitePropShareByEmailEnabled",
     "SitePropSocialBarOnSitePagesDisabled",
@@ -284,7 +284,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
   private _webProps: string[] = [
     "WebPropCommentsOnSitePagesDisabled",
     "WebPropExcludeFromOfflineClient",
-    "WebPropExcludeFromSearch",
+    "WebPropNoCrawl",
     "WebPropSearchScope",
     "WebPropTemplate",
     "WebPropTitle"

@@ -158,7 +158,7 @@ export class WebTab extends Tab<{
                             // Set the value
                             this._requestItems.NoCrawl = {
                                 key: RequestTypes.NoCrawl,
-                                message: `The request to ${value ? "enable" : "disable"} the app catalog will be processed within 5 minutes.`,
+                                message: `The request to ${value ? "hide" : "show"} content from search will be processed within 5 minutes.`,
                                 value
                             };
                         } else {
