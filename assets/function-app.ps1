@@ -127,6 +127,29 @@ if ($item -ne $null) {
                     $output = "The app catalog has been disabled for this site collection.";
                 }
             }
+            "Client Side Assets" {
+                # See if we are enabling the app catalog
+                if ($value -eq "true") {
+                    # Log
+                    Write-Host "Setting exemption for download...";
+
+                    # Add Client Site Asset library exception
+                    Set-PnPList -Identity "Client Side Assets" -ExemptFromBlockDownloadOfNonViewableFiles $true;
+
+                    # Set the output
+                    $output = "The client side assets library will bypass the block download policy.";
+                }
+                else {
+                    # Log
+                    Write-Host "Setting exemption for download...";
+
+                    # Add Client Site Asset library exception
+                    Set-PnPList -Identity "Client Side Assets" -ExemptFromBlockDownloadOfNonViewableFiles $false;
+
+                    # Set the output
+                    $output = "The client side assets library will not bypass the block download policy.";
+                }
+            }
             "Custom Script" {
                 # See if we are enabling custom scripts
                 if ($value -eq "true") {
@@ -294,6 +317,6 @@ Disconnect-PnPOnline;
 
 # Associate values to output bindings by calling 'Push-OutputBinding'.
 Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
-    StatusCode = $statusCode
-    Body       = $output
-});
+        StatusCode = $statusCode
+        Body       = $output
+    });

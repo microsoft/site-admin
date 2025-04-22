@@ -8,12 +8,14 @@ import { IChangeRequest } from "./changes";
  * Features Tab
  */
 export class FeaturesTab extends Tab<{
+    ClientSideAssets: boolean;
     CommentsOnSitePagesDisabled: boolean;
     DisableCompanyWideSharingLinks: boolean;
     ExcludeFromOfflineClient: string;
     NoCrawl: string;
     SocialBarOnSitePagesDisabled: boolean;
 }, {
+    ClientSideAssets: IRequest;
     DisableCompanyWideSharingLinks: IRequest;
     NoCrawl: IRequest;
 }, {
@@ -26,6 +28,7 @@ export class FeaturesTab extends Tab<{
 
         // Set the current values
         this._currValues = {
+            ClientSideAssets: DataSource.HasBypassBlockDownloadPolicy,
             CommentsOnSitePagesDisabled: DataSource.Site.CommentsOnSitePagesDisabled,
             DisableCompanyWideSharingLinks: DataSource.Site.DisableCompanyWideSharingLinks,
             ExcludeFromOfflineClient: null,
@@ -95,6 +98,30 @@ export class FeaturesTab extends Tab<{
             className: "row",
             groupClassName: "col-4 mb-3",
             controls: [
+                {
+                    name: "ClientSideAssets",
+                    label: this._props["ClientSideAssets"].label,
+                    description: this._props["ClientSideAssets"].description,
+                    isDisabled: !DataSource.hasAppCatalog() || this._props["ClientSideAssets"].disabled,
+                    type: Components.FormControlTypes.Switch,
+                    value: this._currValues.ClientSideAssets,
+                    onChange: item => {
+                        let value = item ? true : false;
+
+                        // See if we are changing the value
+                        if (this._currValues.ClientSideAssets != value) {
+                            // Set the value
+                            this._requestItems.ClientSideAssets = {
+                                key: RequestTypes.ClientSideAssets,
+                                message: `The request to update the client side assets library to ${value ? "bypass" : "not bypass"} the block download policy will be processed within 5 minutes.`,
+                                value
+                            };
+                        } else {
+                            // Remove the value
+                            delete this._requestItems.ClientSideAssets;
+                        }
+                    }
+                } as Components.IFormControlPropsSwitch,
                 {
                     name: "CommentsOnSitePagesDisabled",
                     label: this._props["CommentsOnSitePagesDisabled"].label,
