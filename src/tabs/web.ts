@@ -1,7 +1,7 @@
 import { Components } from "gd-sprest-bs";
 import { Tab } from "./base";
 import { IProp } from "../app";
-import { DataSource } from "../ds";
+import { DataSource, IRequest, RequestTypes } from "../ds";
 
 /**
  * Webs Tab
@@ -10,10 +10,13 @@ import { DataSource } from "../ds";
 export class WebTab extends Tab<{
     CommentsOnSitePagesDisabled: boolean;
     ExcludeFromOfflineClient: boolean;
+    NoCrawl?: boolean;
     SearchScope: number;
     WebTemplate: string;
     WebTitle: string;
-}, {}, {
+}, {
+    NoCrawl?: IRequest;
+}, {
     CommentsOnSitePagesDisabled?: boolean;
     ExcludeFromOfflineClient?: boolean;
     SearchScope?: number;
@@ -26,6 +29,7 @@ export class WebTab extends Tab<{
         this._currValues = {
             CommentsOnSitePagesDisabled: DataSource.Web.CommentsOnSitePagesDisabled,
             ExcludeFromOfflineClient: DataSource.Web.ExcludeFromOfflineClient,
+            NoCrawl: DataSource.Web.NoCrawl,
             SearchScope: DataSource.Web.SearchScope,
             WebTemplate: DataSource.Web.WebTemplate,
             WebTitle: DataSource.Web.Title
@@ -42,6 +46,7 @@ export class WebTab extends Tab<{
         this._currValues = {
             CommentsOnSitePagesDisabled: DataSource.Web.CommentsOnSitePagesDisabled,
             ExcludeFromOfflineClient: DataSource.Web.ExcludeFromOfflineClient,
+            NoCrawl: DataSource.Web.NoCrawl,
             SearchScope: DataSource.Web.SearchScope,
             WebTemplate: DataSource.Web.WebTemplate,
             WebTitle: DataSource.Web.Title
@@ -135,6 +140,30 @@ export class WebTab extends Tab<{
                         } else {
                             // Remove the value
                             delete this._newValues.ExcludeFromOfflineClient;
+                        }
+                    }
+                } as Components.IFormControlPropsSwitch,
+                {
+                    name: "NoCrawl",
+                    label: this._props["NoCrawl"].label,
+                    description: this._props["NoCrawl"].description,
+                    isDisabled: this._props["NoCrawl"].disabled,
+                    type: Components.FormControlTypes.Switch,
+                    value: this._currValues.NoCrawl,
+                    onChange: item => {
+                        let value = item ? true : false;
+
+                        // See if we are changing the value
+                        if (this._currValues.NoCrawl != value) {
+                            // Set the value
+                            this._requestItems.NoCrawl = {
+                                key: RequestTypes.NoCrawl,
+                                message: `The request to ${value ? "enable" : "disable"} the app catalog will be processed within 5 minutes.`,
+                                value
+                            };
+                        } else {
+                            // Remove the value
+                            delete this._requestItems.NoCrawl;
                         }
                     }
                 } as Components.IFormControlPropsSwitch,

@@ -11,9 +11,11 @@ export class FeaturesTab extends Tab<{
     CommentsOnSitePagesDisabled: boolean;
     DisableCompanyWideSharingLinks: boolean;
     ExcludeFromOfflineClient: string;
+    NoCrawl: string;
     SocialBarOnSitePagesDisabled: boolean;
 }, {
-    DisableCompanyWideSharingLinks: IRequest
+    DisableCompanyWideSharingLinks: IRequest;
+    NoCrawl: IRequest;
 }, {
     CommentsOnSitePagesDisabled: boolean;
     SocialBarOnSitePagesDisabled: boolean;
@@ -27,6 +29,7 @@ export class FeaturesTab extends Tab<{
             CommentsOnSitePagesDisabled: DataSource.Site.CommentsOnSitePagesDisabled,
             DisableCompanyWideSharingLinks: DataSource.Site.DisableCompanyWideSharingLinks,
             ExcludeFromOfflineClient: null,
+            NoCrawl: null,
             SocialBarOnSitePagesDisabled: DataSource.Site.SocialBarOnSitePagesDisabled
         }
 
@@ -38,9 +41,9 @@ export class FeaturesTab extends Tab<{
     onGetRequests(): IChangeRequest[] {
         let requests: IChangeRequest[] = [];
 
-        // Check the search property
+        // Check the exclude from offline client property
         if (this._currValues.ExcludeFromOfflineClient) {
-            let hideContent = this._currValues.ExcludeFromOfflineClient == "Hide";
+            let excludeContent = this._currValues.ExcludeFromOfflineClient == "Hide";
 
             // Parse the webs
             for (let i = 0; i < DataSource.SiteItems.length; i++) {
@@ -49,9 +52,32 @@ export class FeaturesTab extends Tab<{
                 // Add the request
                 requests.push({
                     oldValue: "",
-                    newValue: hideContent,
+                    newValue: excludeContent,
                     scope: "Web",
                     property: "ExcludeFromOfflineClient",
+                    url: item.text
+                });
+            }
+        }
+
+        // Check the no crawl property
+        if (this._currValues.NoCrawl) {
+            let hideContent = this._currValues.NoCrawl == "Hide";
+
+            // Parse the webs
+            for (let i = 0; i < DataSource.SiteItems.length; i++) {
+                let item = DataSource.SiteItems[i];
+
+                // Add the request
+                requests.push({
+                    oldValue: "",
+                    newValue: !hideContent,
+                    request: {
+                        key: RequestTypes.NoCrawl,
+                        message: `The request to ${hideContent ? "hide" : "show"} content from search will be processed within 5 minutes.`,
+                        value: !hideContent
+                    },
+                    scope: "Web",
                     url: item.text
                 });
             }
@@ -127,6 +153,22 @@ export class FeaturesTab extends Tab<{
                     onChange: item => {
                         // Set the value
                         this._currValues.ExcludeFromOfflineClient = item ? item.value : null;
+                    }
+                } as Components.IFormControlPropsDropdown,
+                {
+                    name: "NoCrawl",
+                    label: this._props["NoCrawl"].label,
+                    description: "This will apply to all sites.",
+                    isDisabled: this._props["NoCrawl"].disabled,
+                    type: Components.FormControlTypes.Dropdown,
+                    items: [
+                        { text: "", value: "" },
+                        { text: "Show", value: "Show" },
+                        { text: "Hide", value: "Hide" }
+                    ],
+                    onChange: item => {
+                        // Set the value
+                        this._currValues.NoCrawl = item ? item.value : null;
                     }
                 } as Components.IFormControlPropsDropdown,
                 {

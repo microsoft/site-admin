@@ -53,6 +53,7 @@ export enum RequestTypes {
     DisableCompanyWideSharingLinks = "Company Wide Sharing Links",
     IncreaseStorage = "Increase Storage",
     LockState = "Lock State",
+    NoCrawl = "No Crawl",
     SearchProperty = "Custom Search Property",
     TeamsConnected = "Teams Connected"
 }
@@ -382,6 +383,7 @@ export class DataSource {
                     "Created",
                     "ExcludeFromOfflineClient",
                     "Id",
+                    "NoCrawl",
                     "SearchScope",
                     "SensitivityLabelId",
                     "Title",
