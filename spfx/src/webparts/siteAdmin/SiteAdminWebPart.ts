@@ -71,6 +71,9 @@ export interface ISiteAdminWebPartProps {
   SitePropLockState: boolean;
   SitePropLockStateDescription: string;
   SitePropLockStateLabel: string;
+  SitePropNoCrawl: boolean;
+  SitePropNoCrawlDescription: string;
+  SitePropNoCrawlLabel: string;
   SitePropSensitivityLabelId: boolean;
   SitePropSensitivityLabelIdDescription: string;
   SitePropSensitivityLabelIdLabel: string;
@@ -95,6 +98,9 @@ export interface ISiteAdminWebPartProps {
   WebPropExcludeFromOfflineClient: boolean;
   WebPropExcludeFromOfflineClientDescription: string;
   WebPropExcludeFromOfflineClientLabel: string;
+  WebPropNoCrawl: boolean;
+  WebPropNoCrawlDescription: string;
+  WebPropNoCrawlLabel: string;
   WebPropSearchPropertyDescription: string;
   WebPropSearchPropertyKey: string;
   WebPropSearchPropertyLabel: string;
@@ -255,6 +261,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     "SitePropHubSiteConnected",
     "SitePropIncreaseStorage",
     "SitePropLockState",
+    "SitePropNoCrawl",
     "SitePropSensitivityLabelId",
     "SitePropShareByEmailEnabled",
     "SitePropSocialBarOnSitePagesDisabled",
@@ -277,6 +284,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
   private _webProps: string[] = [
     "WebPropCommentsOnSitePagesDisabled",
     "WebPropExcludeFromOfflineClient",
+    "WebPropNoCrawl",
     "WebPropSearchScope",
     "WebPropTemplate",
     "WebPropTitle"

@@ -15,6 +15,7 @@ declare interface ISiteAdminWebPartStrings {
   SitePropHubSiteConnected: string;
   SitePropIncreaseStorage: string;
   SitePropLockState: string;
+  SitePropNoCrawl: string;
   SitePropSensitivityLabelId: string;
   SitePropShareByEmailEnabled: string;
   SitePropSocialBarOnSitePagesDisabled: string;
@@ -22,6 +23,8 @@ declare interface ISiteAdminWebPartStrings {
   SitePropTemplate: string;
   SitePropTitle: string;
   WebPropCommentsOnSitePagesDisabled: string;
+  WebPropExcludeFromOfflineClient: string;
+  WebPropNoCrawl: string;
   WebPropSearchPropertyKey: string;
   WebPropSearchPropertyDescription: string;
   WebPropSearchPropertyLabel: string;
@@ -29,7 +32,6 @@ declare interface ISiteAdminWebPartStrings {
   WebPropSearchPropertyReportName: string;
   WebPropSearchPropertyTabName: string;
   WebPropSearchPropertyValues: string;
-  WebPropExcludeFromOfflineClient: string;
   WebPropSearchScope: string;
   WebPropWebTemplate: string;
   AppLocalEnvironmentSharePoint: string;
