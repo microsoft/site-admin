@@ -59,6 +59,9 @@ export interface ISiteAdminWebPartProps {
   SitePropExcludeFromOfflineClient: boolean;
   SitePropExcludeFromOfflineClientDescription: string;
   SitePropExcludeFromOfflineClientLabel: string;
+  SitePropExcludeFromSearch: boolean;
+  SitePropExcludeFromSearchDescription: string;
+  SitePropExcludeFromSearchLabel: string;
   SitePropHubSite: boolean;
   SitePropHubSiteDescription: string;
   SitePropHubSiteLabel: string;
@@ -95,6 +98,9 @@ export interface ISiteAdminWebPartProps {
   WebPropExcludeFromOfflineClient: boolean;
   WebPropExcludeFromOfflineClientDescription: string;
   WebPropExcludeFromOfflineClientLabel: string;
+  WebPropExcludeFromSearch: boolean;
+  WebPropExcludeFromSearchDescription: string;
+  WebPropExcludeFromSearchLabel: string;
   WebPropSearchPropertyDescription: string;
   WebPropSearchPropertyKey: string;
   WebPropSearchPropertyLabel: string;
@@ -251,6 +257,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     "SitePropCustomScriptsEnabled",
     "SitePropDisableCompanyWideSharingLinks",
     "SitePropExcludeFromOfflineClient",
+    "SitePropExcludeFromSearch",
     "SitePropHubSite",
     "SitePropHubSiteConnected",
     "SitePropIncreaseStorage",
@@ -277,6 +284,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
   private _webProps: string[] = [
     "WebPropCommentsOnSitePagesDisabled",
     "WebPropExcludeFromOfflineClient",
+    "WebPropExcludeFromSearch",
     "WebPropSearchScope",
     "WebPropTemplate",
     "WebPropTitle"
