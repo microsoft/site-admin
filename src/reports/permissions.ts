@@ -218,7 +218,7 @@ export class Permissions {
             };
         } else {
             // See if this is a M365 group
-            let groupId = this.getGroupId(role.Member.LoginName);
+            let groupId = DataSource.getGroupId(role.Member.LoginName);
 
             // Add the role information
             item = {
@@ -313,7 +313,7 @@ export class Permissions {
             // See if this is a M365 Group
             if (user.PrincipalType == SPTypes.PrincipalTypes.SecurityGroup) {
                 // Add the group id
-                let groupId = this.getGroupId(user.LoginName);
+                let groupId = DataSource.getGroupId(user.LoginName);
                 groupId ? item.GroupIds.push(groupId) : null;
             }
         }
@@ -321,17 +321,6 @@ export class Permissions {
 
     // Gets the form fields to display
     static getFormFields(): Components.IFormControlProps[] { return []; }
-
-    // Returns the group id from the login name
-    static getGroupId(loginName: string): string {
-        // Get the group id from the login name
-        let userInfo = loginName.split('|');
-        let groupInfo = userInfo[userInfo.length - 1];
-        let groupId = groupInfo.split('_')[0];
-
-        // Ensure it's a guid and return null if it's not
-        return /^[{]?[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}[}]?$/.test(groupId) ? groupId : null;
-    }
 
     // Removes a user from a group
     private static removeUser(user: string, userId: number) {
@@ -514,7 +503,7 @@ export class Permissions {
                                 }
 
                                 // Exclude M365 groups
-                                return this.getGroupId(value.LoginName) ? false : true;
+                                return DataSource.getGroupId(value.LoginName) ? false : true;
                             });
 
                             // Set the value
