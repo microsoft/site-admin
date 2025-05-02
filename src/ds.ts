@@ -216,6 +216,9 @@ export class DataSource {
                     // Resolve the request
                     resolve(false);
                 });
+            }, () => {
+                // Resolve the request
+                resolve(false);
             });
         });
     }
