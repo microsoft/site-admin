@@ -1,5 +1,5 @@
 import { List, LoadingDialog } from "dattatable";
-import { Components, ContextInfo, GroupSiteManager, Helper, Site, Types, Web, SPTypes, v2 } from "gd-sprest-bs";
+import { Components, ContextInfo, GroupSiteManager, Helper, Site, Types, Web, SPTypes, v2, DirectorySession } from "gd-sprest-bs";
 import { Security } from "./security";
 import Strings from "./strings";
 
@@ -122,6 +122,107 @@ export class DataSource {
         });
     }
 
+    // Checks to see if a site is set to read-only and determines if the user is a site admin
+    private static checkReadOnlySite(siteUrl: string): PromiseLike<boolean> {
+        // Return a promise
+        return new Promise(resolve => {
+            // Get the site
+            Site(siteUrl).query({ Select: ["ReadOnly"] }).execute(site => {
+                // See if it's not read only
+                if (!site.ReadOnly) {
+                    // Resolve the request
+                    resolve(false);
+                    return;
+                }
+
+                // Get the site admins for this site
+                Web(siteUrl).SiteUsers().query({
+                    Filter: "IsSiteAdmin eq true",
+                    OrderBy: ["PrincipalType desc"]
+                }).execute(items => {
+                    let groupIds = [];
+
+                    // Parse the items
+                    for (let i = 0; i < items.results.length; i++) {
+                        let item = items.results[i];
+
+                        // See if this is a user
+                        if (item.PrincipalType == SPTypes.PrincipalTypes.User) {
+                            // See if this is the user
+                            if (item.Email == ContextInfo.userEmail) {
+                                // Resolve the request
+                                resolve(true);
+                                return;
+                            }
+                        }
+                        // Else, see if this is a M365 group
+                        else if (item.PrincipalType == SPTypes.PrincipalTypes.SecurityGroup) {
+                            // Add the group id
+                            groupIds.push(this.getGroupId(item.LoginName));
+                        }
+                    }
+
+                    // See if no groups exist
+                    if (groupIds.length == 0) {
+                        // Resolve the request
+                        resolve(false);
+                        return;
+                    }
+
+                    // Create the request for getting the M365 group information in a batch request
+                    let ds = DirectorySession();
+
+                    // Parse the group ids to see if the user is a site admin
+                    let isSiteAdmin = false;
+                    groupIds.forEach(groupId => {
+                        // See if the user is an member/owner of this group
+                        ds.group(groupId).query({
+                            Expand: ["members", "owners"],
+                            Select: [
+                                "id",
+                                "members/principalName", "members/id", "members/displayName", "members/mail",
+                                "owners/principalName", "owners/id", "owners/displayName", "owners/mail"
+                            ]
+                        }).batch(group => {
+                            // See if we already set the flag
+                            if (isSiteAdmin) { return; }
+
+                            // See if the user is a member
+                            for (let i = 0; i < group.members.results.length; i++) {
+                                if (group.members.results[i].mail == ContextInfo.userEmail) {
+                                    // Set the flag
+                                    isSiteAdmin = true;
+                                    return;
+                                }
+                            }
+
+                            // See if the user is a owner
+                            for (let i = 0; i < group.owners.results.length; i++) {
+                                if (group.owners.results[i].mail == ContextInfo.userEmail) {
+                                    // Set the flag
+                                    isSiteAdmin = true;
+                                    return;
+                                }
+                            }
+                        });
+                    });
+
+                    // Execute the request
+                    ds.execute(() => {
+                        // Resolve the request
+                        resolve(isSiteAdmin);
+                    });
+                }, () => {
+                    // Resolve the request
+                    resolve(false);
+                });
+            }, () => {
+                // Resolve the request
+                resolve(false);
+            });
+        });
+    }
+
     // Formats a value to bytes
     static formatBytes(bytes, decimals = 2) {
         if (bytes === 0) return '0 Bytes';
@@ -190,6 +291,17 @@ export class DataSource {
                 onInitialized: resolve
             });
         });
+    }
+
+    // Returns the group id from the login name
+    static getGroupId(loginName: string): string {
+        // Get the group id from the login name
+        let userInfo = loginName.split('|');
+        let groupInfo = userInfo[userInfo.length - 1];
+        let groupId = groupInfo.split('_')[0];
+
+        // Ensure it's a guid and return null if it's not
+        return /^[{]?[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}[}]?$/.test(groupId) ? groupId : null;
     }
 
     // Loads the files for a drive
@@ -584,7 +696,19 @@ export class DataSource {
                                 this.loadSiteInfo().then(resolve, reject);
                             }, reject);
                         } else {
-                            reject("Site exists, but you are not the administrator. Please have the site administrator submit the request.");
+                            // Check to see if this is a read-only site and determine if the user is an admin
+                            this.checkReadOnlySite(this.SiteContext.SiteFullUrl).then(isAdmin => {
+                                if (isAdmin) {
+                                    // Load the web information
+                                    this.loadWebInfo(this.SiteContext.WebFullUrl).then(() => {
+                                        // Load the site information
+                                        this.loadSiteInfo().then(resolve, reject);
+                                    }, reject);
+                                } else {
+                                    // Reject the request
+                                    reject("Site exists, but you are not the administrator. Please have the site administrator submit the request.");
+                                }
+                            });
                         }
                     });
                 },
