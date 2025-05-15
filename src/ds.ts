@@ -465,13 +465,8 @@ export class DataSource {
                     value: this._site.RootWeb.Id
                 }];
 
-                // Load additional information
-                Promise.all([
-                    // Load the client side assets
-                    this.loadClientSideAssets(),
-                    // Get all of the sites for this collection
-                    this.getAllWebs(site.Url)
-                ]).then(() => {
+                // Load the client side assets
+                this.loadClientSideAssets().then(() => {
                     // Sort the items
                     this._siteItems = this._siteItems.sort((a, b) => {
                         if (a.text < b.text) { return -1; }
@@ -481,7 +476,7 @@ export class DataSource {
 
                     // Resolve the request
                     resolve();
-                }).catch(reject);
+                }, reject);
             }, reject);
         });
     }
