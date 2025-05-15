@@ -1,5 +1,8 @@
 using namespace System.Net
 
+# import helper functions
+Import-Module "$PSScriptRoot/Modules/helper.psm1"
+
 # Input bindings are passed in via param block.
 param($Request, $TriggerMetadata)
 
@@ -81,9 +84,27 @@ if ($item -ne $null) {
         Write-Host "Request Type: $requestType";
         Write-Host "Request Value: $value";
 
-        # Connect to the site        
+        # Connect to the site
         Connect-PnPOnline -Url $item["Title"] -Tenant $tenant -ClientId $clientId -Thumbprint $cert;
-        
+
+        # Check to make sure the user requesting the change is an admin
+        if (-not(IsSiteCollectionAdmin -UserEmail $item["Requestor"])) {
+            # Log
+            Write-Host "The user is not a site collection admin";
+
+            # Set the output
+            $output = "The user is not a site collection admin.";
+
+            # Set the status code
+            $statusCode = 401;
+
+            # Disconnect from the site
+            Disconnect-PnPOnline;
+
+            # Return
+            return;
+        }
+
         # Process the setting, based on the request type
         switch ($requestType) {
             "App Catalog" {
