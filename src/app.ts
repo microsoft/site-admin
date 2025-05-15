@@ -154,12 +154,22 @@ export class App {
                             control: {
                                 label: "Sub Site Url:",
                                 type: Components.FormControlTypes.Dropdown,
-                                items: DataSource.SiteItems,
+                                items: [{ text: "Loading Sites..." }],
                                 value: DataSource.Web.Id,
                                 required: true,
                                 onChange: item => {
-                                    // Refresh the web tab
-                                    tabs.refreshWebTab(item.text);
+                                    // Ensure it's a valid site
+                                    if (item.value) {
+                                        // Refresh the web tab
+                                        tabs.refreshWebTab(item.text);
+                                    }
+                                },
+                                onControlRendered: ctrl => {
+                                    // Load the sub-webs
+                                    DataSource.getAllWebs(DataSource.Site.Url).then(() => {
+                                        // Update the control
+                                        ctrl.dropdown.setItems(DataSource.SiteItems);
+                                    });
                                 }
                             } as Components.IFormControlPropsDropdown
                         }
