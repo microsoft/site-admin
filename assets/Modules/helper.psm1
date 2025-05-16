@@ -1,4 +1,38 @@
-﻿function IsSiteCollectionAdmin
+﻿function GetAllADMembers
+{
+    [CmdletBinding()]
+    [OutputType([string[]])]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$GroupName
+    )
+
+    $memberEmails = @()
+
+    $groupMembers = Get-PnPAzureADGroupMember -Identity $GroupName
+    if ($groupMembers)
+    {
+        $groupMembers | ForEach-Object {
+            if ($_.UserType -eq 'Member')
+            {
+                $memberEmails += $_.Email
+            }
+            else
+            {
+                # nested security group
+                $memberEmails += GetAllADMembers -GroupName $_.DisplayName
+            }
+        }
+    }
+    else
+    {
+        Write-Host "Could not find group $GroupName in M365 or AD"
+    }
+
+    Write-Output $memberEmails
+}
+
+function IsSiteCollectionAdmin
 {
     [CmdletBinding()]
     [OutputType([bool])]
@@ -10,23 +44,31 @@
 
     $SiteAdminstrators = @()
     Get-PnPSiteCollectionAdmin -PipelineVariable Admin | ForEach-Object {
-        If ($_.PrincipalType -eq 'SecurityGroup')
+        if ($_.PrincipalType -eq 'SecurityGroup')
         {
             #Get Members of the Group
-            $Group = Get-PnPMicrosoft365Group -IncludeOwners | Where-Object { $_.Mail -eq $Admin.Email }
-            $Group.Owners | Select-Object Email | ForEach-Object {
-                $SiteAdminstrators += $_.Email
-            }
-            # Also include members of M365 group unless it is specifically the group owners (designated with _o)
-            if (!$Admin.LoginName.EndsWith('_o'))
+            $group = Get-PnPMicrosoft365Group -IncludeOwners | Where-Object { $_.Mail -eq $Admin.Email }
+            if ($group)
             {
-                $Members = Get-PnPMicrosoft365GroupMember -Identity $Group.Id -ErrorAction SilentlyContinue
-                $Members | ForEach-Object {
+                $group.Owners | Select-Object Email | ForEach-Object {
                     $SiteAdminstrators += $_.Email
                 }
+                # Also include members of M365 group unless it is specifically the group owners (designated with _o)
+                if (!$Admin.LoginName.EndsWith('_o'))
+                {
+                    $Members = Get-PnPMicrosoft365GroupMember -Identity $Group.Id -ErrorAction SilentlyContinue
+                    $Members | ForEach-Object {
+                        $SiteAdminstrators += $_.Email
+                    }
+                }
+            }
+            else
+            {
+                # Not a M365 group. Try to get the group from AD
+                $SiteAdminstrators += GetAllADMembers -GroupName $Admin.Title
             }
         }
-        Else
+        else
         {
             $SiteAdminstrators += $Admin.Email
         }
