@@ -161,7 +161,7 @@ if ($item -ne $null) {
         Connect-PnPOnline -Url $item["Title"] -Tenant $tenant -ClientId $clientId -Thumbprint $cert;
 
         # Check to make sure the user requesting the change is an admin
-        if (-not(IsSiteCollectionAdmin -UserEmail $item["Requestor"])) {
+        if (-not(IsSiteCollectionAdmin -UserEmail $item["Author"].EMail)) {
             # Log
             Write-Host "The user is not a site collection admin";
 
