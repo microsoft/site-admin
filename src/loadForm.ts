@@ -47,6 +47,8 @@ export class LoadForm {
     // Renders the form
     private renderForm(el: HTMLElement) {
         let disableEvent = false;
+        let ddl: Components.IDropdown = null;
+        let ddlLastSelection = "/sites/";
         let tb: Components.IInputGroup = null;
 
         // Clear the element
@@ -69,7 +71,18 @@ export class LoadForm {
                         items: [
                             { text: "/sites/", value: "/sites/", isSelected: true },
                             { text: "/teams/", value: "/teams/" }
-                        ]
+                        ],
+                        assignTo: obj => { ddl = obj; },
+                        onChange: ((item: Components.IDropdownItem) => {
+                            if (item) {
+                                // Set the last selection
+                                ddlLastSelection = item.value;
+                                return;
+                            }
+
+                            // Set the default item
+                            ddl.setValue(ddlLastSelection);
+                        })
                     },
                     onControlRendered: ctrl => {
                         let keyIdx = 0;

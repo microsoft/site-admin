@@ -23,6 +23,6 @@ const Strings = {
     ProjectDescription: "Application for adminitrators to make requests for changes on their site collections.",
     SourceUrl: ContextInfo.webServerRelativeUrl,
     TimeFormat: "YYYY-MMM-DD HH:mm:ss",
-    Version: "0.7"
+    Version: "0.8"
 };
 export default Strings;

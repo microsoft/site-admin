@@ -10,7 +10,9 @@ export const Configuration = Helper.SPConfig({
             ListInformation: {
                 Title: Strings.Lists.Main,
                 BaseTemplate: SPTypes.ListTemplateType.GenericList,
-                EnableAttachments: false
+                EnableAttachments: false,
+                ReadSecurity: SPTypes.ListReadSecurity.User,
+                WriteSecurity: SPTypes.ListWriteSecurity.User
             },
             TitleFieldDisplayName: "Site Url",
             TitleFieldDescription: "Enter the relative/absolute url to the site collection you want to enable custom scripts on.",
