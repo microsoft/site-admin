@@ -18,6 +18,12 @@ export class InfoTab extends Tab {
 
     // Renders the tab
     private render(siteAttestation: boolean) {
+        let dtAttestation = DataSource.Web.AllProperties["AttestationDate"] || "";
+        if (dtAttestation) {
+            // Set the date/time
+            dtAttestation = moment(dtAttestation).format("LLLL");
+        }
+
         // Render the form
         Components.Form({
             el: this._el,
@@ -85,7 +91,7 @@ export class InfoTab extends Tab {
                     label: this._props["AttestationDate"].label,
                     description: this._props["AttestationDate"].description,
                     type: Components.FormControlTypes.Readonly,
-                    value: DataSource.Web.AllProperties["AttestationDate"] || ""
+                    value: dtAttestation
                 },
                 {
                     name: "AttestationUser",

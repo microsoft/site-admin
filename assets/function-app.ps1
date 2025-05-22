@@ -386,8 +386,8 @@ if ($item -ne $null) {
                 # Enable custom scripts
                 Set-PnPSite -Identity $siteUrl -NoScriptSite $false;
 
-                # Get the current date/time
-                $currentDateTime = Get-Date -Format "yyyy-MM-ddTHH:mm:ssz";
+                # Get the current date/time in ISO 8601 format
+                $currentDateTime = Get-Date -Format "o";
 
                 # Log
                 Write-Host "Adding the key $siteAttestationDateProp to the property bag with value $currentDateTime...";
