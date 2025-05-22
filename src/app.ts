@@ -25,6 +25,7 @@ export interface IAppProps {
     maxStorageSize?: number;
     reportProps?: IReportProps;
     searchProps?: ISearchProps;
+    siteAttestation?: boolean;
     siteProps: { [key: string]: IProp; }
     title?: string;
     webProps: { [key: string]: IProp; }

@@ -51,7 +51,7 @@ export class Tabs {
                 isActive: true,
                 onRender: (el) => {
                     // Render the tab
-                    new InfoTab(el, appProps.siteProps);
+                    new InfoTab(el, appProps.siteAttestation, appProps.siteProps);
                 }
             },
             {
