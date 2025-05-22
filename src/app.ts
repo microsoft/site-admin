@@ -6,6 +6,7 @@ import { InstallationModal } from "./install";
 import { LoadForm } from "./loadForm";
 import Strings from "./strings";
 import { Security } from "./security";
+import { SiteAttestationForm } from "./siteAttestationForm";
 import { Tabs } from "./tabs";
 import { IReportProps } from "./tabs/reports";
 import { ISearchProps } from "./tabs/searchProp";
@@ -26,6 +27,7 @@ export interface IAppProps {
     reportProps?: IReportProps;
     searchProps?: ISearchProps;
     siteAttestation?: boolean;
+    siteAttestationText?: string;
     siteProps: { [key: string]: IProp; }
     title?: string;
     webProps: { [key: string]: IProp; }
@@ -101,6 +103,20 @@ export class App {
                         // Render the tabs
                         this.renderTabs(elRow.children[1] as HTMLElement);
                     });
+                }
+            });
+        }
+
+        // See if we are enabling the site attestation feature
+        if (this._props.siteAttestation) {
+            // Add the settings for the app
+            itemsEnd.push({
+                className: "btn-outline-light ms-2",
+                isButton: true,
+                text: "Site Attestation",
+                onClick: () => {
+                    // Show the site attestation form
+                    new SiteAttestationForm(this._props.siteAttestationText);
                 }
             });
         }

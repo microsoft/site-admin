@@ -56,6 +56,7 @@ export enum RequestTypes {
     LockState = "Lock State",
     NoCrawl = "No Crawl",
     SearchProperty = "Custom Search Property",
+    SiteAttestation = "Site Attestation",
     TeamsConnected = "Teams Connected"
 }
 

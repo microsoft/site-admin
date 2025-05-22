@@ -20,6 +20,8 @@ $clientId = $env:CLIENT_ID;
 $tenant = $env:TENANT_ID;
 $listName = "Site Admin Requests";
 $searchProp = "BusinessUnit";
+$siteAttestationDateProp = "AttestationDate";
+$siteAttestationUserProp = "AttestationUser";
 ############################################### Global Vars ###############################################
 
 ############################################### Functions ###############################################
@@ -373,6 +375,33 @@ if ($item -ne $null) {
 
                 # Log
                 Write-Host "Disabling custom scripts...";
+
+                # Disable custom scripts
+                Set-PnPSite -Identity $siteUrl -NoScriptSite $true;
+            }
+            "Site Attestation" {
+                # Log
+                Write-Host "Setting NoScriptSite to false...";
+
+                # Enable custom scripts
+                Set-PnPSite -Identity $siteUrl -NoScriptSite $false;
+
+                # Get the current date/time
+                $currentDateTime = Get-Date -Format "yyyy-MM-ddTHH:mm:ssz";
+
+                # Log
+                Write-Host "Adding the key $siteAttestationDateProp to the property bag with value $currentDateTime...";
+                Write-Host "Adding the key $siteAttestationUserProp to the property bag with value $value...";
+
+                # Update the site property
+                Set-PnPPropertyBagValue -Key $siteAttestationDateProp -Value $currentDateTime -Indexed;
+                Set-PnPPropertyBagValue -Key $siteAttestationUserProp -Value $value -Indexed;
+
+                # Set the output
+                $output = "The site attestation was completed for $value.";
+
+                # Log
+                Write-Host "Setting NoScriptSite to true...";
 
                 # Disable custom scripts
                 Set-PnPSite -Identity $siteUrl -NoScriptSite $true;

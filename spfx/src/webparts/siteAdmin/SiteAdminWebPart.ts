@@ -42,6 +42,7 @@ export interface ISiteAdminWebPartProps {
   ReportsDocSearchFileExt: string;
   ReportsDocSearchKeywords: string;
   SiteAttestation: boolean;
+  SiteAttestationText: string;
   SitePropAttestationDate: boolean;
   SitePropAttestationDateDescription: string;
   SitePropAttestationDateLabel: string;
@@ -142,6 +143,7 @@ declare const SiteAdmin: {
     maxStorageDesc?: string;
     maxStorageSize?: number;
     siteAttestation?: boolean;
+    siteAttestationText?: string;
     reportProps?: {
       docRententionYears?: string;
       docSearchFileExt?: string;
@@ -241,6 +243,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         values: this.properties.WebPropSearchPropertyValues
       },
       siteAttestation: this.properties.SiteAttestation,
+      siteAttestationText: this.properties.SiteAttestationText,
       siteProps,
       title: this.properties.AppTitle,
       webProps
@@ -385,6 +388,13 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   checked: this.properties.SiteAttestation,
                   onText: "The admins will be able to record the date/time of attestation.",
                   offText: "This feature will not be visible in the solution."
+                }),
+                PropertyPaneTextField("SiteAttestationText", {
+                  label: "Site Attestation Text",
+                  description: "The text displayed in the confirmation dialog.",
+                  multiline: true,
+                  rows: 6,
+                  value: this.properties.SiteAttestationText
                 })
               ]
             },
