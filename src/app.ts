@@ -105,20 +105,20 @@ export class App {
                     });
                 }
             });
-        }
 
-        // See if we are enabling the site attestation feature
-        if (this._props.siteAttestation) {
-            // Add the settings for the app
-            itemsEnd.push({
-                className: "btn-outline-light ms-2",
-                isButton: true,
-                text: "Site Attestation",
-                onClick: () => {
-                    // Show the site attestation form
-                    new SiteAttestationForm(this._props.siteAttestationText);
-                }
-            });
+            // See if we are enabling the site attestation feature
+            if (this._props.siteAttestation) {
+                // Add the settings for the app
+                itemsEnd.push({
+                    className: "btn-outline-light ms-2",
+                    isButton: true,
+                    text: "Site Attestation",
+                    onClick: () => {
+                        // Show the site attestation form
+                        new SiteAttestationForm(this._props.siteAttestationText);
+                    }
+                });
+            }
         }
 
         // See if this is the admin
