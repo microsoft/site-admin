@@ -59,7 +59,7 @@
                     },
                     "conditions": [
                         {
-                            "expression": "@equals(triggerOutputs()['body/RequestType/Value'], 'Site Attestation')"
+                            "expression": "@and(equals(triggerOutputs()['body/RequestType/Value'], 'Site Attestation'), equals(triggerOutputs()['body/ProcessFlag'], true))"
                         }
                     ]
                 }
