@@ -127,7 +127,6 @@ export class LoadForm {
                             target: tb.elTextbox,
                             placement: Components.PopoverPlacements.BottomStart,
                             options: {
-                                showOnCreate: false,
                                 trigger: ""
                             }
                         });
