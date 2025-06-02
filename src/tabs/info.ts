@@ -9,15 +9,21 @@ import { Tab } from "./base";
  */
 export class InfoTab extends Tab {
     // Constructor
-    constructor(el: HTMLElement, props: { [key: string]: IProp; }) {
+    constructor(el: HTMLElement, siteAttestation: boolean, props: { [key: string]: IProp; }) {
         super(el, props, "Site");
 
         // Render the tab
-        this.render();
+        this.render(siteAttestation);
     }
 
     // Renders the tab
-    private render() {
+    private render(siteAttestation: boolean) {
+        let dtAttestation = DataSource.Web.AllProperties["AttestationDate"] || "";
+        if (dtAttestation) {
+            // Set the date/time
+            dtAttestation = moment(dtAttestation).format("LLLL");
+        }
+
         // Render the form
         Components.Form({
             el: this._el,
@@ -78,6 +84,22 @@ export class InfoTab extends Tab {
                     description: this._props["StorageUsed"].description,
                     type: Components.FormControlTypes.Readonly,
                     value: `${DataSource.formatBytes(DataSource.Site.Usage.Storage)} of ${DataSource.formatBytes(DataSource.Site.Usage.Storage / DataSource.Site.Usage.StoragePercentageUsed)} (${Math.round(DataSource.Site.Usage.StoragePercentageUsed * 100) + "%"} Used)`
+                },
+                {
+                    name: "AttestationDate",
+                    className: siteAttestation ? "" : "d-none",
+                    label: this._props["AttestationDate"].label,
+                    description: this._props["AttestationDate"].description,
+                    type: Components.FormControlTypes.Readonly,
+                    value: dtAttestation
+                },
+                {
+                    name: "AttestationUser",
+                    className: siteAttestation ? "" : "d-none",
+                    label: this._props["AttestationUser"].label,
+                    description: this._props["AttestationUser"].description,
+                    type: Components.FormControlTypes.Readonly,
+                    value: DataSource.Web.AllProperties["AttestationUser"] || ""
                 }
             ]
         });

@@ -5,6 +5,8 @@ declare interface ISiteAdminWebPartStrings {
   ReportsDocRententionYears: string;
   ReportsDocSearchFileExt: string;
   ReportsDocSearchKeywords: string;
+  SitePropAttestationDate: string;
+  SitePropAttestationUser: string;
   SitePropClientSideAssets: string;
   SitePropCommentsOnSitePagesDisabled: string;
   SitePropContainsAppCatalog: string;

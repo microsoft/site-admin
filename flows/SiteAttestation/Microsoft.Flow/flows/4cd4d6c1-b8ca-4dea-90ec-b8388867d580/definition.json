@@ -1,0 +1,212 @@
+{
+    "name": "092c1229-52a4-458b-821f-2200c3b2c7ad",
+    "id": "/providers/Microsoft.Flow/flows/092c1229-52a4-458b-821f-2200c3b2c7ad",
+    "type": "Microsoft.Flow/flows",
+    "properties": {
+        "apiId": "/providers/Microsoft.PowerApps/apis/shared_logicflows",
+        "displayName": "Site Attestation",
+        "definition": {
+            "metadata": {
+                "workflowEntityId": null,
+                "processAdvisorMetadata": null,
+                "flowChargedByPaygo": null,
+                "flowclientsuspensionreason": "None",
+                "flowclientsuspensiontime": null,
+                "flowclientsuspensionreasondetails": null,
+                "creator": {
+                    "id": "4af50d87-e728-484e-874c-3f4536b38fee",
+                    "type": "User",
+                    "tenantId": "aecb54e0-7430-409d-86a4-7639c743eee7"
+                },
+                "provisioningMethod": "FromDefinition",
+                "failureAlertSubscription": true,
+                "clientLastModifiedTime": "2025-06-02T18:37:22.8261924Z",
+                "connectionKeySavedTimeKey": "2025-06-02T18:37:22.8261924Z",
+                "creationSource": "Portal",
+                "modifiedSources": "Portal"
+            },
+            "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+            "contentVersion": "1.0.0.0",
+            "parameters": {
+                "$authentication": {
+                    "defaultValue": {},
+                    "type": "SecureObject"
+                },
+                "$connections": {
+                    "defaultValue": {},
+                    "type": "Object"
+                }
+            },
+            "triggers": {
+                "When_an_item_is_created": {
+                    "recurrence": {
+                        "frequency": "Minute",
+                        "interval": 5
+                    },
+                    "splitOn": "@triggerOutputs()?['body/value']",
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                        "parameters": {
+                            "dataset": "",
+                            "table": ""
+                        },
+                        "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                            "connectionName": "shared_sharepointonline",
+                            "operationId": "GetOnNewItems"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                    },
+                    "conditions": [
+                        {
+                            "expression": "@equals(triggerOutputs()['body/RequestType/Value'], 'Site Attestation')"
+                        }
+                    ]
+                }
+            },
+            "actions": {
+                "Load_the_Site_Information": {
+                    "runAfter": {},
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                        "parameters": {
+                            "dataset": "@triggerBody()?['Title']",
+                            "parameters/method": "GET",
+                            "parameters/uri": "_api/site"
+                        },
+                        "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                            "connectionName": "shared_sharepointonline",
+                            "operationId": "HttpRequest"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                    }
+                },
+                "List_rows_present_in_a_table": {
+                    "runAfter": {
+                        "Load_the_Site_Information": [
+                            "Succeeded"
+                        ]
+                    },
+                    "metadata": {
+                        "01XOZVAYJ4MNMS2XQBWFEJBCAKTAFT77W5": "/site_attestation.xlsx",
+                        "tableId": "{3EF8C5F2-D8EA-479A-BE9A-4B1467115AEF}",
+                        "01XOZVAYPZWX3MV6L27NG3BP3R6KPDYMJR": "/site_attestation.xlsx",
+                        "01XOZVAYNH4VXEFPJBPNELZYY7ZA2DHV27": "/site_attestation.xlsx"
+                    },
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                        "parameters": {
+                            "source": "sites/dattaspo.sharepoint.com,8a25e50f-a830-4e23-bfd3-38aaa20b57ba,20dca168-e08a-4595-895a-d4fa1ff09688",
+                            "drive": "b!D-UlijCoI06_0ziqogtXumih3CCK4JVFiVrU-h_wlojJ-Z62eIUSSbdIhkfRqQHn",
+                            "file": "01XOZVAYNH4VXEFPJBPNELZYY7ZA2DHV27",
+                            "table": "{3EF8C5F2-D8EA-479A-BE9A-4B1467115AEF}",
+                            "$filter": "SiteID eq '@{body('Load_the_Site_Information')['d']['Id']}'",
+                            "$top": 1
+                        },
+                        "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_excelonlinebusiness",
+                            "connectionName": "shared_excelonlinebusiness",
+                            "operationId": "GetItems"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                    }
+                },
+                "See_if_the_row_exists": {
+                    "actions": {
+                        "Update_a_row": {
+                            "metadata": {
+                                "01XOZVAYNH4VXEFPJBPNELZYY7ZA2DHV27": "/site_attestation.xlsx",
+                                "tableId": "{3EF8C5F2-D8EA-479A-BE9A-4B1467115AEF}"
+                            },
+                            "type": "OpenApiConnection",
+                            "inputs": {
+                                "parameters": {
+                                    "source": "sites/dattaspo.sharepoint.com,8a25e50f-a830-4e23-bfd3-38aaa20b57ba,20dca168-e08a-4595-895a-d4fa1ff09688",
+                                    "drive": "b!D-UlijCoI06_0ziqogtXumih3CCK4JVFiVrU-h_wlojJ-Z62eIUSSbdIhkfRqQHn",
+                                    "file": "01XOZVAYNH4VXEFPJBPNELZYY7ZA2DHV27",
+                                    "table": "{3EF8C5F2-D8EA-479A-BE9A-4B1467115AEF}",
+                                    "idColumn": "SiteID",
+                                    "id": "@body('Load_the_Site_Information')['d']['Id']",
+                                    "item/AttestationUser": "@triggerBody()?['RequestValue']",
+                                    "item/AttestationDate": "@utcNow()"
+                                },
+                                "host": {
+                                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_excelonlinebusiness",
+                                    "connectionName": "shared_excelonlinebusiness",
+                                    "operationId": "PatchItem"
+                                },
+                                "authentication": "@parameters('$authentication')"
+                            }
+                        }
+                    },
+                    "runAfter": {
+                        "List_rows_present_in_a_table": [
+                            "Succeeded"
+                        ]
+                    },
+                    "else": {
+                        "actions": {
+                            "Add_a_row_into_a_table": {
+                                "metadata": {
+                                    "01XOZVAYPZWX3MV6L27NG3BP3R6KPDYMJR": "/site_attestation.xlsx",
+                                    "tableId": "{3EF8C5F2-D8EA-479A-BE9A-4B1467115AEF}",
+                                    "01XOZVAYNH4VXEFPJBPNELZYY7ZA2DHV27": "/site_attestation.xlsx"
+                                },
+                                "type": "OpenApiConnection",
+                                "inputs": {
+                                    "parameters": {
+                                        "source": "sites/dattaspo.sharepoint.com,8a25e50f-a830-4e23-bfd3-38aaa20b57ba,20dca168-e08a-4595-895a-d4fa1ff09688",
+                                        "drive": "b!D-UlijCoI06_0ziqogtXumih3CCK4JVFiVrU-h_wlojJ-Z62eIUSSbdIhkfRqQHn",
+                                        "file": "01XOZVAYNH4VXEFPJBPNELZYY7ZA2DHV27",
+                                        "table": "{3EF8C5F2-D8EA-479A-BE9A-4B1467115AEF}",
+                                        "item/SiteID": "@body('Load_the_Site_Information')['d']['Id']",
+                                        "item/URL": "@body('Load_the_Site_Information')['d']['Url']",
+                                        "item/AttestationUser": "@triggerBody()?['RequestValue']",
+                                        "item/AttestationDate": "@utcNow()"
+                                    },
+                                    "host": {
+                                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_excelonlinebusiness",
+                                        "connectionName": "shared_excelonlinebusiness",
+                                        "operationId": "AddRowV2"
+                                    },
+                                    "authentication": "@parameters('$authentication')"
+                                }
+                            }
+                        }
+                    },
+                    "expression": {
+                        "and": [
+                            {
+                                "greater": [
+                                    "@length(outputs('List_rows_present_in_a_table')?['body/value'])",
+                                    0
+                                ]
+                            }
+                        ]
+                    },
+                    "type": "If"
+                }
+            },
+            "outputs": {}
+        },
+        "connectionReferences": {
+            "shared_sharepointonline": {
+                "connectionName": "shared-sharepointonl-66a6d844-5e1b-4fa5-a8f1-40d37f28a005",
+                "source": "Embedded",
+                "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                "tier": "NotSpecified",
+                "apiName": "sharepointonline"
+            },
+            "shared_excelonlinebusiness": {
+                "connectionName": "shared-excelonlinebu-636779ba-357f-4569-8fb3-befaae8875e7",
+                "source": "Embedded",
+                "id": "/providers/Microsoft.PowerApps/apis/shared_excelonlinebusiness",
+                "tier": "NotSpecified",
+                "apiName": "excelonlinebusiness"
+            }
+        },
+        "flowFailureAlertSubscribed": false,
+        "isManaged": false
+    }
+}

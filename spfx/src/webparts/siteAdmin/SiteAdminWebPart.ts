@@ -41,6 +41,14 @@ export interface ISiteAdminWebPartProps {
   ReportsDocRententionYears: string;
   ReportsDocSearchFileExt: string;
   ReportsDocSearchKeywords: string;
+  SiteAttestation: boolean;
+  SiteAttestationText: string;
+  SitePropAttestationDate: boolean;
+  SitePropAttestationDateDescription: string;
+  SitePropAttestationDateLabel: string;
+  SitePropAttestationUser: boolean;
+  SitePropAttestationUserDescription: string;
+  SitePropAttestationUserLabel: string;
   SitePropClientSideAssets: boolean;
   SitePropClientSideAssetsDescription: string;
   SitePropClientSideAssetsLabel: string;
@@ -134,6 +142,8 @@ declare const SiteAdmin: {
     imageReferences: string[];
     maxStorageDesc?: string;
     maxStorageSize?: number;
+    siteAttestation?: boolean;
+    siteAttestationText?: string;
     reportProps?: {
       docRententionYears?: string;
       docSearchFileExt?: string;
@@ -232,6 +242,8 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         tabName: this.properties.WebPropSearchPropertyTabName,
         values: this.properties.WebPropSearchPropertyValues
       },
+      siteAttestation: this.properties.SiteAttestation,
+      siteAttestationText: this.properties.SiteAttestationText,
       siteProps,
       title: this.properties.AppTitle,
       webProps
@@ -254,6 +266,8 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
   protected get disableReactivePropertyChanges(): boolean { return true; }
 
   private _siteProps: string[] = [
+    "SitePropAttestationDate",
+    "SitePropAttestationUser",
     "SitePropClientSideAssets",
     "SitePropCommentsOnSitePagesDisabled",
     "SitePropContainsAppCatalog",
@@ -275,6 +289,8 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
   ];
 
   private _readOnlyProps: string[] = [
+    "SitePropAttestationDate",
+    "SitePropAttestationUser",
     "SitePropCreated",
     "SitePropHubSite",
     "SitePropHubSiteConnected",
@@ -305,6 +321,12 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     for (let i = 0; i < props.length; i++) {
       const propName = props[i];
       const hideProp = (this.properties as any)[propName] as boolean;
+
+      // See if this is the attestation option, and ensure we this feature is enabled
+      if (propName.indexOf("SitePropAttestation") === 0 && this.properties.SiteAttestation !== true) {
+        // Skip this property
+        continue;
+      }
 
       // See if this is a readonly property
       if (this._readOnlyProps.indexOf(propName) >= 0) {
@@ -360,6 +382,19 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   label: strings.AppTitle,
                   description: "The title displayed.",
                   value: this.properties.AppTitle
+                }),
+                PropertyPaneToggle("SiteAttestation", {
+                  label: "Site Attestation Feature",
+                  checked: this.properties.SiteAttestation,
+                  onText: "The admins will be able to record the date/time of attestation.",
+                  offText: "This feature will not be visible in the solution."
+                }),
+                PropertyPaneTextField("SiteAttestationText", {
+                  label: "Site Attestation Text",
+                  description: "The text displayed in the confirmation dialog.",
+                  multiline: true,
+                  rows: 6,
+                  value: this.properties.SiteAttestationText
                 })
               ]
             },
