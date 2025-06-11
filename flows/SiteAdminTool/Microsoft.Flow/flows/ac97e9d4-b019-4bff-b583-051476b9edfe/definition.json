@@ -47,8 +47,8 @@
                     "type": "OpenApiConnection",
                     "inputs": {
                         "parameters": {
-                            "dataset": "https://dattaspo.sharepoint.com/sites/Demo/site-admin",
-                            "table": "1d4b1510-1ac5-4fd4-8a4f-1108327f2a41"
+                            "dataset": "",
+                            "table": ""
                         },
                         "host": {
                             "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
@@ -65,8 +65,8 @@
                     "type": "OpenApiConnection",
                     "inputs": {
                         "parameters": {
-                            "dataset": "https://dattaspo.sharepoint.com/sites/Demo/site-admin",
-                            "table": "1d4b1510-1ac5-4fd4-8a4f-1108327f2a41",
+                            "dataset": "",
+                            "table": "",
                             "id": "@triggerBody()?['ID']"
                         },
                         "host": {
@@ -112,8 +112,8 @@
                                 "type": "OpenApiConnection",
                                 "inputs": {
                                     "parameters": {
-                                        "dataset": "https://dattaspo.sharepoint.com/sites/Demo/site-admin",
-                                        "table": "1d4b1510-1ac5-4fd4-8a4f-1108327f2a41",
+                                        "dataset": "",
+                                        "table": "",
                                         "id": "@outputs('Get_Request_Item')?['body/ID']",
                                         "item/Title": "@{body('Get_Request_Item')?['Title']}",
                                         "item/Status/Value": "Cancelled"
@@ -177,8 +177,8 @@
                             "type": "OpenApiConnection",
                             "inputs": {
                                 "parameters": {
-                                    "dataset": "https://dattaspo.sharepoint.com/sites/Demo/site-admin",
-                                    "table": "1d4b1510-1ac5-4fd4-8a4f-1108327f2a41",
+                                    "dataset": "",
+                                    "table": "",
                                     "id": "@outputs('Get_Request_Item')?['body/ID']",
                                     "item/Title": "@{body('Get_Request_Item')?['Title']}",
                                     "item/Status/Value": "Completed"
@@ -226,8 +226,8 @@
                                 "type": "OpenApiConnection",
                                 "inputs": {
                                     "parameters": {
-                                        "dataset": "https://dattaspo.sharepoint.com/sites/Demo/site-admin",
-                                        "table": "1d4b1510-1ac5-4fd4-8a4f-1108327f2a41",
+                                        "dataset": "",
+                                        "table": "",
                                         "id": "@outputs('Get_Request_Item')?['body/ID']",
                                         "item/Title": "@{body('Get_Request_Item')?['Title']}",
                                         "item/Status/Value": "Error"
