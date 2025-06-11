@@ -69,7 +69,9 @@ export class LoadForm {
                     prependedDropdown: {
                         updateLabel: true,
                         items: [
+                            { text: "/", value: "/" },
                             { text: "/sites/", value: "/sites/", isSelected: true },
+                            //{ text: "/personal/", value: "/personal/" },
                             { text: "/teams/", value: "/teams/" }
                         ],
                         assignTo: obj => { ddl = obj; },
@@ -77,11 +79,20 @@ export class LoadForm {
                             if (item) {
                                 // Set the last selection
                                 ddlLastSelection = item.value;
-                                return;
-                            }
 
-                            // Set the default item
-                            ddl.setValue(ddlLastSelection);
+                                // See if this is the absolute root
+                                if (item.value == "/") {
+                                    // Clear and disable the textbox
+                                    tb.setValue("");
+                                    tb.elTextbox.disabled = true;
+                                } else {
+                                    // Enable the textbox
+                                    tb.elTextbox.disabled = false;
+                                }
+                            } else {
+                                // Set the default item
+                                ddl.setValue(ddlLastSelection);
+                            }
                         })
                     },
                     onControlRendered: ctrl => {
