@@ -18,6 +18,7 @@ export interface IProp {
     label: string;
 }
 export interface IAppProps {
+    auditOnly?: boolean;
     context?: any;
     disableSensitivityLabelOverride?: boolean;
     imageReferences: string[];
@@ -147,7 +148,7 @@ export class App {
     }
 
     // Renders the tabs
-    private renderTabs(el: HTMLElement) {
+    private renderTabs(el: HTMLElement,) {
         // Clear the tabs element
         while (el.firstChild) { el.removeChild(el.firstChild); }
 
@@ -171,7 +172,8 @@ export class App {
                             control: {
                                 label: "Sub Site Url:",
                                 type: Components.FormControlTypes.Dropdown,
-                                items: [{ text: "Loading Sites..." }],
+                                isDisabled: this._props.auditOnly,
+                                items: [this._props.auditOnly ? { text: DataSource.Site.Url } : { text: "Loading Sites..." }],
                                 value: DataSource.Web.Id,
                                 required: true,
                                 onChange: item => {
@@ -182,6 +184,9 @@ export class App {
                                     }
                                 },
                                 onControlRendered: ctrl => {
+                                    // Ensure it's not disabled
+                                    if (ctrl.props.isDisabled) { return; }
+
                                     // Load the sub-webs
                                     DataSource.getAllWebs(DataSource.Site.Url).then(() => {
                                         // Update the control

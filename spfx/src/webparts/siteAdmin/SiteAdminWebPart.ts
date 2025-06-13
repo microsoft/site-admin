@@ -35,6 +35,7 @@ const imageReferences = [
 
 export interface ISiteAdminWebPartProps {
   AppTitle: string;
+  AuditOnly: boolean;
   DisableSensitivityLabelOverride: boolean;
   MaxStorage: number;
   MaxStorageDescription: string;
@@ -125,6 +126,7 @@ import "main-lib";
 declare const SiteAdmin: {
   appDescription: string;
   render: (props: {
+    auditOnly?: boolean;
     context?: WebPartContext;
     el: HTMLElement;
     title?: string;
@@ -212,6 +214,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
 
     // Render the solution
     SiteAdmin.render({
+      auditOnly: this.properties.AuditOnly,
       context: this.context,
       el: this.domElement,
       disableSensitivityLabelOverride: this.properties.DisableSensitivityLabelOverride,
@@ -372,6 +375,12 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   label: strings.AppTitle,
                   description: "The title displayed.",
                   value: this.properties.AppTitle
+                }),
+                PropertyPaneToggle("AuditOnly", {
+                  label: "Audit Only",
+                  checked: this.properties.AuditOnly,
+                  onText: "The site admins/owners will only see the Information and Audit Tools tabs.",
+                  offText: "The site owners will only see the Information and Audit Tools tabs."
                 }),
                 PropertyPaneToggle("SiteAttestation", {
                   label: "Site Attestation Feature",
