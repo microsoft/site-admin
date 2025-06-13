@@ -178,7 +178,7 @@ export class SharingLinks {
     }
 
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, onClose: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, onClose: () => void) {
         // Render the summary
         new Dashboard({
             el,
@@ -342,28 +342,31 @@ export class SharingLinks {
                                 }
                             });
 
-                            // Add the delete group button
-                            tooltips.push({
-                                el,
-                                content: "Click to delete the site group.",
-                                btnProps: {
-                                    assignTo: btn => { btnDelete = btn; },
-                                    className: "pe-2 py-1",
-                                    iconType: personX(24, 24, "mx-1"),
-                                    text: "Delete",
-                                    type: Components.ButtonTypes.OutlineDanger,
-                                    onClick: () => {
-                                        // Confirm the deletion of the group
-                                        if (confirm("Are you sure you want to delete this group?")) {
-                                            // Disable this button
-                                            btnDelete.disable();
+                            // Ensure we can delete
+                            if (!auditOnly) {
+                                // Add the delete group button
+                                tooltips.push({
+                                    el,
+                                    content: "Click to delete the site group.",
+                                    btnProps: {
+                                        assignTo: btn => { btnDelete = btn; },
+                                        className: "pe-2 py-1",
+                                        iconType: personX(24, 24, "mx-1"),
+                                        text: "Delete",
+                                        type: Components.ButtonTypes.OutlineDanger,
+                                        onClick: () => {
+                                            // Confirm the deletion of the group
+                                            if (confirm("Are you sure you want to delete this group?")) {
+                                                // Disable this button
+                                                btnDelete.disable();
 
-                                            // Delete the site group
-                                            this.removeGroup(row.Group, row.GroupId);
+                                                // Delete the site group
+                                                this.removeGroup(row.Group, row.GroupId);
+                                            }
                                         }
                                     }
-                                }
-                            });
+                                });
+                            }
 
                             // Render the buttons
                             Components.TooltipGroup({
@@ -378,7 +381,7 @@ export class SharingLinks {
     }
 
     // Runs the report
-    static run(el: HTMLElement, values: { [key: string]: string }, onClose: () => void) {
+    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
         // Show a loading dialog
         LoadingDialog.setHeader("Loading Security Groups");
         LoadingDialog.setBody("Loading the permissions for this site...");
@@ -428,7 +431,7 @@ export class SharingLinks {
                     while (el.firstChild) { el.removeChild(el.firstChild); }
 
                     // Render the summary
-                    this.renderSummary(el, onClose);
+                    this.renderSummary(el, auditOnly, onClose);
 
                     // Hide the loading dialog
                     LoadingDialog.hide();

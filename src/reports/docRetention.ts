@@ -79,7 +79,7 @@ export class DocRetention {
     }
 
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, items: ISearchItem[], onClose: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, items: ISearchItem[], onClose: () => void) {
         // Render the summary
         new Dashboard({
             el,
@@ -166,7 +166,7 @@ export class DocRetention {
                             let btnDelete: Components.IButton = null;
 
                             // Render the buttons
-                            Components.TooltipGroup({
+                            let tooltips = Components.TooltipGroup({
                                 el,
                                 tooltips: [
                                     {
@@ -198,31 +198,35 @@ export class DocRetention {
                                                 window.open(`${row.SPWebUrl}/_layouts/15/download.aspx?SourceUrl=${row.Path}`, "_blank");
                                             }
                                         }
-                                    },
-                                    {
-                                        content: "Delete Document",
-                                        btnProps: {
-                                            assignTo: btn => { btnDelete = btn; },
-                                            className: "pe-2 py-1",
-                                            iconClassName: "mx-1",
-                                            iconType: trash,
-                                            iconSize: 24,
-                                            text: "Delete",
-                                            type: Components.ButtonTypes.OutlineDanger,
-                                            onClick: () => {
-                                                // Confirm the deletion of the group
-                                                if (confirm("Are you sure you want to delete this document?")) {
-                                                    // Disable this button
-                                                    btnDelete.disable();
-
-                                                    // Delete the document
-                                                    this.deleteDocument(row);
-                                                }
-                                            }
-                                        }
                                     }
                                 ]
                             });
+
+                            // Add the delete option
+                            if (!auditOnly) {
+                                tooltips.add({
+                                    content: "Delete Document",
+                                    btnProps: {
+                                        assignTo: btn => { btnDelete = btn; },
+                                        className: "pe-2 py-1",
+                                        iconClassName: "mx-1",
+                                        iconType: trash,
+                                        iconSize: 24,
+                                        text: "Delete",
+                                        type: Components.ButtonTypes.OutlineDanger,
+                                        onClick: () => {
+                                            // Confirm the deletion of the group
+                                            if (confirm("Are you sure you want to delete this document?")) {
+                                                // Disable this button
+                                                btnDelete.disable();
+
+                                                // Delete the document
+                                                this.deleteDocument(row);
+                                            }
+                                        }
+                                    }
+                                })
+                            }
                         }
                     }
                 ]
@@ -231,7 +235,7 @@ export class DocRetention {
     }
 
     // Runs the report
-    static run(el: HTMLElement, values: { [key: string]: string }, onClose: () => void) {
+    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Site");
         LoadingDialog.setBody("Searching the site for files...");
@@ -259,7 +263,7 @@ export class DocRetention {
             while (el.firstChild) { el.removeChild(el.firstChild); }
 
             // Render the summary
-            this.renderSummary(el, search.results, onClose);
+            this.renderSummary(el, auditOnly, search.results, onClose);
 
             // Hide the loading dialog
             LoadingDialog.hide();

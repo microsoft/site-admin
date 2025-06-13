@@ -30,6 +30,7 @@ enum ReportTypes {
  * Reports Tab
  */
 export class ReportsTab {
+    private _auditOnly: boolean = null;
     private _el: HTMLElement = null;
     private _disableSensitivityLabelOverride: boolean = null;
     private _reportProps: IReportProps = null;
@@ -37,6 +38,7 @@ export class ReportsTab {
 
     // Constructor
     constructor(el: HTMLElement, appProps: IAppProps) {
+        this._auditOnly = appProps.auditOnly ? true : false;
         this._el = el;
         this._disableSensitivityLabelOverride = appProps.disableSensitivityLabelOverride;
         this._reportProps = appProps.reportProps;
@@ -182,50 +184,50 @@ export class ReportsTab {
                 // Run the report
                 switch (selectedReport) {
                     case ReportTypes.DocRetention:
-                        Reports.DocRetention.run(this._el, form.getValues(), () => {
+                        Reports.DocRetention.run(this._el, this._auditOnly, form.getValues(), () => {
                             // Render this component
                             this.render(selectedReport);
                         });
                         break;
                     case ReportTypes.ExternalShares:
-                        Reports.ExternalShares.run(this._el, form.getValues(), () => {
+                        Reports.ExternalShares.run(this._el, this._auditOnly, form.getValues(), () => {
                             // Render this component
                             this.render(selectedReport);
                         });
                         break;
                     case ReportTypes.ExternalUsers:
-                        Reports.ExternalUsers.run(this._el, form.getValues(), () => {
+                        Reports.ExternalUsers.run(this._el, this._auditOnly, form.getValues(), () => {
                             // Render this component
                             this.render(selectedReport);
                         });
                         break;
                     case ReportTypes.Lists:
-                        Reports.Lists.run(this._el, form.getValues(), this._disableSensitivityLabelOverride, () => {
+                        Reports.Lists.run(this._el, this._auditOnly, form.getValues(), this._disableSensitivityLabelOverride, () => {
                             // Render this component
                             this.render(selectedReport);
                         });
                         break;
                     case ReportTypes.Permissions:
-                        Reports.Permissions.run(this._el, form.getValues(), () => {
+                        Reports.Permissions.run(this._el, this._auditOnly, form.getValues(), () => {
                             // Render this component
                             this.render(selectedReport);
                         });
                         break;
                     case ReportTypes.SearchDocs:
-                        Reports.SearchDocs.run(this._el, form.getValues(), () => {
+                        Reports.SearchDocs.run(this._el, this._auditOnly, form.getValues(), () => {
                             // Render this component
                             this.render(selectedReport);
                         });
                         break;
                     case ReportTypes.SearchEEEU:
-                        Reports.SearchEEEU.run(this._el, form.getValues(), () => {
+                        Reports.SearchEEEU.run(this._el, this._auditOnly, form.getValues(), () => {
                             // Render this component
                             this.render(selectedReport);
                         });
                         break;
                     case ReportTypes.SearchProp:
                         let searchValue = form.getValues()["value"];
-                        Reports.SearchProp.run(this._el, this._searchProps.managedProperty, typeof (searchValue) === "string" ? searchValue : searchValue?.value, () => {
+                        Reports.SearchProp.run(this._el, this._auditOnly, this._searchProps.managedProperty, typeof (searchValue) === "string" ? searchValue : searchValue?.value, () => {
                             // Render this component
                             this.render(selectedReport);
                         });
@@ -234,7 +236,7 @@ export class ReportsTab {
                         // Ensure the values exist
                         let values = form.getValues();
                         if (values.UserName || values.PeoplePicker.length > 0) {
-                            Reports.SearchUsers.run(this._el, values, () => {
+                            Reports.SearchUsers.run(this._el, this._auditOnly, values, () => {
                                 // Render this component
                                 this.render(selectedReport);
                             });
@@ -253,13 +255,13 @@ export class ReportsTab {
                         }
                         break;
                     case ReportTypes.SharingLinks:
-                        Reports.SharingLinks.run(this._el, form.getValues(), () => {
+                        Reports.SharingLinks.run(this._el, this._auditOnly, form.getValues(), () => {
                             // Render this component
                             this.render(selectedReport);
                         });
                         break;
                     case ReportTypes.UniquePermissions:
-                        Reports.UniquePermissions.run(this._el, form.getValues(), () => {
+                        Reports.UniquePermissions.run(this._el, this._auditOnly, form.getValues(), () => {
                             // Render this component
                             this.render(selectedReport);
                         });

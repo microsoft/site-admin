@@ -54,7 +54,7 @@ export class SearchProp {
     }
 
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, searchProp: string, items: ISearchItem[], onClose: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, searchProp: string, items: ISearchItem[], onClose: () => void) {
         // Render the summary
         new Dashboard({
             el,
@@ -177,7 +177,7 @@ export class SearchProp {
     }
 
     // Runs the report
-    static run(el: HTMLElement, searchProp: string, searchValue: string, onClose: () => void) {
+    static run(el: HTMLElement, auditOnly: boolean, searchProp: string, searchValue: string, onClose: () => void) {
         let searchEmpty = searchValue ? false : true;
 
         // Show a loading dialog
@@ -219,7 +219,7 @@ export class SearchProp {
             }
 
             // Render the summary
-            this.renderSummary(el, searchProp, search.results, onClose);
+            this.renderSummary(el, auditOnly, searchProp, search.results, onClose);
 
             // Hide the loading dialog
             LoadingDialog.hide();
