@@ -43,10 +43,8 @@ export interface ISiteAdminWebPartProps {
   ReportsDocSearchKeywords: string;
   SiteAttestation: boolean;
   SiteAttestationText: string;
-  SitePropAttestationDate: boolean;
   SitePropAttestationDateDescription: string;
   SitePropAttestationDateLabel: string;
-  SitePropAttestationUser: boolean;
   SitePropAttestationUserDescription: string;
   SitePropAttestationUserLabel: string;
   SitePropClientSideAssets: boolean;
@@ -58,7 +56,6 @@ export interface ISiteAdminWebPartProps {
   SitePropContainsAppCatalog: boolean;
   SitePropContainsAppCatalogDescription: string;
   SitePropContainsAppCatalogLabel: string;
-  SitePropCreated: boolean;
   SitePropCreatedDescription: string;
   SitePropCreatedLabel: string;
   SitePropCustomScriptsEnabled: boolean;
@@ -70,10 +67,8 @@ export interface ISiteAdminWebPartProps {
   SitePropExcludeFromOfflineClient: boolean;
   SitePropExcludeFromOfflineClientDescription: string;
   SitePropExcludeFromOfflineClientLabel: string;
-  SitePropHubSite: boolean;
   SitePropHubSiteDescription: string;
   SitePropHubSiteLabel: string;
-  SitePropHubSiteConnected: boolean;
   SitePropHubSiteConnectedDescription: string;
   SitePropHubSiteConnectedLabel: string;
   SitePropIncreaseStorage: boolean;
@@ -94,13 +89,10 @@ export interface ISiteAdminWebPartProps {
   SitePropSocialBarOnSitePagesDisabled: boolean;
   SitePropSocialBarOnSitePagesDisabledDescription: string;
   SitePropSocialBarOnSitePagesDisabledLabel: string;
-  SitePropStorageUsed: boolean;
   SitePropStorageUsedDescription: string;
   SitePropStorageUsedLabel: string;
-  SitePropTemplate: boolean;
   SitePropTemplateDescription: string;
   SitePropTemplateLabel: string;
-  SitePropTitle: boolean;
   SitePropTitleDescription: string;
   SitePropTitleLabel: string;
   WebPropCommentsOnSitePagesDisabled: boolean;
@@ -122,10 +114,8 @@ export interface ISiteAdminWebPartProps {
   WebPropSearchScope: boolean;
   WebPropSearchScopeDescription: string;
   WebPropSearchScopeLabel: string;
-  WebPropTemplate: boolean;
   WebPropTemplateDescription: string;
   WebPropTemplateLabel: string;
-  WebPropTitle: boolean;
   WebPropTitleDescription: string;
   WebPropTitleLabel: string;
 }
