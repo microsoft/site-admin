@@ -786,7 +786,7 @@ export class DataSource {
                         } else {
                             // Check to see if this is a read-only site and determine if the user is an admin
                             this.checkReadOnlySite(this.SiteContext.SiteFullUrl).then(isAdmin => {
-                                // Set the flag
+                                // See if this is an admin
                                 this._isAdmin = isAdmin;
                                 if (isAdmin) {
                                     // Load the web information
