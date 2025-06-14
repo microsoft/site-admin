@@ -35,6 +35,7 @@ const imageReferences = [
 
 export interface ISiteAdminWebPartProps {
   AppTitle: string;
+  AuditOnly: boolean;
   DisableSensitivityLabelOverride: boolean;
   MaxStorage: number;
   MaxStorageDescription: string;
@@ -43,10 +44,8 @@ export interface ISiteAdminWebPartProps {
   ReportsDocSearchKeywords: string;
   SiteAttestation: boolean;
   SiteAttestationText: string;
-  SitePropAttestationDate: boolean;
   SitePropAttestationDateDescription: string;
   SitePropAttestationDateLabel: string;
-  SitePropAttestationUser: boolean;
   SitePropAttestationUserDescription: string;
   SitePropAttestationUserLabel: string;
   SitePropClientSideAssets: boolean;
@@ -58,7 +57,6 @@ export interface ISiteAdminWebPartProps {
   SitePropContainsAppCatalog: boolean;
   SitePropContainsAppCatalogDescription: string;
   SitePropContainsAppCatalogLabel: string;
-  SitePropCreated: boolean;
   SitePropCreatedDescription: string;
   SitePropCreatedLabel: string;
   SitePropCustomScriptsEnabled: boolean;
@@ -70,10 +68,8 @@ export interface ISiteAdminWebPartProps {
   SitePropExcludeFromOfflineClient: boolean;
   SitePropExcludeFromOfflineClientDescription: string;
   SitePropExcludeFromOfflineClientLabel: string;
-  SitePropHubSite: boolean;
   SitePropHubSiteDescription: string;
   SitePropHubSiteLabel: string;
-  SitePropHubSiteConnected: boolean;
   SitePropHubSiteConnectedDescription: string;
   SitePropHubSiteConnectedLabel: string;
   SitePropIncreaseStorage: boolean;
@@ -94,13 +90,10 @@ export interface ISiteAdminWebPartProps {
   SitePropSocialBarOnSitePagesDisabled: boolean;
   SitePropSocialBarOnSitePagesDisabledDescription: string;
   SitePropSocialBarOnSitePagesDisabledLabel: string;
-  SitePropStorageUsed: boolean;
   SitePropStorageUsedDescription: string;
   SitePropStorageUsedLabel: string;
-  SitePropTemplate: boolean;
   SitePropTemplateDescription: string;
   SitePropTemplateLabel: string;
-  SitePropTitle: boolean;
   SitePropTitleDescription: string;
   SitePropTitleLabel: string;
   WebPropCommentsOnSitePagesDisabled: boolean;
@@ -122,10 +115,8 @@ export interface ISiteAdminWebPartProps {
   WebPropSearchScope: boolean;
   WebPropSearchScopeDescription: string;
   WebPropSearchScopeLabel: string;
-  WebPropTemplate: boolean;
   WebPropTemplateDescription: string;
   WebPropTemplateLabel: string;
-  WebPropTitle: boolean;
   WebPropTitleDescription: string;
   WebPropTitleLabel: string;
 }
@@ -135,6 +126,7 @@ import "main-lib";
 declare const SiteAdmin: {
   appDescription: string;
   render: (props: {
+    auditOnly?: boolean;
     context?: WebPartContext;
     el: HTMLElement;
     title?: string;
@@ -222,6 +214,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
 
     // Render the solution
     SiteAdmin.render({
+      auditOnly: this.properties.AuditOnly,
       context: this.context,
       el: this.domElement,
       disableSensitivityLabelOverride: this.properties.DisableSensitivityLabelOverride,
@@ -382,6 +375,12 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   label: strings.AppTitle,
                   description: "The title displayed.",
                   value: this.properties.AppTitle
+                }),
+                PropertyPaneToggle("AuditOnly", {
+                  label: "Audit Only",
+                  checked: this.properties.AuditOnly,
+                  onText: "The site admins/owners will only see the Information and Audit Tools tabs.",
+                  offText: "The site owners will only see the Information and Audit Tools tabs."
                 }),
                 PropertyPaneToggle("SiteAttestation", {
                   label: "Site Attestation Feature",

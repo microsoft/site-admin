@@ -254,7 +254,7 @@ export class SearchUsers {
         )
     }
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, items: ISearchItem[], onClose: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, items: ISearchItem[], onClose: () => void) {
         // Render the summary
         new Dashboard({
             el,
@@ -416,28 +416,31 @@ export class SearchUsers {
                                     }
                                 });
 
-                                // Add the remove button
-                                tooltips.add({
-                                    content: "Removes the user from the group",
-                                    btnProps: {
-                                        assignTo: btn => { btnDelete = btn; },
-                                        className: "pe-2 py-1",
-                                        //iconType: GetIcon(24, 24, "PersonDelete", "mx-1"),
-                                        text: "Remove From Group",
-                                        type: Components.ButtonTypes.OutlineDanger,
-                                        onClick: () => {
-                                            // Confirm the removal of the user
-                                            if (confirm("Are you sure you want to remove the user from this group?")) {
-                                                // Disable this button
-                                                btnDelete.disable();
+                                // Ensure we can remove
+                                if (!auditOnly) {
+                                    // Add the remove button
+                                    tooltips.add({
+                                        content: "Removes the user from the group",
+                                        btnProps: {
+                                            assignTo: btn => { btnDelete = btn; },
+                                            className: "pe-2 py-1",
+                                            //iconType: GetIcon(24, 24, "PersonDelete", "mx-1"),
+                                            text: "Remove From Group",
+                                            type: Components.ButtonTypes.OutlineDanger,
+                                            onClick: () => {
+                                                // Confirm the removal of the user
+                                                if (confirm("Are you sure you want to remove the user from this group?")) {
+                                                    // Disable this button
+                                                    btnDelete.disable();
 
-                                                // Remove the user
-                                                this.removeUserFromGroup(row.Name, row.Id, row.GroupId);
+                                                    // Remove the user
+                                                    this.removeUserFromGroup(row.Name, row.Id, row.GroupId);
+                                                }
                                             }
                                         }
-                                    }
-                                });
-                            } else {
+                                    });
+                                }
+                            } else if (!auditOnly) {
                                 // Add the remove button
                                 tooltips.add({
                                     content: "Removes the user from the site",
@@ -468,7 +471,7 @@ export class SearchUsers {
     }
 
     // Runs the report
-    static run(el: HTMLElement, values: { [key: string]: any }, onClose: () => void) {
+    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: any }, onClose: () => void) {
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Site");
         LoadingDialog.setBody("Searching the current permissions of the site...");
@@ -495,7 +498,7 @@ export class SearchUsers {
                 while (el.firstChild) { el.removeChild(el.firstChild); }
 
                 // Render the summary
-                this.renderSummary(el, this._items, onClose);
+                this.renderSummary(el, auditOnly, this._items, onClose);
 
                 // Hide the loading dialog
                 LoadingDialog.hide();

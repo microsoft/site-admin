@@ -124,6 +124,93 @@ export class DataSource {
     }
 
     // Checks to see if a site is set to read-only and determines if the user is a site admin
+    private static checkOwner(siteUrl: string): PromiseLike<boolean> {
+        // Return a promise
+        return new Promise(resolve => {
+            // See if the user is part of the owner's group
+            Web(siteUrl).AssociatedOwnerGroup().query({
+                Expand: ["Users"]
+            }).execute(ownersGroup => {
+                let groupIds = [];
+
+                // Parse the group users
+                for (let i = 0; i < ownersGroup.Users.results.length; i++) {
+                    let item = ownersGroup.Users.results[i];
+
+                    // See if this is a user
+                    if (item.PrincipalType == SPTypes.PrincipalTypes.User) {
+                        // See if this is the user
+                        if (item.Email == ContextInfo.userEmail) {
+                            // Resolve the request
+                            resolve(true);
+                            return;
+                        }
+                    }
+                    // Else, see if this is a M365 group
+                    else if (item.PrincipalType == SPTypes.PrincipalTypes.SecurityGroup) {
+                        // Add the group id
+                        groupIds.push(this.getGroupId(item.LoginName));
+                    }
+                }
+
+                // See if no groups exist
+                if (groupIds.length == 0) {
+                    // Resolve the request
+                    resolve(false);
+                    return;
+                }
+
+                // Create the request for getting the M365 group information in a batch request
+                let ds = DirectorySession();
+
+                // Parse the group ids to see if the user is a site admin
+                let isSiteAdmin = false;
+                groupIds.forEach(groupId => {
+                    // See if the user is an member/owner of this group
+                    ds.group(groupId).query({
+                        Expand: ["members", "owners"],
+                        Select: [
+                            "id",
+                            "members/principalName", "members/id", "members/displayName", "members/mail",
+                            "owners/principalName", "owners/id", "owners/displayName", "owners/mail"
+                        ]
+                    }).batch(group => {
+                        // See if we already set the flag
+                        if (isSiteAdmin) { return; }
+
+                        // See if the user is a member
+                        for (let i = 0; i < group.members.results.length; i++) {
+                            if (group.members.results[i].mail == ContextInfo.userEmail) {
+                                // Set the flag
+                                isSiteAdmin = true;
+                                return;
+                            }
+                        }
+
+                        // See if the user is a owner
+                        for (let i = 0; i < group.owners.results.length; i++) {
+                            if (group.owners.results[i].mail == ContextInfo.userEmail) {
+                                // Set the flag
+                                isSiteAdmin = true;
+                                return;
+                            }
+                        }
+                    });
+                });
+
+                // Execute the request
+                ds.execute(() => {
+                    // Resolve the request
+                    resolve(isSiteAdmin);
+                });
+            }, () => {
+                // Resolve the request
+                resolve(false);
+            });
+        });
+    }
+
+    // Checks to see if a site is set to read-only and determines if the user is a site admin
     private static checkReadOnlySite(siteUrl: string): PromiseLike<boolean> {
         // Return a promise
         return new Promise(resolve => {
@@ -671,9 +758,14 @@ export class DataSource {
     }
 
     // Validates that the user is an SCA of the site
+    private static _isAdmin: boolean = false;
+    static get IsAdmin(): boolean { return this._isAdmin; }
     static validate(webUrl: string): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve, reject) => {
+            // Set the flag
+            this._isAdmin = false;
+
             // Get the web context
             ContextInfo.getWeb(webUrl).execute(
                 context => {
@@ -694,6 +786,8 @@ export class DataSource {
                         } else {
                             // Check to see if this is a read-only site and determine if the user is an admin
                             this.checkReadOnlySite(this.SiteContext.SiteFullUrl).then(isAdmin => {
+                                // See if this is an admin
+                                this._isAdmin = isAdmin;
                                 if (isAdmin) {
                                     // Load the web information
                                     this.loadWebInfo(this.SiteContext.WebFullUrl).then(() => {
@@ -701,8 +795,17 @@ export class DataSource {
                                         this.loadSiteInfo().then(resolve, reject);
                                     }, reject);
                                 } else {
-                                    // Reject the request
-                                    reject("Site exists, but you are not the administrator. Please have the site administrator submit the request.");
+                                    // Check to see if this is an owner
+                                    this.checkOwner(this.SiteContext.SiteFullUrl).then(isOwner => {
+                                        // See if they are an owner
+                                        if (isOwner) {
+                                            // Load the site information
+                                            this.loadSiteInfo().then(resolve, reject);
+                                        } else {
+                                            // Reject the request
+                                            reject("Site exists, but you are not the administrator. Please have the site administrator submit the request.");
+                                        }
+                                    });
                                 }
                             });
                         }

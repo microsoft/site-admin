@@ -136,7 +136,7 @@ export class UniquePermissions {
     static getFormFields(): Components.IFormControlProps[] { return []; }
 
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, onClose: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, onClose: () => void) {
         // Render the summary
         new Dashboard({
             el,
@@ -286,7 +286,7 @@ export class UniquePermissions {
     }
 
     // Runs the report
-    static run(el: HTMLElement, values: { [key: string]: string }, onClose: () => void) {
+    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Lists");
         LoadingDialog.setBody("Searching the site...");
@@ -326,7 +326,7 @@ export class UniquePermissions {
             while (el.firstChild) { el.removeChild(el.firstChild); }
 
             // Render the summary
-            this.renderSummary(el, onClose);
+            this.renderSummary(el, auditOnly, onClose);
 
             // Hide the loading dialog
             LoadingDialog.hide();

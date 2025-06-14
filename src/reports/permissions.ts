@@ -372,7 +372,7 @@ export class Permissions {
         )
     }
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, items: IPermissionItem[], onClose: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, items: IPermissionItem[], onClose: () => void) {
         // Render the summary
         new Dashboard({
             el,
@@ -590,7 +590,7 @@ export class Permissions {
     }
 
     // Runs the report
-    static run(el: HTMLElement, values: { [key: string]: any }, onClose: () => void) {
+    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: any }, onClose: () => void) {
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Site");
         LoadingDialog.setBody("Searching the current permissions of the site...");
@@ -612,7 +612,7 @@ export class Permissions {
                 while (el.firstChild) { el.removeChild(el.firstChild); }
 
                 // Render the summary
-                this.renderSummary(el, this._items, onClose);
+                this.renderSummary(el, auditOnly, this._items, onClose);
 
                 // Hide the loading dialog
                 LoadingDialog.hide();

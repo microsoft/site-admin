@@ -99,7 +99,7 @@ export class Lists {
     }
 
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, onClose: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, onClose: () => void) {
         // Render the summary
         new Dashboard({
             el,
@@ -187,7 +187,7 @@ export class Lists {
                                 item.ListTemplateType == SPTypes.ListTemplateType.WebPageLibrary
 
                             // Render the buttons
-                            Components.TooltipGroup({
+                            let tooltips = Components.TooltipGroup({
                                 el,
                                 tooltips: [
                                     {
@@ -200,36 +200,40 @@ export class Lists {
                                                 window.open(item.ListViewUrl + "?ID=" + item.ListUrl, "_blank");
                                             }
                                         }
-                                    },
-                                    {
-                                        content: "Click to set the default sensitivity label.",
-                                        btnProps: {
-                                            isDisabled: !isLibrary || !DataSource.HasSensitivityLabels,
-                                            text: "Default Label",
-                                            type: Components.ButtonTypes.OutlinePrimary,
-                                            onClick: () => {
-                                                // Show the form
-                                                this.setDefaultSensitivityLabel(item);
-                                            }
-                                        }
-                                    },
-                                    {
-                                        content: "Click to set the default sensitivity label for any files that aren't currently labelled.",
-                                        btnProps: {
-                                            isDisabled: !isLibrary || !DataSource.HasSensitivityLabels,
-                                            text: "Label Files",
-                                            type: Components.ButtonTypes.OutlinePrimary,
-                                            onClick: () => {
-                                                // Load the folders for this list
-                                                this.loadFolders(item).then(folders => {
-                                                    // Show the form
-                                                    this.setDefaultSensitivityLabelForFiles(item, folders);
-                                                });
-                                            }
-                                        }
                                     }
                                 ]
                             });
+
+                            // Add the options to make changes
+                            if (!auditOnly) {
+                                tooltips.add({
+                                    content: "Click to set the default sensitivity label.",
+                                    btnProps: {
+                                        isDisabled: !isLibrary || !DataSource.HasSensitivityLabels,
+                                        text: "Default Label",
+                                        type: Components.ButtonTypes.OutlinePrimary,
+                                        onClick: () => {
+                                            // Show the form
+                                            this.setDefaultSensitivityLabel(item);
+                                        }
+                                    }
+                                });
+                                tooltips.add({
+                                    content: "Click to set the default sensitivity label for any files that aren't currently labelled.",
+                                    btnProps: {
+                                        isDisabled: !isLibrary || !DataSource.HasSensitivityLabels,
+                                        text: "Label Files",
+                                        type: Components.ButtonTypes.OutlinePrimary,
+                                        onClick: () => {
+                                            // Load the folders for this list
+                                            this.loadFolders(item).then(folders => {
+                                                // Show the form
+                                                this.setDefaultSensitivityLabelForFiles(item, folders);
+                                            });
+                                        }
+                                    }
+                                });
+                            }
                         }
                     }
                 ]
@@ -238,7 +242,7 @@ export class Lists {
     }
 
     // Runs the report
-    static run(el: HTMLElement, values: { [key: string]: string }, disableLabelOverride: boolean, onClose: () => void) {
+    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, disableLabelOverride: boolean, onClose: () => void) {
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Lists");
         LoadingDialog.setBody("Searching the site...");
@@ -310,7 +314,7 @@ export class Lists {
             while (el.firstChild) { el.removeChild(el.firstChild); }
 
             // Render the summary
-            this.renderSummary(el, onClose);
+            this.renderSummary(el, auditOnly, onClose);
 
             // Hide the loading dialog
             LoadingDialog.hide();

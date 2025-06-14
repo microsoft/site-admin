@@ -78,7 +78,6 @@ export class WebTab extends Tab<{
                     name: "Template",
                     label: this._props["Template"].label,
                     description: this._props["Template"].description,
-                    isDisabled: this._props["Template"].disabled,
                     type: Components.FormControlTypes.Readonly,
                     value: this._currValues.WebTemplate,
                     onControlRendering: ctrl => {
@@ -99,7 +98,6 @@ export class WebTab extends Tab<{
                     name: "Title",
                     label: this._props["Title"].label,
                     description: this._props["Title"].description,
-                    isDisabled: this._props["Title"].disabled,
                     type: Components.FormControlTypes.Readonly,
                     value: this._currValues.WebTitle
                 },

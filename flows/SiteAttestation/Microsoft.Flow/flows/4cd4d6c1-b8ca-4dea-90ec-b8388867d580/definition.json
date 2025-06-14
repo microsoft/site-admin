@@ -20,8 +20,8 @@
                 },
                 "provisioningMethod": "FromDefinition",
                 "failureAlertSubscription": true,
-                "clientLastModifiedTime": "2025-06-02T18:37:22.8261924Z",
-                "connectionKeySavedTimeKey": "2025-06-02T18:37:22.8261924Z",
+                "clientLastModifiedTime": "2025-06-02T19:37:06.4900094Z",
+                "connectionKeySavedTimeKey": "2025-06-02T19:37:06.4900094Z",
                 "creationSource": "Portal",
                 "modifiedSources": "Portal"
             },
@@ -47,8 +47,8 @@
                     "type": "OpenApiConnection",
                     "inputs": {
                         "parameters": {
-                            "dataset": "",
-                            "table": ""
+                            "dataset": "https://dattaspo.sharepoint.com/sites/Demo/site-admin",
+                            "table": "1d4b1510-1ac5-4fd4-8a4f-1108327f2a41"
                         },
                         "host": {
                             "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
@@ -196,14 +196,16 @@
                 "source": "Embedded",
                 "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
                 "tier": "NotSpecified",
-                "apiName": "sharepointonline"
+                "apiName": "sharepointonline",
+                "isProcessSimpleApiReferenceConversionAlreadyDone": false
             },
             "shared_excelonlinebusiness": {
                 "connectionName": "shared-excelonlinebu-636779ba-357f-4569-8fb3-befaae8875e7",
                 "source": "Embedded",
                 "id": "/providers/Microsoft.PowerApps/apis/shared_excelonlinebusiness",
                 "tier": "NotSpecified",
-                "apiName": "excelonlinebusiness"
+                "apiName": "excelonlinebusiness",
+                "isProcessSimpleApiReferenceConversionAlreadyDone": false
             }
         },
         "flowFailureAlertSubscribed": false,

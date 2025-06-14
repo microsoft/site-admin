@@ -45,7 +45,23 @@ export class Tabs {
     // Renders the tabs
     private render(appProps: IAppProps) {
         // Set the items
-        let items: Components.IListGroupItem[] = [
+        let items: Components.IListGroupItem[] = !DataSource.IsAdmin || appProps.auditOnly ? [
+            {
+                tabName: "Information",
+                isActive: true,
+                onRender: (el) => {
+                    // Render the tab
+                    new InfoTab(el, appProps.siteAttestation, appProps.siteProps);
+                }
+            },
+            {
+                tabName: "Audit Tools",
+                onRender: (el) => {
+                    // Render the tab
+                    this._tabReports = new ReportsTab(el, appProps);
+                }
+            }
+        ] : [
             {
                 tabName: "Information",
                 isActive: true,
@@ -84,56 +100,59 @@ export class Tabs {
             }
         ];
 
-        // See if we are customizing a search property
-        if (!isEmpty(appProps.searchProps) && appProps.searchProps.key) {
-            items.splice(1, 0, {
-                tabName: appProps.searchProps.tabName || "Search Property",
+        // See if we are rendering all tabs
+        if (appProps.auditOnly != true) {
+            // See if we are customizing a search property
+            if (!isEmpty(appProps.searchProps) && appProps.searchProps.key) {
+                items.splice(1, 0, {
+                    tabName: appProps.searchProps.tabName || "Search Property",
+                    onRender: (el) => {
+                        // Render the tab
+                        this._tabSearch = new SearchPropTab(el, appProps.searchProps);
+                    }
+                });
+            }
+
+            // Add the webs
+            items.push({
+                tabName: DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "Top Site" : "Sub Site",
+                onRenderTab: el => {
+                    // Set the tab reference
+                    this._elWebTab = el;
+                },
                 onRender: (el) => {
                     // Render the tab
-                    this._tabSearch = new SearchPropTab(el, appProps.searchProps);
+                    this._tabWeb = new WebTab(el, appProps.webProps);
+                }
+            });
+
+            // Add the changes
+            items.push({
+                tabName: "Changes",
+                type: Components.ListGroupItemTypes.Success,
+                onRender: (el) => {
+                    // Render the changes
+                    this._tabChanges = new ChangesTab(el);
+                },
+                onClick: () => {
+                    // Get the changes
+                    let changes = this._tabFeatures.getRequests().concat(
+                        this._tabManagement.getRequests(),
+                        this._webRequests,
+                        this._tabWeb.getRequests()
+                    );
+
+                    // See if the search tab exists
+                    if (this._tabSearch) {
+                        // Append the search request
+                        changes = changes.concat(this._tabSearch.getRequests());
+                    }
+
+                    // Set the changes
+                    this._tabChanges.setChanges(changes);
                 }
             });
         }
-
-        // Add the webs
-        items.push({
-            tabName: DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "Top Site" : "Sub Site",
-            onRenderTab: el => {
-                // Set the tab reference
-                this._elWebTab = el;
-            },
-            onRender: (el) => {
-                // Render the tab
-                this._tabWeb = new WebTab(el, appProps.webProps);
-            }
-        });
-
-        // Add the changes
-        items.push({
-            tabName: "Changes",
-            type: Components.ListGroupItemTypes.Success,
-            onRender: (el) => {
-                // Render the changes
-                this._tabChanges = new ChangesTab(el);
-            },
-            onClick: () => {
-                // Get the changes
-                let changes = this._tabFeatures.getRequests().concat(
-                    this._tabManagement.getRequests(),
-                    this._webRequests,
-                    this._tabWeb.getRequests()
-                );
-
-                // See if the search tab exists
-                if (this._tabSearch) {
-                    // Append the search request
-                    changes = changes.concat(this._tabSearch.getRequests());
-                }
-
-                // Set the changes
-                this._tabChanges.setChanges(changes);
-            }
-        });
 
         // Render the tabs
         Components.ListGroup({
