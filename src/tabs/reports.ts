@@ -38,7 +38,7 @@ export class ReportsTab {
 
     // Constructor
     constructor(el: HTMLElement, appProps: IAppProps) {
-        this._auditOnly = appProps.auditOnly ? true : false;
+        this._auditOnly = !DataSource.IsAdmin || (appProps.auditOnly ? true : false);
         this._el = el;
         this._disableSensitivityLabelOverride = appProps.disableSensitivityLabelOverride;
         this._reportProps = appProps.reportProps;

@@ -45,7 +45,7 @@ export class Tabs {
     // Renders the tabs
     private render(appProps: IAppProps) {
         // Set the items
-        let items: Components.IListGroupItem[] = appProps.auditOnly ? [
+        let items: Components.IListGroupItem[] = !DataSource.IsAdmin || appProps.auditOnly ? [
             {
                 tabName: "Information",
                 isActive: true,
