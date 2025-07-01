@@ -1,6 +1,6 @@
 {
   "name": "site-admin",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "description": "An automation tool for tenant admins to use for automation of features/enhancements.",
   "main": "src/index.ts",
   "scripts": {
@@ -16,8 +16,8 @@
   "author": "Gunjan Datta <gudatta@microsoft.com>",
   "license": "ISC",
   "dependencies": {
-    "datatables.net": "^2.1.8",
-    "datatables.net-bs5": "^2.1.8",
+    "datatables.net": "^2.3.2",
+    "datatables.net-bs5": "^2.3.2",
     "dattatable": "^2.11.40",
     "gd-sprest-bs": "^10.13.95",
     "jquery": "^3.7.1",
