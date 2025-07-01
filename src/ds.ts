@@ -778,6 +778,9 @@ export class DataSource {
                     }).execute(settings => {
                         // See if this is the site admin
                         if (settings.IsUserSiteAdmin) {
+                            // Set the flag
+                            this._isAdmin = true;
+
                             // Load the web information
                             this.loadWebInfo(this.SiteContext.WebFullUrl).then(() => {
                                 // Load the site information
