@@ -48,42 +48,32 @@ export class FeaturesTab extends Tab<{
         if (this._currValues.ExcludeFromOfflineClient) {
             let excludeContent = this._currValues.ExcludeFromOfflineClient == "Hide";
 
-            // Parse the webs
-            for (let i = 0; i < DataSource.SiteItems.length; i++) {
-                let item = DataSource.SiteItems[i];
-
-                // Add the request
-                requests.push({
-                    oldValue: "",
-                    newValue: excludeContent,
-                    scope: "Web",
-                    property: "ExcludeFromOfflineClient",
-                    url: item.text
-                });
-            }
+            // Add the request
+            requests.push({
+                oldValue: "",
+                newValue: excludeContent,
+                scope: "Web",
+                property: "ExcludeFromOfflineClient",
+                url: DataSource.SiteContext.SiteFullUrl
+            });
         }
 
         // Check the no crawl property
         if (this._currValues.NoCrawl) {
             let hideContent = this._currValues.NoCrawl == "Hide";
 
-            // Parse the webs
-            for (let i = 0; i < DataSource.SiteItems.length; i++) {
-                let item = DataSource.SiteItems[i];
-
-                // Add the request
-                requests.push({
-                    oldValue: "",
-                    newValue: !hideContent,
-                    request: {
-                        key: RequestTypes.NoCrawl,
-                        message: `The request to ${hideContent ? "hide" : "show"} content from search will be processed within 5 minutes.`,
-                        value: !hideContent
-                    },
-                    scope: "Web",
-                    url: item.text
-                });
-            }
+            // Add the request
+            requests.push({
+                oldValue: "",
+                newValue: !hideContent,
+                request: {
+                    key: RequestTypes.NoCrawl,
+                    message: `The request to ${hideContent ? "hide" : "show"} content from search will be processed within 5 minutes.`,
+                    value: !hideContent
+                },
+                scope: "Web",
+                url: DataSource.SiteContext.SiteFullUrl
+            });
         }
 
         // Return the requests
