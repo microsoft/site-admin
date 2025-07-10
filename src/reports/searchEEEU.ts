@@ -1,5 +1,5 @@
 import { Dashboard, LoadingDialog } from "dattatable";
-import { Components, ContextInfo, Helper, Types, Web } from "gd-sprest-bs";
+import { Components, ContextInfo, Helper, Types, Web, SPTypes } from "gd-sprest-bs";
 import { DataSource } from "../ds";
 import { ExportCSV } from "./exportCSV";
 
@@ -15,6 +15,10 @@ interface ISearchItem {
     Id?: number;
     WebTitle: string;
     WebUrl: string;
+    ListName?: string;
+    ListUrl?: string;
+    ItemId?: number;
+    ItemType?: string;
 }
 
 interface IUserInfo {
@@ -27,11 +31,105 @@ interface IUserInfo {
 
 const CSVFields = [
     "Name", "UserName", "Email", "Group", "GroupInfo",
-    "Role", "RoleInfo", "WebTitle", "WebUrl"
+    "Role", "RoleInfo", "WebTitle", "WebUrl", "ListName", "ListUrl", "ItemId", "ItemType"
 ]
 
 export class SearchEEEU {
     private static _items: ISearchItem[] = null;
+
+    // Analyzes the lists and libraries with unique permissions
+    private static analyzeListsAndLibraries(web: Types.SP.WebOData, users: IUserInfo[]) {
+        // Return a promise
+        return new Promise(resolve => {
+            // Get the lists with unique permissions for this web
+            Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().query({
+                Filter: "Hidden eq false and HasUniqueRoleAssignments eq true",
+                Expand: ["RoleAssignments", "RoleAssignments/Member", "RoleAssignments/RoleDefinitionBindings"],
+                Select: ["Title", "RootFolder/ServerRelativeUrl", "HasUniqueRoleAssignments"]
+            }).execute(lists => {
+                let counter = 0;
+
+                // Parse the lists with unique permissions
+                Helper.Executor(lists.results, list => {
+                    // Update the loading dialog
+                    LoadingDialog.setBody(`Analyzing List ${++counter} of ${lists.results.length} in web: ${web.Title}`);
+
+                    // Check list-level permissions
+                    return this.checkListPermissions(web, list, users);
+                }).then(resolve);
+            }, resolve);
+        });
+    }
+
+    // Checks permissions on a specific list
+    private static checkListPermissions(web: Types.SP.WebOData, list: Types.SP.ListOData, users: IUserInfo[]) {
+        // Return a promise
+        return new Promise(resolve => {
+            // Parse the users to check against list permissions
+            Helper.Executor(users, user => {
+                // Return a promise
+                return new Promise(resolve => {
+                    // Parse the role assignments for this list
+                    for (let i = 0; i < list.RoleAssignments.results.length; i++) {
+                        let role: Types.SP.RoleAssignmentOData = list.RoleAssignments.results[i] as any;
+
+                        // See if this role is the user directly
+                        if (role.Member.LoginName == user.Name) {
+                            // Add the user information
+                            this._items.push({
+                                WebUrl: web.Url,
+                                WebTitle: web.Title,
+                                Id: user.Id,
+                                LoginName: user.Name,
+                                Name: user.Title || user.Name,
+                                Email: user.EMail,
+                                Group: "",
+                                GroupId: 0,
+                                GroupInfo: "",
+                                Role: role.RoleDefinitionBindings.results[0].Name,
+                                RoleInfo: role.RoleDefinitionBindings.results[0].Description || "",
+                                ListName: list.Title,
+                                ListUrl: list.RootFolder?.ServerRelativeUrl,
+                                ItemType: "List"
+                            });
+                        }
+                    }
+
+                    // Get the groups the user is associated with
+                    Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).SiteUsers(user.Id).Groups().execute(groups => {
+                        // Parse the groups the member belongs to
+                        Helper.Executor(groups.results, group => {
+                            // Parse the role assignments for this list
+                            for (let i = 0; i < list.RoleAssignments.results.length; i++) {
+                                let role: Types.SP.RoleAssignmentOData = list.RoleAssignments.results[i] as any;
+
+                                // See if the user belongs to this role through group membership
+                                if (role.Member.LoginName == group.LoginName) {
+                                    // Add the user information
+                                    this._items.push({
+                                        WebUrl: web.Url,
+                                        WebTitle: web.Title,
+                                        Id: user.Id,
+                                        LoginName: user.Name,
+                                        Name: user.Title || user.Name,
+                                        Email: user.EMail,
+                                        Group: group.Title,
+                                        GroupId: group.Id,
+                                        GroupInfo: group.Description || "",
+                                        Role: role.RoleDefinitionBindings.results[0].Name,
+                                        RoleInfo: role.RoleDefinitionBindings.results[0].Description || "",
+                                        ListName: list.Title,
+                                        ListUrl: list.RootFolder?.ServerRelativeUrl,
+                                        ItemType: "List"
+                                    });
+                                }
+                            }
+                        }).then(resolve);
+                    }, resolve);
+                });
+            }).then(resolve);
+        });
+    }
 
     // Analyzes the site
     private static analyzeSite(web: Types.SP.WebOData) {
@@ -47,14 +145,11 @@ export class SearchEEEU {
                 // Parse the users
                 Helper.Executor(users, user => {
                     // Update the loading dialog
-                    LoadingDialog.setBody(`Analyzing User ${++counter} of ${users.length}`);
+                    LoadingDialog.setBody(`Analyzing User ${++counter} of ${users.length} for web: ${web.Title}`);
 
                     // Get the user information
                     return this.getUserInfo(web, user);
                 }).then(() => {
-                    // Hide the loading dialog
-                    LoadingDialog.hide();
-
                     // Resolve the request
                     resolve(null);
                 });
@@ -63,7 +158,17 @@ export class SearchEEEU {
     }
 
     // Gets the form fields to display
-    static getFormFields(): Components.IFormControlProps[] { return []; }
+    static getFormFields(): Components.IFormControlProps[] { 
+        return [
+            {
+                name: "RecursiveSearch",
+                label: "Recursive Search",
+                description: "Enable this option to search all sub-webs in the site collection, including lists and libraries with unique permissions.",
+                type: Components.FormControlTypes.Switch,
+                value: false
+            }
+        ];
+    }
 
     // Get the user information
     private static getUserInfo(web: Types.SP.WebOData, userInfo: IUserInfo) {
@@ -87,7 +192,10 @@ export class SearchEEEU {
                         GroupId: 0,
                         GroupInfo: "",
                         Role: role.RoleDefinitionBindings.results[0].Name,
-                        RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
+                        RoleInfo: role.RoleDefinitionBindings.results[0].Description || "",
+                        ListName: "",
+                        ListUrl: "",
+                        ItemType: "Web"
                     });
 
                     // Check the next role
@@ -117,7 +225,10 @@ export class SearchEEEU {
                                 GroupId: group.Id,
                                 GroupInfo: group.Description || "",
                                 Role: role.RoleDefinitionBindings.results[0].Name,
-                                RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
+                                RoleInfo: role.RoleDefinitionBindings.results[0].Description || "",
+                                ListName: "",
+                                ListUrl: "",
+                                ItemType: "Web"
                             });
                         }
                     }
@@ -240,7 +351,7 @@ export class SearchEEEU {
                 onRendering: dtProps => {
                     dtProps.columnDefs = [
                         {
-                            "targets": 5,
+                            "targets": 7,
                             "orderable": false,
                             "searchable": false
                         }
@@ -330,6 +441,14 @@ export class SearchEEEU {
                             // Append the span
                             el.appendChild(span);
                         }
+                    },
+                    {
+                        name: "ItemType",
+                        title: "Item Type"
+                    },
+                    {
+                        name: "ListName",
+                        title: "List/Library"
                     },
                     {
                         className: "text-end",
@@ -423,16 +542,12 @@ export class SearchEEEU {
         // Clear the items
         this._items = [];
 
-        // Get the permissions
-        Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).query({
-            Expand: [
-                "RoleAssignments", "RoleAssignments/Groups", "RoleAssignments/Member",
-                "RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings",
-                "SiteGroups"
-            ]
-        }).execute(web => {
-            // Analyze the site
-            this.analyzeSite(web).then(() => {
+        // Check if recursive search is enabled
+        let recursiveSearch = values["RecursiveSearch"];
+
+        if (recursiveSearch) {
+            // Recursively search all webs in the site collection
+            this.runRecursiveSearch().then(() => {
                 // Clear the element
                 while (el.firstChild) { el.removeChild(el.firstChild); }
 
@@ -442,6 +557,76 @@ export class SearchEEEU {
                 // Hide the loading dialog
                 LoadingDialog.hide();
             });
+        } else {
+            // Run the search only on the current web
+            this.runSingleWebSearch().then(() => {
+                // Clear the element
+                while (el.firstChild) { el.removeChild(el.firstChild); }
+
+                // Render the summary
+                this.renderSummary(el, auditOnly, this._items, onClose);
+
+                // Hide the loading dialog
+                LoadingDialog.hide();
+            });
+        }
+    }
+
+    // Runs the search on a single web (current behavior)
+    private static runSingleWebSearch(): PromiseLike<void> {
+        // Return a promise
+        return new Promise(resolve => {
+            // Get the permissions for the current web
+            Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).query({
+                Expand: [
+                    "RoleAssignments", "RoleAssignments/Groups", "RoleAssignments/Member",
+                    "RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings",
+                    "SiteGroups"
+                ]
+            }).execute(web => {
+                // Analyze the site
+                this.analyzeSite(web).then(() => {
+                    // Also check lists and libraries with unique permissions in this web
+                    this.getUsers().then(users => {
+                        this.analyzeListsAndLibraries(web, users).then(resolve);
+                    });
+                });
+            });
+        });
+    }
+
+    // Runs the recursive search across all webs in the site collection
+    private static runRecursiveSearch(): PromiseLike<void> {
+        // Return a promise
+        return new Promise(resolve => {
+            // Parse all the webs in the site collection
+            let counter = 0;
+            Helper.Executor(DataSource.SiteItems, siteItem => {
+                // Update the loading dialog
+                LoadingDialog.setHeader(`Searching Web ${++counter} of ${DataSource.SiteItems.length}`);
+                LoadingDialog.setBody(`Analyzing permissions for: ${siteItem.text}`);
+
+                // Return a promise
+                return new Promise(resolve => {
+                    // Get the permissions for this web
+                    Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue }).query({
+                        Expand: [
+                            "RoleAssignments", "RoleAssignments/Groups", "RoleAssignments/Member",
+                            "RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings",
+                            "SiteGroups"
+                        ]
+                    }).execute(web => {
+                        // Analyze the site-level permissions
+                        this.analyzeSite(web).then(() => {
+                            // Get the users to check against list permissions
+                            this.getUsers().then(users => {
+                                // Also check lists and libraries with unique permissions
+                                this.analyzeListsAndLibraries(web, users).then(resolve);
+                            });
+                        });
+                    }, resolve);
+                });
+            }).then(resolve);
         });
     }
 }
