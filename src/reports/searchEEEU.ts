@@ -423,25 +423,38 @@ export class SearchEEEU {
         // Clear the items
         this._items = [];
 
-        // Get the permissions
-        Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).query({
-            Expand: [
-                "RoleAssignments", "RoleAssignments/Groups", "RoleAssignments/Member",
-                "RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings",
-                "SiteGroups"
-            ]
-        }).execute(web => {
-            // Analyze the site
-            this.analyzeSite(web).then(() => {
-                // Clear the element
-                while (el.firstChild) { el.removeChild(el.firstChild); }
+        // Parse all webs
+        let counter = 0;
+        Helper.Executor(DataSource.SiteItems, siteItem => {
+            // Update the loading dialog
+            LoadingDialog.setBody(`Getting the info for web ${++counter} of ${DataSource.SiteItems.length}...`);
 
-                // Render the summary
-                this.renderSummary(el, auditOnly, this._items, onClose);
+            // Return a promise
+            return new Promise(resolve => {
+                // Get the permissions
+                Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue }).query({
+                    Expand: [
+                        "RoleAssignments", "RoleAssignments/Groups", "RoleAssignments/Member",
+                        "RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings",
+                        "SiteGroups"
+                    ]
+                }).execute(web => {
+                    // Update the loading dialog
+                    LoadingDialog.setBody(`Analyzing web ${counter} of ${DataSource.SiteItems.length}...`);
 
-                // Hide the loading dialog
-                LoadingDialog.hide();
+                    // Analyze the site
+                    this.analyzeSite(web).then(resolve);
+                });
             });
+        }).then(() => {
+            // Clear the element
+            while (el.firstChild) { el.removeChild(el.firstChild); }
+
+            // Render the summary
+            this.renderSummary(el, auditOnly, this._items, onClose);
+
+            // Hide the loading dialog
+            LoadingDialog.hide();
         });
     }
 }
