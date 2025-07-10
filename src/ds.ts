@@ -328,12 +328,13 @@ export class DataSource {
             // Get all the sub sites
             Web(url, { requestDigest: this.SiteContext.FormDigestValue }).query({
                 Expand: ["Webs"],
-                Select: ["Webs/Id", "Webs/ServerRelativeUrl"]
+                Select: ["Webs/Id", "Webs/ServerRelativeUrl", "Webs/Title"]
             }).execute(resp => {
                 // Parse the webs
                 Helper.Executor(resp.Webs.results, web => {
                     // Append the item
                     this._siteItems.push({
+                        data: web.Title,
                         text: web.ServerRelativeUrl,
                         value: web.Id
                     });

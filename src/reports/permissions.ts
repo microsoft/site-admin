@@ -176,7 +176,7 @@ export class Permissions {
     }
 
     // Analyze the role
-    private static analyzeRole(role: Types.SP.RoleAssignmentOData): string[] {
+    private static analyzeRole(role: Types.SP.RoleAssignmentOData, webUrl: string, webTitle: string): string[] {
         let item: IPermissionItem = null;
 
         // See if this is a user
@@ -194,8 +194,8 @@ export class Permissions {
                 SiteMembers: [],
                 SiteOwners: [],
                 Type: "User",
-                WebTitle: DataSource.Site.RootWeb.Title,
-                WebUrl: DataSource.Site.Url
+                WebTitle: webTitle,
+                WebUrl: webUrl
             };
         }
         // Else, see if this is a site group
@@ -213,8 +213,8 @@ export class Permissions {
                 SiteMembers: role.Member["Users"].results,
                 SiteOwners: [role.Member["Owner"]],
                 Type: "Site Group",
-                WebTitle: DataSource.Site.RootWeb.Title,
-                WebUrl: DataSource.Site.Url,
+                WebTitle: webTitle,
+                WebUrl: webUrl,
             };
         } else {
             // See if this is a M365 group
@@ -233,8 +233,8 @@ export class Permissions {
                 SiteMembers: role.Member["Users"]?.results || [],
                 SiteOwners: role.Member["Owner"] ? [role.Member["Owner"]] : [],
                 Type: groupId ? "M365 Group" : "AD Group",
-                WebTitle: DataSource.Site.RootWeb.Title,
-                WebUrl: DataSource.Site.Url
+                WebTitle: webTitle,
+                WebUrl: webUrl
             };
         }
 
@@ -253,7 +253,7 @@ export class Permissions {
     }
 
     // Analyzes the roles
-    private static analyzeRoles(roles: Types.SP.RoleAssignmentOData[]): PromiseLike<void> {
+    private static analyzeRoles(roles: Types.SP.RoleAssignmentOData[], webUrl: string, webTitle: string): PromiseLike<void> {
         // Return a promise
         return new Promise(resolve => {
             let counter = 0;
@@ -268,7 +268,7 @@ export class Permissions {
                 LoadingDialog.setBody(`Analyzing Role ${++counter} of ${roles.length}`);
 
                 // Analyze the role
-                groupIds = groupIds.concat(this.analyzeRole(role));
+                groupIds = groupIds.concat(this.analyzeRole(role, webUrl, webTitle));
             }).then(() => {
                 // Remove duplicates from the array
                 groupIds = groupIds.filter((value, idx, self) => {
@@ -592,7 +592,7 @@ export class Permissions {
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: any }, onClose: () => void) {
         // Show a loading dialog
-        LoadingDialog.setHeader("Searching Site");
+        LoadingDialog.setHeader("Getting Site Roles");
         LoadingDialog.setBody("Searching the current permissions of the site...");
         LoadingDialog.show();
 
@@ -600,23 +600,36 @@ export class Permissions {
         this._groupIds = {};
         this._items = [];
 
-        // Get the permissions
-        Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).RoleAssignments().query({
-            Expand: [
-                "Member", "Member/Groups", "Member/Owner", "Member/Users", "RoleDefinitionBindings"
-            ]
-        }).execute(roles => {
-            // Analyze the roles
-            this.analyzeRoles(roles.results).then(() => {
-                // Clear the element
-                while (el.firstChild) { el.removeChild(el.firstChild); }
+        // Parse all webs
+        let counter = 0;
+        Helper.Executor(DataSource.SiteItems, siteItem => {
+            // Update the loading dialog
+            LoadingDialog.setBody(`Getting the roles for web ${++counter} of ${DataSource.SiteItems.length}...`);
 
-                // Render the summary
-                this.renderSummary(el, auditOnly, this._items, onClose);
+            // Return a promise
+            return new Promise(resolve => {
+                // Get the permissions
+                Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue }).RoleAssignments().query({
+                    Expand: [
+                        "Member", "Member/Groups", "Member/Owner", "Member/Users", "RoleDefinitionBindings"
+                    ]
+                }).execute(roles => {
+                    // Update the loading dialog
+                    LoadingDialog.setBody(`Analyzing the roles for web ${counter} of ${DataSource.SiteItems.length}...`);
 
-                // Hide the loading dialog
-                LoadingDialog.hide();
+                    // Analyze the roles
+                    this.analyzeRoles(roles.results, siteItem.title, siteItem.data).then(resolve);
+                });
             });
+        }).then(() => {
+            // Clear the element
+            while (el.firstChild) { el.removeChild(el.firstChild); }
+
+            // Render the summary
+            this.renderSummary(el, auditOnly, this._items, onClose);
+
+            // Hide the loading dialog
+            LoadingDialog.hide();
         });
     }
 
