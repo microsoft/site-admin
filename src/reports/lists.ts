@@ -7,6 +7,7 @@ interface IList {
     DefaultSensitivityLabel: string;
     HasUniqueRoleAssignments: boolean;
     ItemCount: number;
+    ListId: string;
     ListName: string;
     ListTemplateType: number;
     ListTemplate: string;
@@ -45,6 +46,7 @@ export class Lists {
             DefaultSensitivityLabel: list.DefaultSensitivityLabelForLibrary,
             HasUniqueRoleAssignments: list.HasUniqueRoleAssignments,
             ItemCount: list.ItemCount,
+            ListId: list.Id,
             ListName: list.Title,
             ListTemplate: this._listTemplates[list.BaseTemplate],
             ListTemplateType: list.BaseTemplate,
@@ -75,7 +77,7 @@ export class Lists {
             let items: Components.IDropdownItem[] = [{ text: "All Files in Library", value: null }];
 
             // Load the folders for this list
-            Web(item.WebUrl).Lists(item.ListName).RootFolder().Folders().query({ Expand: ["ListItemAllFields"], OrderBy: ["Name"] }).execute(folders => {
+            Web(item.WebUrl).Lists().getById(item.ListId).RootFolder().Folders().query({ Expand: ["ListItemAllFields"], OrderBy: ["Name"] }).execute(folders => {
                 // Parse the folders
                 folders.results.forEach(folder => {
                     // Ensure an item exists for this folder
@@ -371,7 +373,7 @@ export class Lists {
 
                                 // Restore the permissions
                                 Web(item.WebUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
-                                    .Lists(item.ListName).update({
+                                    .Lists().getById(item.ListId).update({
                                         DefaultSensitivityLabelForLibrary: labelId
                                     }).execute(() => {
                                         // Update the item

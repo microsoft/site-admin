@@ -8,6 +8,7 @@ interface IPermission {
     FileName?: string;
     FileUrl?: string;
     ItemId: number;
+    ListId: string;
     ListName: string;
     ListType: number;
     ListUrl: string;
@@ -43,13 +44,13 @@ export class UniquePermissions {
             }
 
             // Get the items where it has broken inheritance
-            Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(list.Title).Items().query({
+            Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().getById(list.Id).Items().query({
                 GetAllItems: true,
                 Select,
                 Top: 5000
             }).execute(items => {
                 // Create a batch job
-                let batch = Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(list.Title);
+                let batch = Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().getById(list.Id);
 
                 // Parse the items
                 Helper.Executor(items.results, item => {
@@ -89,6 +90,7 @@ export class UniquePermissions {
                                     FileName: item["FileLeafRef"],
                                     FileUrl: item["FileRef"],
                                     ItemId: item.Id,
+                                    ListId: list.Id,
                                     ListName: list.Title,
                                     ListType: list.BaseTemplate,
                                     ListUrl: list.RootFolder.ServerRelativeUrl,
@@ -108,6 +110,7 @@ export class UniquePermissions {
                                     FileName: item["FileLeafRef"],
                                     FileUrl: item["FileRef"],
                                     ItemId: item.Id,
+                                    ListId: list.Id,
                                     ListName: list.Title,
                                     ListType: list.BaseTemplate,
                                     ListUrl: list.RootFolder.ServerRelativeUrl,
@@ -279,7 +282,7 @@ export class UniquePermissions {
 
         // Restore the permissions
         Web(item.WebUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
-            .Lists(item.ListName).Items(item.ItemId).resetRoleInheritance().execute(() => {
+            .Lists().getById(item.ListId).Items(item.ItemId).resetRoleInheritance().execute(() => {
                 // Close the loading dialog
                 LoadingDialog.hide();
             });
