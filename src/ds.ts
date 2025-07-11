@@ -393,6 +393,16 @@ export class DataSource {
         return /^[{]?[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}[}]?$/.test(groupId) ? groupId : null;
     }
 
+    // Encodes list names for use in SharePoint REST API calls
+    // This ensures special characters like '/' are properly handled
+    static encodeListName(listName: string): string {
+        // Return null/undefined as-is
+        if (!listName) { return listName; }
+        
+        // URL encode the list name for safe use in REST API calls
+        return encodeURIComponent(listName);
+    }
+
     // Loads the files for a drive
     static loadFiles(webId: string, listName?: string, folder?: Types.SP.Folder): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
         let files = [];

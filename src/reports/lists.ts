@@ -75,7 +75,7 @@ export class Lists {
             let items: Components.IDropdownItem[] = [{ text: "All Files in Library", value: null }];
 
             // Load the folders for this list
-            Web(item.WebUrl).Lists(item.ListName).RootFolder().Folders().query({ Expand: ["ListItemAllFields"], OrderBy: ["Name"] }).execute(folders => {
+            Web(item.WebUrl).Lists(DataSource.encodeListName(item.ListName)).RootFolder().Folders().query({ Expand: ["ListItemAllFields"], OrderBy: ["Name"] }).execute(folders => {
                 // Parse the folders
                 folders.results.forEach(folder => {
                     // Ensure an item exists for this folder
@@ -371,7 +371,7 @@ export class Lists {
 
                                 // Restore the permissions
                                 Web(item.WebUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
-                                    .Lists(item.ListName).update({
+                                    .Lists(DataSource.encodeListName(item.ListName)).update({
                                         DefaultSensitivityLabelForLibrary: labelId
                                     }).execute(() => {
                                         // Update the item
