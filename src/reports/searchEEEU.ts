@@ -1,18 +1,24 @@
-import { Dashboard, LoadingDialog } from "dattatable";
-import { Components, ContextInfo, Helper, Types, Web } from "gd-sprest-bs";
+import { Dashboard, Documents, LoadingDialog } from "dattatable";
+import { Components, ContextInfo, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
 import { DataSource } from "../ds";
 import { ExportCSV } from "./exportCSV";
 
 interface ISearchItem {
-    Role?: string;
-    RoleInfo?: string;
-    LoginName: string;
-    Name: string;
     Email?: string;
+    FileName?: string;
+    FileUrl?: string;
     Group?: string;
     GroupId?: number;
     GroupInfo?: string;
     Id?: number;
+    ItemId?: number;
+    ListId?: string;
+    ListName?: string;
+    ListUrl?: string;
+    LoginName: string;
+    Name: string;
+    Role?: string;
+    RoleInfo?: string;
     WebTitle: string;
     WebUrl: string;
 }
@@ -26,20 +32,127 @@ interface IUserInfo {
 }
 
 const CSVFields = [
-    "Name", "UserName", "Email", "Group", "GroupInfo",
-    "Role", "RoleInfo", "WebTitle", "WebUrl"
+    "Name", "UserName", "Email", "Group", "GroupInfo", "FileName", "FileUrl",
+    "ItemId", "ListName", "ListUrl", "Role", "RoleInfo", "WebTitle", "WebUrl"
 ]
 
 export class SearchEEEU {
     private static _items: ISearchItem[] = null;
 
+    // Analyzes a lists
+    private static analyzeList(web: Types.SP.WebOData, list: Types.SP.ListOData): PromiseLike<void> {
+        // Return a promise
+        return new Promise(resolve => {
+            let Select = ["Id", "HasUniqueRoleAssignments"];
+
+            // See if this is a document library
+            if (list.BaseTemplate == SPTypes.ListTemplateType.DocumentLibrary || list.BaseTemplate == SPTypes.ListTemplateType.PageLibrary) {
+                // Get the file information
+                Select.push("FileLeafRef");
+                Select.push("FileRef");
+            }
+
+            // Get the items where it has broken inheritance
+            Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(list.Title).Items().query({
+                GetAllItems: true,
+                Select,
+                Top: 5000
+            }).execute(items => {
+                // Create a batch job
+                let batch = Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(list.Title);
+
+                // Parse the items
+                Helper.Executor(items.results, item => {
+                    // See if this item doesn't have unique permissions
+                    if (!item.HasUniqueRoleAssignments) { return; }
+
+                    // Get the permissions
+                    batch.Items(item.Id).RoleAssignments().query({
+                        Filter: `Member/Title eq 'Everyone' or substringof('spo-grid-all-users', Member/LoginName)`,
+                        Expand: [
+                            "Member", "RoleDefinitionBindings"
+                        ]
+                    }).batch(roles => {
+                        // Parse the role assignments
+                        Helper.Executor(roles.results, roleAssignment => {
+                            let roleDefinition = roleAssignment.RoleDefinitionBindings.results[0];
+                            let user: Types.SP.User = roleAssignment.Member as any;
+
+                            // Add a row for this entry
+                            this._items.push({
+                                Email: user.Email,
+                                FileName: item["FileLeafRef"],
+                                FileUrl: item["FileRef"],
+                                Group: "",
+                                GroupId: 0,
+                                GroupInfo: "",
+                                Id: user.Id,
+                                ItemId: item.Id,
+                                ListId: list.Id,
+                                ListName: list.Title,
+                                LoginName: user.LoginName,
+                                ListUrl: list.RootFolder.ServerRelativeUrl,
+                                Name: user.Title || user.LoginName,
+                                Role: roleDefinition.Name,
+                                RoleInfo: roleDefinition.Description || "",
+                                WebUrl: web.Url,
+                                WebTitle: web.Title
+                            });
+                        });
+                    });
+                }).then(() => {
+                    // Execute the batch job
+                    batch.execute(() => {
+                        // Resolve the request
+                        resolve();
+                    });
+                });
+            });
+        });
+    }
+
     // Analyzes the site
-    private static analyzeSite(web: Types.SP.WebOData) {
+    private static analyzeSite(web: Types.SP.WebOData, searchLists: boolean): PromiseLike<void> {
         // Return a promise
         return new Promise(resolve => {
             // Show a loading dialog
             LoadingDialog.setBody("Getting the user information...");
 
+            // Search the users
+            this.analyzeUsers(web).then(() => {
+                // See if we are searching lists
+                if (searchLists) {
+                    // Get the lists
+                    Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().query({
+                        Filter: "Hidden eq false",
+                        Expand: ["RootFolder"],
+                        Select: ["Id", "Title", "BaseTemplate", "HasUniqueRoleAssignments", "RootFolder/ServerRelativeUrl"]
+                    }).execute(lists => {
+                        let ctrList = 0;
+
+                        // Parse the lists
+                        Helper.Executor(lists.results, list => {
+                            // Update the status
+                            LoadingDialog.setBody(`Analyzing List ${++ctrList} of ${lists.results.length}...`);
+
+                            // Analyze the list
+                            return this.analyzeList(web, list);
+                        }).then(() => {
+                            // Resolve the request
+                            resolve(null);
+                        });
+                    });
+                } else {
+                    // Resolve the request
+                    resolve();
+                }
+            })
+        });
+    }
+
+    // Analyze the site users
+    private static analyzeUsers(web: Types.SP.WebOData) {
+        return new Promise(resolve => {
             // Get the users
             this.getUsers().then(users => {
                 let counter = 0;
@@ -52,18 +165,25 @@ export class SearchEEEU {
                     // Get the user information
                     return this.getUserInfo(web, user);
                 }).then(() => {
-                    // Hide the loading dialog
-                    LoadingDialog.hide();
-
                     // Resolve the request
                     resolve(null);
                 });
             }, resolve);
-        });
+        })
     }
 
     // Gets the form fields to display
-    static getFormFields(): Components.IFormControlProps[] { return []; }
+    static getFormFields(): Components.IFormControlProps[] {
+        return [
+            {
+                name: "SearchLists",
+                label: "Search Lists?",
+                description: "Select this option to include searching lists/libraries with broken inheritance.",
+                type: Components.FormControlTypes.Switch,
+                value: false
+            }
+        ];
+    }
 
     // Get the user information
     private static getUserInfo(web: Types.SP.WebOData, userInfo: IUserInfo) {
@@ -208,6 +328,22 @@ export class SearchEEEU {
             }
         )
     }
+
+    // Reverts the item permissions
+    private static revertPermissions(item: ISearchItem) {
+        // Show a loading dialog
+        LoadingDialog.setHeader("Restoring Permissions");
+        LoadingDialog.setBody("This window will close after the item permissions are restored...");
+        LoadingDialog.show();
+
+        // Restore the permissions
+        Web(item.WebUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
+            .Lists(item.ListName).Items(item.ItemId).resetRoleInheritance().execute(() => {
+                // Close the loading dialog
+                LoadingDialog.hide();
+            });
+    }
+
     // Renders the search summary
     private static renderSummary(el: HTMLElement, auditOnly: boolean, items: ISearchItem[], onClose: () => void) {
         // Render the summary
@@ -254,8 +390,22 @@ export class SearchEEEU {
                 },
                 columns: [
                     {
-                        name: "Name",
-                        title: "User Name"
+                        name: "",
+                        title: "Object Type",
+                        onRenderCell: (el, col, item: ISearchItem) => {
+                            // Set the object type
+                            let objType = "Site";
+                            if (item.GroupId > 0) { objType = "Group"; }
+                            if (item.ItemId > 0) { objType = "Item"; }
+                            if (item.FileUrl) { objType = "File" }
+
+                            // Render the info
+                            el.innerHTML = `
+                                ${item.Name}
+                                <br/>
+                                <b>Type: </b>${objType}
+                            `;
+                        }
                     },
                     {
                         name: "Group",
@@ -341,6 +491,41 @@ export class SearchEEEU {
                             // Render the tooltips
                             let tooltips = Components.TooltipGroup({ el });
 
+                            // See if this is a file
+                            if (row.FileUrl) {
+                                // Add a button to the file
+                                tooltips.add({
+                                    content: "Click to view the file.",
+                                    btnProps: {
+                                        className: "pe-2 py-1",
+                                        text: "View File",
+                                        type: Components.ButtonTypes.OutlinePrimary,
+                                        onClick: () => {
+                                            // View the file
+                                            window.open(Documents.isWopi(row.FileName) ? row.WebUrl + "/_layouts/15/WopiFrame.aspx?sourcedoc=" + row.FileUrl + "&action=view" : row.FileUrl, "_blank");
+                                        }
+                                    }
+                                });
+                            }
+
+                            // See if this is a list item
+                            if (row.ListId) {
+                                // Add the view button
+                                tooltips.add({
+                                    content: "Click to view the item unique permissions.",
+                                    btnProps: {
+                                        className: "pe-2 py-1",
+                                        //iconType: GetIcon(24, 24, "PeopleTeam", "mx-1"),
+                                        text: "View Group",
+                                        type: Components.ButtonTypes.OutlinePrimary,
+                                        onClick: () => {
+                                            // View the group
+                                            window.open(`${row.WebUrl}/${ContextInfo.layoutsUrl}/user.aspx?List=${row.ListId}&obj=${row.ListId},${row.FileUrl ? "1" : "2"},LISTITEM`);
+                                        }
+                                    }
+                                });
+                            }
+
                             // Ensure this is a group
                             if (row.GroupId > 0) {
                                 // Add the view button
@@ -351,7 +536,6 @@ export class SearchEEEU {
                                         //iconType: GetIcon(24, 24, "PeopleTeam", "mx-1"),
                                         text: "View Group",
                                         type: Components.ButtonTypes.OutlinePrimary,
-                                        isDisabled: !(row.GroupId > 0),
                                         onClick: () => {
                                             // View the group
                                             window.open(`${row.WebUrl}/${ContextInfo.layoutsUrl}/people.aspx?MembershipGroupId=${row.GroupId}`);
@@ -384,27 +568,49 @@ export class SearchEEEU {
                                     });
                                 }
                             } else if (!auditOnly) {
-                                // Add the remove button
-                                tooltips.add({
-                                    content: "Click to remove the account from all site groups and the site",
-                                    btnProps: {
-                                        assignTo: btn => { btnDelete = btn; },
-                                        className: "pe-2 py-1",
-                                        //iconType: GetIcon(24, 24, "PersonDelete", "mx-1"),
-                                        text: "Remove From Site",
-                                        type: Components.ButtonTypes.OutlineDanger,
-                                        onClick: () => {
-                                            // Confirm the removal of the user
-                                            if (confirm("Are you sure you want to remove the account from this site?")) {
-                                                // Disable this button
-                                                btnDelete.disable();
-
-                                                // Remove the user
-                                                this.removeUser(row.Name, row.Id);
+                                // See if this is an item
+                                if (row.ItemId > 0) {
+                                    // Add the remove button
+                                    tooltips.add({
+                                        content: "Click to restore permissions to inherit from the parent",
+                                        btnProps: {
+                                            assignTo: btn => { btnDelete = btn; },
+                                            className: "pe-2 py-1",
+                                            //iconType: GetIcon(24, 24, "PeopleTeamDelete", "mx-1"),
+                                            text: "Restore",
+                                            type: Components.ButtonTypes.OutlineDanger,
+                                            onClick: () => {
+                                                // Confirm the deletion of the group
+                                                if (confirm("Are you sure you restore the permissions to inherit?")) {
+                                                    // Revert the permissions
+                                                    this.revertPermissions(row);
+                                                }
                                             }
                                         }
-                                    }
-                                });
+                                    });
+                                } else {
+                                    // Add the remove button
+                                    tooltips.add({
+                                        content: "Click to remove the account from all site groups and the site",
+                                        btnProps: {
+                                            assignTo: btn => { btnDelete = btn; },
+                                            className: "pe-2 py-1",
+                                            //iconType: GetIcon(24, 24, "PersonDelete", "mx-1"),
+                                            text: "Remove From Site",
+                                            type: Components.ButtonTypes.OutlineDanger,
+                                            onClick: () => {
+                                                // Confirm the removal of the user
+                                                if (confirm("Are you sure you want to remove the account from this site?")) {
+                                                    // Disable this button
+                                                    btnDelete.disable();
+
+                                                    // Remove the user
+                                                    this.removeUser(row.Name, row.Id);
+                                                }
+                                            }
+                                        }
+                                    });
+                                }
                             }
                         }
                     }
@@ -422,6 +628,9 @@ export class SearchEEEU {
 
         // Clear the items
         this._items = [];
+
+        // See if we are showing hidden lists
+        let searchLists = values["SearchLists"];
 
         // Parse all webs
         let counter = 0;
@@ -443,7 +652,7 @@ export class SearchEEEU {
                     LoadingDialog.setBody(`Analyzing web ${counter} of ${DataSource.SiteItems.length}...`);
 
                     // Analyze the site
-                    this.analyzeSite(web).then(resolve);
+                    this.analyzeSite(web, searchLists).then(resolve);
                 });
             });
         }).then(() => {
