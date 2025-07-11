@@ -305,7 +305,7 @@ export class UniquePermissions {
             return new Promise(resolve => {
                 // Get the lists
                 Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().query({
-                    Filter: "Hidden eq false and HasUniqueRoleAssignments eq true",
+                    Filter: "Hidden eq false",
                     Expand: ["DefaultDisplayFormUrl", "DefaultViewFormUrl", "RootFolder"],
                     Select: ["BaseTemplate", "Id", "Title", "HasUniqueRoleAssignments", "RootFolder/ServerRelativeUrl"]
                 }).execute(lists => {
