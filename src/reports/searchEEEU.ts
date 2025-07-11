@@ -53,13 +53,13 @@ export class SearchEEEU {
             }
 
             // Get the items where it has broken inheritance
-            Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(list.Title).Items().query({
+            Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().getById(list.Id).Items().query({
                 GetAllItems: true,
                 Select,
                 Top: 5000
             }).execute(items => {
                 // Create a batch job
-                let batch = Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(list.Title);
+                let batch = Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().getById(list.Id);
 
                 // Parse the items
                 Helper.Executor(items.results, item => {
@@ -338,7 +338,7 @@ export class SearchEEEU {
 
         // Restore the permissions
         Web(item.WebUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
-            .Lists(item.ListName).Items(item.ItemId).resetRoleInheritance().execute(() => {
+            .Lists().getById(item.ListId).Items(item.ItemId).resetRoleInheritance().execute(() => {
                 // Close the loading dialog
                 LoadingDialog.hide();
             });
