@@ -85,7 +85,7 @@ export class ReportsTab {
                             value: ReportTypes.Lists
                         },
                         {
-                            text: "Permissions (beta)",
+                            text: "Permissions",
                             data: "Scans all users/groups that have permissions to the site.",
                             value: ReportTypes.Permissions
                         },

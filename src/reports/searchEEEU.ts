@@ -178,7 +178,7 @@ export class SearchEEEU {
             {
                 name: "SearchLists",
                 label: "Search Lists?",
-                description: "Select this option to include searching lists/libraries with broken inheritance.",
+                description: "Selecting this option will include a search for unique item permissions in lists/libraries.",
                 type: Components.FormControlTypes.Switch,
                 value: false
             }

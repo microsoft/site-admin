@@ -618,7 +618,7 @@ export class Permissions {
                     LoadingDialog.setBody(`Analyzing the roles for web ${counter} of ${DataSource.SiteItems.length}...`);
 
                     // Analyze the roles
-                    this.analyzeRoles(roles.results, siteItem.title, siteItem.data).then(resolve);
+                    this.analyzeRoles(roles.results, siteItem.text, siteItem.data).then(resolve);
                 });
             });
         }).then(() => {
