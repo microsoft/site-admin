@@ -606,6 +606,10 @@ export class Permissions {
             // Update the loading dialog
             LoadingDialog.setBody(`Getting the roles for web ${++counter} of ${DataSource.SiteItems.length}...`);
 
+            // See if this is a sub-web and doesn't have unique role assignments
+            // The sub-webs have the data property set for them
+            if (siteItem.data != null && !siteItem.data.HasUniqueRoleAssignments) { return; }
+
             // Return a promise
             return new Promise(resolve => {
                 // Get the permissions
@@ -618,7 +622,7 @@ export class Permissions {
                     LoadingDialog.setBody(`Analyzing the roles for web ${counter} of ${DataSource.SiteItems.length}...`);
 
                     // Analyze the roles
-                    this.analyzeRoles(roles.results, siteItem.text, siteItem.data).then(resolve);
+                    this.analyzeRoles(roles.results, siteItem.text, siteItem.data ? siteItem.data.Title : DataSource.Site.RootWeb.Title).then(resolve);
                 });
             });
         }).then(() => {
