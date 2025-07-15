@@ -177,7 +177,7 @@ export class SearchEEEU {
         return [
             {
                 name: "SearchLists",
-                label: "Search Lists?",
+                label: "In Depth Search?",
                 description: "Selecting this option will include a search for unique item permissions in lists/libraries.",
                 type: Components.FormControlTypes.Switch,
                 value: false
