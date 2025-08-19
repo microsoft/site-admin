@@ -148,8 +148,12 @@ export class DataSource {
                     }
                     // Else, see if this is a M365 group
                     else if (item.PrincipalType == SPTypes.PrincipalTypes.SecurityGroup) {
-                        // Add the group id
-                        groupIds.push(this.getGroupId(item.LoginName));
+                        // Get the group id
+                        let groupId = this.getGroupId(item.LoginName);
+                        // Only add valid group ids
+                        if (groupId) {
+                            groupIds.push(groupId);
+                        }
                     }
                 }
 
@@ -202,6 +206,10 @@ export class DataSource {
                 ds.execute(() => {
                     // Resolve the request
                     resolve(isSiteAdmin);
+                }, () => {
+                    // Handle batch execution errors (e.g., invalid group IDs)
+                    // Resolve as false since we couldn't verify group membership
+                    resolve(false);
                 });
             }, () => {
                 // Resolve the request
@@ -245,8 +253,12 @@ export class DataSource {
                         }
                         // Else, see if this is a M365 group
                         else if (item.PrincipalType == SPTypes.PrincipalTypes.SecurityGroup) {
-                            // Add the group id
-                            groupIds.push(this.getGroupId(item.LoginName));
+                            // Get the group id
+                            let groupId = this.getGroupId(item.LoginName);
+                            // Only add valid group ids
+                            if (groupId) {
+                                groupIds.push(groupId);
+                            }
                         }
                     }
 
@@ -299,6 +311,10 @@ export class DataSource {
                     ds.execute(() => {
                         // Resolve the request
                         resolve(isSiteAdmin);
+                    }, () => {
+                        // Handle batch execution errors (e.g., invalid group IDs)
+                        // Resolve as false since we couldn't verify group membership
+                        resolve(false);
                     });
                 }, () => {
                     // Resolve the request

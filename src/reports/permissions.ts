@@ -170,6 +170,10 @@ export class Permissions {
 
                     // Resolve the request
                     resolve();
+                }, () => {
+                    // Handle batch execution errors
+                    // Resolve anyway since we already have basic group information
+                    resolve();
                 });
             });
         });
