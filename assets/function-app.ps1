@@ -285,7 +285,7 @@ if ($item -ne $null) {
                     Write-Host "Removing the key $searchProp from the property bag...";
 
                     # Remove the site property
-                    Remove-PnPPropertyBagValue -Key $searchProp;
+                    Remove-PnPPropertyBagValue -Key $searchProp -Force;
 
                     # Set the output
                     $output = "The property bag $searchProp value was removed.";

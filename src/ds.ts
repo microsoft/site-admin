@@ -179,20 +179,24 @@ export class DataSource {
                         if (isSiteAdmin) { return; }
 
                         // See if the user is a member
-                        for (let i = 0; i < group.members.results.length; i++) {
-                            if (group.members.results[i].mail == ContextInfo.userEmail) {
-                                // Set the flag
-                                isSiteAdmin = true;
-                                return;
+                        if (group.members) {
+                            for (let i = 0; i < group.members.results.length; i++) {
+                                if (group.members.results[i].mail == ContextInfo.userEmail) {
+                                    // Set the flag
+                                    isSiteAdmin = true;
+                                    return;
+                                }
                             }
                         }
 
                         // See if the user is a owner
-                        for (let i = 0; i < group.owners.results.length; i++) {
-                            if (group.owners.results[i].mail == ContextInfo.userEmail) {
-                                // Set the flag
-                                isSiteAdmin = true;
-                                return;
+                        if (group.owners) {
+                            for (let i = 0; i < group.owners.results.length; i++) {
+                                if (group.owners.results[i].mail == ContextInfo.userEmail) {
+                                    // Set the flag
+                                    isSiteAdmin = true;
+                                    return;
+                                }
                             }
                         }
                     });
