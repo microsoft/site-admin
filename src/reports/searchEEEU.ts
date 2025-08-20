@@ -68,7 +68,7 @@ export class SearchEEEU {
 
                     // Get the permissions
                     batch.Items(item.Id).RoleAssignments().query({
-                        Filter: `Member/Title eq 'Everyone' or substringof('spo-grid-all-users', Member/LoginName)`,
+                        Filter: `Member/Title eq 'Everyone' or Member/Title eq 'Everyone except external users' or substringof('spo-grid-all-users', Member/LoginName) or Member/LoginName eq 'c:0(.s|true'`,
                         Expand: [
                             "Member", "RoleDefinitionBindings"
                         ]
@@ -254,7 +254,7 @@ export class SearchEEEU {
 
             // Get the user information list
             Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists("User Information List").Items().query({
-                Filter: `Title eq 'Everyone' or substringof('spo-grid-all-users', Name)`,
+                Filter: `Title eq 'Everyone' or Title eq 'Everyone except external users' or substringof('spo-grid-all-users', Name) or Name eq 'c:0(.s|true'`,
                 Select: ["Id", "Name", "EMail", "Title", "UserName"],
                 GetAllItems: true,
                 Top: 5000
@@ -508,27 +508,9 @@ export class SearchEEEU {
                                 });
                             }
 
-                            // See if this is a list item
-                            if (row.ListId) {
-                                // Add the view button
-                                tooltips.add({
-                                    content: "Click to view the item unique permissions.",
-                                    btnProps: {
-                                        className: "pe-2 py-1",
-                                        //iconType: GetIcon(24, 24, "PeopleTeam", "mx-1"),
-                                        text: "View Group",
-                                        type: Components.ButtonTypes.OutlinePrimary,
-                                        onClick: () => {
-                                            // View the group
-                                            window.open(`${row.WebUrl}/${ContextInfo.layoutsUrl}/user.aspx?List=${row.ListId}&obj=${row.ListId},${row.FileUrl ? "1" : "2"},LISTITEM`);
-                                        }
-                                    }
-                                });
-                            }
-
-                            // Ensure this is a group
+                            // Determine what type of object this is and add appropriate buttons
                             if (row.GroupId > 0) {
-                                // Add the view button
+                                // This is a group member - add group-specific buttons
                                 tooltips.add({
                                     content: "Click to view the site group.",
                                     btnProps: {
@@ -567,10 +549,24 @@ export class SearchEEEU {
                                         }
                                     });
                                 }
-                            } else if (!auditOnly) {
-                                // See if this is an item
-                                if (row.ItemId > 0) {
-                                    // Add the remove button
+                            } else if (row.ListId && row.ItemId > 0) {
+                                // This is a list item with unique permissions
+                                tooltips.add({
+                                    content: "Click to view the item unique permissions.",
+                                    btnProps: {
+                                        className: "pe-2 py-1",
+                                        //iconType: GetIcon(24, 24, "PeopleTeam", "mx-1"),
+                                        text: "View Permissions",
+                                        type: Components.ButtonTypes.OutlinePrimary,
+                                        onClick: () => {
+                                            // View the permissions
+                                            window.open(`${row.WebUrl}/${ContextInfo.layoutsUrl}/user.aspx?List=${row.ListId}&obj=${row.ListId},${row.FileUrl ? "1" : "2"},LISTITEM`);
+                                        }
+                                    }
+                                });
+
+                                // Add restore button if not audit only
+                                if (!auditOnly) {
                                     tooltips.add({
                                         content: "Click to restore permissions to inherit from the parent",
                                         btnProps: {
@@ -588,7 +584,10 @@ export class SearchEEEU {
                                             }
                                         }
                                     });
-                                } else {
+                                }
+                            } else {
+                                // This is a site-level permission
+                                if (!auditOnly) {
                                     // Add the remove button
                                     tooltips.add({
                                         content: "Click to remove the account from all site groups and the site",
