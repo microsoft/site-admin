@@ -1,6 +1,6 @@
 {
   "name": "site-admin",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "An automation tool for tenant admins to use for automation of features/enhancements.",
   "main": "src/index.ts",
   "scripts": {
@@ -19,7 +19,7 @@
     "datatables.net": "^2.3.2",
     "datatables.net-bs5": "^2.3.2",
     "dattatable": "^2.11.43",
-    "gd-sprest-bs": "^10.13.99",
+    "gd-sprest-bs": "^10.14.4",
     "jquery": "^3.7.1",
     "moment": "^2.30.1"
   },
