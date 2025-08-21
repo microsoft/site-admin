@@ -198,8 +198,8 @@ export class Lists {
                                             text: "View List",
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
-                                                // Show the security group
-                                                window.open(item.ListViewUrl + "?ID=" + item.ListUrl, "_blank");
+                                                // Show the list
+                                                window.open(item.WebUrl + item.ListUrl, "_blank");
                                             }
                                         }
                                     }
