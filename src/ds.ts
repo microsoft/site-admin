@@ -808,8 +808,11 @@ export class DataSource {
                                     this.checkOwner(this.SiteContext.SiteFullUrl).then(isOwner => {
                                         // See if they are an owner
                                         if (isOwner) {
-                                            // Load the site information
-                                            this.loadSiteInfo().then(resolve, reject);
+                                            // Load the web information
+                                            this.loadWebInfo(this.SiteContext.WebFullUrl).then(() => {
+                                                // Load the site information
+                                                this.loadSiteInfo().then(resolve, reject);
+                                            }, reject);
                                         } else {
                                             // Reject the request
                                             reject("Site exists, but you are not the administrator. Please have the site administrator submit the request.");
