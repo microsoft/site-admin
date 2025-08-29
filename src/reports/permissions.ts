@@ -33,14 +33,14 @@ const CSVFields = [
 
 export class Permissions {
     private static _groupIds: { [key: string]: Types.SP.Directory.GroupOData } = null;
+    private static _groupIdErrors: string[] = null;
+    private static _roleMapper: { [key: string]: Types.SP.User } = null;
     private static _items: IPermissionItem[] = null;
 
     // Analyze the group ids
     private static analyzeGroupIds(groupIds: string[]): PromiseLike<void> {
         // Return a promise
         return new Promise(resolve => {
-            let validGroupIds = [];
-
             // Try to get the groups
             let counter = 0;
             Helper.Executor(groupIds, groupId => {
@@ -49,128 +49,107 @@ export class Permissions {
 
                 // Return a promise
                 return new Promise(resolve => {
+                    // Skip this, if we have already queried for this group
+                    if (this._groupIds[groupId] || this._groupIdErrors.indexOf(groupId) >= 0) { resolve(null); return; }
+
                     // Get the group information
                     DirectorySession().group(groupId).query({
-                        Select: ["calendarUrl", "displayName", "id", "isPublic", "mail"]
+                        Expand: ["members", "owners"],
+                        Select: [
+                            "calendarUrl", "displayName", "id", "isPublic", "mail",
+                            "members/principalName", "members/id", "members/displayName", "members/mail",
+                            "owners/principalName", "owners/id", "owners/displayName", "owners/mail"
+                        ]
                     }).execute(group => {
                         // Add the group information to the mapper
                         this._groupIds[group.id] = group;
 
-                        // Add the group id for the batch job
-                        validGroupIds.push(group.id);
-
                         // Try the next group
                         resolve(null);
                     }, () => {
+                        // Append the error
+                        this._groupIdErrors.push(groupId);
+
                         // Try the next group
                         resolve(null);
                     });
                 });
             }).then(() => {
                 // Update the loading dialog
-                LoadingDialog.setBody(`Creating the batch request to get M365 Group information`);
+                LoadingDialog.setBody(`Updating the role assignments with the M365 Group information`);
 
-                // Create the request
-                let ds = DirectorySession();
+                // Parse the items
+                this._items.forEach(item => {
+                    // Clear the groups
+                    item.GroupMembers = [];
+                    item.GroupMembersAsString = [];
+                    item.GroupOwners = [];
+                    item.GroupOwnersAsString = [];
+                    item.SiteMembersAsString = [];
+                    item.SiteOwnersAsString = [];
 
-                // Parse the group ids
-                validGroupIds.forEach(groupId => {
-                    // Get the owners
-                    ds.group(groupId).query({
-                        Expand: ["members", "owners"],
-                        Select: [
-                            "id",
-                            "members/principalName", "members/id", "members/displayName", "members/mail",
-                            "owners/principalName", "owners/id", "owners/displayName", "owners/mail"
-                        ]
-                    }).batch(group => {
-                        // Update the group
-                        this._groupIds[group.id].members = group.members;
-                        this._groupIds[group.id].owners = group.owners;
+                    // Ensure groups exist
+                    if (item.GroupIds.length == 0) { return; }
+
+                    // Parse the group ids
+                    item.GroupIds.forEach(groupId => {
+                        // Get the group
+                        let group = this._groupIds[groupId];
+                        if (group) {
+                            // Add the members/owners
+                            item.GroupMembers = item.GroupMembers.concat(group.members.results);
+                            item.GroupOwners = item.GroupOwners.concat(group.owners.results);
+                            item.GroupUrl = group.calendarUrl.replace("calendar/group", "groups") + "/members";
+                        }
+                    });
+
+                    // Parse the group members
+                    item.GroupMembers.forEach(member => {
+                        // Add the member name
+                        item.GroupMembersAsString.push(member.mail);
+                    });
+
+                    // Remove duplicates
+                    item.GroupMembersAsString = item.GroupMembersAsString.filter((value, idx, self) => {
+                        return self.indexOf(value) === idx;
+                    });
+
+                    // Parse the group owners
+                    item.GroupOwners.forEach(owner => {
+                        // Add the member name
+                        item.GroupOwnersAsString.push(owner.mail);
+                    });
+
+                    // Remove duplicates
+                    item.GroupOwnersAsString = item.GroupOwnersAsString.filter((value, idx, self) => {
+                        return self.indexOf(value) === idx;
+                    });
+
+                    // Parse the site members
+                    item.SiteMembers.forEach(member => {
+                        // Add the member name
+                        item.SiteMembersAsString.push(member.Email || member.UserPrincipalName || member.LoginName);
+                    });
+
+                    // Remove duplicates
+                    item.SiteMembersAsString = item.SiteMembersAsString.filter((value, idx, self) => {
+                        return self.indexOf(value) === idx;
+                    });
+
+                    // Parse the site owners
+                    item.SiteOwners.forEach(owner => {
+                        // Add the member name
+                        item.SiteOwnersAsString.push(owner.Email || owner.UserPrincipalName || owner.LoginName);
+                    });
+
+                    // Remove duplicates
+                    item.SiteOwnersAsString = item.SiteOwnersAsString.filter((value, idx, self) => {
+                        return self.indexOf(value) === idx;
                     });
                 });
 
-                // Update the loading dialog
-                LoadingDialog.setBody(`Executing the batch request to get M365 Group information`);
-
-                // Execute the batch job
-                ds.execute(() => {
-                    // Update the loading dialog
-                    LoadingDialog.setBody(`Updating the role assignments with the M365 Group information`);
-
-                    // Parse the items
-                    this._items.forEach(item => {
-                        // Clear the groups
-                        item.GroupMembers = [];
-                        item.GroupMembersAsString = [];
-                        item.GroupOwners = [];
-                        item.GroupOwnersAsString = [];
-                        item.SiteMembersAsString = [];
-                        item.SiteOwnersAsString = [];
-
-                        // Ensure groups exist
-                        if (item.GroupIds.length == 0) { return; }
-
-                        // Parse the group ids
-                        item.GroupIds.forEach(groupId => {
-                            // Get the group
-                            let group = this._groupIds[groupId];
-                            if (group) {
-                                // Add the members/owners
-                                item.GroupMembers = item.GroupMembers.concat(group.members.results);
-                                item.GroupOwners = item.GroupOwners.concat(group.owners.results);
-                                item.GroupUrl = group.calendarUrl.replace("calendar/group", "groups") + "/members";
-                            }
-                        });
-
-                        // Parse the group members
-                        item.GroupMembers.forEach(member => {
-                            // Add the member name
-                            item.GroupMembersAsString.push(member.mail);
-                        });
-
-                        // Remove duplicates
-                        item.GroupMembersAsString = item.GroupMembersAsString.filter((value, idx, self) => {
-                            return self.indexOf(value) === idx;
-                        });
-
-                        // Parse the group owners
-                        item.GroupOwners.forEach(owner => {
-                            // Add the member name
-                            item.GroupOwnersAsString.push(owner.mail);
-                        });
-
-                        // Remove duplicates
-                        item.GroupOwnersAsString = item.GroupOwnersAsString.filter((value, idx, self) => {
-                            return self.indexOf(value) === idx;
-                        });
-
-                        // Parse the site members
-                        item.SiteMembers.forEach(member => {
-                            // Add the member name
-                            item.SiteMembersAsString.push(member.Email || member.UserPrincipalName || member.LoginName);
-                        });
-
-                        // Remove duplicates
-                        item.SiteMembersAsString = item.SiteMembersAsString.filter((value, idx, self) => {
-                            return self.indexOf(value) === idx;
-                        });
-
-                        // Parse the site owners
-                        item.SiteOwners.forEach(owner => {
-                            // Add the member name
-                            item.SiteOwnersAsString.push(owner.Email || owner.UserPrincipalName || owner.LoginName);
-                        });
-
-                        // Remove duplicates
-                        item.SiteOwnersAsString = item.SiteOwnersAsString.filter((value, idx, self) => {
-                            return self.indexOf(value) === idx;
-                        });
-                    });
-
-                    // Resolve the request
-                    resolve();
-                });
+                // Resolve the request
+                resolve();
             });
         });
     }
@@ -312,9 +291,13 @@ export class Permissions {
 
             // See if this is a M365 Group
             if (user.PrincipalType == SPTypes.PrincipalTypes.SecurityGroup) {
-                // Add the group id
+                // Get the group id
                 let groupId = DataSource.getGroupId(user.LoginName);
-                groupId ? item.GroupIds.push(groupId) : null;
+                if (groupId) {
+                    // Add the group id
+                    item.GroupIds.push(groupId);
+                    this._roleMapper[groupId] = user;
+                }
             }
         }
     }
@@ -322,72 +305,102 @@ export class Permissions {
     // Gets the form fields to display
     static getFormFields(): Components.IFormControlProps[] { return []; }
 
-    // Removes a user from a group
-    private static removeUser(user: string, userId: number) {
-        // Display a loading dialog
-        LoadingDialog.setHeader("Removing User");
-        LoadingDialog.setBody(`Removing the site user '${user}' from all groups. This will close after the request completes.`);
-        LoadingDialog.show();
+    // Renders the errors
+    private static renderErrors() {
+        // Clear the modal
+        Modal.clear();
 
-        // Remove the user from the site
-        Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).SiteUsers().removeById(userId).execute(
-            // Success
-            () => {
-                // Close the dialog
-                LoadingDialog.hide();
+        // Set the header
+        Modal.setHeader("Permission Errors");
+
+        // Parse the errors
+        let rows = [];
+        for (let i = 0; i < this._groupIdErrors.length; i++) {
+            let groupId = this._groupIdErrors[i];
+            let mapper = this._roleMapper[groupId];
+
+            // Add the row
+            rows.push({
+                id: groupId,
+                title: mapper ? mapper.Title : "",
+            });
+        }
+
+        // Render a dashboard
+        new Dashboard({
+            el: Modal.BodyElement,
+            navigation: {
+                title: "M365 Group Errors",
+                showFilter: false,
+                showSearch: false
             },
-
-            // Error
-            () => {
-                // Close the dialog
-                LoadingDialog.hide();
-
-                // TODO
+            table: {
+                rows,
+                columns: [
+                    {
+                        name: "id",
+                        title: "Group Id"
+                    },
+                    {
+                        name: "title",
+                        title: "Group Name"
+                    },
+                    {
+                        name: "",
+                        onRenderCell: (el) => {
+                            el.innerHTML = "Unable to get the group information.";
+                        }
+                    }
+                ]
             }
-        )
+        });
+
+        // Render the footer
+        Components.Button({
+            text: "Close",
+            onClick: () => {
+                Modal.hide();
+            }
+        });
+
+        // Show the modal
+        Modal.show();
     }
 
-    // Removes a user from a group
-    private static removeUserFromGroup(user: string, userId: number, groupId: number) {
-        // Display a loading dialog
-        LoadingDialog.setHeader("Removing User");
-        LoadingDialog.setBody(`Removing the site user '${user}' from the group. This will close after the request completes.`);
-        LoadingDialog.show();
-
-        // Remove the user from the site
-        Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).SiteGroups().getById(groupId).Users().removeById(userId).execute(
-            // Success
-            () => {
-                // Close the dialog
-                LoadingDialog.hide();
-            },
-
-            // Error
-            () => {
-                // Close the dialog
-                LoadingDialog.hide();
-
-                // TODO
-            }
-        )
-    }
     // Renders the search summary
     private static renderSummary(el: HTMLElement, auditOnly: boolean, items: IPermissionItem[], onClose: () => void) {
+        // Create the nav items
+        let navItems: Components.INavbarItem[] = [{
+            text: "New Search",
+            className: "btn-outline-light",
+            isButton: true,
+            onClick: () => {
+                // Call the close event
+                onClose();
+            }
+        }];
+
+        // See if there are errors
+        if (this._groupIdErrors.length > 0) {
+            // Show the error button
+            navItems.push({
+                text: "Errors",
+                className: "btn-outline-light ms-2",
+                isButton: true,
+                onClick: () => {
+                    // Display the errors
+                    this.renderErrors();
+                }
+            })
+        }
+
         // Render the summary
         new Dashboard({
             el,
             navigation: {
                 title: "Search Users",
                 showFilter: false,
-                items: [{
-                    text: "New Search",
-                    className: "btn-outline-light",
-                    isButton: true,
-                    onClick: () => {
-                        // Call the close event
-                        onClose();
-                    }
-                }],
+                items: navItems,
                 itemsEnd: [{
                     text: "Export to CSV",
                     className: "btn-outline-light me-2",
@@ -598,7 +611,9 @@ export class Permissions {
 
         // Clear the items
         this._groupIds = {};
+        this._groupIdErrors = [];
         this._items = [];
+        this._roleMapper = {};
 
         // Parse all webs
         let counter = 0;
