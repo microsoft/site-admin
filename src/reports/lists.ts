@@ -6,6 +6,7 @@ import { ExportCSV } from "./exportCSV";
 interface IList {
     DefaultSensitivityLabel: string;
     HasUniqueRoleAssignments: boolean;
+    IncludedInSearch: boolean;
     ItemCount: number;
     ListId: string;
     ListName: string;
@@ -26,7 +27,7 @@ interface ISetSensitivityLabelResponse {
 }
 
 const CSVFields = [
-    "WebUrl", "WebId", "ListName", "ListTemplateType", "ListTemplate", "ListUrl", "ListViewUrl", "HasUniqueRoleAssignments", "ItemCount", "DefaultSensitivityLabel"
+    "WebUrl", "WebId", "ListName", "ListTemplateType", "ListTemplate", "ListUrl", "ListViewUrl", "HasUniqueRoleAssignments", "ItemCount", "IncludedInSearch", "DefaultSensitivityLabel"
 ]
 const CSVSensitivityLabelResponseFields = [
     "errorFl", "url", "fileName", "message"
@@ -45,13 +46,14 @@ export class Lists {
         this._items.push({
             DefaultSensitivityLabel: list.DefaultSensitivityLabelForLibrary,
             HasUniqueRoleAssignments: list.HasUniqueRoleAssignments,
+            IncludedInSearch: !list.NoCrawl,
             ItemCount: list.ItemCount,
             ListId: list.Id,
             ListName: list.Title,
             ListTemplate: this._listTemplates[list.BaseTemplate],
             ListTemplateType: list.BaseTemplate,
             ListUrl: list.RootFolder.ServerRelativeUrl,
-            ListViewUrl: list.DefaultDisplayFormUrl,
+            ListViewUrl: list.DefaultViewUrl,
             WebId: webId,
             WebUrl: webUrl
         });
@@ -177,6 +179,10 @@ export class Lists {
                         }
                     },
                     {
+                        name: "IncludedInSearch",
+                        title: "Included In Search"
+                    },
+                    {
                         name: "HasUniqueRoleAssignments",
                         title: "Has Unique Permissions"
                     },
@@ -208,6 +214,7 @@ export class Lists {
 
                             // Add the options to make changes
                             if (!auditOnly) {
+                                let tooltip: Components.ITooltip = null;
                                 tooltips.add({
                                     content: "Click to set the default sensitivity label.",
                                     btnProps: {
@@ -231,6 +238,22 @@ export class Lists {
                                             this.loadFolders(item).then(folders => {
                                                 // Show the form
                                                 this.setDefaultSensitivityLabelForFiles(item, folders);
+                                            });
+                                        }
+                                    }
+                                });
+                                tooltips.add({
+                                    assignTo: obj => { tooltip = obj; },
+                                    content: `Click to ${item.IncludedInSearch ? "remove" : "add"} the content from the search index.`,
+                                    btnProps: {
+                                        text: "Update Search",
+                                        type: Components.ButtonTypes.OutlinePrimary,
+                                        onClick: () => {
+                                            // Show the form
+                                            this.setListSearch(item, () => {
+                                                // Flip the flag
+                                                item.IncludedInSearch = !item.IncludedInSearch;
+                                                tooltip.setContent(`Click to ${item.IncludedInSearch ? "remove" : "add"} the content from the search index.`);
                                             });
                                         }
                                     }
@@ -606,6 +629,66 @@ export class Lists {
                                     });
                                 });
                             }
+                        }
+                    }
+                },
+                {
+                    content: "Closes the dialog.",
+                    btnProps: {
+                        text: "Close",
+                        type: Components.ButtonTypes.OutlineSecondary,
+                        onClick: () => {
+                            // Close the modal
+                            Modal.hide();
+                        }
+                    }
+                }
+            ]
+        });
+
+        // Show the modal
+        Modal.show();
+    }
+
+    // Adds/Removes the list content from the search index
+    private static setListSearch(item: IList, onUpdate: () => void) {
+        // Clear the modal
+        Modal.clear();
+
+        // Set the header
+        Modal.setHeader(item.IncludedInSearch ? "Remove From Search" : "Add To Search");
+
+        // Set the body
+        Modal.setBody(item.IncludedInSearch ? "Confirm to remove the contents of this list from the search index." : "Confirm to add the contents of this list to the search index.");
+
+        // Set the footer
+        Components.TooltipGroup({
+            el: Modal.FooterElement,
+            tooltips: [
+                {
+                    content: item.IncludedInSearch ? "Remove the list from search" : "Add the list to search",
+                    btnProps: {
+                        text: "Update",
+                        type: Components.ButtonTypes.OutlinePrimary,
+                        onClick: () => {
+                            // Show a loading dialog
+                            LoadingDialog.setHeader("Update List");
+                            LoadingDialog.setBody("This will close after the list has been updated...");
+                            LoadingDialog.show();
+
+                            // Update the list
+                            Web(item.WebUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().getById(item.ListId).update({
+                                NoCrawl: item.IncludedInSearch
+                            }).execute(() => {
+                                // Close the dialog
+                                LoadingDialog.hide();
+                                Modal.hide();
+                            }, () => {
+                                // Error updating the list
+                                console.error("Error updating the search index for the list...");
+                                LoadingDialog.hide();
+                                Modal.hide();
+                            });
                         }
                     }
                 },

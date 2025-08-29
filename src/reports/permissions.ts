@@ -398,7 +398,7 @@ export class Permissions {
         new Dashboard({
             el,
             navigation: {
-                title: "Search Users",
+                title: "Permissions",
                 showFilter: false,
                 items: navItems,
                 itemsEnd: [{

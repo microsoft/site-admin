@@ -350,7 +350,7 @@ export class SearchEEEU {
         new Dashboard({
             el,
             navigation: {
-                title: "Search Users",
+                title: "Search EEEU",
                 showFilter: false,
                 items: [{
                     text: "New Search",
