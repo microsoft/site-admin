@@ -105,7 +105,7 @@ export class Lists {
     // Renders the search summary
     private static renderSummary(el: HTMLElement, auditOnly: boolean, onClose: () => void) {
         // Render the summary
-        new Dashboard({
+        let dt = new Dashboard({
             el,
             navigation: {
                 title: "Lists/Libraries",
@@ -190,7 +190,7 @@ export class Lists {
                         className: "text-end",
                         name: "",
                         title: "",
-                        onRenderCell: (el, col, item: IList) => {
+                        onRenderCell: (el, col, item: IList, rowIdx) => {
                             let isLibrary = item.ListTemplateType == SPTypes.ListTemplateType.DocumentLibrary ||
                                 item.ListTemplateType == SPTypes.ListTemplateType.WebPageLibrary
 
@@ -254,6 +254,9 @@ export class Lists {
                                                 // Flip the flag
                                                 item.IncludedInSearch = !item.IncludedInSearch;
                                                 tooltip.setContent(`Click to ${item.IncludedInSearch ? "remove" : "add"} the content from the search index.`);
+
+                                                // Update the row cell
+                                                dt.Datatable.datatable.cell({ row: rowIdx, column: 4 }).data(item.IncludedInSearch).draw();
                                             });
                                         }
                                     }
@@ -318,7 +321,7 @@ export class Lists {
                     Filter,
                     Expand: ["DefaultViewFormUrl", "RootFolder"],
                     Select: [
-                        "BaseTemplate", "DefaultSensitivityLabelForLibrary", "Id",
+                        "BaseTemplate", "DefaultSensitivityLabelForLibrary", "Id", "NoCrawl",
                         "ItemCount", "Title", "HasUniqueRoleAssignments", "RootFolder/ServerRelativeUrl"
                     ]
                 }).execute(lists => {
@@ -680,6 +683,9 @@ export class Lists {
                             Web(item.WebUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().getById(item.ListId).update({
                                 NoCrawl: item.IncludedInSearch
                             }).execute(() => {
+                                // Call the update event
+                                onUpdate();
+
                                 // Close the dialog
                                 LoadingDialog.hide();
                                 Modal.hide();
