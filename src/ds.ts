@@ -153,13 +153,6 @@ export class DataSource {
                     }
                 }
 
-                // See if no groups exist
-                if (groupIds.length == 0) {
-                    // Resolve the request
-                    resolve(false);
-                    return;
-                }
-
                 // Create the request for getting the M365 group information in a batch request
                 let ds = DirectorySession();
 
@@ -222,7 +215,7 @@ export class DataSource {
                     }, () => {
                         // Resolve the request
                         resolve(false);
-                    })
+                    });
                 });
             }, () => {
                 // Resolve the request
