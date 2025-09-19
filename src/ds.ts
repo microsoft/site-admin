@@ -204,8 +204,25 @@ export class DataSource {
 
                 // Execute the request
                 ds.execute(() => {
-                    // Resolve the request
-                    resolve(isSiteAdmin);
+                    // See if the user is an admin
+                    if (isSiteAdmin) {
+                        // Resolve the request
+                        resolve(isSiteAdmin);
+                        return;
+                    }
+
+                    // Get the user permissions
+                    Web(siteUrl).query({ Select: ["EffectiveBasePermissions"] }).execute(web => {
+                        // See if the user is an owner
+                        resolve(Helper.hasPermissions(web.EffectiveBasePermissions, [
+                            SPTypes.BasePermissionTypes.ManageLists,
+                            SPTypes.BasePermissionTypes.ManagePermissions,
+                            SPTypes.BasePermissionTypes.ManageWeb
+                        ]));
+                    }, () => {
+                        // Resolve the request
+                        resolve(false);
+                    })
                 });
             }, () => {
                 // Resolve the request
