@@ -101,7 +101,7 @@ export class Tabs {
         ];
 
         // See if we are rendering all tabs
-        if (appProps.auditOnly != true) {
+        if (!DataSource.IsAdmin && appProps.auditOnly != true) {
             // See if we are customizing a search property
             if (!isEmpty(appProps.searchProps) && appProps.searchProps.key) {
                 items.splice(1, 0, {
