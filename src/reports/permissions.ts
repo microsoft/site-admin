@@ -662,7 +662,7 @@ export class Permissions {
                 // Get the permissions for the site
                 Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue }).RoleAssignments().query({
                     Expand: [
-                        "Member", "Member/Groups", "Member/Owner", "Member/Users", "RoleDefinitionBindings"
+                        "Member", "Member/Groups", "Member/Users", "RoleDefinitionBindings"
                     ]
                 }).execute(roles => {
                     // Update the loading dialog
