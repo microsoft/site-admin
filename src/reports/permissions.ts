@@ -155,80 +155,103 @@ export class Permissions {
     }
 
     // Analyze the role
-    private static analyzeRole(role: Types.SP.RoleAssignmentOData, webUrl: string, webTitle: string): string[] {
-        let item: IPermissionItem = null;
+    private static analyzeRole(role: Types.SP.RoleAssignmentOData, webUrl: string, webTitle: string): Promise<string[]> {
+        // Gets the owner for a member role
+        let getOwnerForRole = () => {
+            return new Promise(resolve => {
+                // Do not do this for user types
+                if (role.Member.PrincipalType == SPTypes.PrincipalTypes.User) { resolve(null); return; }
 
-        // See if this is a user
-        if (role.Member.PrincipalType == SPTypes.PrincipalTypes.User) {
-            // Add the role information
-            item = {
-                EEEU: false,
-                Everyone: false,
-                GroupIds: [],
-                Id: role.Member.Id,
-                LoginName: role.Member.LoginName,
-                Name: role.Member.Title,
-                Roles: [],
-                RoleInfo: [],
-                SiteMembers: [],
-                SiteOwners: [],
-                Type: "User",
-                WebTitle: webTitle,
-                WebUrl: webUrl
-            };
-        }
-        // Else, see if this is a site group
-        else if (role.Member.PrincipalType == SPTypes.PrincipalTypes.SharePointGroup) {
-            // Add the role information
-            item = {
-                EEEU: false,
-                Everyone: false,
-                GroupIds: [],
-                Id: role.Member.Id,
-                LoginName: role.Member.LoginName,
-                Name: role.Member.Title,
-                Roles: [],
-                RoleInfo: [],
-                SiteMembers: role.Member["Users"].results,
-                SiteOwners: [role.Member["Owner"]],
-                Type: "Site Group",
-                WebTitle: webTitle,
-                WebUrl: webUrl,
-            };
-        } else {
-            // See if this is a M365 group
-            let groupId = DataSource.getGroupId(role.Member.LoginName);
+                // Get the owner information
+                Web(webUrl).RoleAssignments(role.PrincipalId).query({ Expand: ["Member/Owner"], Select: ["Member/Owner"] }).execute(roleQuery => {
+                    // Update the owner
+                    role.Member["Owner"] = roleQuery.Member["Owner"];
 
-            // Add the role information
-            item = {
-                EEEU: role.Member.Title == "Everyone except external users",
-                Everyone: role.Member.Title == "Everyone",
-                GroupIds: groupId ? [groupId] : [],
-                Id: role.Member.Id,
-                LoginName: role.Member.LoginName,
-                Name: role.Member.Title,
-                Roles: [],
-                RoleInfo: [],
-                SiteMembers: role.Member["Users"]?.results || [],
-                SiteOwners: role.Member["Owner"] ? [role.Member["Owner"]] : [],
-                Type: groupId ? "M365 Group" : "AD Group",
-                WebTitle: webTitle,
-                WebUrl: webUrl
-            };
+                    // Resolve the request
+                    resolve(null);
+                }, resolve);
+            });
         }
 
-        // Parse the role definitions
-        role.RoleDefinitionBindings.results.forEach(roleDef => {
-            // Add the permission
-            item.Roles.push(roleDef.Name);
-            item.RoleInfo.push(roleDef.Description);
+        // Return a promise
+        return new Promise(resolve => {
+            let item: IPermissionItem = null;
+
+            // Get the owner for the role
+            getOwnerForRole().then(() => {
+                // See if this is a user
+                if (role.Member.PrincipalType == SPTypes.PrincipalTypes.User) {
+                    // Add the role information
+                    item = {
+                        EEEU: false,
+                        Everyone: false,
+                        GroupIds: [],
+                        Id: role.Member.Id,
+                        LoginName: role.Member.LoginName,
+                        Name: role.Member.Title,
+                        Roles: [],
+                        RoleInfo: [],
+                        SiteMembers: [],
+                        SiteOwners: [],
+                        Type: "User",
+                        WebTitle: webTitle,
+                        WebUrl: webUrl
+                    };
+                }
+                // Else, see if this is a site group
+                else if (role.Member.PrincipalType == SPTypes.PrincipalTypes.SharePointGroup) {
+                    // Add the role information
+                    item = {
+                        EEEU: false,
+                        Everyone: false,
+                        GroupIds: [],
+                        Id: role.Member.Id,
+                        LoginName: role.Member.LoginName,
+                        Name: role.Member.Title,
+                        Roles: [],
+                        RoleInfo: [],
+                        SiteMembers: role.Member["Users"].results,
+                        SiteOwners: role.Member["Owner"] ? [role.Member["Owner"]] : [],
+                        Type: "Site Group",
+                        WebTitle: webTitle,
+                        WebUrl: webUrl,
+                    };
+                } else {
+                    // See if this is a M365 group
+                    let groupId = DataSource.getGroupId(role.Member.LoginName);
+
+                    // Add the role information
+                    item = {
+                        EEEU: role.Member.Title == "Everyone except external users",
+                        Everyone: role.Member.Title == "Everyone",
+                        GroupIds: groupId ? [groupId] : [],
+                        Id: role.Member.Id,
+                        LoginName: role.Member.LoginName,
+                        Name: role.Member.Title,
+                        Roles: [],
+                        RoleInfo: [],
+                        SiteMembers: role.Member["Users"]?.results || [],
+                        SiteOwners: role.Member["Owner"] ? [role.Member["Owner"]] : [],
+                        Type: groupId ? "M365 Group" : "AD Group",
+                        WebTitle: webTitle,
+                        WebUrl: webUrl
+                    };
+                }
+
+                // Parse the role definitions
+                role.RoleDefinitionBindings.results.forEach(roleDef => {
+                    // Add the permission
+                    item.Roles.push(roleDef.Name);
+                    item.RoleInfo.push(roleDef.Description);
+                });
+
+                // Analyze the users for this item
+                this.analyzeUsers(item);
+
+                // Reolve the group ids
+                resolve(item.GroupIds);
+            });
         });
-
-        // Analyze the users for this item
-        this.analyzeUsers(item);
-
-        // Return the group ids
-        return item.GroupIds;
     }
 
     // Analyzes the roles
@@ -246,8 +269,17 @@ export class Permissions {
                 // Update the loading dialog
                 LoadingDialog.setBody(`Analyzing Role ${++counter} of ${roles.length}`);
 
-                // Analyze the role
-                groupIds = groupIds.concat(this.analyzeRole(role, webUrl, webTitle));
+                // Return a promise
+                return new Promise(resolve => {
+                    // Analyze the role
+                    this.analyzeRole(role, webUrl, webTitle).then(ids => {
+                        // Add the group ids
+                        groupIds = groupIds.concat(ids);
+
+                        // Resolve the request
+                        resolve(null);
+                    });
+                });
             }).then(() => {
                 // Remove duplicates from the array
                 groupIds = groupIds.filter((value, idx, self) => {
@@ -627,7 +659,7 @@ export class Permissions {
 
             // Return a promise
             return new Promise(resolve => {
-                // Get the permissions
+                // Get the permissions for the site
                 Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue }).RoleAssignments().query({
                     Expand: [
                         "Member", "Member/Groups", "Member/Owner", "Member/Users", "RoleDefinitionBindings"
