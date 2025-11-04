@@ -161,6 +161,7 @@ if ($item -ne $null) {
 
         # Connect to the site
         Connect-PnPOnline -Url $item["Title"] -Tenant $tenant -ClientId $clientId -Thumbprint $cert;
+        #Connect-PnPOnline -Url $item["Title"] -Tenant $tenant -ClientId $clientId -Thumbprint $cert -AzureEnvironment $azureEnv;
 
         # Check to make sure the user requesting the change is an admin
         if (-not(IsSiteCollectionAdmin -UserEmail $item["Author"].EMail)) {
@@ -413,6 +414,7 @@ if ($item -ne $null) {
 
         # Connect to the main site
         Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert;
+        #Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert -AzureEnvironment $azureEnv;
 
         # Update the item status
         Set-PnpListItem -List $listName -Identity $item.Id -Values @{ "Status" = "Completed" };
