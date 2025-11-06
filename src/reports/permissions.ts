@@ -539,20 +539,23 @@ export class Permissions {
                         name: "",
                         title: "AD Accounts",
                         onRenderCell: (el, col, item: IPermissionItem) => {
-                            // Get the non user accounts
-                            let users = item.SiteMembers.filter(value => {
-                                // See if this is a user
-                                if (value.PrincipalType == SPTypes.PrincipalTypes.User) {
-                                    // Determine if this is an AD account by the email
-                                    return value.Email ? false : true;
-                                }
+                            // Ensure the site members exist
+                            if (item.SiteMembers) {
+                                // Get the non user accounts
+                                let users = item.SiteMembers.filter(value => {
+                                    // See if this is a user
+                                    if (value.PrincipalType == SPTypes.PrincipalTypes.User) {
+                                        // Determine if this is an AD account by the email
+                                        return value.Email ? false : true;
+                                    }
 
-                                // Exclude M365 groups
-                                return DataSource.getGroupId(value.LoginName) ? false : true;
-                            });
+                                    // Exclude M365 groups
+                                    return DataSource.getGroupId(value.LoginName) ? false : true;
+                                });
 
-                            // Set the value
-                            el.innerHTML = users.length.toString();
+                                // Set the value
+                                el.innerHTML = users.length.toString();
+                            }
 
                             // Set the filter and order values
                             el.setAttribute("data-filter", el.innerHTML);
@@ -565,7 +568,7 @@ export class Permissions {
                         onRenderCell: (el, col, item: IPermissionItem) => {
                             if (item.Type == "User") {
                                 el.innerHTML = "1";
-                            } else {
+                            } else if (item.SiteMembers) {
                                 // Get the users
                                 let users = item.SiteMembers.filter((value, idx, self) => {
                                     return value.PrincipalType == SPTypes.PrincipalTypes.User && value.Email;
