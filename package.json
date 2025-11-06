@@ -1,6 +1,6 @@
 {
   "name": "site-admin",
-  "version": "0.9.6",
+  "version": "0.9.7",
   "description": "An automation tool for tenant admins to use for automation of features/enhancements.",
   "main": "src/index.ts",
   "scripts": {

@@ -200,7 +200,7 @@ export class SharingLinks {
                     isButton: true,
                     onClick: () => {
                         // Export the CSV
-                        new ExportCSV("listPermissions.csv", CSVFields, this._items);
+                        new ExportCSV("sharingLinks.csv", CSVFields, this._items);
                     }
                 }]
             },

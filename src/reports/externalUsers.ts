@@ -200,7 +200,7 @@ export class ExternalUsers {
                     isButton: true,
                     onClick: () => {
                         // Export the CSV
-                        new ExportCSV("listPermissions.csv", CSVFields, this._items);
+                        new ExportCSV("externalUsers.csv", CSVFields, this._items);
                     }
                 }]
             },

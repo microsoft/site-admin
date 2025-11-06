@@ -276,7 +276,7 @@ export class SearchUsers {
                     isButton: true,
                     onClick: () => {
                         // Export the CSV
-                        new ExportCSV("searchDocs.csv", CSVFields, items);
+                        new ExportCSV("searchUsers.csv", CSVFields, items);
                     }
                 }]
             },
