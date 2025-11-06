@@ -156,16 +156,17 @@ export class Permissions {
 
     // Analyze the role
     private static analyzeRole(role: Types.SP.RoleAssignmentOData, webUrl: string, webTitle: string): Promise<string[]> {
-        // Gets the owner for a member role
-        let getOwnerForRole = () => {
+        // Expands the owners and users
+        let getOwnerAndUsersForRole = () => {
             return new Promise(resolve => {
                 // Do not do this for user types
                 if (role.Member.PrincipalType == SPTypes.PrincipalTypes.User) { resolve(null); return; }
 
                 // Get the owner information
-                Web(webUrl).RoleAssignments(role.PrincipalId).query({ Expand: ["Member/Owner"], Select: ["Member/Owner"] }).execute(roleQuery => {
-                    // Update the owner
+                Web(webUrl).RoleAssignments(role.PrincipalId).query({ Expand: ["Member/Owner", "Member/Users"], Select: ["Member/Owner", "Member/Users"] }).execute(roleQuery => {
+                    // Update the owner and users
                     role.Member["Owner"] = roleQuery.Member["Owner"];
+                    role.Member["Users"] = roleQuery.Member["Users"];
 
                     // Resolve the request
                     resolve(null);
@@ -177,8 +178,8 @@ export class Permissions {
         return new Promise(resolve => {
             let item: IPermissionItem = null;
 
-            // Get the owner for the role
-            getOwnerForRole().then(() => {
+            // Get the owner and users for the role
+            getOwnerAndUsersForRole().then(() => {
                 // See if this is a user
                 if (role.Member.PrincipalType == SPTypes.PrincipalTypes.User) {
                     // Add the role information
@@ -210,7 +211,7 @@ export class Permissions {
                         Name: role.Member.Title,
                         Roles: [],
                         RoleInfo: [],
-                        SiteMembers: role.Member["Users"].results,
+                        SiteMembers: role.Member["Users"] ? role.Member["Users"].results : [],
                         SiteOwners: role.Member["Owner"] ? [role.Member["Owner"]] : [],
                         Type: "Site Group",
                         WebTitle: webTitle,
@@ -230,7 +231,7 @@ export class Permissions {
                         Name: role.Member.Title,
                         Roles: [],
                         RoleInfo: [],
-                        SiteMembers: role.Member["Users"]?.results || [],
+                        SiteMembers: role.Member["Users"] ? role.Member["Users"].results : [],
                         SiteOwners: role.Member["Owner"] ? [role.Member["Owner"]] : [],
                         Type: groupId ? "M365 Group" : "AD Group",
                         WebTitle: webTitle,
@@ -439,8 +440,7 @@ export class Permissions {
                     isButton: true,
                     onClick: () => {
                         // Export the CSV
-                        // Need to generate the CSV for this.....
-                        new ExportCSV("searchDocs.csv", CSVFields, items);
+                        new ExportCSV("permissions.csv", CSVFields, items);
                     }
                 }]
             },
@@ -662,7 +662,7 @@ export class Permissions {
                 // Get the permissions for the site
                 Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue }).RoleAssignments().query({
                     Expand: [
-                        "Member", "Member/Groups", "Member/Users", "RoleDefinitionBindings"
+                        "Member", "Member/Groups", "RoleDefinitionBindings"
                     ]
                 }).execute(roles => {
                     // Update the loading dialog
