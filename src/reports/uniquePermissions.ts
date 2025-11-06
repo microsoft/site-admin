@@ -161,7 +161,7 @@ export class UniquePermissions {
                     isButton: true,
                     onClick: () => {
                         // Export the CSV
-                        new ExportCSV("listPermissions.csv", CSVFields, this._items);
+                        new ExportCSV("uniquePermissions.csv", CSVFields, this._items);
                     }
                 }]
             },

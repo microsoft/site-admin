@@ -80,7 +80,7 @@ export class ExternalShares {
                     isButton: true,
                     onClick: () => {
                         // Export the CSV
-                        new ExportCSV("searchDocs.csv", CSVFields, items);
+                        new ExportCSV("externalShares.csv", CSVFields, items);
                     }
                 }]
             },

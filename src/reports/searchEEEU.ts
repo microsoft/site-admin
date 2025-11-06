@@ -367,7 +367,7 @@ export class SearchEEEU {
                     isButton: true,
                     onClick: () => {
                         // Export the CSV
-                        new ExportCSV("searchDocs.csv", CSVFields, items);
+                        new ExportCSV("searchEEEU.csv", CSVFields, items);
                     }
                 }]
             },
