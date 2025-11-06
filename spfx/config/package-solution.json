@@ -3,7 +3,7 @@
   "solution": {
     "name": "site-admin-tool",
     "id": "9c7bcdac-024d-4ffe-b63a-cef526bc1930",
-    "version": "0.9.7.0",
+    "version": "0.9.7.1",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
