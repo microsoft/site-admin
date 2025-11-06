@@ -644,8 +644,7 @@ export class SearchEEEU {
                 Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue }).query({
                     Expand: [
                         "RoleAssignments", "RoleAssignments/Groups", "RoleAssignments/Member",
-                        "RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings",
-                        "SiteGroups"
+                        "RoleAssignments/RoleDefinitionBindings", "SiteGroups"
                     ]
                 }).execute(web => {
                     // Update the loading dialog
