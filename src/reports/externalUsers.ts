@@ -413,7 +413,7 @@ export class ExternalUsers {
         Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).query({
             Expand: [
                 "ParentWeb", "RoleAssignments", "RoleAssignments/Groups", "RoleAssignments/Member",
-                "RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings"
+                "RoleAssignments/RoleDefinitionBindings"
             ]
         }).execute(web => {
             // Update the loading dialog
