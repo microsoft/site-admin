@@ -1,5 +1,5 @@
 import { Dashboard, LoadingDialog } from "dattatable";
-import { Components, ContextInfo, Helper, Types, Web } from "gd-sprest-bs";
+import { Components, ContextInfo, DirectorySession, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
 import { DataSource } from "../ds";
 import { ExportCSV } from "./exportCSV";
 
@@ -13,6 +13,7 @@ interface ISearchItem {
     GroupId?: number;
     GroupInfo?: string;
     Id?: number;
+    IsM365Group?: boolean;
     WebTitle: string;
     WebUrl: string;
 }
@@ -33,15 +34,160 @@ const CSVFields = [
 export class SearchUsers {
     private static _items: ISearchItem[] = null;
 
+    // Get the group user information
+    private static analyzeRoleAssignments(web: Types.SP.WebOData, search: string | Types.SP.User, userInfo: IUserInfo): PromiseLike<void> {
+        // Return a promise
+        return new Promise(resolve => {
+            let groups: { [key: string]: Types.SP.RoleAssignmentOData } = {};
+
+            // Parse the roles
+            Helper.Executor((web.RoleAssignments.results as any as Types.SP.RoleAssignmentOData[]), role => {
+                // Return a promise
+                return new Promise(resolve => {
+                    // See if this role is the user
+                    if (role.Member.LoginName == userInfo.Name) {
+                        // Add the user information
+                        this._items.push({
+                            WebUrl: web.Url,
+                            WebTitle: web.Title,
+                            Id: userInfo.Id,
+                            LoginName: userInfo.Name,
+                            Name: userInfo.Title || userInfo.Name,
+                            Email: userInfo.EMail,
+                            Group: "",
+                            GroupId: 0,
+                            GroupInfo: "",
+                            Role: role.RoleDefinitionBindings.results[0].Name,
+                            RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
+                        });
+
+                        // Check the next role
+                        resolve(null);
+                    } else if (role.Member.PrincipalType == SPTypes.PrincipalTypes.SharePointGroup) {
+                        // Get the members for this group
+                        Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).SiteGroups().getById(role.Member.Id).Users().execute(users => {
+                            // Parse the users
+                            Helper.Executor(users.results, user => {
+                                // Get the group id
+                                let groupId = DataSource.getGroupId(user.LoginName);
+                                if (groupId) {
+                                    // See if this is an owners group
+                                    if (user.LoginName.endsWith("_o")) {
+                                        groupId += "_o";
+                                    }
+
+                                    // Set the group
+                                    groups[groupId] = role;
+                                }
+                            }).then(resolve);
+                        });
+                    } else {
+                        // Get the group id
+                        let groupId = DataSource.getGroupId(role.Member.LoginName);
+                        if (groupId) {
+                            // See if this is an owners group
+                            if (role.Member.LoginName.endsWith("_o")) {
+                                groupId += "_o";
+                            }
+
+                            // Set the group
+                            groups[groupId] = role;
+                        }
+
+                        // Check the next role
+                        resolve(null);
+                    }
+                });
+            }).then(() => {
+                // Get the group ids
+                let groupIds = [];
+                for (let groupId in groups) { groupIds.push(groupId); }
+
+                // Parse the group ids
+                Helper.Executor(groupIds, groupId => {
+                    // Return a promise
+                    return new Promise(resolve => {
+                        let groupInfo = groupId.split('_');
+                        let isOwner = groupInfo.length > 1;
+
+                        // Get the group information
+                        DirectorySession().group(groupInfo[0]).query({
+                            Expand: ["members", "owners"],
+                            Select: [
+                                "displayName", "id",
+                                "members/principalName", "members/id", "members/displayName", "members/mail",
+                                "owners/principalName", "owners/id", "owners/displayName", "owners/mail"
+                            ]
+                        }).execute(group => {
+                            let role = groups[groupId];
+
+                            // Parse the users
+                            let users = isOwner ? group.owners.results : group.members.results;
+                            for (let i = 0; i < users.length; i++) {
+                                let user = users[i];
+
+                                // See if we are searching by string
+                                if (typeof (search) === "string") {
+                                    // See this is the user
+                                    if (user.displayName.toLowerCase().indexOf(search.toString()) >= 0) {
+                                        // Add the user information
+                                        this._items.push({
+                                            WebUrl: web.Url,
+                                            WebTitle: web.Title,
+                                            Id: userInfo.Id,
+                                            LoginName: userInfo.Name,
+                                            Name: userInfo.Title || userInfo.Name,
+                                            Email: userInfo.EMail,
+                                            Group: role.Member.Title,
+                                            GroupId: role.Member.Id,
+                                            GroupInfo: `${group.displayName} M365 Group ${isOwner ? "owner" : "member"}`,
+                                            IsM365Group: true,
+                                            Role: role.RoleDefinitionBindings.results[0].Name,
+                                            RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
+                                        });
+                                    }
+                                }
+                                // Else, compare the email
+                                else if (user.mail == userInfo.EMail) {
+                                    // Add the user information
+                                    this._items.push({
+                                        WebUrl: web.Url,
+                                        WebTitle: web.Title,
+                                        Id: userInfo.Id,
+                                        LoginName: userInfo.Name,
+                                        Name: userInfo.Title || userInfo.Name,
+                                        Email: userInfo.EMail,
+                                        Group: role.Member.Title,
+                                        GroupId: role.Member.Id,
+                                        GroupInfo: `${group.displayName} M365 Group ${isOwner ? "owner" : "member"}`,
+                                        IsM365Group: true,
+                                        Role: role.RoleDefinitionBindings.results[0].Name,
+                                        RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
+                                    });
+                                }
+                            }
+
+                            // Try the next group
+                            resolve(null);
+                        }, () => {
+                            // Try the next group
+                            resolve(null);
+                        });
+                    });
+                }).then(resolve);
+            });
+        });
+    }
+
     // Analyzes the site
-    private static analyzeSite(web: Types.SP.WebOData, user: string | Types.SP.User) {
+    private static analyzeSite(web: Types.SP.WebOData, search: string | Types.SP.User) {
         // Return a promise
         return new Promise(resolve => {
             // Show a loading dialog
             LoadingDialog.setBody("Getting the user information...");
 
             // Get the users
-            this.getUsers(user).then(users => {
+            this.getUsers(search).then(users => {
                 let counter = 0;
 
                 // Parse the users
@@ -49,8 +195,24 @@ export class SearchUsers {
                     // Update the loading dialog
                     LoadingDialog.setBody(`Analyzing User ${++counter} of ${users.length}`);
 
-                    // Get the user information
-                    return this.getUserInfo(web, user);
+                    // Add the user information
+                    this._items.push({
+                        WebUrl: web.Url,
+                        WebTitle: web.Title,
+                        Id: user.Id,
+                        LoginName: user.UserName,
+                        Name: user.Title || user.Name,
+                        Email: user.EMail
+                    });
+
+                    // Return a promise
+                    return new Promise(resolve => {
+                        // Analyze the user groups
+                        this.analyzeUserGroups(web, search, user).then(() => {
+                            // Analyze the role assignments
+                            this.analyzeRoleAssignments(web, search, user).then(resolve);
+                        });
+                    });
                 }).then(() => {
                     // Hide the loading dialog
                     LoadingDialog.hide();
@@ -62,60 +224,10 @@ export class SearchUsers {
         });
     }
 
-    // Gets the form fields to display
-    static getFormFields(): Components.IFormControlProps[] {
-        return [
-            {
-                label: "User or Group Search by Text",
-                name: "UserName",
-                className: "mb-3",
-                description: "Type a user or group display or login name for the search",
-                errorMessage: "Please enter the user or group information",
-                type: Components.FormControlTypes.TextField
-            },
-            {
-                label: "People Search by Lookup",
-                name: "PeoplePicker",
-                className: "mb-3",
-                description: "Enter a minimum of 3 characters to search for a user",
-                errorMessage: "No user was selected...",
-                allowGroups: true,
-                searchUrl: DataSource.Site.Url,
-                type: Components.FormControlTypes.PeoplePicker
-            } as Components.IFormControlPropsPeoplePicker
-        ];
-    }
-
-    // Get the user information
-    private static getUserInfo(web: Types.SP.WebOData, userInfo: IUserInfo) {
+    // Get the groups the user is a part of
+    private static analyzeUserGroups(web: Types.SP.WebOData, search: string | Types.SP.User, userInfo: IUserInfo): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve) => {
-            // Parse the roles
-            for (let i = 0; i < web.RoleAssignments.results.length; i++) {
-                let role: Types.SP.RoleAssignmentOData = web.RoleAssignments.results[i] as any;
-
-                // See if this role is the user
-                if (role.Member.LoginName == userInfo.Name) {
-                    // Add the user information
-                    this._items.push({
-                        WebUrl: web.Url,
-                        WebTitle: web.Title,
-                        Id: userInfo.Id,
-                        LoginName: userInfo.Name,
-                        Name: userInfo.Title || userInfo.Name,
-                        Email: userInfo.EMail,
-                        Group: "",
-                        GroupId: 0,
-                        GroupInfo: "",
-                        Role: role.RoleDefinitionBindings.results[0].Name,
-                        RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
-                    });
-
-                    // Check the next role
-                    continue;
-                }
-            }
-
             // Get the groups the user is associated with
             Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).SiteUsers(userInfo.Id).Groups().execute(groups => {
                 // Parse the groups the member belongs to
@@ -145,6 +257,30 @@ export class SearchUsers {
                 }).then(resolve);
             }, resolve);
         });
+    }
+
+    // Gets the form fields to display
+    static getFormFields(): Components.IFormControlProps[] {
+        return [
+            {
+                label: "User or Group Search by Text",
+                name: "UserName",
+                className: "mb-3",
+                description: "Type a user or group display or login name for the search",
+                errorMessage: "Please enter the user or group information",
+                type: Components.FormControlTypes.TextField
+            },
+            {
+                label: "People Search by Lookup",
+                name: "PeoplePicker",
+                className: "mb-3",
+                description: "Enter a minimum of 3 characters to search for a user",
+                errorMessage: "No user was selected...",
+                allowGroups: true,
+                searchUrl: DataSource.Site.Url,
+                type: Components.FormControlTypes.PeoplePicker
+            } as Components.IFormControlPropsPeoplePicker
+        ];
     }
 
     // Gets the external users
@@ -223,8 +359,6 @@ export class SearchUsers {
             () => {
                 // Close the dialog
                 LoadingDialog.hide();
-
-                // TODO
             }
         )
     }
@@ -417,7 +551,7 @@ export class SearchUsers {
                                 });
 
                                 // Ensure we can remove
-                                if (!auditOnly) {
+                                if (!auditOnly && row.IsM365Group != true) {
                                     // Add the remove button
                                     tooltips.add({
                                         content: "Removes the user from the group",
@@ -440,7 +574,7 @@ export class SearchUsers {
                                         }
                                     });
                                 }
-                            } else if (!auditOnly) {
+                            } else if (!auditOnly && row.IsM365Group != true) {
                                 // Add the remove button
                                 tooltips.add({
                                     content: "Removes the user from the site",
