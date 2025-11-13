@@ -184,16 +184,16 @@ export class App {
                                     }
                                 },
                                 onControlRendered: ctrl => {
-                                    // Ensure it's not disabled
-                                    if (ctrl.props.isDisabled) { return; }
-
                                     // Load the sub-webs
                                     DataSource.getAllWebs(DataSource.Site.Url).then(() => {
-                                        // Update the control
-                                        ctrl.dropdown.setItems(DataSource.SiteItems);
-
                                         // Update the tabs
                                         tabs.onWebsLoaded(DataSource.SiteItems);
+
+                                        // If it's not enabled, do not update the dropdown
+                                        if (ctrl.props.isDisabled) { return; }
+
+                                        // Update the control
+                                        ctrl.dropdown.setItems(DataSource.SiteItems);
                                     });
                                 }
                             } as Components.IFormControlPropsDropdown
