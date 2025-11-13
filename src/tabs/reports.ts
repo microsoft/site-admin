@@ -13,6 +13,7 @@ export interface IReportProps {
 
 // Report Types
 enum ReportTypes {
+    DLP = "DLP",
     DocRetention = "DocRetention",
     ExternalShares = "ExternalShares",
     ExternalUsers = "ExternalUsers",
@@ -48,7 +49,7 @@ export class ReportsTab {
     }
 
     // Renders the tab
-    private render(selectedReport: string = ReportTypes.DocRetention) {
+    private render(selectedReport: string = ReportTypes.DLP) {
         // Clear the element
         while (this._el.firstChild) { this._el.removeChild(this._el.firstChild); }
 
@@ -63,6 +64,11 @@ export class ReportsTab {
                     type: Components.FormControlTypes.Dropdown,
                     value: selectedReport,
                     items: [
+                        {
+                            text: "DLP Report",
+                            data: "Finds files that has DLP applied to it.",
+                            value: ReportTypes.DLP
+                        },
                         {
                             text: "Document Retention",
                             data: "Find documents older than a specified date.",
@@ -125,6 +131,9 @@ export class ReportsTab {
 
         // Add the controls
         switch (selectedReport) {
+            case ReportTypes.DLP:
+                form.appendControls(Reports.DLP.getFormFields());
+                break;
             case ReportTypes.DocRetention:
                 form.appendControls(Reports.DocRetention.getFormFields(this._reportProps.docRententionYears));
                 break;
@@ -174,6 +183,12 @@ export class ReportsTab {
 
                 // Run the report
                 switch (selectedReport) {
+                    case ReportTypes.DLP:
+                        Reports.DLP.run(this._el, this._auditOnly, form.getValues(), () => {
+                            // Render this component
+                            this.render(selectedReport);
+                        });
+                        break;
                     case ReportTypes.DocRetention:
                         Reports.DocRetention.run(this._el, this._auditOnly, form.getValues(), () => {
                             // Render this component

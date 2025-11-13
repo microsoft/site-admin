@@ -63,7 +63,7 @@ export class Tabs {
                 }
             },
             {
-                tabName: "Lists",
+                tabName: "Lists/Libraries",
                 onRender: (el) => {
                     // Render the tab
                     this._tabLists = new ListsTab(el, appProps);
@@ -107,7 +107,7 @@ export class Tabs {
                 }
             },
             {
-                tabName: "Lists",
+                tabName: "Lists/Libraries",
                 onRender: (el) => {
                     // Render the tab
                     this._tabLists = new ListsTab(el, appProps);
