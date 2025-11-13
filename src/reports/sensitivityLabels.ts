@@ -1,22 +1,18 @@
 import { Dashboard, Documents, LoadingDialog } from "dattatable";
 import { Components, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
 import { fileEarmark } from "gd-sprest-bs/build/icons/svgs/fileEarmark";
-import * as moment from "moment";
 import { DataSource } from "../ds";
-import Strings from "../strings";
 import { ExportCSV } from "./exportCSV";
 
-interface IDLPItem {
-    AppliedActionsText: string;
+interface ISensitivityLabelItem {
     Author: string;
-    ConditionDescription: string;
     FileExtension: string;
     FileName: string;
-    GeneralText: string;
-    LastProcessedTime: string;
     ListId: string;
     ListTitle: string;
     Path: string;
+    SensitivityLabel: string;
+    SensitivityLabelId: string;
     WebUrl: string;
     WebId: string;
 }
@@ -29,22 +25,20 @@ interface IWebItem {
 }
 
 const CSVFields = [
-    "WebUrl",
-    "ListTitle",
-    "FileName",
-    "FileExtension",
-    "GeneralText",
-    "AppliedActionsText",
-    "ConditionDescription",
-    "LastProcessedTime",
     "Author",
-    "Path",
+    "FileExtension",
+    "FileName",
     "ListId",
-    "WebId"
+    "ListTitle",
+    "Path",
+    "SensitivityLabel",
+    "SensitivityLabelId",
+    "WebId",
+    "WebUrl"
 ]
 
-export class DLP {
-    private static _items: IDLPItem[] = [];
+export class SensitivityLabels {
+    private static _items: ISensitivityLabelItem[] = [];
 
     // Gets the form fields to display
     static getFormFields(): Components.IFormControlProps[] { return []; }
@@ -62,44 +56,33 @@ export class DLP {
 
                 // Return a promise
                 return new Promise(resolve => {
-                    // Get the item ids for this library
-                    Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(lib.Title).Items().query({
-                        Expand: ["Author"],
-                        GetAllItems: true,
-                        Select: ["Author/Title", "FileLeafRef", "FileRef", "File_x0020_Type", "Id"],
-                        Top: 5000
-                    }).execute(items => {
-                        let list = Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(lib.Title);
+                    // Get the files for this library
+                    DataSource.loadFiles(webId, lib.Title).then(files => {
+                        // Parse the files
+                        files.forEach(file => {
+                            // Ensure a sensitivity label exists
+                            if (file.sensitivityLabel && file.sensitivityLabel.displayName) {
+                                let fileInfo = file.name.split('.');
+                                let folderPath = file.parentReference.path.split('root:')[1];
 
-                        // Parse the items and create the batch job
-                        items.results.forEach(item => {
-                            list.Items(item.Id).GetDlpPolicyTip().batch(result => {
-                                // Ensure a policy exists
-                                if (typeof (result["GetDlpPolicyTip"]) === "undefined") {
-                                    // Parse the conditions
-                                    result.MatchedConditionDescriptions.results.forEach(condition => {
-                                        // Append the data
-                                        this._items.push({
-                                            AppliedActionsText: result.AppliedActionsText,
-                                            Author: item["Author"]?.Title,
-                                            ConditionDescription: condition,
-                                            FileExtension: item["File_x0020_Type"],
-                                            FileName: item["FileLeafRef"],
-                                            GeneralText: result.GeneralText,
-                                            LastProcessedTime: result.LastProcessedTime,
-                                            ListId: lib.Id,
-                                            ListTitle: lib.Title,
-                                            Path: item["FileRef"],
-                                            WebId: webId,
-                                            WebUrl: webUrl
-                                        });
-                                    });
-                                }
-                            });
+                                // Append the data
+                                this._items.push({
+                                    Author: file.createdBy.user["email"],
+                                    FileExtension: fileInfo[fileInfo.length - 1],
+                                    FileName: file.name,
+                                    ListId: lib.Id,
+                                    ListTitle: lib.Title,
+                                    Path: `${lib.RootFolder.ServerRelativeUrl}${folderPath}/${file.name}`,
+                                    SensitivityLabel: file.sensitivityLabel.displayName,
+                                    SensitivityLabelId: file.sensitivityLabel.id,
+                                    WebId: webId,
+                                    WebUrl: webUrl
+                                });
+                            }
                         });
 
-                        // Execute the batch request
-                        list.execute(resolve);
+                        // Check the next library
+                        resolve(null);
                     });
                 });
             }).then(resolve);
@@ -112,7 +95,7 @@ export class DLP {
         new Dashboard({
             el,
             navigation: {
-                title: "DLP Report",
+                title: "Sensitivity Labels",
                 showFilter: false,
                 items: [{
                     text: "New Search",
@@ -129,7 +112,7 @@ export class DLP {
                     isButton: true,
                     onClick: () => {
                         // Export the CSV
-                        new ExportCSV("dlpReport.csv", CSVFields, this._items);
+                        new ExportCSV("SensitivityLabels.csv", CSVFields, this._items);
                     }
                 }]
             },
@@ -138,14 +121,14 @@ export class DLP {
                 onRendering: dtProps => {
                     dtProps.columnDefs = [
                         {
-                            "targets": 5,
+                            "targets": 4,
                             "orderable": false,
                             "searchable": false
                         }
                     ];
 
                     // Order by the 1st column by default; ascending
-                    dtProps.order = [[2, "asc"]];
+                    dtProps.order = [[3, "asc"]];
 
                     // Return the properties
                     return dtProps;
@@ -156,40 +139,33 @@ export class DLP {
                         title: "List"
                     },
                     {
-                        name: "Author",
-                        title: "Created By"
+                        name: "FileName",
+                        title: "File"
                     },
                     {
                         name: "",
-                        title: "File",
-                        onRenderCell: (el, col, item: IDLPItem) => {
+                        title: "File Info",
+                        onRenderCell: (el, col, item: ISensitivityLabelItem) => {
                             // Set the sort value
                             el.setAttribute("data-order", item.Path);
 
                             // Show the file info
                             el.innerHTML = `
-                                <b>Name: </b>${item.FileName}
+                                <b>Create By: </b>${item.Author}
                                 <br/>
                                 <b>Path: </b>${item.Path}
                             `;
                         }
                     },
                     {
-                        name: "ConditionDescription",
-                        title: "Condition"
-                    },
-                    {
-                        name: "LastProcessedTime",
-                        title: "Last Processed Time",
-                        onRenderCell: (el, col, item: IDLPItem) => {
-                            el.innerHTML = item.LastProcessedTime ? moment(item.LastProcessedTime).format(Strings.TimeFormat) : "";
-                        }
+                        name: "SensitivityLabel",
+                        title: "Sensitivity Label"
                     },
                     {
                         className: "text-end",
                         name: "",
                         title: "",
-                        onRenderCell: (el, col, row: IDLPItem) => {
+                        onRenderCell: (el, col, row: ISensitivityLabelItem) => {
                             let btnDelete: Components.IButton = null;
 
                             // Render the buttons
@@ -243,8 +219,9 @@ export class DLP {
                 // Get the libraries for this site
                 Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().query({
                     Filter: `Hidden eq false and BaseTemplate eq ${SPTypes.ListTemplateType.DocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.PageLibrary}`,
+                    Expand: ["RootFolder"],
                     GetAllItems: true,
-                    Select: ["Id", "Title"],
+                    Select: ["Id", "Title", "RootFolder/ServerRelativeUrl"],
                     Top: 5000
                 }).execute(libs => {
                     // Add the libraries to analyze

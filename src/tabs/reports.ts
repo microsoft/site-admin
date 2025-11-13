@@ -22,6 +22,7 @@ enum ReportTypes {
     SearchEEEU = "SearchEEEU",
     SearchProp = "SearchProp",
     SearchUsers = "SearchUsers",
+    SensitivityLabels = "SensitivityLabels",
     SharingLinks = "SharingLinks",
     UniquePermissions = "UniquePermissions"
 }
@@ -111,6 +112,11 @@ export class ReportsTab {
                             value: ReportTypes.SearchUsers
                         },
                         {
+                            text: "Sensitivity Labels",
+                            data: "Search for files that have sensitivity labels.",
+                            value: ReportTypes.SensitivityLabels
+                        },
+                        {
                             text: "Sharing Links",
                             data: "Scans for any 'Sharing Link' groups.",
                             value: ReportTypes.SharingLinks
@@ -157,6 +163,9 @@ export class ReportsTab {
                 break;
             case ReportTypes.SearchUsers:
                 form.appendControls(Reports.SearchUsers.getFormFields());
+                break;
+            case ReportTypes.SensitivityLabels:
+                form.appendControls(Reports.SensitivityLabels.getFormFields());
                 break;
             case ReportTypes.SharingLinks:
                 form.appendControls(Reports.SharingLinks.getFormFields());
@@ -253,6 +262,12 @@ export class ReportsTab {
                                 invalidMessage: "A keyword or account is required to perform a search."
                             });
                         }
+                        break;
+                    case ReportTypes.SensitivityLabels:
+                        Reports.SensitivityLabels.run(this._el, this._auditOnly, form.getValues(), () => {
+                            // Render this component
+                            this.render(selectedReport);
+                        });
                         break;
                     case ReportTypes.SharingLinks:
                         Reports.SharingLinks.run(this._el, this._auditOnly, form.getValues(), () => {

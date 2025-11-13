@@ -363,32 +363,17 @@ export class DataSource {
         });
     }
 
-    // List Items
-    static get ListItems(): IListItem[] { return this.List.Items; }
-
     // List
     private static _list: List<IListItem> = null;
     static get List(): List<IListItem> { return this._list; }
     private static loadList(): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve, reject) => {
-            // See if this is not an admin
-            let Filter = null;
-            if (!Security.IsAdmin) {
-                // Set the filter
-                Filter = "AuthorId eq " + ContextInfo.userId;
-            }
-
-            // Initialize the list
+            // Initialize the list and don't load any items
             this._list = new List<IListItem>({
                 listName: Strings.Lists.Main,
                 itemQuery: {
-                    Filter,
-                    Expand: ["Author"],
-                    OrderBy: ["Title"],
-                    GetAllItems: true,
-                    Top: 5000,
-                    Select: ["*", "Author/Id", "Author/Title"]
+                    Filter: "Id eq 0"
                 },
                 onInitError: reject,
                 onInitialized: resolve
@@ -421,7 +406,7 @@ export class DataSource {
                 let driveFolder = folder ? drive.getFolder(folder) : drive.root();
                 driveFolder.children().query({
                     GetAllItems: true,
-                    Select: ["driveId", "file", "folder", "id", "name", "parentReference", "sensitivityLabel", "webUrl"],
+                    Select: ["createdBy", "driveId", "file", "folder", "id", "name", "parentReference", "sensitivityLabel", "webUrl"],
                     Top: 5000
                 }).execute(resp => {
                     // Parse the items
