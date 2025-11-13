@@ -7,5 +7,6 @@ export * from "./searchDocs";
 export * from "./searchEEEU";
 export * from "./searchProp";
 export * from "./searchUsers";
+export * from "./sensitivityLabels";
 export * from "./sharingLinks";
 export * from "./uniquePermissions";
