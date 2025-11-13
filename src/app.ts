@@ -191,6 +191,9 @@ export class App {
                                     DataSource.getAllWebs(DataSource.Site.Url).then(() => {
                                         // Update the control
                                         ctrl.dropdown.setItems(DataSource.SiteItems);
+
+                                        // Update the tabs
+                                        tabs.onWebsLoaded(DataSource.SiteItems);
                                     });
                                 }
                             } as Components.IFormControlPropsDropdown

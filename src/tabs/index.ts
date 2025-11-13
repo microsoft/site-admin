@@ -7,6 +7,7 @@ import { IAppProps } from "../app";
 import { DataSource } from "../ds";
 import { FeaturesTab } from "./features";
 import { InfoTab } from "./info";
+import { ListsTab } from "./lists";
 import { ManagementTab } from "./management";
 import { SearchPropTab } from "./searchProp";
 import { ReportsTab } from "./reports";
@@ -22,6 +23,7 @@ export class Tabs {
     private _tabAppPermissions: AppPermissionsTab = null;
     private _tabChanges: ChangesTab = null;
     private _tabFeatures: FeaturesTab = null;
+    private _tabLists: ListsTab = null;
     private _tabManagement: ManagementTab = null;
     private _tabReports: ReportsTab = null;
     private _tabSearch: SearchPropTab = null;
@@ -42,6 +44,12 @@ export class Tabs {
         this.render(appProps);
     }
 
+    // Event when the webs are loaded
+    onWebsLoaded(webs: Components.IDropdownItem[]) {
+        // Update the list tab
+        this._tabLists.setWebs(webs);
+    }
+
     // Renders the tabs
     private render(appProps: IAppProps) {
         // Set the items
@@ -52,6 +60,13 @@ export class Tabs {
                 onRender: (el) => {
                     // Render the tab
                     new InfoTab(el, appProps.siteAttestation, appProps.siteProps);
+                }
+            },
+            {
+                tabName: "Lists",
+                onRender: (el) => {
+                    // Render the tab
+                    this._tabLists = new ListsTab(el, appProps);
                 }
             },
             {
@@ -89,6 +104,13 @@ export class Tabs {
                 onRender: (el) => {
                     // Render the tab
                     this._tabAppPermissions = new AppPermissionsTab(el);
+                }
+            },
+            {
+                tabName: "Lists",
+                onRender: (el) => {
+                    // Render the tab
+                    this._tabLists = new ListsTab(el, appProps);
                 }
             },
             {
