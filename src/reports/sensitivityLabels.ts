@@ -25,16 +25,16 @@ interface IWebItem {
 }
 
 const CSVFields = [
-    "WebUrl",
-    "ListTitle",
-    "FileName",
+    "Author",
     "FileExtension",
+    "FileName",
+    "ListId",
+    "ListTitle",
+    "Path",
     "SensitivityLabel",
     "SensitivityLabelId",
-    "Author",
-    "Path",
-    "ListId",
-    "WebId"
+    "WebId",
+    "WebUrl"
 ]
 
 export class SensitivityLabels {
@@ -61,8 +61,9 @@ export class SensitivityLabels {
                         // Parse the files
                         files.forEach(file => {
                             // Ensure a sensitivity label exists
-                            if (file.sensitivityLabel) {
+                            if (file.sensitivityLabel && file.sensitivityLabel.displayName) {
                                 let fileInfo = file.name.split('.');
+                                let folderPath = file.parentReference.path.split('root:')[1];
 
                                 // Append the data
                                 this._items.push({
@@ -71,7 +72,7 @@ export class SensitivityLabels {
                                     FileName: file.name,
                                     ListId: lib.Id,
                                     ListTitle: lib.Title,
-                                    Path: file.webUrl,
+                                    Path: `${lib.RootFolder.ServerRelativeUrl}${folderPath}/${file.name}`,
                                     SensitivityLabel: file.sensitivityLabel.displayName,
                                     SensitivityLabelId: file.sensitivityLabel.id,
                                     WebId: webId,
@@ -127,7 +128,7 @@ export class SensitivityLabels {
                     ];
 
                     // Order by the 1st column by default; ascending
-                    dtProps.order = [[2, "asc"]];
+                    dtProps.order = [[3, "asc"]];
 
                     // Return the properties
                     return dtProps;
@@ -138,19 +139,19 @@ export class SensitivityLabels {
                         title: "List"
                     },
                     {
-                        name: "Author",
-                        title: "Created By"
+                        name: "FileName",
+                        title: "File"
                     },
                     {
                         name: "",
-                        title: "File",
+                        title: "File Info",
                         onRenderCell: (el, col, item: ISensitivityLabelItem) => {
                             // Set the sort value
                             el.setAttribute("data-order", item.Path);
 
                             // Show the file info
                             el.innerHTML = `
-                                <b>Name: </b>${item.FileName}
+                                <b>Create By: </b>${item.Author}
                                 <br/>
                                 <b>Path: </b>${item.Path}
                             `;
@@ -218,8 +219,9 @@ export class SensitivityLabels {
                 // Get the libraries for this site
                 Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().query({
                     Filter: `Hidden eq false and BaseTemplate eq ${SPTypes.ListTemplateType.DocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.PageLibrary}`,
+                    Expand: ["RootFolder"],
                     GetAllItems: true,
-                    Select: ["Id", "Title"],
+                    Select: ["Id", "Title", "RootFolder/ServerRelativeUrl"],
                     Top: 5000
                 }).execute(libs => {
                     // Add the libraries to analyze
