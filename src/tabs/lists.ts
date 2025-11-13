@@ -818,10 +818,10 @@ export class ListsTab {
                                 // See if we are searching all webs
                                 if (values["SearchAll"]) {
                                     // Load the lists
-                                    this.loadLists(true);
+                                    this.loadLists(values["ShowHiddenLists"]);
                                 } else {
                                     // Load the lists
-                                    this.loadLists(false, values["SelectedWebs"]);
+                                    this.loadLists(values["ShowHiddenLists"], values["SelectedWebs"]);
                                 }
 
                                 // Close the dialog

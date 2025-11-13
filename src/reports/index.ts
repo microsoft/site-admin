@@ -1,3 +1,4 @@
+export * from "./dlp";
 export * from "./docRetention";
 export * from "./externalShares";
 export * from "./externalUsers";
