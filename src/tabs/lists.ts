@@ -1,7 +1,9 @@
 import { Dashboard, DataTable, Modal, LoadingDialog } from "dattatable";
 import { Components, Helper, SPTypes, Types, Web, v2 } from "gd-sprest-bs";
+import { ExportCSV } from "../reports/exportCSV";
+import { IAppProps } from "../app";
 import { DataSource } from "../ds";
-import { ExportCSV } from "./exportCSV";
+import { IDropdownItem } from "gd-sprest-bs/src/components/components";
 
 interface IList {
     DefaultSensitivityLabel: string;
@@ -33,15 +35,30 @@ const CSVSensitivityLabelResponseFields = [
     "errorFl", "url", "fileName", "message"
 ]
 
-export class Lists {
-    private static _disableLabelOverride: boolean = null;
-    private static _items: IList[] = [];
+/**
+ * Lists Tab
+ */
+export class ListsTab {
+    private _appProps: IAppProps = null;
+    private _el: HTMLElement = null;
+    private _form: Components.IForm = null;
+    private _items: IList[] = [];
+    private _webs: Components.IDropdownItem[] = null;
 
     // List Template Types
     private static _listTemplates: { [key: number]: string } = {};
 
+    // Constructor
+    constructor(el: HTMLElement, appProps: IAppProps) {
+        this._el = el;
+        this._appProps = appProps;
+
+        // Render the tab
+        this.render();
+    }
+
     // Analyzes a list
-    private static analyzeList(webUrl: string, webId: string, list: Types.SP.ListOData) {
+    private analyzeList(webUrl: string, webId: string, list: Types.SP.ListOData) {
         // Add a row for this entry
         this._items.push({
             DefaultSensitivityLabel: list.DefaultSensitivityLabelForLibrary,
@@ -50,7 +67,7 @@ export class Lists {
             ItemCount: list.ItemCount,
             ListId: list.Id,
             ListName: list.Title,
-            ListTemplate: this._listTemplates[list.BaseTemplate],
+            ListTemplate: ListsTab._listTemplates[list.BaseTemplate],
             ListTemplateType: list.BaseTemplate,
             ListUrl: list.RootFolder.ServerRelativeUrl,
             ListViewUrl: list.DefaultViewUrl,
@@ -59,21 +76,8 @@ export class Lists {
         });
     }
 
-    // Gets the form fields to display
-    static getFormFields(): Components.IFormControlProps[] {
-        return [
-            {
-                name: "ShowHiddenLists",
-                label: "Show Hidden Lists?",
-                description: "Select this option to include hidden lists.",
-                type: Components.FormControlTypes.Switch,
-                value: false
-            }
-        ];
-    }
-
     // Loads the root folders for the list
-    private static loadFolders(item: IList): PromiseLike<Components.IDropdownItem[]> {
+    private loadFolders(item: IList): PromiseLike<Components.IDropdownItem[]> {
         // Return a promise
         return new Promise(resolve => {
             let items: Components.IDropdownItem[] = [{ text: "All Files in Library", value: null }];
@@ -102,11 +106,86 @@ export class Lists {
         });
     }
 
-    // Renders the search summary
-    private static renderSummary(el: HTMLElement, auditOnly: boolean, onClose: () => void) {
-        // Render the summary
+    // Loads the lists
+    private loadLists(showHiddenLists: boolean = false, webItems?: IDropdownItem[]) {
+        // Show a loading dialog
+        LoadingDialog.setHeader("Searching Lists");
+        LoadingDialog.setBody("Searching the site...");
+        LoadingDialog.show();
+
+        // Clear the items
+        this._items = [];
+
+        // Parse all the webs
+        let counter = 0;
+        let webs = webItems || DataSource.SiteItems;
+        Helper.Executor(webs, siteItem => {
+            // Set the loading dialog element
+            let elLoadingDialog = document.createElement("div");
+            elLoadingDialog.innerHTML = `<span>Search ${++counter} of ${webs.length}...</span><br/><span></span>`;
+            let elStatus = elLoadingDialog.childNodes[2] as HTMLElement;
+
+            // Update the loading dialog
+            LoadingDialog.setBody(elLoadingDialog);
+
+            // Return a promise
+            return new Promise(resolve => {
+                // Set the filter
+                let Filter = showHiddenLists ? "" : "Hidden eq false";
+
+                // Get the list templates
+                let web = Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue });
+                web.ListTemplates().execute(templates => {
+                    // Parse the templates
+                    for (let i = 0; i < templates.results.length; i++) {
+                        let template = templates.results[i];
+
+                        // Skip the template if we already set it
+                        if (ListsTab._listTemplates[template.ListTemplateTypeKind]) { continue; }
+
+                        // Set the template
+                        ListsTab._listTemplates[template.ListTemplateTypeKind] = template.Name;
+                    }
+                });
+
+                // Get the lists
+                web.Lists().query({
+                    Filter,
+                    Expand: ["DefaultViewFormUrl", "RootFolder"],
+                    Select: [
+                        "BaseTemplate", "DefaultSensitivityLabelForLibrary", "Id", "NoCrawl",
+                        "ItemCount", "Title", "HasUniqueRoleAssignments", "RootFolder/ServerRelativeUrl"
+                    ]
+                }).execute(lists => {
+                    let ctrList = 0;
+
+                    // Parse the lists
+                    Helper.Executor(lists.results, list => {
+                        // Update the status
+                        elStatus.innerHTML = `Analyzing List ${++ctrList} of ${lists.results.length}...`;
+
+                        // Analyze the list
+                        return this.analyzeList(siteItem.text, siteItem.value, list);
+                    }).then(resolve);
+                }, true);
+            });
+        }).then(() => {
+            // Render the summary
+            this.render();
+
+            // Hide the loading dialog
+            LoadingDialog.hide();
+        });
+    }
+
+    // Renders the tab
+    private render() {
+        // Clear the element
+        while (this._el.firstChild) { this._el.removeChild(this._el.firstChild); }
+
+        // Render a dashboard
         let dt = new Dashboard({
-            el,
+            el: this._el,
             navigation: {
                 title: "Lists/Libraries",
                 showFilter: false,
@@ -115,8 +194,8 @@ export class Lists {
                     className: "btn-outline-light",
                     isButton: true,
                     onClick: () => {
-                        // Call the close event
-                        onClose();
+                        // Show the form
+                        this.showForm();
                     }
                 }],
                 itemsEnd: [{
@@ -213,7 +292,7 @@ export class Lists {
                             });
 
                             // Add the options to make changes
-                            if (!auditOnly) {
+                            if (!this._appProps.auditOnly) {
                                 let tooltip: Components.ITooltip = null;
                                 tooltips.add({
                                     content: "Click to set the default sensitivity label.",
@@ -269,88 +348,8 @@ export class Lists {
         });
     }
 
-    // Runs the report
-    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, disableLabelOverride: boolean, onClose: () => void) {
-        // Show a loading dialog
-        LoadingDialog.setHeader("Searching Lists");
-        LoadingDialog.setBody("Searching the site...");
-        LoadingDialog.show();
-
-        // Set the flag
-        this._disableLabelOverride = disableLabelOverride;
-
-        // Clear the items
-        this._items = [];
-
-        // See if we are showing hidden lists
-        let showHiddenLists = values["ShowHiddenLists"];
-
-        // Parse all the webs
-        let counter = 0;
-        Helper.Executor(DataSource.SiteItems, siteItem => {
-            // Set the loading dialog element
-            let elLoadingDialog = document.createElement("div");
-            elLoadingDialog.innerHTML = `<span>Search ${++counter} of ${DataSource.SiteItems.length}...</span><br/><span></span>`;
-            let elStatus = elLoadingDialog.childNodes[2] as HTMLElement;
-
-            // Update the loading dialog
-            LoadingDialog.setBody(elLoadingDialog);
-
-            // Return a promise
-            return new Promise(resolve => {
-                // Set the filter
-                let Filter = showHiddenLists ? "" : "Hidden eq false";
-
-                // Get the list templates
-                let web = Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue });
-                web.ListTemplates().execute(templates => {
-                    // Parse the templates
-                    for (let i = 0; i < templates.results.length; i++) {
-                        let template = templates.results[i];
-
-                        // Skip the template if we already set it
-                        if (this._listTemplates[template.ListTemplateTypeKind]) { continue; }
-
-                        // Set the template
-                        this._listTemplates[template.ListTemplateTypeKind] = template.Name;
-                    }
-                });
-
-                // Get the lists
-                web.Lists().query({
-                    Filter,
-                    Expand: ["DefaultViewFormUrl", "RootFolder"],
-                    Select: [
-                        "BaseTemplate", "DefaultSensitivityLabelForLibrary", "Id", "NoCrawl",
-                        "ItemCount", "Title", "HasUniqueRoleAssignments", "RootFolder/ServerRelativeUrl"
-                    ]
-                }).execute(lists => {
-                    let ctrList = 0;
-
-                    // Parse the lists
-                    Helper.Executor(lists.results, list => {
-                        // Update the status
-                        elStatus.innerHTML = `Analyzing List ${++ctrList} of ${lists.results.length}...`;
-
-                        // Analyze the list
-                        return this.analyzeList(siteItem.text, siteItem.value, list);
-                    }).then(resolve);
-                }, true);
-            });
-        }).then(() => {
-            // Clear the element
-            while (el.firstChild) { el.removeChild(el.firstChild); }
-
-            // Render the summary
-            this.renderSummary(el, auditOnly, onClose);
-
-            // Hide the loading dialog
-            LoadingDialog.hide();
-        });
-    }
-
     // Reverts the item permissions
-    private static setDefaultSensitivityLabel(item: IList) {
+    private setDefaultSensitivityLabel(item: IList) {
         // Set the modal header
         Modal.clear();
         Modal.setHeader("Set Default Sensitivity Label");
@@ -434,7 +433,7 @@ export class Lists {
     }
 
     // Reverts the item permissions
-    private static setDefaultSensitivityLabelForFiles(item: IList, folders: Components.IDropdownItem[]) {
+    private setDefaultSensitivityLabelForFiles(item: IList, folders: Components.IDropdownItem[]) {
         // Set the modal header
         Modal.clear();
         Modal.setHeader("Set Default Sensitivity Label");
@@ -470,7 +469,7 @@ export class Lists {
                     name: "OverrideLabel",
                     label: "Override Label?",
                     description: "If a label already exists, it will attempt to override it.",
-                    isDisabled: this._disableLabelOverride,
+                    isDisabled: this._appProps.disableSensitivityLabelOverride,
                     type: Components.FormControlTypes.Switch,
                     value: false
                 },
@@ -654,7 +653,7 @@ export class Lists {
     }
 
     // Adds/Removes the list content from the search index
-    private static setListSearch(item: IList, onUpdate: () => void) {
+    private setListSearch(item: IList, onUpdate: () => void) {
         // Clear the modal
         Modal.clear();
 
@@ -716,8 +715,130 @@ export class Lists {
         Modal.show();
     }
 
+    // Sets the webs
+    setWebs(webs: Components.IDropdownItem[]) {
+        this._webs = webs;
+
+        // See if the form exists
+        if (this._form) {
+            // Get the control
+            let ctrl = this._form.getControl("SelectedWebs");
+
+            // Set the items
+            ctrl.dropdown.setItems(this._webs);
+
+            // Enable the control
+            ctrl.dropdown.enable();
+        }
+    }
+
+    // Shows the load form
+    private showForm() {
+        // Clear the modal
+        Modal.clear();
+
+        // Set the header
+        Modal.setHeader("Load Lists");
+
+        // Set the form
+        let ddlWebs: Components.IFormControl;
+        let form = Components.Form({
+            el: Modal.BodyElement,
+            onRendered: () => {
+                // Hide the selected webs
+                ddlWebs.hide();
+            },
+            controls: [
+                {
+                    name: "SearchAll",
+                    type: Components.FormControlTypes.Switch,
+                    label: "Search All Webs?",
+                    description: "Select this option to search all webs in this site.",
+                    value: true,
+                    onChange: (item => {
+                        // Show or hide the control
+                        item ? ddlWebs.hide() : ddlWebs.show();
+                    })
+                } as Components.IFormControlPropsSwitch,
+                {
+                    name: "SelectedWebs",
+                    type: Components.FormControlTypes.MultiDropdownCheckbox,
+                    isDisabled: this._webs == null,
+                    items: this._webs,
+                    label: "Selected Web(s):",
+                    placeholder: "Select a web",
+                    onControlRendered: ctrl => { ddlWebs = ctrl; },
+                    onValidate: (ctrl, results) => {
+                        // See if we are not searching all the webs
+                        let values = form.getValues();
+                        if (values["SearchAll"] == false) {
+                            // Ensure a value exists
+                            results.isValid = results.value ? true : false;
+                            results.invalidMessage = "A selection is required.";
+                        }
+
+                        // Return the results
+                        return results;
+                    }
+                } as Components.IFormControlPropsMultiDropdownCheckbox,
+                {
+                    name: "ShowHiddenLists",
+                    type: Components.FormControlTypes.Switch,
+                    label: "Show Hidden Lists?",
+                    description: "Select this option to include hidden lists.",
+                    value: false
+                }
+            ]
+        });
+
+        // Set the footer
+        Components.TooltipGroup({
+            buttonType: Components.ButtonTypes.OutlinePrimary,
+            el: Modal.FooterElement,
+            tooltips: [
+                {
+                    content: "Closes the form.",
+                    btnProps: {
+                        text: "Close",
+                        onClick: () => {
+                            // Hide the modal
+                            Modal.hide();
+                        }
+                    }
+                },
+                {
+                    content: "Runs the lists report.",
+                    btnProps: {
+                        text: "Run",
+                        onClick: () => {
+                            // Ensure the form is valid
+                            if (form.isValid()) {
+                                let values = form.getValues();
+
+                                // See if we are searching all webs
+                                if (values["SearchAll"]) {
+                                    // Load the lists
+                                    this.loadLists(true);
+                                } else {
+                                    // Load the lists
+                                    this.loadLists(false, values["SelectedWebs"]);
+                                }
+
+                                // Close the dialog
+                                Modal.hide();
+                            }
+                        }
+                    }
+                }
+            ]
+        });
+
+        // Show the form
+        Modal.show();
+    }
+
     // Shows the responses for setting the sensitivity labels
-    private static showResponses(responses: ISetSensitivityLabelResponse[]) {
+    private showResponses(responses: ISetSensitivityLabelResponse[]) {
         // Clear the modal and set the header
         Modal.clear();
         Modal.setType(Components.ModalTypes.Full);

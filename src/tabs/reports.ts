@@ -16,7 +16,6 @@ enum ReportTypes {
     DocRetention = "DocRetention",
     ExternalShares = "ExternalShares",
     ExternalUsers = "ExternalUsers",
-    Lists = "Lists",
     Permissions = "Permissions",
     SearchDocs = "SearchDocs",
     SearchEEEU = "SearchEEEU",
@@ -80,11 +79,6 @@ export class ReportsTab {
                             value: ReportTypes.ExternalUsers
                         },
                         {
-                            text: "Lists/Libraries",
-                            data: "Scans all of the lists/libraries for this site.",
-                            value: ReportTypes.Lists
-                        },
-                        {
                             text: "Permissions",
                             data: "Scans all users/groups that have permissions to the site.",
                             value: ReportTypes.Permissions
@@ -140,9 +134,6 @@ export class ReportsTab {
             case ReportTypes.ExternalUsers:
                 form.appendControls(Reports.ExternalUsers.getFormFields());
                 break;
-            case ReportTypes.Lists:
-                form.appendControls(Reports.Lists.getFormFields());
-                break;
             case ReportTypes.Permissions:
                 form.appendControls(Reports.Permissions.getFormFields());
                 break;
@@ -197,12 +188,6 @@ export class ReportsTab {
                         break;
                     case ReportTypes.ExternalUsers:
                         Reports.ExternalUsers.run(this._el, this._auditOnly, form.getValues(), () => {
-                            // Render this component
-                            this.render(selectedReport);
-                        });
-                        break;
-                    case ReportTypes.Lists:
-                        Reports.Lists.run(this._el, this._auditOnly, form.getValues(), this._disableSensitivityLabelOverride, () => {
                             // Render this component
                             this.render(selectedReport);
                         });

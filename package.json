@@ -19,7 +19,7 @@
     "datatables.net": "^2.3.2",
     "datatables.net-bs5": "^2.3.2",
     "dattatable": "^2.11.43",
-    "gd-sprest-bs": "^10.15.13",
+    "gd-sprest-bs": "^10.15.15",
     "jquery": "^3.7.1",
     "moment": "^2.30.1"
   },
