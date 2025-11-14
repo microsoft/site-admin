@@ -288,7 +288,7 @@ export class SensitivityLabels {
 
                             // Show the file info
                             el.innerHTML = `
-                                <b>Create By: </b>${item.Author}
+                                <b>Created By: </b>${item.Author}
                                 <br/>
                                 <b>Path: </b>${item.Path}
                             `;

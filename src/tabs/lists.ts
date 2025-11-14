@@ -3,9 +3,11 @@ import { Components, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
 import { ExportCSV } from "../reports/exportCSV";
 import { IAppProps } from "../app";
 import { DataSource } from "../ds";
+import { DLP } from "../reports/dlp";
 import { SensitivityLabels } from "../reports/sensitivityLabels";
 
 interface IList {
+    BaseTemplate: number;
     DefaultSensitivityLabel: string;
     HasUniqueRoleAssignments: boolean;
     IncludedInSearch: boolean;
@@ -50,6 +52,7 @@ export class ListsTab {
     private analyzeList(webUrl: string, webId: string, list: Types.SP.ListOData) {
         // Add a row for this entry
         this._items.push({
+            BaseTemplate: list.BaseTemplate,
             DefaultSensitivityLabel: list.DefaultSensitivityLabelForLibrary,
             HasUniqueRoleAssignments: list.HasUniqueRoleAssignments,
             IncludedInSearch: !list.NoCrawl,
@@ -280,36 +283,60 @@ export class ListsTab {
                                 ]
                             });
 
+                            // See if this is a library
+                            if (isLibrary) {
+                                tooltips.add({
+                                    content: "Click to run a DLP report.",
+                                    btnProps: {
+                                        text: "Run DLP Report",
+                                        type: Components.ButtonTypes.OutlinePrimary,
+                                        onClick: () => {
+                                            // Run the DLP report for this library
+                                            DLP.analyzeLibrary(item.WebId, item.WebUrl, item.ListId, item.ListName);
+                                        }
+                                    }
+                                });
+                            }
+
                             // Add the options to make changes
                             if (!this._appProps.auditOnly) {
                                 let tooltip: Components.ITooltip = null;
-                                tooltips.add({
-                                    content: "Click to set the default sensitivity label.",
-                                    btnProps: {
-                                        isDisabled: !isLibrary || !DataSource.HasSensitivityLabels,
-                                        text: "Default Label",
-                                        type: Components.ButtonTypes.OutlinePrimary,
-                                        onClick: () => {
-                                            // Show the form
-                                            this.setDefaultSensitivityLabel(item);
+
+                                // Ensure this is a library
+                                if (isLibrary) {
+                                    // Set the default label
+                                    tooltips.add({
+                                        content: "Click to set the default sensitivity label.",
+                                        btnProps: {
+                                            isDisabled: !DataSource.HasSensitivityLabels,
+                                            text: "Default Label",
+                                            type: Components.ButtonTypes.OutlinePrimary,
+                                            onClick: () => {
+                                                // Show the form
+                                                this.setDefaultSensitivityLabel(item);
+                                            }
                                         }
-                                    }
-                                });
-                                tooltips.add({
-                                    content: "Click to set the default sensitivity label for any files that aren't currently labelled.",
-                                    btnProps: {
-                                        isDisabled: !isLibrary || !DataSource.HasSensitivityLabels,
-                                        text: "Label Files",
-                                        type: Components.ButtonTypes.OutlinePrimary,
-                                        onClick: () => {
-                                            // Load the folders for this list
-                                            this.loadFolders(item).then(folders => {
-                                                // Show the senstivity label form
-                                                SensitivityLabels.setDefaultSensitivityLabelForFiles(item.WebId, item.ListName, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride);
-                                            });
+                                    });
+
+                                    // Label the files in bulk
+                                    tooltips.add({
+                                        content: "Click to set the default sensitivity label for any files that aren't currently labelled.",
+                                        btnProps: {
+                                            isDisabled: !DataSource.HasSensitivityLabels,
+                                            text: "Label Files",
+                                            type: Components.ButtonTypes.OutlinePrimary,
+                                            onClick: () => {
+                                                // Load the folders for this list
+                                                this.loadFolders(item).then(folders => {
+                                                    // Show the senstivity label form
+                                                    SensitivityLabels.setDefaultSensitivityLabelForFiles(item.WebId, item.ListName, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride);
+                                                });
+                                            }
                                         }
-                                    }
-                                });
+                                    });
+                                }
+
+                                // Update the list to be in or out of the search index
                                 tooltips.add({
                                     assignTo: obj => { tooltip = obj; },
                                     content: `Click to ${item.IncludedInSearch ? "remove" : "add"} the content from the search index.`,
@@ -507,7 +534,7 @@ export class ListsTab {
         Modal.clear();
 
         // Set the header
-        Modal.setHeader("Load Lists");
+        Modal.setHeader("Load Lists/Libraries");
 
         // Set the form
         let ddlWebs: Components.IFormControl;
@@ -521,7 +548,7 @@ export class ListsTab {
                 {
                     name: "SearchAll",
                     type: Components.FormControlTypes.Switch,
-                    label: "Search All Webs?",
+                    label: "Search All Sub-Webs?",
                     description: "Select this option to search all webs in this site.",
                     value: true,
                     onChange: (item => {
@@ -534,8 +561,8 @@ export class ListsTab {
                     type: Components.FormControlTypes.MultiDropdownCheckbox,
                     isDisabled: this._webs == null,
                     items: this._webs,
-                    label: "Selected Web(s):",
-                    placeholder: "Select a web",
+                    label: "Selected Sub-Web(s):",
+                    placeholder: "Select a sub-web",
                     onControlRendered: ctrl => { ddlWebs = ctrl; },
                     onValidate: (ctrl, results) => {
                         // See if we are not searching all the webs
@@ -553,8 +580,8 @@ export class ListsTab {
                 {
                     name: "ShowHiddenLists",
                     type: Components.FormControlTypes.Switch,
-                    label: "Show Hidden Lists?",
-                    description: "Select this option to include hidden lists.",
+                    label: "Show Hidden Lists/Libraries?",
+                    description: "Select this option to include hidden lists/libraries.",
                     value: false
                 }
             ]
