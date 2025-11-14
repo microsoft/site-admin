@@ -324,7 +324,7 @@ export class ListsTab {
                                                 tooltip.setContent(`Click to ${item.IncludedInSearch ? "remove" : "add"} the content from the search index.`);
 
                                                 // Update the row cell
-                                                dt.Datatable.datatable.cell({ row: rowIdx, column: 4 }).data(item.IncludedInSearch).draw();
+                                                dt.updateCell(rowIdx, 4, item.IncludedInSearch);
                                             });
                                         }
                                     }

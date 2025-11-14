@@ -1,11 +1,12 @@
 import { Dashboard, DataTable, Documents, LoadingDialog, Modal } from "dattatable";
 import { Components, Helper, SPTypes, Types, Web, v2 } from "gd-sprest-bs";
-import { fileEarmark } from "gd-sprest-bs/build/icons/svgs/fileEarmark";
+import { fileEarmarkText } from "gd-sprest-bs/build/icons/svgs/fileEarmarkText";
 import { DataSource } from "../ds";
 import { ExportCSV } from "./exportCSV";
 
 interface ISensitivityLabelItem {
     Author: string;
+    File: Types.Microsoft.Graph.driveItem;
     FileExtension: string;
     FileName: string;
     ListId: string;
@@ -57,18 +58,19 @@ export class SensitivityLabels {
         return [
             {
                 name: "SearchType",
+                className: "mb-3",
                 type: Components.FormControlTypes.MultiSwitch,
                 required: true,
                 errorMessage: "A selection is required.",
                 items: [
                     {
                         name: "WithLabels",
-                        title: "Find all files with a label",
+                        label: "Find all files with a label",
                         isSelected: true
                     },
                     {
                         name: "WithoutLabels",
-                        title: "Find all files without a label"
+                        label: "Find all files without a label"
                     }
                 ]
             } as Components.IFormControlPropsMultiSwitch
@@ -102,6 +104,7 @@ export class SensitivityLabels {
                                 // Append the data
                                 this._items.push({
                                     Author: file.createdBy.user["email"],
+                                    File: file,
                                     FileExtension: fileInfo[fileInfo.length - 1],
                                     FileName: file.name,
                                     ListId: lib.Id,
@@ -123,8 +126,8 @@ export class SensitivityLabels {
         });
     }
 
-    // Labels files
-    private static labelFiles(file: Types.Microsoft.Graph.driveItem, overrideLabelFl: boolean, label: string, labelId: string, justification: string, responses: ISetSensitivityLabelResponse[]) {
+    // Labels file
+    private static labelFile(file: Types.Microsoft.Graph.driveItem, overrideLabelFl: boolean, label: string, labelId: string, justification: string, responses: ISetSensitivityLabelResponse[]): PromiseLike<ISetSensitivityLabelResponse[]> {
         // See if this file has a sensitivity label
         if (file.sensitivityLabel?.id && !overrideLabelFl) {
             // Add a response
@@ -164,8 +167,8 @@ export class SensitivityLabels {
                         url: file.webUrl
                     });
 
-                    // Check the next file
-                    resolve(null);
+                    // Resolve the request
+                    resolve(responses);
                 },
 
                 // Error
@@ -184,8 +187,8 @@ export class SensitivityLabels {
                         url: file.webUrl
                     });
 
-                    // Check the next file
-                    resolve(null);
+                    // Resolve the request
+                    resolve(responses);
                 }
             );
         });
@@ -211,8 +214,8 @@ export class SensitivityLabels {
                 // Update the loading dialog
                 LoadingDialog.setBody(`Processing ${++counter} of ${files.length} files...`);
 
-                // Label the files
-                return this.labelFiles(file, overrideLabelFl, label.text, label.value, justification, responses);
+                // Label the file
+                return this.labelFile(file, overrideLabelFl, label.text, label.value, justification, responses);
             }).then(() => {
                 // Show the responses
                 this.showResponses(responses);
@@ -226,7 +229,7 @@ export class SensitivityLabels {
     // Renders the search summary
     private static renderSummary(el: HTMLElement, auditOnly: boolean, onClose: () => void) {
         // Render the summary
-        new Dashboard({
+        let dt = new Dashboard({
             el,
             navigation: {
                 title: "Sensitivity Labels",
@@ -299,9 +302,7 @@ export class SensitivityLabels {
                         className: "text-end",
                         name: "",
                         title: "",
-                        onRenderCell: (el, col, row: ISensitivityLabelItem) => {
-                            let btnDelete: Components.IButton = null;
-
+                        onRenderCell: (el, col, row: ISensitivityLabelItem, rowIdx) => {
                             // Render the buttons
                             let tooltips = Components.TooltipGroup({
                                 el,
@@ -311,7 +312,7 @@ export class SensitivityLabels {
                                         btnProps: {
                                             className: "pe-2 py-1",
                                             iconClassName: "mx-1",
-                                            iconType: fileEarmark,
+                                            iconType: fileEarmarkText,
                                             iconSize: 24,
                                             text: "View",
                                             type: Components.ButtonTypes.OutlinePrimary,
@@ -323,6 +324,26 @@ export class SensitivityLabels {
                                     }
                                 ]
                             });
+
+                            // Ensure we can make updates
+                            if (!auditOnly) {
+                                // Add the label button
+                                tooltips.add({
+                                    content: "Sets the label for the file.",
+                                    btnProps: {
+                                        className: "pe-2 py-1",
+                                        text: "Set Label",
+                                        type: Components.ButtonTypes.OutlinePrimary,
+                                        onClick: () => {
+                                            // Show the form to label the file
+                                            this.showLabelFileForm(row.File, label => {
+                                                // Update the row cell
+                                                dt.updateCell(rowIdx, 3, label);
+                                            });
+                                        }
+                                    }
+                                });
+                            }
                         }
                     }
                 ]
@@ -342,7 +363,7 @@ export class SensitivityLabels {
         let withoutLabelsFl = false;
         (values["SearchType"] as any as Components.ICheckboxGroupItem[]).forEach(item => {
             withLabelsFl = item.name == "WithLabels" ? true : withLabelsFl;
-            withoutLabelsFl = item.name == "WithOutLabels" ? true : withoutLabelsFl;
+            withoutLabelsFl = item.name == "WithoutLabels" ? true : withoutLabelsFl;
         });
 
         // Show a loading dialog
@@ -507,6 +528,136 @@ export class SensitivityLabels {
 
                                 // Label the files
                                 this.labelFilesInFolder(webId, listName, folder, label, overrideLabelFl, justification);
+                            }
+                        }
+                    }
+                },
+                {
+                    content: "Closes the dialog.",
+                    btnProps: {
+                        text: "Close",
+                        type: Components.ButtonTypes.OutlineSecondary,
+                        onClick: () => {
+                            // Close the modal
+                            Modal.hide();
+                        }
+                    }
+                }
+            ]
+        });
+
+        // Show the modal
+        Modal.show();
+    }
+
+    // Shows the form to label a file
+    private static showLabelFileForm(file: Types.Microsoft.Graph.driveItem, onUpdate: (label: string) => void) {
+        // Set the modal header
+        Modal.clear();
+        Modal.setHeader("Set Sensitivity Label");
+
+        // Set the form
+        let form = Components.Form({
+            el: Modal.BodyElement,
+            groupClassName: "mb-3",
+            controls: [
+                {
+                    name: "SensitivityLabel",
+                    label: "Select Sensitivity Label:",
+                    description: "This will set any file that isn't currently labelled.",
+                    errorMessage: "A sensitivity label is required.",
+                    items: DataSource.SensitivityLabelItems,
+                    type: Components.FormControlTypes.Dropdown,
+                    required: true,
+                    onValidate: (ctrl, results) => {
+                        // Ensure a selection exists
+                        results.isValid = results.value && results.value.text ? true : false;
+                        return results;
+                    }
+                } as Components.IFormControlPropsDropdown,
+                {
+                    name: "Justification",
+                    label: "Justification:",
+                    description: "Your organization requires justification to change this label.",
+                    type: Components.FormControlTypes.Dropdown,
+                    required: true,
+                    items: [
+                        { text: "Previous label no longer applies" },
+                        { text: "Previous label was incorrect" },
+                        { text: "Other" }
+                    ],
+                    onChange: (item) => {
+                        let ctrlTextbox = form.getControl("JustificationOther");
+
+                        // See if we are showing it
+                        if (item.text == "Other") {
+                            // Show it
+                            ctrlTextbox.show();
+                        } else {
+                            // Hide it
+                            ctrlTextbox.hide();
+                        }
+                    }
+                } as Components.IFormControlPropsDropdown,
+                {
+                    name: "JustificationOther",
+                    label: "Explain Justification:",
+                    description: "Do not enter sensitive information",
+                    className: "d-none",
+                    type: Components.FormControlTypes.TextField,
+                    errorMessage: "A justification is required.",
+                    onValidate: (ctrl, results) => {
+                        let item = form.getValues()["Justification"] as Components.IDropdownItem;
+
+                        // See if we are expecting a justification
+                        if (item.text == "Other") {
+                            // Set the falg
+                            results.isValid = results.value ? true : false;
+                        }
+
+                        // Return the results
+                        return results;
+                    }
+                } as Components.IFormControlPropsTextField,
+            ]
+        });
+
+        // Set the footer
+        Components.TooltipGroup({
+            el: Modal.FooterElement,
+            tooltips: [
+                {
+                    content: "Sets the default sensitivity label to the selected option.",
+                    btnProps: {
+                        text: "Update",
+                        type: Components.ButtonTypes.OutlinePrimary,
+                        onClick: () => {
+                            // Ensure the form is valid
+                            if (form.isValid()) {
+                                let values = form.getValues();
+                                let label: Components.IDropdownItem = values["SensitivityLabel"];
+
+                                // Update the justification
+                                let justification = values["Justification"].text;
+                                justification = justification == "Other" ? values["JustificationOther"] : justification;
+
+                                // Show a loading dialog
+                                LoadingDialog.setHeader("Setting Label");
+                                LoadingDialog.setBody("Updating the label for this file.");
+                                LoadingDialog.show();
+
+                                // Label the file
+                                this.labelFile(file, true, label.text, label.value, justification, []).then(responses => {
+                                    // See if it was successful
+                                    if (!responses[0].errorFl) {
+                                        // Call the event
+                                        onUpdate(label.text);
+
+                                        // Hide the dialogs
+                                        LoadingDialog.hide();
+                                        Modal.hide();
+                                    }
+                                });
                             }
                         }
                     }

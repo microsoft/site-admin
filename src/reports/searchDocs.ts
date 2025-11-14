@@ -1,6 +1,6 @@
 import { Dashboard, Documents, LoadingDialog } from "dattatable";
 import { Components, Search, Types, Web } from "gd-sprest-bs";
-import { fileEarmark } from "gd-sprest-bs/build/icons/svgs/fileEarmark";
+import { fileEarmarkText } from "gd-sprest-bs/build/icons/svgs/fileEarmarkText";
 import { fileEarmarkArrowDown } from "gd-sprest-bs/build/icons/svgs/fileEarmarkArrowDown";
 import { trash } from "gd-sprest-bs/build/icons/svgs/trash";
 import * as moment from "moment";
@@ -204,7 +204,7 @@ export class SearchDocs {
                                         btnProps: {
                                             className: "pe-2 py-1",
                                             iconClassName: "mx-1",
-                                            iconType: fileEarmark,
+                                            iconType: fileEarmarkText,
                                             iconSize: 24,
                                             text: "View",
                                             type: Components.ButtonTypes.OutlinePrimary,
