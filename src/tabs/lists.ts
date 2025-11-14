@@ -534,7 +534,7 @@ export class ListsTab {
         Modal.clear();
 
         // Set the header
-        Modal.setHeader("Load Lists");
+        Modal.setHeader("Load Lists/Libraries");
 
         // Set the form
         let ddlWebs: Components.IFormControl;
@@ -548,7 +548,7 @@ export class ListsTab {
                 {
                     name: "SearchAll",
                     type: Components.FormControlTypes.Switch,
-                    label: "Search All Webs?",
+                    label: "Search All Sub-Webs?",
                     description: "Select this option to search all webs in this site.",
                     value: true,
                     onChange: (item => {
@@ -561,8 +561,8 @@ export class ListsTab {
                     type: Components.FormControlTypes.MultiDropdownCheckbox,
                     isDisabled: this._webs == null,
                     items: this._webs,
-                    label: "Selected Web(s):",
-                    placeholder: "Select a web",
+                    label: "Selected Sub-Web(s):",
+                    placeholder: "Select a sub-web",
                     onControlRendered: ctrl => { ddlWebs = ctrl; },
                     onValidate: (ctrl, results) => {
                         // See if we are not searching all the webs
@@ -580,8 +580,8 @@ export class ListsTab {
                 {
                     name: "ShowHiddenLists",
                     type: Components.FormControlTypes.Switch,
-                    label: "Show Hidden Lists?",
-                    description: "Select this option to include hidden lists.",
+                    label: "Show Hidden Lists/Libraries?",
+                    description: "Select this option to include hidden lists/libraries.",
                     value: false
                 }
             ]
