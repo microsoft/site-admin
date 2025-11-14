@@ -1,4 +1,4 @@
-import { Dashboard, Documents, LoadingDialog } from "dattatable";
+import { Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
 import { Components, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
 import { fileEarmark } from "gd-sprest-bs/build/icons/svgs/fileEarmark";
 import * as moment from "moment";
@@ -49,6 +49,93 @@ export class DLP {
     // Gets the form fields to display
     static getFormFields(): Components.IFormControlProps[] { return []; }
 
+    // Analyzes a single library
+    static analyzeLibrary(webId: string, webUrl: string, libId: string, libTitle: string) {
+        // Clear the items
+        this._items = [];
+
+        // Show a loading dialog
+        LoadingDialog.setHeader("Analyzing Library");
+        LoadingDialog.setBody("Getting all files in this library...");
+        LoadingDialog.show();
+
+        // Get the item ids for this library
+        Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(libTitle).Items().query({
+            Expand: ["Author"],
+            GetAllItems: true,
+            Select: ["Author/Title", "FileLeafRef", "FileRef", "File_x0020_Type", "Id"],
+            Top: 5000
+        }).execute(items => {
+            let batchRequests = 0;
+
+            // Update the dialog
+            LoadingDialog.setBody("Creating batch job for files...");
+
+            // Parse the items and create the batch job
+            let list = Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(libTitle);
+            items.results.forEach(item => {
+                // Increment the counter
+                batchRequests++;
+
+                // Create a batch request to get the dlp policy on this item
+                list.Items(item.Id).GetDlpPolicyTip().batch(result => {
+                    // Ensure a policy exists
+                    if (typeof (result["GetDlpPolicyTip"]) === "undefined") {
+                        // Parse the conditions
+                        result.MatchedConditionDescriptions.results.forEach(condition => {
+                            // Append the data
+                            this._items.push({
+                                AppliedActionsText: result.AppliedActionsText,
+                                Author: item["Author"]?.Title,
+                                ConditionDescription: condition,
+                                FileExtension: item["File_x0020_Type"],
+                                FileName: item["FileLeafRef"],
+                                GeneralText: result.GeneralText,
+                                LastProcessedTime: result.LastProcessedTime,
+                                ListId: libId,
+                                ListTitle: libTitle,
+                                Path: item["FileRef"],
+                                WebId: webId,
+                                WebUrl: webUrl
+                            });
+                        });
+                    }
+                });
+            });
+
+            // Update the dialog
+            LoadingDialog.setBody(`Executing Batch Request for ${batchRequests} items...`);
+
+            // Execute the batch request
+            list.execute(() => {
+                // Set the modal
+                Modal.clear();
+                Modal.setHeader("Data Loss Prevention Report");
+
+                // Show the results
+                this.renderSummary(Modal.BodyElement, false, null);
+
+                // Render the footer
+                Components.ButtonGroup({
+                    el: Modal.FooterElement,
+                    buttons: [
+                        {
+                            text: "Close",
+                            type: Components.ButtonTypes.OutlinePrimary,
+                            onClick: () => { Modal.hide(); }
+                        }
+                    ]
+                });
+
+                // Show the modal
+                Modal.show();
+
+                // Hide the dialog
+                LoadingDialog.hide();
+            });
+        });
+    }
+
     // Analyzes the libraries
     private static analyzeLibraries(webId: string, webUrl: string, libraries: Types.SP.ListOData[]) {
         // Return a promise
@@ -62,6 +149,8 @@ export class DLP {
 
                 // Return a promise
                 return new Promise(resolve => {
+                    let batchRequests = 0;
+
                     // Get the item ids for this library
                     Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(lib.Title).Items().query({
                         Expand: ["Author"],
@@ -73,6 +162,10 @@ export class DLP {
 
                         // Parse the items and create the batch job
                         items.results.forEach(item => {
+                            // Increment the counter
+                            batchRequests++;
+
+                            // Create a batch request to get the dlp policy on this item
                             list.Items(item.Id).GetDlpPolicyTip().batch(result => {
                                 // Ensure a policy exists
                                 if (typeof (result["GetDlpPolicyTip"]) === "undefined") {
@@ -97,6 +190,9 @@ export class DLP {
                                 }
                             });
                         });
+
+                        // Update the dialog
+                        LoadingDialog.setBody(`Executing Batch Request for ${batchRequests} items...`);
 
                         // Execute the batch request
                         list.execute(resolve);
