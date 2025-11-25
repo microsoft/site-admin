@@ -174,9 +174,6 @@ export class DLP {
                         items.results.forEach(item => {
                             let analyzeFile = true;
 
-                            // Increment the counter
-                            batchRequests++;
-
                             // See if the file extensions are provided
                             if (fileExtensions) {
                                 // Default the flag
@@ -191,6 +188,9 @@ export class DLP {
 
                             // See if we are analyzing this file
                             if (analyzeFile) {
+                                // Increment the counter
+                                batchRequests++;
+
                                 // Create a batch request to get the dlp policy on this item
                                 list.Items(item.Id).GetDlpPolicyTip().batch(result => {
                                     // Ensure a policy exists
