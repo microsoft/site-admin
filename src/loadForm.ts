@@ -61,7 +61,7 @@ export class LoadForm {
                 {
                     name: "url",
                     label: "Site Url:",
-                    placeholder: "Absolute or Relative Site Url",
+                    placeholder: "Relative Site Url",
                     type: Components.FormControlTypes.TextField,
                     description: "The relative url to the site. (Example: /sites/dev)<br/>Type in a minimum of 3 characters to search for sites.",
                     required: true,
