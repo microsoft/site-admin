@@ -237,7 +237,7 @@ export class DLP {
             navigation: {
                 title: "DLP Report",
                 showFilter: false,
-                items: [{
+                items: showSearch ? [{
                     text: "New Search",
                     className: "btn-outline-light",
                     isButton: true,
@@ -245,7 +245,7 @@ export class DLP {
                         // Call the close event
                         onClose();
                     }
-                }],
+                }] : null,
                 itemsEnd: [{
                     text: "Export to CSV",
                     className: "btn-outline-light me-2",
