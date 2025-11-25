@@ -694,7 +694,7 @@ export class DataSource {
                         LoadingDialog.setBody("Validating the site '" + url + "'");
 
                         // Validate the url and resolve the request
-                        this.validate(url).then(resolve, resolve);
+                        this.validate(decodeURIComponent(url)).then(resolve, resolve);
                     } else {
                         // Resolve the request
                         resolve();

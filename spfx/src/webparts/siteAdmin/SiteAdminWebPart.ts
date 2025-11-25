@@ -40,6 +40,7 @@ export interface ISiteAdminWebPartProps {
   MaxStorage: number;
   MaxStorageDescription: string;
   ReportsDocRententionYears: string;
+  ReportsDLPFileExt: string;
   ReportsDocSearchFileExt: string;
   ReportsDocSearchKeywords: string;
   SiteAttestation: boolean;
@@ -138,6 +139,7 @@ declare const SiteAdmin: {
     siteAttestationText?: string;
     reportProps?: {
       docRententionYears?: string;
+      dlpFileExt?: string;
       docSearchFileExt?: string;
       docSearchKeywords?: string;
     }
@@ -222,6 +224,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       maxStorageDesc: this.properties.MaxStorageDescription,
       maxStorageSize: this.properties.MaxStorage,
       reportProps: {
+        dlpFileExt: this.properties.ReportsDLPFileExt,
         docRententionYears: this.properties.ReportsDocRententionYears,
         docSearchFileExt: this.properties.ReportsDocSearchFileExt,
         docSearchKeywords: this.properties.ReportsDocSearchKeywords
@@ -432,6 +435,11 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
             {
               groupName: "Audit Tools",
               groupFields: [
+                PropertyPaneTextField("ReportsDLPFileExt", {
+                  label: strings.ReportsDLPFileExt,
+                  description: "The default file extensions to search.",
+                  value: this.properties.ReportsDLPFileExt
+                }),
                 PropertyPaneDropdown("ReportsDocRententionYears", {
                   label: strings.ReportsDocRententionYears,
                   selectedKey: this.properties.ReportsDocRententionYears,

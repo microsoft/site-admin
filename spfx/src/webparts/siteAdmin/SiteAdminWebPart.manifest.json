@@ -36,6 +36,7 @@
         "DisableSensitivityLabelOverride": false,
         "MaxStorage": 25,
         "MaxStorageDescription": "The max threshold has been met.",
+        "ReportsDLPFileExt": "csv doc docx dot dotx pdf pot potx pps ppsx ppt pptx txt xls xlsx xlt xltx",
         "ReportsDocSearchFileExt": "csv doc docx dot dotx pdf pot potx pps ppsx ppt pptx txt xls xlsx xlt xltx",
         "ReportsDocSearchKeywords": "phi pii ssn",
         "SiteAttestation": false,
