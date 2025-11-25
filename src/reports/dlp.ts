@@ -47,7 +47,17 @@ export class DLP {
     private static _items: IDLPItem[] = [];
 
     // Gets the form fields to display
-    static getFormFields(): Components.IFormControlProps[] { return []; }
+    static getFormFields(fileExt: string = ""): Components.IFormControlProps[] {
+        return [
+            {
+                label: "File Types",
+                name: "FileTypes",
+                className: "mb-3",
+                type: Components.FormControlTypes.TextField,
+                value: fileExt
+            }
+        ];
+    }
 
     // Analyzes a single library
     static analyzeLibrary(webId: string, webUrl: string, libId: string, libTitle: string) {
@@ -113,7 +123,7 @@ export class DLP {
                 Modal.setHeader("Data Loss Prevention Report");
 
                 // Show the results
-                this.renderSummary(Modal.BodyElement, false, null);
+                this.renderSummary(Modal.BodyElement, false, false);
 
                 // Render the footer
                 Components.ButtonGroup({
@@ -137,7 +147,7 @@ export class DLP {
     }
 
     // Analyzes the libraries
-    private static analyzeLibraries(webId: string, webUrl: string, libraries: Types.SP.ListOData[]) {
+    private static analyzeLibraries(webId: string, webUrl: string, libraries: Types.SP.ListOData[], fileExtensions: string[]) {
         // Return a promise
         return new Promise(resolve => {
             let counter = 0;
@@ -162,33 +172,50 @@ export class DLP {
 
                         // Parse the items and create the batch job
                         items.results.forEach(item => {
+                            let analyzeFile = true;
+
                             // Increment the counter
                             batchRequests++;
 
-                            // Create a batch request to get the dlp policy on this item
-                            list.Items(item.Id).GetDlpPolicyTip().batch(result => {
-                                // Ensure a policy exists
-                                if (typeof (result["GetDlpPolicyTip"]) === "undefined") {
-                                    // Parse the conditions
-                                    result.MatchedConditionDescriptions.results.forEach(condition => {
-                                        // Append the data
-                                        this._items.push({
-                                            AppliedActionsText: result.AppliedActionsText,
-                                            Author: item["Author"]?.Title,
-                                            ConditionDescription: condition,
-                                            FileExtension: item["File_x0020_Type"],
-                                            FileName: item["FileLeafRef"],
-                                            GeneralText: result.GeneralText,
-                                            LastProcessedTime: result.LastProcessedTime,
-                                            ListId: lib.Id,
-                                            ListTitle: lib.Title,
-                                            Path: item["FileRef"],
-                                            WebId: webId,
-                                            WebUrl: webUrl
+                            // See if the file extensions are provided
+                            if (fileExtensions) {
+                                // Default the flag
+                                analyzeFile = false
+
+                                // Loop through the file extensions
+                                fileExtensions.forEach(fileExt => {
+                                    // Set the flag if there is match
+                                    if (fileExt.toLowerCase() == item["File_x0020_Type"]?.toLowerCase()) { analyzeFile = true; }
+                                });
+                            }
+
+                            // See if we are analyzing this file
+                            if (analyzeFile) {
+                                // Create a batch request to get the dlp policy on this item
+                                list.Items(item.Id).GetDlpPolicyTip().batch(result => {
+                                    // Ensure a policy exists
+                                    if (typeof (result["GetDlpPolicyTip"]) === "undefined") {
+                                        // Parse the conditions
+                                        result.MatchedConditionDescriptions.results.forEach(condition => {
+                                            // Append the data
+                                            this._items.push({
+                                                AppliedActionsText: result.AppliedActionsText,
+                                                Author: item["Author"]?.Title,
+                                                ConditionDescription: condition,
+                                                FileExtension: item["File_x0020_Type"],
+                                                FileName: item["FileLeafRef"],
+                                                GeneralText: result.GeneralText,
+                                                LastProcessedTime: result.LastProcessedTime,
+                                                ListId: lib.Id,
+                                                ListTitle: lib.Title,
+                                                Path: item["FileRef"],
+                                                WebId: webId,
+                                                WebUrl: webUrl
+                                            });
                                         });
-                                    });
-                                }
-                            });
+                                    }
+                                });
+                            }
                         });
 
                         // Update the dialog
@@ -203,7 +230,7 @@ export class DLP {
     }
 
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, auditOnly: boolean, onClose: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, showSearch?: boolean, onClose?: () => void) {
         // Render the summary
         new Dashboard({
             el,
@@ -328,6 +355,9 @@ export class DLP {
         LoadingDialog.setBody("Loading the libraries...");
         LoadingDialog.show();
 
+        // Get the file extensions
+        let fileExtensions: string[] = values["FileTypes"] ? values["FileTypes"].trim().split(' ') : [];
+
         // Parse the webs
         let counter = 0;
         Helper.Executor(DataSource.SiteItems, siteItem => {
@@ -358,7 +388,7 @@ export class DLP {
                     LoadingDialog.setBody("Loading the files for the libraries...");
 
                     // Analyze the libraries
-                    this.analyzeLibraries(siteItem.value, siteItem.text, libs.results).then(resolve);
+                    this.analyzeLibraries(siteItem.value, siteItem.text, libs.results, fileExtensions).then(resolve);
                 });
             });
         }).then(() => {
@@ -366,7 +396,7 @@ export class DLP {
             while (el.firstChild) { el.removeChild(el.firstChild); }
 
             // Render the summary
-            this.renderSummary(el, auditOnly, onClose);
+            this.renderSummary(el, auditOnly, true, onClose);
 
             // Hide the loading dialog
             LoadingDialog.hide();

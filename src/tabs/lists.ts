@@ -230,7 +230,7 @@ export class ListsTab {
                             el.innerHTML = `
                                 <span><b>Name: </b>${item.ListName}</span>
                                 <br/>
-                                <span><b>Type: </b>${item.ListTemplate}</span>
+                                <span><b>Type: </b>${item.ListTemplate || ""}</span>
                             `;
                         }
                     },
@@ -548,7 +548,7 @@ export class ListsTab {
                 {
                     name: "SearchAll",
                     type: Components.FormControlTypes.Switch,
-                    label: "Search All Sub-Webs?",
+                    label: "Search All Sub-Sites?",
                     description: "Select this option to search all webs in this site.",
                     value: true,
                     onChange: (item => {

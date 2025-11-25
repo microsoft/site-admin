@@ -3,6 +3,7 @@ define([], function () {
     "AppTitle": "App Title",
     "MaxStorage": "Max Storage Allowed",
     "MaxStorageDescription": "Max Storage Description",
+    "ReportsDLPFileExt": "DLP Default File Extensions",
     "ReportsDocRententionYears": "Document Retention Default Years",
     "ReportsDocSearchFileExt": "Document Search Default File Extensions",
     "ReportsDocSearchKeywords": "Document Search Default Keywords",
