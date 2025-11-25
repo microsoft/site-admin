@@ -63,7 +63,7 @@ export class LoadForm {
                     label: "Site Url:",
                     placeholder: "Relative Site Url",
                     type: Components.FormControlTypes.TextField,
-                    description: "The relative url to the site. (Example: /sites/dev)<br/>Type in a minimum of 3 characters to search for sites.",
+                    description: "The relative url to the site. (Example: Enter 'dev' to load: /sites/dev)<br/>Type in a minimum of 3 characters to search for sites.",
                     required: true,
                     errorMessage: "The site url is required.",
                     prependedDropdown: {
