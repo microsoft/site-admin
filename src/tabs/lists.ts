@@ -205,7 +205,7 @@ export class ListsTab {
                 onRendering: dtProps => {
                     dtProps.columnDefs = [
                         {
-                            "targets": 5,
+                            "targets": 6,
                             "orderable": false,
                             "searchable": false
                         }
@@ -288,7 +288,7 @@ export class ListsTab {
                                 tooltips.add({
                                     content: "Click to run a DLP report.",
                                     btnProps: {
-                                        text: "Run DLP Report",
+                                        text: "DLP Report",
                                         type: Components.ButtonTypes.OutlinePrimary,
                                         onClick: () => {
                                             // Run the DLP report for this library
