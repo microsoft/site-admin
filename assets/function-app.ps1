@@ -371,8 +371,14 @@ if ($item -ne $null) {
                 # Log
                 Write-Host "Setting NoCrawl to $value...";
 
-                # Set the no crawl property
-                Set-PnPWeb -NoCrawl:$value;
+                # See if we are setting turning it off
+                if($value -eq "true") {
+                    # Set the no crawl property
+                    Set-PnPWeb -NoCrawl:$true;
+                } else {
+                    # Set the no crawl property
+                    Set-PnPWeb -NoCrawl:$false;
+                }
 
                 # Log
                 Write-Host "Disabling custom scripts...";
