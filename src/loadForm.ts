@@ -1,4 +1,4 @@
-import { LoadingDialog, Modal } from "dattatable";
+import { Dashboard, LoadingDialog, Modal, DataTable } from "dattatable";
 import { Components, Search } from "gd-sprest-bs";
 import { DataSource } from "./ds";
 import { PageGenerator } from "./page-generator";
@@ -30,6 +30,16 @@ export class LoadForm {
         Components.TooltipGroup({
             el,
             tooltips: [
+                {
+                    content: "Views the owners/admins of the site.",
+                    btnProps: {
+                        text: "View Admins/Owners",
+                        onClick: () => {
+                            // Load the admins/owners of the site
+                            this.viewAdminsOwners();
+                        }
+                    }
+                },
                 {
                     content: "Validates that you are an admin for the site entered.",
                     btnProps: {
@@ -290,6 +300,90 @@ export class LoadForm {
                     });
                 }
             )
+        }
+    }
+
+    // Views the admins/owners of the site
+    private viewAdminsOwners() {
+        // Ensure the popover is hidden
+        this._popover.hide();
+
+        // Validate the form
+        if (this._form.isValid()) {
+            let ctrl = this._form.getControl("url");
+            let url = this._form.getValues()["url"];
+
+            // Show a loading dialog
+            LoadingDialog.setHeader("Validating Site");
+            LoadingDialog.setBody("This will close after the site url is validated...");
+            LoadingDialog.show();
+
+            // Load the admins/owners
+            DataSource.loadAdminsOwners(typeof (url) === "string" ? url : url.value).then(
+                // Success
+                users => {
+                    // Clear the modal
+                    Modal.clear();
+
+                    // Set the header
+                    Modal.setHeader("Site Admins/Owners");
+
+                    // Set the body
+                    new DataTable({
+                        el: Modal.BodyElement,
+                        rows: users.admins.concat(users.owners),
+                        columns: [
+                            {
+                                name: "type",
+                                title: "User Type"
+                            },
+                            {
+                                name: "name",
+                                title: "Name"
+                            },
+                            {
+                                name: "email",
+                                title: "Email"
+                            }
+                        ]
+                    });
+
+                    // Render the footer
+                    Components.TooltipGroup({
+                        el: Modal.FooterElement,
+                        tooltips: [
+                            {
+                                content: "Closes the form.",
+                                btnProps: {
+                                    text: "Close",
+                                    onClick: () => {
+                                        // Hide the modal
+                                        Modal.hide();
+                                    }
+                                }
+                            }
+                        ]
+                    });
+
+                    // Close the dialog
+                    LoadingDialog.hide();
+
+                    // Show the modal
+                    Modal.show();
+                },
+
+                // Error
+                () => {
+                    // Close the dialog
+                    LoadingDialog.hide();
+
+                    // Update the validation
+                    ctrl.updateValidation(ctrl.el, {
+                        isValid: false,
+                        invalidMessage: "Unable to load the web information. Please check the url: " + url
+                    });
+                }
+            );
         }
     }
 }
