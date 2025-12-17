@@ -21,6 +21,7 @@ define([], function () {
     "SitePropIncreaseStorage": "Increase Site Storage",
     "SitePropLockState": "Lock State",
     "SitePropNoCrawl": "Exclude From Search",
+    "SitePropRestrictContentDiscovery": "Restrict Content Discovery",
     "SitePropSensitivityLabelId": "Sensitivity Label",
     "SitePropShareByEmailEnabled": "Shared By Email",
     "SitePropSocialBarOnSitePagesDisabled": "Social Bar on Site Pages",

@@ -82,6 +82,9 @@ export interface ISiteAdminWebPartProps {
   SitePropNoCrawl: boolean;
   SitePropNoCrawlDescription: string;
   SitePropNoCrawlLabel: string;
+  SitePropRestrictContentDiscovery: boolean;
+  SitePropRestrictContentDiscoveryDescription: string;
+  SitePropRestrictContentDiscoveryLabel: string;
   SitePropSensitivityLabelId: boolean;
   SitePropSensitivityLabelIdDescription: string;
   SitePropSensitivityLabelIdLabel: string;
@@ -276,6 +279,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     "SitePropIncreaseStorage",
     "SitePropLockState",
     "SitePropNoCrawl",
+    "SitePropRestrictContentDiscovery",
     "SitePropSensitivityLabelId",
     "SitePropShareByEmailEnabled",
     "SitePropSocialBarOnSitePagesDisabled",

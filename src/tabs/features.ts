@@ -12,7 +12,8 @@ export class FeaturesTab extends Tab<{
     CommentsOnSitePagesDisabled: boolean;
     DisableCompanyWideSharingLinks: boolean;
     ExcludeFromOfflineClient: string;
-    NoCrawl: string;
+    NoCrawl: boolean;
+    RestrictContentDiscovery: boolean;
     SocialBarOnSitePagesDisabled: boolean;
 }, {
     ClientSideAssets: IRequest;
@@ -32,7 +33,8 @@ export class FeaturesTab extends Tab<{
             CommentsOnSitePagesDisabled: DataSource.Site.CommentsOnSitePagesDisabled,
             DisableCompanyWideSharingLinks: DataSource.Site.DisableCompanyWideSharingLinks,
             ExcludeFromOfflineClient: null,
-            NoCrawl: null,
+            NoCrawl: DataSource.Web.NoCrawl,
+            RestrictContentDiscovery: DataSource.Site.IsRestrictContentOrgWideSearchPolicyEnforcedOnSite,
             SocialBarOnSitePagesDisabled: DataSource.Site.SocialBarOnSitePagesDisabled
         }
 
@@ -54,24 +56,6 @@ export class FeaturesTab extends Tab<{
                 newValue: excludeContent,
                 scope: "Web",
                 property: "ExcludeFromOfflineClient",
-                url: DataSource.SiteContext.SiteFullUrl
-            });
-        }
-
-        // Check the no crawl property
-        if (this._currValues.NoCrawl) {
-            let hideContent = this._currValues.NoCrawl == "Hide";
-
-            // Add the request
-            requests.push({
-                oldValue: "",
-                newValue: !hideContent,
-                request: {
-                    key: RequestTypes.NoCrawl,
-                    message: `The request to ${hideContent ? "hide" : "show"} content from search will be processed within 5 minutes.`,
-                    value: !hideContent
-                },
-                scope: "Web",
                 url: DataSource.SiteContext.SiteFullUrl
             });
         }
@@ -157,37 +141,53 @@ export class FeaturesTab extends Tab<{
                     }
                 } as Components.IFormControlPropsSwitch,
                 {
-                    name: "ExcludeFromOfflineClient",
-                    label: this._props["ExcludeFromOfflineClient"].label,
-                    description: "This will apply to all sites.",
-                    isDisabled: this._props["ExcludeFromOfflineClient"].disabled,
-                    type: Components.FormControlTypes.Dropdown,
-                    items: [
-                        { text: "", value: "" },
-                        { text: "Show", value: "Show" },
-                        { text: "Hide", value: "Hide" }
-                    ],
+                    name: "RestrictContentDiscovery",
+                    label: this._props["RestrictContentDiscovery"].label,
+                    description: this._props["RestrictContentDiscovery"].description,
+                    isDisabled: this._props["RestrictContentDiscovery"].disabled,
+                    type: Components.FormControlTypes.Switch,
+                    value: this._currValues.RestrictContentDiscovery,
                     onChange: item => {
-                        // Set the value
-                        this._currValues.ExcludeFromOfflineClient = item ? item.value : null;
+                        let value = item ? true : false;
+
+                        // See if we are changing the value
+                        if (this._currValues.DisableCompanyWideSharingLinks != value) {
+                            // Set the value
+                            this._requestItems.DisableCompanyWideSharingLinks = {
+                                key: RequestTypes.DisableCompanyWideSharingLinks,
+                                message: `The request to ${value ? "enable" : "disable"} the restriction from global search will be processed within 5 minutes.`,
+                                value
+                            };
+                        } else {
+                            // Remove the value
+                            delete this._requestItems.DisableCompanyWideSharingLinks;
+                        }
                     }
-                } as Components.IFormControlPropsDropdown,
+                } as Components.IFormControlPropsSwitch,
                 {
                     name: "NoCrawl",
                     label: this._props["NoCrawl"].label,
-                    description: "This will apply to all sites.",
+                    description: "This will remove all content for this site from global search.",
                     isDisabled: this._props["NoCrawl"].disabled,
-                    type: Components.FormControlTypes.Dropdown,
-                    items: [
-                        { text: "", value: "" },
-                        { text: "Show", value: "Show" },
-                        { text: "Hide", value: "Hide" }
-                    ],
+                    type: Components.FormControlTypes.Switch,
+                    value: this._currValues.NoCrawl,
                     onChange: item => {
-                        // Set the value
-                        this._currValues.NoCrawl = item ? item.value : null;
+                        let value = item ? true : false;
+
+                        // See if we are changing the value
+                        if (this._currValues.NoCrawl != value) {
+                            // Set the value
+                            this._requestItems.DisableCompanyWideSharingLinks = {
+                                key: RequestTypes.NoCrawl,
+                                message: `The request to ${value ? "hide" : "show"} content from search will be processed within 5 minutes.`,
+                                value
+                            };
+                        } else {
+                            // Remove the value
+                            delete this._requestItems.NoCrawl;
+                        }
                     }
-                } as Components.IFormControlPropsDropdown,
+                } as Components.IFormControlPropsSwitch,
                 {
                     name: "SocialBarOnSitePagesDisabled",
                     label: this._props["SocialBarOnSitePagesDisabled"].label,
@@ -207,7 +207,23 @@ export class FeaturesTab extends Tab<{
                             delete this._newValues.SocialBarOnSitePagesDisabled;
                         }
                     }
-                } as Components.IFormControlPropsSwitch
+                } as Components.IFormControlPropsSwitch,
+                {
+                    name: "ExcludeFromOfflineClient",
+                    label: this._props["ExcludeFromOfflineClient"].label,
+                    description: "This will apply to all sites.",
+                    isDisabled: this._props["ExcludeFromOfflineClient"].disabled,
+                    type: Components.FormControlTypes.Dropdown,
+                    items: [
+                        { text: "", value: "" },
+                        { text: "Show", value: "Show" },
+                        { text: "Hide", value: "Hide" }
+                    ],
+                    onChange: item => {
+                        // Set the value
+                        this._currValues.ExcludeFromOfflineClient = item ? item.value : null;
+                    }
+                } as Components.IFormControlPropsDropdown
             ]
         });
     }

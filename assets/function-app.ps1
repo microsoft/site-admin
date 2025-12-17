@@ -372,10 +372,11 @@ if ($item -ne $null) {
                 Write-Host "Setting NoCrawl to $value...";
 
                 # See if we are setting turning it off
-                if($value -eq "true") {
+                if ($value -eq "true") {
                     # Set the no crawl property
                     Set-PnPWeb -NoCrawl:$true;
-                } else {
+                }
+                else {
                     # Set the no crawl property
                     Set-PnPWeb -NoCrawl:$false;
                 }
@@ -385,6 +386,20 @@ if ($item -ne $null) {
 
                 # Disable custom scripts
                 Set-PnPSite -Identity $siteUrl -NoScriptSite $true;
+            }
+            "Restrict Content Discovery" {
+                # Log
+                Write-Host "Setting RestrictContentOrgWideSearch to $value...";
+
+                # See if we are setting turning it off
+                if ($value -eq "true") {
+                    # Set the no crawl property
+                    Set-PnPSite -Identity $siteUrl -RestrictContentOrgWideSearch:$true;
+                }
+                else {
+                    # Set the no crawl property
+                    Set-PnPSite -Identity $siteUrl -RestrictContentOrgWideSearch:$false;
+                }
             }
             "Site Attestation" {
                 # Log
