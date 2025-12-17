@@ -83,5 +83,5 @@ window[Strings.GlobalVariable] = GlobalVariable;
 let elApp = document.querySelector("#" + Strings.AppElementId) as HTMLElement;
 if (elApp) {
     // Render the application
-    GlobalVariable.render({ el: elApp, imageReferences: [], siteProps: {}, webProps: {} });
+    GlobalVariable.render({ el: elApp, hideTabs: {}, imageReferences: [], siteProps: {}, webProps: {} });
 }

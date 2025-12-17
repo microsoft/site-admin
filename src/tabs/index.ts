@@ -52,90 +52,74 @@ export class Tabs {
 
     // Renders the tabs
     private render(appProps: IAppProps) {
-        // Set the items
-        let items: Components.IListGroupItem[] = !DataSource.IsAdmin || appProps.auditOnly ? [
-            {
-                tabName: "Information",
-                isActive: true,
-                onRender: (el) => {
-                    // Render the tab
-                    new InfoTab(el, appProps.siteAttestation, appProps.siteProps);
-                }
-            },
-            {
-                tabName: "Lists/Libraries",
-                onRender: (el) => {
-                    // Render the tab
-                    this._tabLists = new ListsTab(el, appProps);
-                }
-            },
-            {
-                tabName: "Audit Tools",
-                onRender: (el) => {
-                    // Render the tab
-                    this._tabReports = new ReportsTab(el, appProps);
-                }
+        let auditOnly = !DataSource.IsAdmin || appProps.auditOnly;
+
+        // Show the info tab by default always
+        let items: Components.IListGroupItem[] = [{
+            tabName: "Information",
+            isActive: true,
+            onRender: (el) => {
+                // Render the tab
+                new InfoTab(el, appProps.siteAttestation, appProps.siteProps);
             }
-        ] : [
-            {
-                tabName: "Information",
-                isActive: true,
+        }];
+
+        // Add the tabs
+        if (!auditOnly && !appProps.hideTabs.search && !isEmpty(appProps.searchProps) && appProps.searchProps.key) {
+            items.push({
+                tabName: appProps.searchProps.tabName || "Search Property",
                 onRender: (el) => {
                     // Render the tab
-                    new InfoTab(el, appProps.siteAttestation, appProps.siteProps);
+                    this._tabSearch = new SearchPropTab(el, appProps.searchProps);
                 }
-            },
-            {
+            });
+        }
+        if (!auditOnly && !appProps.hideTabs.management) {
+            items.push({
                 tabName: "Management",
                 onRender: (el) => {
                     // Render the tab
                     this._tabManagement = new ManagementTab(el, appProps.siteProps, appProps.maxStorageSize, appProps.maxStorageDesc);
                 }
-            },
-            {
+            });
+        }
+        if (!auditOnly && !appProps.hideTabs.features) {
+            items.push({
                 tabName: "Features",
                 onRender: (el) => {
                     // Render the tab
                     this._tabFeatures = new FeaturesTab(el, appProps.siteProps);
                 }
-            },
-            {
+            });
+        }
+        if (!auditOnly && !appProps.hideTabs.appPermissions) {
+            items.push({
                 tabName: "App Permissions",
                 onRender: (el) => {
                     // Render the tab
                     this._tabAppPermissions = new AppPermissionsTab(el);
                 }
-            },
-            {
+            });
+        }
+        if (!appProps.hideTabs.lists) {
+            items.push({
                 tabName: "Lists/Libraries",
                 onRender: (el) => {
                     // Render the tab
                     this._tabLists = new ListsTab(el, appProps);
                 }
-            },
-            {
+            });
+        }
+        if (!appProps.hideTabs.auditTools) {
+            items.push({
                 tabName: "Audit Tools",
                 onRender: (el) => {
                     // Render the tab
                     this._tabReports = new ReportsTab(el, appProps);
                 }
-            }
-        ];
-
-        // See if we are rendering all tabs
-        if (DataSource.IsAdmin && appProps.auditOnly != true) {
-            // See if we are customizing a search property
-            if (!isEmpty(appProps.searchProps) && appProps.searchProps.key) {
-                items.splice(1, 0, {
-                    tabName: appProps.searchProps.tabName || "Search Property",
-                    onRender: (el) => {
-                        // Render the tab
-                        this._tabSearch = new SearchPropTab(el, appProps.searchProps);
-                    }
-                });
-            }
-
-            // Add the webs
+            });
+        }
+        if (!auditOnly && !appProps.hideTabs.webs) {
             items.push({
                 tabName: DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "Top Site" : "Sub Site",
                 onRenderTab: el => {
@@ -147,7 +131,8 @@ export class Tabs {
                     this._tabWeb = new WebTab(el, appProps.webProps);
                 }
             });
-
+        }
+        if (!auditOnly) {
             // Add the changes
             items.push({
                 tabName: "Changes",

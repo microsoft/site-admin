@@ -21,8 +21,17 @@ export interface IAppProps {
     auditOnly?: boolean;
     context?: any;
     disableSensitivityLabelOverride?: boolean;
-    imageReferences: string[];
     el: HTMLElement;
+    hideTabs: {
+        appPermissions?: boolean;
+        auditTools?: boolean;
+        features?: boolean;
+        lists?: boolean;
+        management?: boolean;
+        search?: boolean;
+        webs?: boolean;
+    }
+    imageReferences: string[];
     maxStorageDesc?: string;
     maxStorageSize?: number;
     reportProps?: IReportProps;
