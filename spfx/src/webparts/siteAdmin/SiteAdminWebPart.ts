@@ -37,6 +37,13 @@ export interface ISiteAdminWebPartProps {
   AppTitle: string;
   AuditOnly: boolean;
   DisableSensitivityLabelOverride: boolean;
+  HideAppPermissionsTab: boolean;
+  HideAuditToolsTab: boolean;
+  HideFeaturesTab: boolean;
+  HideListsTab: boolean;
+  HideManagementTab: boolean;
+  HideSearchTab: boolean;
+  HideWebsTab: boolean;
   MaxStorage: number;
   MaxStorageDescription: string;
   ReportsDocRententionYears: string;
@@ -135,6 +142,15 @@ declare const SiteAdmin: {
     el: HTMLElement;
     title?: string;
     disableSensitivityLabelOverride?: boolean;
+    hideTabs: {
+      appPermissions: boolean;
+      auditTools: boolean;
+      features: boolean;
+      lists: boolean;
+      management: boolean;
+      search: boolean;
+      webs: boolean;
+    }
     imageReferences: string[];
     maxStorageDesc?: string;
     maxStorageSize?: number;
@@ -223,6 +239,15 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       context: this.context,
       el: this.domElement,
       disableSensitivityLabelOverride: this.properties.DisableSensitivityLabelOverride,
+      hideTabs: {
+        appPermissions: this.properties.HideAppPermissionsTab,
+        auditTools: this.properties.HideAuditToolsTab,
+        features: this.properties.HideFeaturesTab,
+        lists: this.properties.HideListsTab,
+        management: this.properties.HideManagementTab,
+        search: this.properties.HideSearchTab,
+        webs: this.properties.HideWebsTab
+      },
       imageReferences,
       maxStorageDesc: this.properties.MaxStorageDescription,
       maxStorageSize: this.properties.MaxStorage,
@@ -402,6 +427,53 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   rows: 6,
                   value: this.properties.SiteAttestationText
                 })
+              ]
+            },
+            {
+              groupName: "Show/Hide Tabs",
+              groupFields: [
+                PropertyPaneToggle("HideAppPermissionsTab", {
+                  label: "Hide App Permissions Tab",
+                  checked: this.properties.HideAppPermissionsTab,
+                  onText: "The 'App Permissions' tab will be hidden.",
+                  offText: "The 'App Permissions' tab will be visible"
+                }),
+                PropertyPaneToggle("HideAuditToolsTab", {
+                  label: "Hide Audit Tools Tab",
+                  checked: this.properties.HideAuditToolsTab,
+                  onText: "The 'Audit Tools' tab will be hidden.",
+                  offText: "The 'Audit Tools' tab will be visible"
+                }),
+                PropertyPaneToggle("HideFeaturesTab", {
+                  label: "Hide Features Tab",
+                  checked: this.properties.HideFeaturesTab,
+                  onText: "The 'Features' tab will be hidden.",
+                  offText: "The 'Features' tab will be visible"
+                }),
+                PropertyPaneToggle("HideListsTab", {
+                  label: "Hide Lists/Libraries Tab",
+                  checked: this.properties.HideListsTab,
+                  onText: "The 'Lists/Libraries' tab will be hidden.",
+                  offText: "The 'Lists/Libraries' tab will be visible"
+                }),
+                PropertyPaneToggle("HideManagementTab", {
+                  label: "Hide Management Tab",
+                  checked: this.properties.HideManagementTab,
+                  onText: "The 'Management' tab will be hidden.",
+                  offText: "The 'Management' tab will be visible"
+                }),
+                PropertyPaneToggle("HideSearchTab", {
+                  label: "Hide Search Tab",
+                  checked: this.properties.HideSearchTab,
+                  onText: "The 'Search' tab will be hidden.",
+                  offText: "The 'Search' tab will be visible"
+                }),
+                PropertyPaneToggle("HideWebsTab", {
+                  label: "Hide Webs Tab",
+                  checked: this.properties.HideWebsTab,
+                  onText: "The 'Webs' tab will be hidden.",
+                  offText: "The 'Webs' tab will be visible"
+                }),
               ]
             },
             {
