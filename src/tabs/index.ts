@@ -189,24 +189,27 @@ export class Tabs {
 
     // Method to refresh the web tab
     refreshWebTab(url: string) {
-        // Show a loading dialog
-        LoadingDialog.setHeader("Loading Web");
-        LoadingDialog.setBody("Loading the selected web...");
-        LoadingDialog.show();
-
         // Update the requests
-        this._webRequests = this._webRequests.concat(this._tabWeb.getRequests());
+        if (this._tabWeb) {
+            // Show a loading dialog
+            LoadingDialog.setHeader("Loading Web");
+            LoadingDialog.setBody("Loading the selected web...");
+            LoadingDialog.show();
 
-        // Load the web
-        DataSource.loadWebInfo(url).then(() => {
-            // Update the tab name
-            this._elWebTab.innerHTML = DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "Top Site" : "Sub Site";
+            // Append the sub-webs
+            this._webRequests = this._webRequests.concat(this._tabWeb.getRequests());
 
-            // Refresh the web tab
-            this._tabWeb.refresh();
+            // Load the web
+            DataSource.loadWebInfo(url).then(() => {
+                // Update the tab name
+                this._elWebTab.innerHTML = DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "Top Site" : "Sub Site";
 
-            // Hide the loading dialog
-            LoadingDialog.hide();
-        });
+                // Refresh the web tab
+                this._tabWeb.refresh();
+
+                // Hide the loading dialog
+                LoadingDialog.hide();
+            });
+        }
     }
 }

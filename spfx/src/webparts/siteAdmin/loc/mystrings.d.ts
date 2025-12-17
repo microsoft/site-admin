@@ -20,6 +20,7 @@ declare interface ISiteAdminWebPartStrings {
   SitePropIncreaseStorage: string;
   SitePropLockState: string;
   SitePropNoCrawl: string;
+  SitePropRestrictContentDiscovery: string;
   SitePropSensitivityLabelId: string;
   SitePropShareByEmailEnabled: string;
   SitePropSocialBarOnSitePagesDisabled: string;

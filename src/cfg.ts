@@ -37,7 +37,8 @@ export const Configuration = Helper.SPConfig({
                     showInEditForm: false,
                     choices: [
                         "App Catalog", "Client Side Assets", "Custom Script", "Company Wide Sharing Links",
-                        "Increase Storage", "Lock State", "No Crawl", "Custom Search Property", "Teams Connected"
+                        "Increase Storage", "Lock State", "No Crawl", "Custom Search Property", "Restrict Content Discovery",
+                        "Teams Connected"
                     ]
                 } as Helper.IFieldInfoChoice,
                 {

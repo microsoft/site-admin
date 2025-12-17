@@ -64,6 +64,7 @@ export enum RequestTypes {
     IncreaseStorage = "Increase Storage",
     LockState = "Lock State",
     NoCrawl = "No Crawl",
+    RestrictContentDiscovery = "Restrict Content Discovery",
     SearchProperty = "Custom Search Property",
     SiteAttestation = "Site Attestation",
     TeamsConnected = "Teams Connected"
@@ -582,6 +583,7 @@ export class DataSource {
                     "HubSiteId",
                     "Id",
                     "IsHubSite",
+                    "IsRestrictContentOrgWideSearchPolicyEnforcedOnSite",
                     "MediaTranscriptionDisabled",
                     "Owner",
                     "ReadOnly",
