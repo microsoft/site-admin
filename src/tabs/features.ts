@@ -170,6 +170,7 @@ export class FeaturesTab extends Tab<{
                     description: "This will remove all content for this site from global search.",
                     isDisabled: this._props["NoCrawl"].disabled,
                     type: Components.FormControlTypes.Switch,
+                    value: this._currValues.NoCrawl,
                     onChange: item => {
                         let value = item ? true : false;
 
