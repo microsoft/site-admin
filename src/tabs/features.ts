@@ -19,6 +19,7 @@ export class FeaturesTab extends Tab<{
     ClientSideAssets: IRequest;
     DisableCompanyWideSharingLinks: IRequest;
     NoCrawl: IRequest;
+    RestrictContentDiscovery: IRequest;
 }, {
     CommentsOnSitePagesDisabled: boolean;
     SocialBarOnSitePagesDisabled: boolean;
@@ -151,10 +152,10 @@ export class FeaturesTab extends Tab<{
                         let value = item ? true : false;
 
                         // See if we are changing the value
-                        if (this._currValues.DisableCompanyWideSharingLinks != value) {
+                        if (this._currValues.RestrictContentDiscovery != value) {
                             // Set the value
-                            this._requestItems.DisableCompanyWideSharingLinks = {
-                                key: RequestTypes.DisableCompanyWideSharingLinks,
+                            this._requestItems.RestrictContentDiscovery = {
+                                key: RequestTypes.RestrictContentDiscovery,
                                 message: `The request to ${value ? "enable" : "disable"} the restriction from global search will be processed within 5 minutes.`,
                                 value
                             };
