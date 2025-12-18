@@ -563,6 +563,7 @@ export class ListsTab {
                     items: this._webs,
                     label: "Selected Sub-Web(s):",
                     placeholder: "Select a sub-web",
+                    placement: Components.DropdownPlacements.RightEnd,
                     onControlRendered: ctrl => { ddlWebs = ctrl; },
                     onValidate: (ctrl, results) => {
                         // See if we are not searching all the webs

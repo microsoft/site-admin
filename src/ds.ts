@@ -1,5 +1,8 @@
 import { List, LoadingDialog } from "dattatable";
-import { Components, ContextInfo, GroupSiteManager, Helper, Site, Types, Web, SPTypes, v2, DirectorySession } from "gd-sprest-bs";
+import {
+    Components, ContextInfo, DirectorySession, GroupSiteManager, Helper,
+    Search, Site, SPTypes, Types, Web, v2
+} from "gd-sprest-bs";
 import { Security } from "./security";
 import Strings from "./strings";
 
@@ -369,6 +372,40 @@ export class DataSource {
                         this.getAllWebs(web.ServerRelativeUrl).then(resolve, resolve);
                     });
                 }).then(resolve);
+            }, () => {
+                // Try to get the webs using search
+                Search.postQuery<{ Path: string; IdentityWebId: string; }>({
+                    query: {
+                        Querytext: "path: " + url + " contentclass=sts_site contentclass=sts_web",
+                        SelectProperties: {
+                            results: [
+                                "Path", "IdentityWebId"
+                            ]
+                        }
+                    }
+                }).then(resp => {
+                    // Clear the sites
+                    this._siteItems = [];
+
+                    // Parse the results
+                    resp.results.forEach(result => {
+                        // Add the item
+                        this._siteItems.push({
+                            text: result.Path.substring(location.origin.length),
+                            value: result.IdentityWebId
+                        });
+                    });
+
+                    // Sort the webs
+                    this._siteItems = this._siteItems.sort((a, b) => {
+                        if (a.text < b.text) { return -1; }
+                        if (a.text > b.text) { return 1; }
+                        return 0;
+                    });
+
+                    // Resolve the request
+                    resolve();
+                });
             });
         });
     }
