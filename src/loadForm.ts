@@ -13,44 +13,48 @@ export class LoadForm {
     private _onSuccess: () => void = null;
 
     // Renders the modal
-    constructor(elForm: HTMLElement, elFooter: HTMLElement, onSuccess: () => void) {
+    constructor(elForm: HTMLElement, elFooter: HTMLElement, hideLoadAdminOwnerBtn: boolean = false, onSuccess: () => void) {
         this._onSuccess = onSuccess;
 
         // Render the form and footer
         this.renderForm(elForm);
-        this.renderFooter(elFooter);
+        this.renderFooter(elFooter, hideLoadAdminOwnerBtn);
     }
 
     // Renders the footer
-    private renderFooter(el: HTMLElement) {
+    private renderFooter(el: HTMLElement, hideLoadAdminOwnerBtn: boolean) {
         // Clear the element
         while (el.firstChild) { el.removeChild(el.firstChild); }
+
+        // Set the tooltips
+        let tooltips = []
+        if (!hideLoadAdminOwnerBtn) {
+            tooltips.push({
+                content: "Views the owners/admins of the site.",
+                btnProps: {
+                    text: "View Admins/Owners",
+                    onClick: () => {
+                        // Load the admins/owners of the site
+                        this.viewAdminsOwners();
+                    }
+                }
+            });
+        }
+        tooltips.push({
+            content: "Validates that you are an admin for the site entered.",
+            btnProps: {
+                text: "Load Site",
+                onClick: () => {
+                    // Submit the request
+                    this.submitForm();
+                }
+            }
+        });
 
         // Render the footer
         Components.TooltipGroup({
             el,
-            tooltips: [
-                {
-                    content: "Views the owners/admins of the site.",
-                    btnProps: {
-                        text: "View Admins/Owners",
-                        onClick: () => {
-                            // Load the admins/owners of the site
-                            this.viewAdminsOwners();
-                        }
-                    }
-                },
-                {
-                    content: "Validates that you are an admin for the site entered.",
-                    btnProps: {
-                        text: "Load Site",
-                        onClick: () => {
-                            // Submit the request
-                            this.submitForm();
-                        }
-                    }
-                }
-            ]
+            tooltips
         });
     }
 
@@ -247,7 +251,7 @@ export class LoadForm {
     }
 
     // Shows the modal
-    static showModal(onSuccess: () => void) {
+    static showModal(hideLoadAdminOwnerBtn: boolean = false, onSuccess: () => void) {
         // Clear the modal
         Modal.clear();
 
@@ -255,7 +259,7 @@ export class LoadForm {
         Modal.setHeader("Load Site");
 
         // Create the form/footer
-        new LoadForm(Modal.BodyElement, Modal.FooterElement, onSuccess);
+        new LoadForm(Modal.BodyElement, Modal.FooterElement, hideLoadAdminOwnerBtn, onSuccess);
 
         // Show the modal
         Modal.show();

@@ -41,6 +41,7 @@ export interface ISiteAdminWebPartProps {
   HideAuditToolsTab: boolean;
   HideFeaturesTab: boolean;
   HideListsTab: boolean;
+  HideLoadAdminOwnerBtn: boolean;
   HideManagementTab: boolean;
   HideSearchTab: boolean;
   HideWebsTab: boolean;
@@ -142,6 +143,7 @@ declare const SiteAdmin: {
     el: HTMLElement;
     title?: string;
     disableSensitivityLabelOverride?: boolean;
+    hideLoadAdminOwnerBtn: boolean;
     hideTabs: {
       appPermissions: boolean;
       auditTools: boolean;
@@ -239,6 +241,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       context: this.context,
       el: this.domElement,
       disableSensitivityLabelOverride: this.properties.DisableSensitivityLabelOverride,
+      hideLoadAdminOwnerBtn: this.properties.HideLoadAdminOwnerBtn,
       hideTabs: {
         appPermissions: this.properties.HideAppPermissionsTab,
         auditTools: this.properties.HideAuditToolsTab,
@@ -413,6 +416,12 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   checked: this.properties.AuditOnly,
                   onText: "The site admins/owners will only see the Information and Audit Tools tabs.",
                   offText: "The site owners will only see the Information and Audit Tools tabs."
+                }),
+                PropertyPaneToggle("HideLoadAdminOwnerBtn", {
+                  label: "Hide Load Admin/Owner Button",
+                  checked: this.properties.HideLoadAdminOwnerBtn,
+                  onText: "The option to view a site's admins/owners will be hidden.",
+                  offText: "The option to view a site's admins/owners will be visible."
                 }),
                 PropertyPaneToggle("SiteAttestation", {
                   label: "Site Attestation Feature",

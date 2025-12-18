@@ -22,6 +22,7 @@ export interface IAppProps {
     context?: any;
     disableSensitivityLabelOverride?: boolean;
     el: HTMLElement;
+    hideLoadAdminOwnerBtn?: boolean;
     hideTabs: {
         appPermissions?: boolean;
         auditTools?: boolean;
@@ -91,7 +92,7 @@ export class App {
         `;
 
         // Render the form
-        new LoadForm(el.children[0].children[0] as HTMLElement, el.children[0].children[1] as HTMLElement, () => {
+        new LoadForm(el.children[0].children[0] as HTMLElement, el.children[0].children[1] as HTMLElement, this._props.hideLoadAdminOwnerBtn, () => {
             // Render the tabs
             new App(this._props);
         });
@@ -109,7 +110,7 @@ export class App {
                 text: "Load Site",
                 onClick: () => {
                     // Show the load form
-                    LoadForm.showModal(() => {
+                    LoadForm.showModal(this._props.hideLoadAdminOwnerBtn, () => {
                         // Render the tabs
                         this.renderTabs(elRow.children[1] as HTMLElement);
                     });

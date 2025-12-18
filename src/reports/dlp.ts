@@ -77,6 +77,7 @@ export class DLP {
             Top: 5000
         }).execute(items => {
             let batchRequests = 0;
+            let completed = 0;
 
             // Update the dialog
             LoadingDialog.setBody("Creating batch job for files...");
@@ -110,6 +111,9 @@ export class DLP {
                             });
                         });
                     }
+
+                    // Increment the counter and update the dialog
+                    LoadingDialog.setBody(`Batch Requests Processed ${++completed} of ${batchRequests}...`);
                 });
             });
 
@@ -160,6 +164,7 @@ export class DLP {
                 // Return a promise
                 return new Promise(resolve => {
                     let batchRequests = 0;
+                    let completed = 0;
 
                     // Get the item ids for this library
                     Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(lib.Title).Items().query({
@@ -214,6 +219,9 @@ export class DLP {
                                             });
                                         });
                                     }
+
+                                    // Increment the counter and update the dialog
+                                    LoadingDialog.setBody(`Batch Requests Processed ${++completed} of ${batchRequests}...`);
                                 });
                             }
                         });
