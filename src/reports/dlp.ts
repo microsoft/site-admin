@@ -44,6 +44,8 @@ const CSVFields = [
 ]
 
 export class DLP {
+    private static _dashboard: Dashboard = null;
+    private static _elSubNav: HTMLElement = null;
     private static _items: IDLPItem[] = [];
 
     // Gets the form fields to display
@@ -64,10 +66,31 @@ export class DLP {
         // Clear the items
         this._items = [];
 
-        // Show a loading dialog
-        LoadingDialog.setHeader("Analyzing Library");
-        LoadingDialog.setBody("Getting all files in this library...");
-        LoadingDialog.show();
+        // Set the modal
+        Modal.clear();
+        Modal.setHeader("Data Loss Prevention Report");
+
+        // Show the results
+        this.renderSummary(Modal.BodyElement, false, false);
+
+        // Render the footer
+        Components.ButtonGroup({
+            el: Modal.FooterElement,
+            buttons: [
+                {
+                    text: "Close",
+                    type: Components.ButtonTypes.OutlinePrimary,
+                    onClick: () => { Modal.hide(); }
+                }
+            ]
+        });
+
+        // Show the modal
+        Modal.show();
+
+        // Update the status
+        this._elSubNav.children[0].innerHTML = "Analyzing Library";
+        this._elSubNav.children[1].innerHTML = "Getting all files in this library...";
 
         // Get the item ids for this library
         Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(libTitle).Items().query({
@@ -80,7 +103,7 @@ export class DLP {
             let completed = 0;
 
             // Update the dialog
-            LoadingDialog.setBody("Creating batch job for files...");
+            this._elSubNav.children[1].innerHTML = "Creating batch job for files...";
 
             // Parse the items and create the batch job
             let list = Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(libTitle);
@@ -94,8 +117,7 @@ export class DLP {
                     if (typeof (result["GetDlpPolicyTip"]) === "undefined") {
                         // Parse the conditions
                         result.MatchedConditionDescriptions.results.forEach(condition => {
-                            // Append the data
-                            this._items.push({
+                            let dataItem: IDLPItem = {
                                 AppliedActionsText: result.AppliedActionsText,
                                 Author: item["Author"]?.Title,
                                 ConditionDescription: condition,
@@ -108,44 +130,26 @@ export class DLP {
                                 Path: item["FileRef"],
                                 WebId: webId,
                                 WebUrl: webUrl
-                            });
+                            };
+
+                            // Append the data
+                            this._items.push(dataItem);
+                            this._dashboard.Datatable.addRow(dataItem);
                         });
                     }
 
                     // Increment the counter and update the dialog
-                    LoadingDialog.setBody(`Batch Requests Processed ${++completed} of ${batchRequests}...`);
+                    this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${batchRequests}...`;
                 });
             });
 
             // Update the dialog
-            LoadingDialog.setBody(`Executing Batch Request for ${batchRequests} items...`);
+            this._elSubNav.children[1].innerHTML = `Executing Batch Request for ${batchRequests} items...`;
 
             // Execute the batch request
             list.execute(() => {
-                // Set the modal
-                Modal.clear();
-                Modal.setHeader("Data Loss Prevention Report");
-
-                // Show the results
-                this.renderSummary(Modal.BodyElement, false, false);
-
-                // Render the footer
-                Components.ButtonGroup({
-                    el: Modal.FooterElement,
-                    buttons: [
-                        {
-                            text: "Close",
-                            type: Components.ButtonTypes.OutlinePrimary,
-                            onClick: () => { Modal.hide(); }
-                        }
-                    ]
-                });
-
-                // Show the modal
-                Modal.show();
-
-                // Hide the dialog
-                LoadingDialog.hide();
+                // Hide the sub-nav
+                this._elSubNav.classList.add("d-none");
             });
         });
     }
@@ -159,7 +163,7 @@ export class DLP {
             // Parse the libraries
             Helper.Executor(libraries, lib => {
                 // Update the dialog
-                LoadingDialog.setBody(`Analyzing Library ${lib.Title}<br/>${++counter} of ${libraries.length}`);
+                this._elSubNav.children[1].innerHTML = `Analyzing Library ${lib.Title}<br/>${++counter} of ${libraries.length}`;
 
                 // Return a promise
                 return new Promise(resolve => {
@@ -202,8 +206,7 @@ export class DLP {
                                     if (typeof (result["GetDlpPolicyTip"]) === "undefined") {
                                         // Parse the conditions
                                         result.MatchedConditionDescriptions.results.forEach(condition => {
-                                            // Append the data
-                                            this._items.push({
+                                            let dataItem: IDLPItem = {
                                                 AppliedActionsText: result.AppliedActionsText,
                                                 Author: item["Author"]?.Title,
                                                 ConditionDescription: condition,
@@ -216,18 +219,22 @@ export class DLP {
                                                 Path: item["FileRef"],
                                                 WebId: webId,
                                                 WebUrl: webUrl
-                                            });
+                                            };
+
+                                            // Append the data
+                                            this._items.push(dataItem);
+                                            this._dashboard.Datatable.addRow(dataItem);
                                         });
                                     }
 
                                     // Increment the counter and update the dialog
-                                    LoadingDialog.setBody(`Batch Requests Processed ${++completed} of ${batchRequests}...`);
+                                    this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${batchRequests}...`;
                                 });
                             }
                         });
 
                         // Update the dialog
-                        LoadingDialog.setBody(`Executing Batch Request for ${batchRequests} items...`);
+                        this._elSubNav.children[1].innerHTML = `Executing Batch Request for ${batchRequests} items...`;
 
                         // Execute the batch request
                         list.execute(resolve);
@@ -240,7 +247,7 @@ export class DLP {
     // Renders the search summary
     private static renderSummary(el: HTMLElement, auditOnly: boolean, showSearch?: boolean, onClose?: () => void) {
         // Render the summary
-        new Dashboard({
+        this._dashboard = new Dashboard({
             el,
             navigation: {
                 title: "DLP Report",
@@ -349,6 +356,12 @@ export class DLP {
                 ]
             }
         });
+
+        // Set the sub-nav element
+        this._elSubNav = el.querySelector("#sub-navigation");
+        this._elSubNav.classList.remove("d-none");
+        this._elSubNav.classList.add("my-2");
+        this._elSubNav.innerHTML = `<div class="h6"></div><div></div>`;
     }
 
     // Runs the report
@@ -366,11 +379,20 @@ export class DLP {
         // Get the file extensions
         let fileExtensions: string[] = values["FileTypes"] ? values["FileTypes"].trim().split(' ') : [];
 
+        // Clear the element
+        while (el.firstChild) { el.removeChild(el.firstChild); }
+
+        // Render the summary
+        this.renderSummary(el, auditOnly, true, onClose);
+
+        // Hide the loading dialog
+        LoadingDialog.hide();
+
         // Parse the webs
         let counter = 0;
         Helper.Executor(DataSource.SiteItems, siteItem => {
-            // Update the dialog
-            LoadingDialog.setHeader(`Searching Site ${++counter} of ${DataSource.SiteItems.length}`);
+            // Update the status
+            this._elSubNav.children[0].innerHTML = `Searching Site ${++counter} of ${DataSource.SiteItems.length}`;
 
             // Return a promise
             return new Promise(resolve => {
@@ -393,21 +415,15 @@ export class DLP {
                     });
 
                     // Update the dialog
-                    LoadingDialog.setBody("Loading the files for the libraries...");
+                    this._elSubNav.children[1].innerHTML = "Loading the files for the libraries...";
 
                     // Analyze the libraries
                     this.analyzeLibraries(siteItem.value, siteItem.text, libs.results, fileExtensions).then(resolve);
                 });
             });
         }).then(() => {
-            // Clear the element
-            while (el.firstChild) { el.removeChild(el.firstChild); }
-
-            // Render the summary
-            this.renderSummary(el, auditOnly, true, onClose);
-
-            // Hide the loading dialog
-            LoadingDialog.hide();
+            // Hide the sub-nav
+            this._elSubNav.classList.add("d-none");
         });
     }
 }
