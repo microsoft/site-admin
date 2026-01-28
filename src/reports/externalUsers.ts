@@ -101,7 +101,7 @@ export class ExternalUsers {
                 }).batch(user => {
                     // Add the user
                     users.push(user);
-                });
+                }, userIds.length % 25 == 0);
             });
 
             // Update the loading dialog

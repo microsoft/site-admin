@@ -229,7 +229,7 @@ export class DLP {
 
                                     // Increment the counter and update the dialog
                                     this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${batchRequests}...`;
-                                }, batchRequests > 0 && batchRequests % 25 != 0);
+                                }, batchRequests % 25 == 0);
                             }
                         });
 
