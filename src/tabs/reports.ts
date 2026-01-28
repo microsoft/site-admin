@@ -67,7 +67,7 @@ export class ReportsTab {
                     value: selectedReport,
                     items: [
                         {
-                            text: "Data Loss Prevention (Beta)",
+                            text: "Data Loss Prevention",
                             data: "Finds files that has DLP applied to it.",
                             value: ReportTypes.DLP
                         },
