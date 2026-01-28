@@ -101,7 +101,7 @@ export class SearchEEEU {
                                 WebTitle: web.Title
                             });
                         });
-                    }, ++ctrBatchJobs % 25 == 0);
+                    }, ctrBatchJobs++ % 25 == 0);
                 }).then(() => {
                     // Execute the batch job
                     batch.execute(() => {

@@ -108,9 +108,6 @@ export class DLP {
             // Parse the items and create the batch job
             let list = Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(libTitle);
             items.results.forEach(item => {
-                // Increment the counter
-                batchRequests++;
-
                 // Create a batch request to get the dlp policy on this item
                 list.Items(item.Id).GetDlpPolicyTip().batch(result => {
                     // Ensure a policy exists
@@ -140,7 +137,7 @@ export class DLP {
 
                     // Increment the counter and update the dialog
                     this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${batchRequests}...`;
-                }, batchRequests % 25 == 0);
+                }, batchRequests++ % 25 == 0);
             });
 
             // Update the dialog
@@ -197,9 +194,6 @@ export class DLP {
 
                             // See if we are analyzing this file
                             if (analyzeFile) {
-                                // Increment the counter
-                                batchRequests++;
-
                                 // Create a batch request to get the dlp policy on this item
                                 list.Items(item.Id).GetDlpPolicyTip().batch(result => {
                                     // Ensure a policy exists
@@ -229,7 +223,7 @@ export class DLP {
 
                                     // Increment the counter and update the dialog
                                     this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${batchRequests}...`;
-                                }, batchRequests % 25 == 0);
+                                }, batchRequests++ % 25 == 0);
                             }
                         });
 

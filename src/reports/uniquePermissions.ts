@@ -125,7 +125,7 @@ export class UniquePermissions {
                                 });
                             }
                         });
-                    }, ++ctrBatchJobs % 25 == 0);
+                    }, ctrBatchJobs++ % 25 == 0);
                 }).then(() => {
                     // Execute the batch job
                     batch.execute(() => {
