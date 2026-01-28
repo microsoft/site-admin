@@ -49,6 +49,8 @@ export class UniquePermissions {
                 Select,
                 Top: 5000
             }).execute(items => {
+                let ctrBatchJobs = 0;
+
                 // Create a batch job
                 let batch = Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().getById(list.Id);
 
@@ -123,7 +125,7 @@ export class UniquePermissions {
                                 });
                             }
                         });
-                    });
+                    }, ctrBatchJobs++ % 25 == 0);
                 }).then(() => {
                     // Execute the batch job
                     batch.execute(() => {

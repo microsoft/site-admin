@@ -58,6 +58,8 @@ export class SearchEEEU {
                 Select,
                 Top: 5000
             }).execute(items => {
+                let ctrBatchJobs = 0;
+
                 // Create a batch job
                 let batch = Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().getById(list.Id);
 
@@ -99,7 +101,7 @@ export class SearchEEEU {
                                 WebTitle: web.Title
                             });
                         });
-                    });
+                    }, ctrBatchJobs++ % 25 == 0);
                 }).then(() => {
                     // Execute the batch job
                     batch.execute(() => {
