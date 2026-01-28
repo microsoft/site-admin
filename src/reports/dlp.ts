@@ -156,11 +156,12 @@ export class DLP {
         // Return a promise
         return new Promise(resolve => {
             let counter = 0;
+            let siteText = this._elSubNav.children[0].innerHTML;
 
             // Parse the libraries
             Helper.Executor(libraries, lib => {
                 // Update the dialog
-                this._elSubNav.children[1].innerHTML = `Analyzing Library ${lib.Title}<br/>${++counter} of ${libraries.length}`;
+                this._elSubNav.children[0].innerHTML = `${siteText} - Analyzing Library ${lib.Title}<br/>${++counter} of ${libraries.length}`;
 
                 // Return a promise
                 return new Promise(resolve => {
