@@ -634,11 +634,14 @@ export class SearchEEEU {
         // See if we are showing hidden lists
         let searchLists = values["SearchLists"];
 
+        // Determine the webs to target
+        let siteItems: Components.IDropdownItem[] = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
+
         // Parse all webs
         let counter = 0;
-        Helper.Executor(DataSource.SiteItems, siteItem => {
+        Helper.Executor(siteItems, siteItem => {
             // Update the loading dialog
-            LoadingDialog.setBody(`Getting the info for web ${++counter} of ${DataSource.SiteItems.length}...`);
+            LoadingDialog.setBody(`Getting the info for web ${++counter} of ${siteItems.length}...`);
 
             // Return a promise
             return new Promise(resolve => {
@@ -650,7 +653,7 @@ export class SearchEEEU {
                     ]
                 }).execute(web => {
                     // Update the loading dialog
-                    LoadingDialog.setBody(`Analyzing web ${counter} of ${DataSource.SiteItems.length}...`);
+                    LoadingDialog.setBody(`Analyzing web ${counter} of ${siteItems.length}...`);
 
                     // Analyze the site
                     this.analyzeSite(web, searchLists).then(resolve);

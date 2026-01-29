@@ -35,8 +35,10 @@ export class ReportsTab {
     private _auditOnly: boolean = null;
     private _el: HTMLElement = null;
     private _disableSensitivityLabelOverride: boolean = null;
+    private _form: Components.IForm = null;
     private _reportProps: IReportProps = null;
     private _searchProps: ISearchProps = null;
+    private _selectedReport: string = null;
 
     // Constructor
     constructor(el: HTMLElement, appProps: IAppProps) {
@@ -52,11 +54,14 @@ export class ReportsTab {
 
     // Renders the tab
     private render(selectedReport: string = ReportTypes.DLP) {
+        // Set the selected report
+        this._selectedReport = selectedReport;
+
         // Clear the element
         while (this._el.firstChild) { this._el.removeChild(this._el.firstChild); }
 
         // Render a form
-        let form = Components.Form({
+        this._form = Components.Form({
             el: this._el,
             controls: [
                 {
@@ -64,7 +69,7 @@ export class ReportsTab {
                     label: "Select Report",
                     description: "Select a report to run against this site.",
                     type: Components.FormControlTypes.Dropdown,
-                    value: selectedReport,
+                    value: this._selectedReport,
                     items: [
                         {
                             text: "Data Loss Prevention",
@@ -136,43 +141,66 @@ export class ReportsTab {
             ]
         });
 
+        // See if webs exist
+        if (DataSource.SiteItems && DataSource.SiteItems.length > 1) {
+            // See if this is a report that can be run against a specified web
+            switch (this._selectedReport) {
+                case ReportTypes.DLP:
+                case ReportTypes.ExternalUsers:
+                case ReportTypes.Permissions:
+                case ReportTypes.SearchEEEU:
+                case ReportTypes.SearchUsers:
+                case ReportTypes.SensitivityLabels:
+                case ReportTypes.UniquePermissions:
+                    // Add a sub-web control
+                    this._form.insertControl(1, {
+                        name: "TargetWeb",
+                        label: "Target Web",
+                        description: "Select a web to run the report.",
+                        type: Components.FormControlTypes.Dropdown,
+                        items: [{ text: "All Sites", value: null } as Components.IDropdownItem].concat(DataSource.SiteItems)
+                    } as Components.IFormControlPropsDropdown);
+                    break;
+            }
+        }
+
         // Add the controls
-        switch (selectedReport) {
+        switch (this._selectedReport) {
             case ReportTypes.DLP:
-                form.appendControls(Reports.DLP.getFormFields(this._reportProps?.dlpFileExt));
+                this._form.appendControls(Reports.DLP.getFormFields(this._reportProps?.dlpFileExt));
                 break;
             case ReportTypes.DocRetention:
-                form.appendControls(Reports.DocRetention.getFormFields(this._reportProps.docRententionYears));
+                this._form.appendControls(Reports.DocRetention.getFormFields(this._reportProps.docRententionYears));
                 break;
             case ReportTypes.ExternalShares:
-                form.appendControls(Reports.ExternalShares.getFormFields());
+                this._form.appendControls(Reports.ExternalShares.getFormFields());
                 break;
             case ReportTypes.ExternalUsers:
-                form.appendControls(Reports.ExternalUsers.getFormFields());
+                this._form.appendControls(Reports.ExternalUsers.getFormFields());
                 break;
             case ReportTypes.Permissions:
-                form.appendControls(Reports.Permissions.getFormFields());
+                this._form.appendControls(Reports.Permissions.getFormFields());
                 break;
             case ReportTypes.SearchDocs:
-                form.appendControls(Reports.SearchDocs.getFormFields(this._reportProps?.docSearchFileExt, this._reportProps?.docSearchKeywords));
+                this._form.appendControls(Reports.SearchDocs.getFormFields(this._reportProps?.docSearchFileExt, this._reportProps?.docSearchKeywords));
                 break;
             case ReportTypes.SearchEEEU:
-                form.appendControls(Reports.SearchEEEU.getFormFields());
+                this._form.appendControls(Reports.SearchEEEU.getFormFields());
                 break;
             case ReportTypes.SearchProp:
-                form.appendControls(Reports.SearchProp.getFormFields(DataSource.Site.RootWeb.AllProperties[this._searchProps.key]));
+                this._form.appendControls(Reports.SearchProp.getFormFields(DataSource.Site.RootWeb.AllProperties[this._searchProps.key]));
                 break;
             case ReportTypes.SearchUsers:
-                form.appendControls(Reports.SearchUsers.getFormFields());
+                this._form.appendControls(Reports.SearchUsers.getFormFields());
                 break;
             case ReportTypes.SensitivityLabels:
-                form.appendControls(Reports.SensitivityLabels.getFormFields());
+                this._form.appendControls(Reports.SensitivityLabels.getFormFields());
                 break;
             case ReportTypes.SharingLinks:
-                form.appendControls(Reports.SharingLinks.getFormFields());
+                this._form.appendControls(Reports.SharingLinks.getFormFields());
                 break;
             case ReportTypes.UniquePermissions:
-                form.appendControls(Reports.UniquePermissions.getFormFields());
+                this._form.appendControls(Reports.UniquePermissions.getFormFields());
                 break;
         }
 
@@ -189,75 +217,75 @@ export class ReportsTab {
             text: "Run",
             onClick: () => {
                 // Ensure the form is required
-                if (!form.isValid()) { return; }
+                if (!this._form.isValid()) { return; }
 
                 // Run the report
-                switch (selectedReport) {
+                switch (this._selectedReport) {
                     case ReportTypes.DLP:
-                        Reports.DLP.run(this._el, this._auditOnly, form.getValues(), () => {
+                        Reports.DLP.run(this._el, this._auditOnly, this._form.getValues(), () => {
                             // Render this component
-                            this.render(selectedReport);
+                            this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.DocRetention:
-                        Reports.DocRetention.run(this._el, this._auditOnly, form.getValues(), () => {
+                        Reports.DocRetention.run(this._el, this._auditOnly, this._form.getValues(), () => {
                             // Render this component
-                            this.render(selectedReport);
+                            this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.ExternalShares:
-                        Reports.ExternalShares.run(this._el, this._auditOnly, form.getValues(), () => {
+                        Reports.ExternalShares.run(this._el, this._auditOnly, this._form.getValues(), () => {
                             // Render this component
-                            this.render(selectedReport);
+                            this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.ExternalUsers:
-                        Reports.ExternalUsers.run(this._el, this._auditOnly, form.getValues(), () => {
+                        Reports.ExternalUsers.run(this._el, this._auditOnly, this._form.getValues(), () => {
                             // Render this component
-                            this.render(selectedReport);
+                            this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.Permissions:
-                        Reports.Permissions.run(this._el, this._auditOnly, form.getValues(), () => {
+                        Reports.Permissions.run(this._el, this._auditOnly, this._form.getValues(), () => {
                             // Render this component
-                            this.render(selectedReport);
+                            this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.SearchDocs:
-                        Reports.SearchDocs.run(this._el, this._auditOnly, form.getValues(), () => {
+                        Reports.SearchDocs.run(this._el, this._auditOnly, this._form.getValues(), () => {
                             // Render this component
-                            this.render(selectedReport);
+                            this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.SearchEEEU:
-                        Reports.SearchEEEU.run(this._el, this._auditOnly, form.getValues(), () => {
+                        Reports.SearchEEEU.run(this._el, this._auditOnly, this._form.getValues(), () => {
                             // Render this component
-                            this.render(selectedReport);
+                            this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.SearchProp:
-                        let searchValue = form.getValues()["value"];
+                        let searchValue = this._form.getValues()["value"];
                         Reports.SearchProp.run(this._el, this._auditOnly, this._searchProps.managedProperty, typeof (searchValue) === "string" ? searchValue : searchValue?.value, () => {
                             // Render this component
-                            this.render(selectedReport);
+                            this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.SearchUsers:
                         // Ensure the values exist
-                        let values = form.getValues();
+                        let values = this._form.getValues();
                         if (values.UserName || values.PeoplePicker.length > 0) {
                             Reports.SearchUsers.run(this._el, this._auditOnly, values, () => {
                                 // Render this component
-                                this.render(selectedReport);
+                                this.render(this._selectedReport);
                             });
                         } else {
                             // Update the validation
-                            let ctrl = form.getControl("UserName");
+                            let ctrl = this._form.getControl("UserName");
                             ctrl.updateValidation(ctrl.el, {
                                 isValid: false,
                                 invalidMessage: "A keyword or account is required to perform a search."
                             });
-                            ctrl = form.getControl("PeoplePicker");
+                            ctrl = this._form.getControl("PeoplePicker");
                             ctrl.updateValidation(ctrl.el, {
                                 isValid: false,
                                 invalidMessage: "A keyword or account is required to perform a search."
@@ -265,25 +293,51 @@ export class ReportsTab {
                         }
                         break;
                     case ReportTypes.SensitivityLabels:
-                        Reports.SensitivityLabels.run(this._el, this._auditOnly, form.getValues(), () => {
+                        Reports.SensitivityLabels.run(this._el, this._auditOnly, this._form.getValues(), () => {
                             // Render this component
-                            this.render(selectedReport);
+                            this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.SharingLinks:
-                        Reports.SharingLinks.run(this._el, this._auditOnly, form.getValues(), () => {
+                        Reports.SharingLinks.run(this._el, this._auditOnly, this._form.getValues(), () => {
                             // Render this component
-                            this.render(selectedReport);
+                            this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.UniquePermissions:
-                        Reports.UniquePermissions.run(this._el, this._auditOnly, form.getValues(), () => {
+                        Reports.UniquePermissions.run(this._el, this._auditOnly, this._form.getValues(), () => {
                             // Render this component
-                            this.render(selectedReport);
+                            this.render(this._selectedReport);
                         });
                         break;
                 }
             }
         });
+    }
+
+    // Method to add the component
+    setWebs(webs: Components.IDropdownItem[]) {
+        // See if this is a report that can be run against a specified web
+        switch (this._selectedReport) {
+            case ReportTypes.DLP:
+            case ReportTypes.ExternalUsers:
+            case ReportTypes.Permissions:
+            case ReportTypes.SearchEEEU:
+            case ReportTypes.SearchUsers:
+            case ReportTypes.SensitivityLabels:
+            case ReportTypes.UniquePermissions:
+                // See if more than one sub-webs are available
+                if (webs.length > 1) {
+                    // Add a sub-web control
+                    this._form.insertControl(1, {
+                        name: "TargetWeb",
+                        label: "Target Web",
+                        description: "Select a web to run the report.",
+                        type: Components.FormControlTypes.Dropdown,
+                        items: [{ text: "All Sites", value: null } as Components.IDropdownItem].concat(webs)
+                    } as Components.IFormControlPropsDropdown);
+                }
+                break;
+        }
     }
 }

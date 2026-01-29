@@ -300,11 +300,14 @@ export class UniquePermissions {
         // Clear the items
         this._items = [];
 
+        // Determine the webs to target
+        let siteItems: Components.IDropdownItem[] = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
+
         // Parse all the webs
         let counter = 0;
-        Helper.Executor(DataSource.SiteItems, siteItem => {
+        Helper.Executor(siteItems, siteItem => {
             // Update the loading dialog
-            LoadingDialog.setHeader(`Site ${++counter} of ${DataSource.SiteItems.length}`);
+            LoadingDialog.setHeader(`Site ${++counter} of ${siteItems.length}`);
 
             // Return a promise
             return new Promise(resolve => {

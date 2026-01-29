@@ -383,11 +383,14 @@ export class DLP {
         // Hide the loading dialog
         LoadingDialog.hide();
 
+        // Determine the webs to target
+        let siteItems: Components.IDropdownItem[] = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
+
         // Parse the webs
         let counter = 0;
-        Helper.Executor(DataSource.SiteItems, siteItem => {
+        Helper.Executor(siteItems, siteItem => {
             // Update the status
-            this._elSubNav.children[0].innerHTML = `Searching Site ${++counter} of ${DataSource.SiteItems.length}`;
+            this._elSubNav.children[0].innerHTML = `Searching Site ${++counter} of ${siteItems.length}`;
 
             // Return a promise
             return new Promise(resolve => {

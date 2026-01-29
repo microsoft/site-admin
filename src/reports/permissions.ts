@@ -650,11 +650,14 @@ export class Permissions {
         this._items = [];
         this._roleMapper = {};
 
+        // Determine the webs to target
+        let siteItems: Components.IDropdownItem[] = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
+
         // Parse all webs
         let counter = 0;
-        Helper.Executor(DataSource.SiteItems, siteItem => {
+        Helper.Executor(siteItems, siteItem => {
             // Update the loading dialog
-            LoadingDialog.setBody(`Getting the roles for web ${++counter} of ${DataSource.SiteItems.length}...`);
+            LoadingDialog.setBody(`Getting the roles for web ${++counter} of ${siteItems.length}...`);
 
             // See if this is a sub-web and doesn't have unique role assignments
             // The sub-webs have the data property set for them
@@ -669,7 +672,7 @@ export class Permissions {
                     ]
                 }).execute(roles => {
                     // Update the loading dialog
-                    LoadingDialog.setBody(`Analyzing the roles for web ${counter} of ${DataSource.SiteItems.length}...`);
+                    LoadingDialog.setBody(`Analyzing the roles for web ${counter} of ${siteItems.length}...`);
 
                     // Analyze the roles
                     this.analyzeRoles(roles.results, siteItem.text, siteItem.data ? siteItem.data.Title : DataSource.Site.RootWeb.Title).then(resolve);

@@ -399,6 +399,8 @@ export class ExternalUsers {
 
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
+        let users: IUserInfo[] = [];
+
         // Show a loading dialog
         LoadingDialog.setHeader("Loading Security Groups");
         LoadingDialog.setBody("Loading the permissions for this site...");
@@ -406,8 +408,6 @@ export class ExternalUsers {
 
         // Clear the items
         this._items = [];
-
-        let users: IUserInfo[] = [];
 
         // Load the group information
         Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).query({
