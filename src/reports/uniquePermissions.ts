@@ -28,6 +28,8 @@ const CSVFields = [
 ]
 
 export class UniquePermissions {
+    private static _dashboard: Dashboard = null;
+    private static _elSubNav: HTMLElement = null;
     private static _items: IPermission[] = [];
 
     // Analyzes a list
@@ -43,6 +45,9 @@ export class UniquePermissions {
                 Select.push("FileRef");
             }
 
+            // Update the dialog
+            this._elSubNav.children[1].innerHTML = "Getting the list items...";
+
             // Get the items where it has broken inheritance
             Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().getById(list.Id).Items().query({
                 GetAllItems: true,
@@ -53,6 +58,9 @@ export class UniquePermissions {
 
                 // Create a batch job
                 let batch = Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().getById(list.Id);
+
+                // Update the dialog
+                this._elSubNav.children[1].innerHTML = "Creating the batch job...";
 
                 // Parse the items
                 Helper.Executor(items.results, item => {
@@ -88,7 +96,7 @@ export class UniquePermissions {
                                 }
 
                                 // Add a row for this entry
-                                this._items.push({
+                                let listItem = {
                                     FileName: item["FileLeafRef"],
                                     FileUrl: item["FileRef"],
                                     ItemId: item.Id,
@@ -103,12 +111,14 @@ export class UniquePermissions {
                                     SiteGroupUrl: DataSource.SiteContext.SiteFullUrl + "/_layouts/15/people.aspx?MembershipGroupId=" + group.Id,
                                     SiteGroupUsers: members.join(', '),
                                     WebUrl: webUrl
-                                });
+                                };
+                                this._items.push(listItem);
+                                this._dashboard.Datatable.addRow(listItem);
                             } else {
                                 let user: Types.SP.User = roleAssignment.Member as any;
 
                                 // Add a row for this entry
-                                this._items.push({
+                                let listItem = {
                                     FileName: item["FileLeafRef"],
                                     FileUrl: item["FileRef"],
                                     ItemId: item.Id,
@@ -122,7 +132,9 @@ export class UniquePermissions {
                                     SiteGroupName: user.Email || user.UserPrincipalName || user.Title,
                                     SiteGroupPermission: roleDefinitions.join(', '),
                                     WebUrl: webUrl
-                                });
+                                };
+                                this._items.push(listItem);
+                                this._dashboard.Datatable.addRow(listItem);
                             }
                         });
                     }, ctrBatchJobs++ % 25 == 0);
@@ -143,7 +155,7 @@ export class UniquePermissions {
     // Renders the search summary
     private static renderSummary(el: HTMLElement, auditOnly: boolean, onClose: () => void) {
         // Render the summary
-        new Dashboard({
+        this._dashboard = new Dashboard({
             el,
             navigation: {
                 title: "Unique Permissions",
@@ -273,6 +285,12 @@ export class UniquePermissions {
                 ]
             }
         });
+
+        // Set the sub-nav element
+        this._elSubNav = el.querySelector("#sub-navigation");
+        this._elSubNav.classList.remove("d-none");
+        this._elSubNav.classList.add("my-2");
+        this._elSubNav.innerHTML = `<div class="h6"></div><div></div>`;
     }
 
     // Reverts the item permissions
@@ -300,14 +318,25 @@ export class UniquePermissions {
         // Clear the items
         this._items = [];
 
+        // Clear the element
+        while (el.firstChild) { el.removeChild(el.firstChild); }
+
+        // Render the summary
+        this.renderSummary(el, auditOnly, onClose);
+
+        // Hide the loading dialog
+        LoadingDialog.hide();
+
         // Determine the webs to target
         let siteItems: Components.IDropdownItem[] = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
 
         // Parse all the webs
         let counter = 0;
         Helper.Executor(siteItems, siteItem => {
-            // Update the loading dialog
-            LoadingDialog.setHeader(`Site ${++counter} of ${siteItems.length}`);
+            // Update the status
+            let siteText = `Searching Site ${++counter} of ${siteItems.length}`;
+            this._elSubNav.children[0].innerHTML = siteText;
+            this._elSubNav.children[1].innerHTML = "Loading the lists for this site...";
 
             // Return a promise
             return new Promise(resolve => {
@@ -319,10 +348,14 @@ export class UniquePermissions {
                 }).execute(lists => {
                     let ctrList = 0;
 
+                    // Update the dialog
+                    this._elSubNav.children[1].innerHTML = "Loading the lists for this site...";
+
                     // Parse the lists
                     Helper.Executor(lists.results, list => {
-                        // Update the status
-                        LoadingDialog.setBody(`Analyzing List ${++ctrList} of ${lists.results.length}...`);
+                        // Update the dialog
+                        this._elSubNav.children[0].innerHTML = `${siteText} [Analyzing Library ${++ctrList} of ${lists.results.length}]: ${list.Title}`;
+                        this._elSubNav.children[1].innerHTML = "Analyzing the list...";
 
                         // Analyze the list
                         return this.analyzeList(siteItem.text, list);
@@ -330,14 +363,8 @@ export class UniquePermissions {
                 });
             });
         }).then(() => {
-            // Clear the element
-            while (el.firstChild) { el.removeChild(el.firstChild); }
-
-            // Render the summary
-            this.renderSummary(el, auditOnly, onClose);
-
-            // Hide the loading dialog
-            LoadingDialog.hide();
+            // Hide the sub-nav
+            this._elSubNav.classList.add("d-none");
         });
     }
 }
