@@ -32,6 +32,8 @@ const CSVFields = [
 ]
 
 export class SearchUsers {
+    private static _dashboard: Dashboard = null;
+    private static _elSubNav: HTMLElement = null;
     private static _items: ISearchItem[] = null;
 
     // Get the group user information
@@ -41,13 +43,17 @@ export class SearchUsers {
             let groups: { [key: string]: Types.SP.RoleAssignmentOData } = {};
 
             // Parse the roles
+            let ctrRoles = 0;
             Helper.Executor((web.RoleAssignments.results as any as Types.SP.RoleAssignmentOData[]), role => {
+                // Update the dialog
+                this._elSubNav.children[1].innerHTML = `Analyzing role assignment ${++ctrRoles} of ${web.RoleAssignments.results.length}...`;
+
                 // Return a promise
                 return new Promise(resolve => {
                     // See if this role is the user
                     if (role.Member.LoginName == userInfo.Name) {
                         // Add the user information
-                        this._items.push({
+                        let userItem = {
                             WebUrl: web.Url,
                             WebTitle: web.Title,
                             Id: userInfo.Id,
@@ -59,7 +65,9 @@ export class SearchUsers {
                             GroupInfo: "",
                             Role: role.RoleDefinitionBindings.results[0].Name,
                             RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
-                        });
+                        }
+                        this._items.push(userItem);
+                        this._dashboard.Datatable.addRow(userItem);
 
                         // Check the next role
                         resolve(null);
@@ -104,7 +112,11 @@ export class SearchUsers {
                 for (let groupId in groups) { groupIds.push(groupId); }
 
                 // Parse the group ids
+                let ctrGroupIds = 0;
                 Helper.Executor(groupIds, groupId => {
+                    // Update the dialog
+                    this._elSubNav.children[1].innerHTML = `Getting M365 group info: ${++ctrGroupIds} of ${groupIds.length}...`;
+
                     // Return a promise
                     return new Promise(resolve => {
                         let groupInfo = groupId.split('_');
@@ -131,7 +143,7 @@ export class SearchUsers {
                                     // See this is the user
                                     if (user.displayName.toLowerCase().indexOf(search.toString()) >= 0) {
                                         // Add the user information
-                                        this._items.push({
+                                        let userItem = {
                                             WebUrl: web.Url,
                                             WebTitle: web.Title,
                                             Id: userInfo.Id,
@@ -144,13 +156,15 @@ export class SearchUsers {
                                             IsM365Group: true,
                                             Role: role.RoleDefinitionBindings.results[0].Name,
                                             RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
-                                        });
+                                        };
+                                        this._items.push(userItem);
+                                        this._dashboard.Datatable.addRow(userItem);
                                     }
                                 }
                                 // Else, compare the email
                                 else if (user.mail == userInfo.EMail) {
                                     // Add the user information
-                                    this._items.push({
+                                    let userItem = {
                                         WebUrl: web.Url,
                                         WebTitle: web.Title,
                                         Id: userInfo.Id,
@@ -163,7 +177,9 @@ export class SearchUsers {
                                         IsM365Group: true,
                                         Role: role.RoleDefinitionBindings.results[0].Name,
                                         RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
-                                    });
+                                    };
+                                    this._items.push(userItem);
+                                    this._dashboard.Datatable.addRow(userItem);
                                 }
                             }
 
@@ -183,27 +199,26 @@ export class SearchUsers {
     private static analyzeSite(web: Types.SP.WebOData, search: string | Types.SP.User) {
         // Return a promise
         return new Promise(resolve => {
-            // Show a loading dialog
-            LoadingDialog.setBody("Getting the user information...");
-
             // Get the users
             this.getUsers(search).then(users => {
                 let counter = 0;
 
                 // Parse the users
                 Helper.Executor(users, user => {
-                    // Update the loading dialog
-                    LoadingDialog.setBody(`Analyzing User ${++counter} of ${users.length}`);
+                    // Update the dialog
+                    this._elSubNav.children[1].innerHTML = `Analyzing User ${++counter} of ${users.length}`;
 
                     // Add the user information
-                    this._items.push({
+                    let userItem = {
                         WebUrl: web.Url,
                         WebTitle: web.Title,
                         Id: user.Id,
                         LoginName: user.UserName,
                         Name: user.Title || user.Name,
                         Email: user.EMail
-                    });
+                    };
+                    this._items.push(userItem);
+                    this._dashboard.Datatable.addRow(userItem);
 
                     // Return a promise
                     return new Promise(resolve => {
@@ -214,9 +229,6 @@ export class SearchUsers {
                         });
                     });
                 }).then(() => {
-                    // Hide the loading dialog
-                    LoadingDialog.hide();
-
                     // Resolve the request
                     resolve(null);
                 });
@@ -228,6 +240,9 @@ export class SearchUsers {
     private static analyzeUserGroups(web: Types.SP.WebOData, search: string | Types.SP.User, userInfo: IUserInfo): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve) => {
+            // Update the dialog
+            this._elSubNav.children[1].innerHTML = `Analyzing the user groups...`;
+
             // Get the groups the user is associated with
             Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).SiteUsers(userInfo.Id).Groups().execute(groups => {
                 // Parse the groups the member belongs to
@@ -239,7 +254,7 @@ export class SearchUsers {
                         // See if the user belongs to this role
                         if (role.Member.LoginName == group.LoginName) {
                             // Add the user information
-                            this._items.push({
+                            let userItem = {
                                 WebUrl: web.Url,
                                 WebTitle: web.Title,
                                 Id: userInfo.Id,
@@ -251,7 +266,9 @@ export class SearchUsers {
                                 GroupInfo: group.Description || "",
                                 Role: role.RoleDefinitionBindings.results[0].Name,
                                 RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
-                            });
+                            };
+                            this._items.push(userItem);
+                            this._dashboard.Datatable.addRow(userItem);
                         }
                     }
                 }).then(resolve);
@@ -285,6 +302,9 @@ export class SearchUsers {
 
     // Gets the external users
     private static getUsers(user: string | Types.SP.User): PromiseLike<IUserInfo[]> {
+        // Update the dialog
+        this._elSubNav.children[1].innerHTML = `Getting the users...`;
+
         // Return a promise
         return new Promise((resolve, reject) => {
             let users: IUserInfo[] = [];
@@ -390,7 +410,7 @@ export class SearchUsers {
     // Renders the search summary
     private static renderSummary(el: HTMLElement, auditOnly: boolean, items: ISearchItem[], onClose: () => void) {
         // Render the summary
-        new Dashboard({
+        this._dashboard = new Dashboard({
             el,
             navigation: {
                 title: "Search Users",
@@ -602,6 +622,12 @@ export class SearchUsers {
                 ]
             }
         });
+
+        // Set the sub-nav element
+        this._elSubNav = el.querySelector("#sub-navigation");
+        this._elSubNav.classList.remove("d-none");
+        this._elSubNav.classList.add("my-2");
+        this._elSubNav.innerHTML = `<div class="h6"></div><div></div>`;
     }
 
     // Runs the report
@@ -618,14 +644,24 @@ export class SearchUsers {
         let userName: string = values["UserName"].trim();
         let user: Types.SP.User = values["PeoplePicker"][0];
 
+        // Clear the element
+        while (el.firstChild) { el.removeChild(el.firstChild); }
+
+        // Render the summary
+        this.renderSummary(el, auditOnly, this._items, onClose);
+
+        // Hide the loading dialog
+        LoadingDialog.hide();
+
         // Determine the webs to target
         let siteItems: Components.IDropdownItem[] = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
 
         // Parse all webs
         let counter = 0;
         Helper.Executor(siteItems, siteItem => {
-            // Update the loading dialog
-            LoadingDialog.setBody(`Getting the info for web ${++counter} of ${siteItems.length}...`);
+            // Update the status
+            this._elSubNav.children[0].innerHTML = `Searching Site ${++counter} of ${siteItems.length}`;
+            this._elSubNav.children[1].innerHTML = "Getting the info for the web...";
 
             // Return a promise
             return new Promise(resolve => {
@@ -636,22 +672,16 @@ export class SearchUsers {
                         "RoleAssignments/RoleDefinitionBindings", "SiteGroups"
                     ]
                 }).execute(web => {
-                    // Update the loading dialog
-                    LoadingDialog.setBody(`Analyzing web ${counter} of ${siteItems.length}...`);
+                    // Update the dialog
+                    this._elSubNav.children[1].innerHTML = `Analyzing web ${counter} of ${siteItems.length}...`;
 
                     // Analyze the site
                     this.analyzeSite(web, userName || user).then(resolve);
                 });
             });
         }).then(() => {
-            // Clear the element
-            while (el.firstChild) { el.removeChild(el.firstChild); }
-
-            // Render the summary
-            this.renderSummary(el, auditOnly, this._items, onClose);
-
-            // Hide the loading dialog
-            LoadingDialog.hide();
+            // Hide the sub-nav
+            this._elSubNav.classList.add("d-none");
         });
     }
 }

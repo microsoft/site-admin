@@ -51,6 +51,8 @@ const CSVSensitivityLabelResponseFields = [
 ]
 
 export class SensitivityLabels {
+    private static _dashboard: Dashboard = null;
+    private static _elSubNav: HTMLElement = null;
     private static _items: ISensitivityLabelItem[] = [];
 
     // Gets the form fields to display
@@ -82,16 +84,23 @@ export class SensitivityLabels {
         // Return a promise
         return new Promise(resolve => {
             let counter = 0;
+            let siteText = this._elSubNav.children[0].innerHTML;
 
             // Parse the libraries
             Helper.Executor(libraries, lib => {
                 // Update the dialog
-                LoadingDialog.setBody(`Analyzing Library ${lib.Title}<br/>${++counter} of ${libraries.length}`);
+                this._elSubNav.children[0].innerHTML = `${siteText} [Analyzing Library ${++counter} of ${libraries.length}]: ${lib.Title}`;
 
                 // Return a promise
                 return new Promise(resolve => {
+                    // Update the dialog
+                    this._elSubNav.children[1].innerHTML = `Loading the files for this library...`;
+
                     // Get the files for this library
                     DataSource.loadFiles(webId, lib.Title).then(files => {
+                        // Update the dialog
+                        this._elSubNav.children[1].innerHTML = `Analyzing the files for this library...`;
+
                         // Parse the files
                         files.forEach(file => {
                             let hasLabel = file.sensitivityLabel && file.sensitivityLabel.displayName ? true : false;
@@ -102,7 +111,7 @@ export class SensitivityLabels {
                                 let folderPath = file.parentReference.path.split('root:')[1];
 
                                 // Append the data
-                                this._items.push({
+                                let fileItem = {
                                     Author: file.createdBy.user["email"],
                                     File: file,
                                     FileExtension: fileInfo[fileInfo.length - 1],
@@ -114,7 +123,9 @@ export class SensitivityLabels {
                                     SensitivityLabelId: file.sensitivityLabel.id,
                                     WebId: webId,
                                     WebUrl: webUrl
-                                });
+                                };
+                                this._items.push(fileItem);
+                                this._dashboard.Datatable.addRow(fileItem);
                             }
                         });
 
@@ -229,7 +240,7 @@ export class SensitivityLabels {
     // Renders the search summary
     private static renderSummary(el: HTMLElement, auditOnly: boolean, onClose: () => void) {
         // Render the summary
-        let dt = new Dashboard({
+        this._dashboard = new Dashboard({
             el,
             navigation: {
                 title: "Sensitivity Labels",
@@ -338,7 +349,7 @@ export class SensitivityLabels {
                                             // Show the form to label the file
                                             this.showLabelFileForm(row.File, label => {
                                                 // Update the row cell
-                                                dt.updateCell(rowIdx, 3, label);
+                                                this._dashboard.updateCell(rowIdx, 3, label);
                                             });
                                         }
                                     }
@@ -349,6 +360,12 @@ export class SensitivityLabels {
                 ]
             }
         });
+
+        // Set the sub-nav element
+        this._elSubNav = el.querySelector("#sub-navigation");
+        this._elSubNav.classList.remove("d-none");
+        this._elSubNav.classList.add("my-2");
+        this._elSubNav.innerHTML = `<div class="h6"></div><div></div>`;
     }
 
     // Runs the report
@@ -371,14 +388,24 @@ export class SensitivityLabels {
         LoadingDialog.setBody("Loading the libraries...");
         LoadingDialog.show();
 
+        // Clear the element
+        while (el.firstChild) { el.removeChild(el.firstChild); }
+
+        // Render the summary
+        this.renderSummary(el, auditOnly, onClose);
+
+        // Hide the loading dialog
+        LoadingDialog.hide();
+
         // Determine the webs to target
         let siteItems: Components.IDropdownItem[] = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
 
         // Parse the webs
         let counter = 0;
         Helper.Executor(siteItems, siteItem => {
-            // Update the dialog
-            LoadingDialog.setHeader(`Searching Site ${++counter} of ${siteItems.length}`);
+            // Update the status
+            this._elSubNav.children[0].innerHTML = `Searching Site ${++counter} of ${siteItems.length}`;
+            this._elSubNav.children[1].innerHTML = "Getting the libraries for this web...";
 
             // Return a promise
             return new Promise(resolve => {
@@ -402,21 +429,15 @@ export class SensitivityLabels {
                     });
 
                     // Update the dialog
-                    LoadingDialog.setBody("Loading the files for the libraries...");
+                    this._elSubNav.children[1].innerHTML = "Loading the files for the libraries...";
 
                     // Analyze the libraries
                     this.analyzeLibraries(siteItem.value, siteItem.text, libs.results, withLabelsFl, withoutLabelsFl).then(resolve);
                 });
             });
         }).then(() => {
-            // Clear the element
-            while (el.firstChild) { el.removeChild(el.firstChild); }
-
-            // Render the summary
-            this.renderSummary(el, auditOnly, onClose);
-
-            // Hide the loading dialog
-            LoadingDialog.hide();
+            // Hide the sub-nav
+            this._elSubNav.classList.add("d-none");
         });
     }
 

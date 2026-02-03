@@ -18,8 +18,8 @@
   "dependencies": {
     "datatables.net": "^2.3.2",
     "datatables.net-bs5": "^2.3.2",
-    "dattatable": "^2.11.45",
-    "gd-sprest-bs": "^10.15.18",
+    "dattatable": "^2.11.52",
+    "gd-sprest-bs": "^10.15.21",
     "jquery": "^3.7.1",
     "moment": "^2.30.1"
   },
