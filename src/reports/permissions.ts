@@ -32,6 +32,8 @@ const CSVFields = [
 ]
 
 export class Permissions {
+    private static _dashboard: Dashboard = null;
+    private static _elSubNav: HTMLElement = null;
     private static _groupIds: { [key: string]: Types.SP.Directory.GroupOData } = null;
     private static _groupIdErrors: string[] = null;
     private static _roleMapper: { [key: string]: Types.SP.User } = null;
@@ -44,8 +46,8 @@ export class Permissions {
             // Try to get the groups
             let counter = 0;
             Helper.Executor(groupIds, groupId => {
-                // Update the loading dialog
-                LoadingDialog.setBody(`Trying to get M365 Group information ${++counter} of ${groupIds.length}`);
+                // Update the dialog
+                this._elSubNav.children[1].innerHTML = `Trying to get M365 Group information: ${++counter} of ${groupIds.length}`;
 
                 // Return a promise
                 return new Promise(resolve => {
@@ -75,8 +77,8 @@ export class Permissions {
                     });
                 });
             }).then(() => {
-                // Update the loading dialog
-                LoadingDialog.setBody(`Updating the role assignments with the M365 Group information`);
+                // Update the dialog
+                this._elSubNav.children[1].innerHTML = `Updating the role assignments with the M365 Group information`;
 
                 // Parse the items
                 this._items.forEach(item => {
@@ -89,7 +91,11 @@ export class Permissions {
                     item.SiteOwnersAsString = [];
 
                     // Ensure groups exist
-                    if (item.GroupIds.length == 0) { return; }
+                    if (item.GroupIds.length == 0) {
+                        // Add the row
+                        this._dashboard.Datatable.addRow(item);
+                        return;
+                    }
 
                     // Parse the group ids
                     item.GroupIds.forEach(groupId => {
@@ -146,6 +152,9 @@ export class Permissions {
                     item.SiteOwnersAsString = item.SiteOwnersAsString.filter((value, idx, self) => {
                         return self.indexOf(value) === idx;
                     });
+
+                    // Add the row
+                    this._dashboard.Datatable.addRow(item);
                 });
 
                 // Resolve the request
@@ -262,13 +271,10 @@ export class Permissions {
             let counter = 0;
             let groupIds: string[] = [];
 
-            // Show a loading dialog
-            LoadingDialog.setBody("Getting the user information...");
-
             // Parse the roles
             Helper.Executor(roles, role => {
-                // Update the loading dialog
-                LoadingDialog.setBody(`Analyzing Role ${++counter} of ${roles.length}`);
+                // Update the dialog
+                this._elSubNav.children[1].innerHTML = `Analyzing Role ${++counter} of ${roles.length}`;
 
                 // Return a promise
                 return new Promise(resolve => {
@@ -289,9 +295,6 @@ export class Permissions {
 
                 // Analyze the group ids
                 this.analyzeGroupIds(groupIds).then(() => {
-                    // Hide the loading dialog
-                    LoadingDialog.hide();
-
                     // Resolve the values
                     resolve();
                 });
@@ -303,9 +306,6 @@ export class Permissions {
     private static analyzeUsers(item: IPermissionItem) {
         // Return if the item doesn't exist
         if (item == null) { return; }
-
-        // Add the item
-        this._items.push(item);
 
         // Parse the users
         let users: Types.SP.User[] = (item.SiteMembers || []).concat(item.SiteOwners || []);
@@ -333,6 +333,9 @@ export class Permissions {
                 }
             }
         }
+
+        // Add the item
+        this._items.push(item);
     }
 
     // Gets the form fields to display
@@ -428,7 +431,7 @@ export class Permissions {
         }
 
         // Render the summary
-        new Dashboard({
+        this._dashboard = new Dashboard({
             el,
             navigation: {
                 title: "Permissions",
@@ -635,6 +638,12 @@ export class Permissions {
                 ]
             }
         });
+
+        // Set the sub-nav element
+        this._elSubNav = el.querySelector("#sub-navigation");
+        this._elSubNav.classList.remove("d-none");
+        this._elSubNav.classList.add("my-2");
+        this._elSubNav.innerHTML = `<div class="h6"></div><div></div>`;
     }
 
     // Runs the report
@@ -650,14 +659,24 @@ export class Permissions {
         this._items = [];
         this._roleMapper = {};
 
+        // Clear the element
+        while (el.firstChild) { el.removeChild(el.firstChild); }
+
+        // Render the summary
+        this.renderSummary(el, auditOnly, this._items, onClose);
+
+        // Hide the loading dialog
+        LoadingDialog.hide();
+
         // Determine the webs to target
         let siteItems: Components.IDropdownItem[] = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
 
         // Parse all webs
         let counter = 0;
         Helper.Executor(siteItems, siteItem => {
-            // Update the loading dialog
-            LoadingDialog.setBody(`Getting the roles for web ${++counter} of ${siteItems.length}...`);
+            // Update the status
+            this._elSubNav.children[0].innerHTML = `Searching Site ${++counter} of ${siteItems.length}`;
+            this._elSubNav.children[1].innerHTML = "Getting the roles for the web...";
 
             // See if this is a sub-web and doesn't have unique role assignments
             // The sub-webs have the data property set for them
@@ -672,21 +691,15 @@ export class Permissions {
                     ]
                 }).execute(roles => {
                     // Update the loading dialog
-                    LoadingDialog.setBody(`Analyzing the roles for web ${counter} of ${siteItems.length}...`);
+                    this._elSubNav.children[1].innerHTML = `Analyzing the roles for web ${counter} of ${siteItems.length}...`;
 
                     // Analyze the roles
                     this.analyzeRoles(roles.results, siteItem.text, siteItem.data ? siteItem.data.Title : DataSource.Site.RootWeb.Title).then(resolve);
                 });
             });
         }).then(() => {
-            // Clear the element
-            while (el.firstChild) { el.removeChild(el.firstChild); }
-
-            // Render the summary
-            this.renderSummary(el, auditOnly, this._items, onClose);
-
-            // Hide the loading dialog
-            LoadingDialog.hide();
+            // Hide the sub-nav
+            this._elSubNav.classList.add("d-none");
         });
     }
 

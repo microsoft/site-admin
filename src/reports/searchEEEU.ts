@@ -37,6 +37,8 @@ const CSVFields = [
 ]
 
 export class SearchEEEU {
+    private static _dashboard: Dashboard = null;
+    private static _elSubNav: HTMLElement = null;
     private static _items: ISearchItem[] = null;
 
     // Analyzes a lists
@@ -81,7 +83,7 @@ export class SearchEEEU {
                             let user: Types.SP.User = roleAssignment.Member as any;
 
                             // Add a row for this entry
-                            this._items.push({
+                            let roleItem = {
                                 Email: user.Email,
                                 FileName: item["FileLeafRef"],
                                 FileUrl: item["FileRef"],
@@ -99,7 +101,9 @@ export class SearchEEEU {
                                 RoleInfo: roleDefinition.Description || "",
                                 WebUrl: web.Url,
                                 WebTitle: web.Title
-                            });
+                            };
+                            this._items.push(roleItem);
+                            this._dashboard.Datatable.addRow(roleItem);
                         });
                     }, ctrBatchJobs++ % 25 == 0);
                 }).then(() => {
@@ -117,13 +121,13 @@ export class SearchEEEU {
     private static analyzeSite(web: Types.SP.WebOData, searchLists: boolean): PromiseLike<void> {
         // Return a promise
         return new Promise(resolve => {
-            // Show a loading dialog
-            LoadingDialog.setBody("Getting the user information...");
-
             // Search the users
             this.analyzeUsers(web).then(() => {
                 // See if we are searching lists
                 if (searchLists) {
+                    // Show a dialog
+                    this._elSubNav.children[1].innerHTML = `Analyzing lists...`;
+
                     // Get the lists
                     Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().query({
                         Filter: "Hidden eq false",
@@ -134,8 +138,8 @@ export class SearchEEEU {
 
                         // Parse the lists
                         Helper.Executor(lists.results, list => {
-                            // Update the status
-                            LoadingDialog.setBody(`Analyzing List ${++ctrList} of ${lists.results.length}...`);
+                            // Show a dialog
+                            this._elSubNav.children[1].innerHTML = `Analyzing List ${++ctrList} of ${lists.results.length}...`;
 
                             // Analyze the list
                             return this.analyzeList(web, list);
@@ -161,8 +165,8 @@ export class SearchEEEU {
 
                 // Parse the users
                 Helper.Executor(users, user => {
-                    // Update the loading dialog
-                    LoadingDialog.setBody(`Analyzing User ${++counter} of ${users.length}`);
+                    // Update the dialog
+                    this._elSubNav.children[1].innerHTML = `Analyzing User ${++counter} of ${users.length}`;
 
                     // Get the user information
                     return this.getUserInfo(web, user);
@@ -198,7 +202,7 @@ export class SearchEEEU {
                 // See if this role is the user
                 if (role.Member.LoginName == userInfo.Name) {
                     // Add the user information
-                    this._items.push({
+                    let roleItem = {
                         WebUrl: web.Url,
                         WebTitle: web.Title,
                         Id: userInfo.Id,
@@ -210,7 +214,9 @@ export class SearchEEEU {
                         GroupInfo: "",
                         Role: role.RoleDefinitionBindings.results[0].Name,
                         RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
-                    });
+                    };
+                    this._items.push(roleItem);
+                    this._dashboard.Datatable.addRow(roleItem);
 
                     // Check the next role
                     continue;
@@ -228,7 +234,7 @@ export class SearchEEEU {
                         // See if the user belongs to this role
                         if (role.Member.LoginName == group.LoginName) {
                             // Add the user information
-                            this._items.push({
+                            let roleItem = {
                                 WebUrl: web.Url,
                                 WebTitle: web.Title,
                                 Id: userInfo.Id,
@@ -240,7 +246,9 @@ export class SearchEEEU {
                                 GroupInfo: group.Description || "",
                                 Role: role.RoleDefinitionBindings.results[0].Name,
                                 RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
-                            });
+                            };
+                            this._items.push(roleItem);
+                            this._dashboard.Datatable.addRow(roleItem);
                         }
                     }
                 }).then(resolve);
@@ -349,7 +357,7 @@ export class SearchEEEU {
     // Renders the search summary
     private static renderSummary(el: HTMLElement, auditOnly: boolean, items: ISearchItem[], onClose: () => void) {
         // Render the summary
-        new Dashboard({
+        this._dashboard = new Dashboard({
             el,
             navigation: {
                 title: "Search EEEU",
@@ -619,6 +627,12 @@ export class SearchEEEU {
                 ]
             }
         });
+
+        // Set the sub-nav element
+        this._elSubNav = el.querySelector("#sub-navigation");
+        this._elSubNav.classList.remove("d-none");
+        this._elSubNav.classList.add("my-2");
+        this._elSubNav.innerHTML = `<div class="h6"></div><div></div>`;
     }
 
     // Runs the report
@@ -634,14 +648,24 @@ export class SearchEEEU {
         // See if we are showing hidden lists
         let searchLists = values["SearchLists"];
 
+        // Clear the element
+        while (el.firstChild) { el.removeChild(el.firstChild); }
+
+        // Render the summary
+        this.renderSummary(el, auditOnly, this._items, onClose);
+
+        // Hide the loading dialog
+        LoadingDialog.hide();
+
         // Determine the webs to target
         let siteItems: Components.IDropdownItem[] = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
 
         // Parse all webs
         let counter = 0;
         Helper.Executor(siteItems, siteItem => {
-            // Update the loading dialog
-            LoadingDialog.setBody(`Getting the info for web ${++counter} of ${siteItems.length}...`);
+            // Update the status
+            this._elSubNav.children[0].innerHTML = `Searching Site ${++counter} of ${siteItems.length}`;
+            this._elSubNav.children[1].innerHTML = "Getting the info for the web...";
 
             // Return a promise
             return new Promise(resolve => {
@@ -652,22 +676,16 @@ export class SearchEEEU {
                         "RoleAssignments/RoleDefinitionBindings", "SiteGroups"
                     ]
                 }).execute(web => {
-                    // Update the loading dialog
-                    LoadingDialog.setBody(`Analyzing web ${counter} of ${siteItems.length}...`);
+                    // Update the dialog
+                    this._elSubNav.children[1].innerHTML = `Analyzing web ${counter} of ${siteItems.length}...`;
 
                     // Analyze the site
                     this.analyzeSite(web, searchLists).then(resolve);
                 });
             });
         }).then(() => {
-            // Clear the element
-            while (el.firstChild) { el.removeChild(el.firstChild); }
-
-            // Render the summary
-            this.renderSummary(el, auditOnly, this._items, onClose);
-
-            // Hide the loading dialog
-            LoadingDialog.hide();
+            // Hide the sub-nav
+            this._elSubNav.classList.add("d-none");
         });
     }
 }
