@@ -63,52 +63,57 @@ export class SearchEEEU {
 
             // Get the items for the list
             let itemCounter = 0;
-            DataSource.loadItems(web.Url, list.Title, { Select }, item => {
-                // Update the dialog
-                this._elSubNav.children[1].innerHTML = `Creating Batch Requests - Processed ${++itemCounter} items...`;
+            DataSource.loadItems({
+                webUrl: web.Url,
+                listId: list.Id,
+                query: { Select },
+                onItem: item => {
+                    // Update the dialog
+                    this._elSubNav.children[1].innerHTML = `Creating Batch Requests - Processed ${++itemCounter} items...`;
 
-                // See if this item doesn't have unique permissions
-                if (!item.HasUniqueRoleAssignments) { return; }
+                    // See if this item doesn't have unique permissions
+                    if (!item.HasUniqueRoleAssignments) { return; }
 
-                // Get the permissions
-                batch.Items(item.Id).RoleAssignments().query({
-                    Filter: `Member/Title eq 'Everyone' or substringof('spo-grid-all-users', Member/LoginName)`,
-                    Expand: [
-                        "Member", "RoleDefinitionBindings"
-                    ]
-                }).batch(roles => {
-                    // Parse the role assignments
-                    Helper.Executor(roles.results, roleAssignment => {
-                        let roleDefinition = roleAssignment.RoleDefinitionBindings.results[0];
-                        let user: Types.SP.User = roleAssignment.Member as any;
+                    // Get the permissions
+                    batch.Items(item.Id).RoleAssignments().query({
+                        Filter: `Member/Title eq 'Everyone' or substringof('spo-grid-all-users', Member/LoginName)`,
+                        Expand: [
+                            "Member", "RoleDefinitionBindings"
+                        ]
+                    }).batch(roles => {
+                        // Parse the role assignments
+                        Helper.Executor(roles.results, roleAssignment => {
+                            let roleDefinition = roleAssignment.RoleDefinitionBindings.results[0];
+                            let user: Types.SP.User = roleAssignment.Member as any;
 
-                        // Add a row for this entry
-                        let roleItem = {
-                            Email: user.Email,
-                            FileName: item["FileLeafRef"],
-                            FileUrl: item["FileRef"],
-                            Group: "",
-                            GroupId: 0,
-                            GroupInfo: "",
-                            Id: user.Id,
-                            ItemId: item.Id,
-                            ListId: list.Id,
-                            ListName: list.Title,
-                            LoginName: user.LoginName,
-                            ListUrl: list.RootFolder.ServerRelativeUrl,
-                            Name: user.Title || user.LoginName,
-                            Role: roleDefinition.Name,
-                            RoleInfo: roleDefinition.Description || "",
-                            WebUrl: web.Url,
-                            WebTitle: web.Title
-                        };
-                        this._items.push(roleItem);
-                        this._dashboard.Datatable.addRow(roleItem);
+                            // Add a row for this entry
+                            let roleItem = {
+                                Email: user.Email,
+                                FileName: item["FileLeafRef"],
+                                FileUrl: item["FileRef"],
+                                Group: "",
+                                GroupId: 0,
+                                GroupInfo: "",
+                                Id: user.Id,
+                                ItemId: item.Id,
+                                ListId: list.Id,
+                                ListName: list.Title,
+                                LoginName: user.LoginName,
+                                ListUrl: list.RootFolder.ServerRelativeUrl,
+                                Name: user.Title || user.LoginName,
+                                Role: roleDefinition.Name,
+                                RoleInfo: roleDefinition.Description || "",
+                                WebUrl: web.Url,
+                                WebTitle: web.Title
+                            };
+                            this._items.push(roleItem);
+                            this._dashboard.Datatable.addRow(roleItem);
 
-                        // Increment the counter and update the dialog
-                        this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${ctrBatchJobs % 25}...`;
-                    });
-                }, ctrBatchJobs++ % 25 == 0);
+                            // Increment the counter and update the dialog
+                            this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${ctrBatchJobs % 25}...`;
+                        });
+                    }, ctrBatchJobs++ % 25 == 0);
+                }
             }).then(() => {
                 // Update the dialog
                 this._elSubNav.children[1].innerHTML = `Executing Batch Request for ${ctrBatchJobs} items...`;

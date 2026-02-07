@@ -558,22 +558,32 @@ export class DataSource {
     }
 
     // Loads the items for a list
-    static loadItems(webUrl, listName: string, query: Types.IODataQuery = {}, onItem?: (items: Types.SP.ListItemOData) => void): PromiseLike<Types.SP.ListItemOData[]> {
+    static loadItems(props: {
+        listId?: string;
+        listName?: string,
+        query: Types.IODataQuery,
+        onItem?: (items: Types.SP.ListItemOData) => void,
+        webUrl: string
+    }): PromiseLike<Types.SP.ListItemOData[]> {
         // Return a promise
         return new Promise((resolve, reject) => {
             // Default the settings
-            query.GetAllItems = true;
-            query.Top = query.Top || 5000;
+            props.query = props.query || {};
+            props.query.GetAllItems = true;
+            props.query.Top = props.query.Top || 5000;
 
-            // Get the list items
-            Web(webUrl, {
+            // Get the list
+            let web = Web(props.webUrl, {
                 disableProcessing: true,
                 requestDigest: DataSource.SiteContext.FormDigestValue,
-                callbackQuery: onItem ? items => {
+                callbackQuery: props.onItem ? items => {
                     // Call the event
-                    items.forEach(item => { onItem(item); });
+                    items.forEach(item => { props.onItem(item); });
                 } : null
-            }).Lists(listName).Items().query(query).execute(
+            });
+
+            // Get the items
+            (props.listName ? web.Lists(props.listName) : web.Lists().getById(props.listId)).Items().query(props.query).execute(
                 items => {
                     // Resolve the request
                     resolve(items.results);

@@ -92,22 +92,21 @@ export class DLP {
         this._elSubNav.children[0].innerHTML = "Analyzing Library";
         this._elSubNav.children[1].innerHTML = "Getting all files in this library...";
 
+        // Create the list for the batch requests
+        let batchRequests = 0;
+        let completed = 0;
+        let list = Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().getById(libId);
+
         // Get the item ids for this library
-        Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue, disableProcessing: true }).Lists(libTitle).Items().query({
-            Expand: ["Author"],
-            GetAllItems: true,
-            Select: ["Author/Title", "FileLeafRef", "FileRef", "File_x0020_Type", "Id"],
-            Top: 5000
-        }).execute(items => {
-            let batchRequests = 0;
-            let completed = 0;
-
-            // Update the dialog
-            this._elSubNav.children[1].innerHTML = "Creating batch job for files...";
-
-            // Parse the items and create the batch job
-            let list = Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(libTitle);
-            items["d"].results.forEach((item: Types.SP.ListItem) => {
+        let itemCounter = 0;
+        DataSource.loadItems({
+            webUrl,
+            listId: libId,
+            query: {
+                Expand: ["Author"],
+                Select: ["Author/Title", "FileLeafRef", "FileRef", "File_x0020_Type", "Id"],
+            },
+            onItem: item => {
                 // Create a batch request to get the dlp policy on this item
                 list.Items(item.Id).GetDlpPolicyTip().batch(result => {
                     // Ensure a policy exists
@@ -138,8 +137,11 @@ export class DLP {
                     // Increment the counter and update the dialog
                     this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${batchRequests}...`;
                 }, batchRequests++ % 25 == 0);
-            });
 
+                // Update the dialog
+                this._elSubNav.children[1].innerHTML = `Creating Batch Requests - Processed ${++itemCounter} items...`;
+            }
+        }).then(() => {
             // Update the dialog
             this._elSubNav.children[1].innerHTML = `Executing Batch Request for ${batchRequests} items...`;
 
@@ -173,60 +175,65 @@ export class DLP {
 
                     // Get the item ids for this library
                     let itemCounter = 0;
-                    DataSource.loadItems(webUrl, lib.Title, {
-                        Expand: ["Author"],
-                        Select: ["Author/Title", "FileLeafRef", "FileRef", "File_x0020_Type", "Id"]
-                    }, item => {
-                        let analyzeFile = true;
+                    DataSource.loadItems({
+                        webUrl,
+                        listId: lib.Id,
+                        query: {
+                            Expand: ["Author"],
+                            Select: ["Author/Title", "FileLeafRef", "FileRef", "File_x0020_Type", "Id"]
+                        },
+                        onItem: item => {
+                            let analyzeFile = true;
 
-                        // See if the file extensions are provided
-                        if (fileExtensions) {
-                            // Default the flag
-                            analyzeFile = false
+                            // See if the file extensions are provided
+                            if (fileExtensions) {
+                                // Default the flag
+                                analyzeFile = false
 
-                            // Loop through the file extensions
-                            fileExtensions.forEach(fileExt => {
-                                // Set the flag if there is match
-                                if (fileExt.toLowerCase() == item["File_x0020_Type"]?.toLowerCase()) { analyzeFile = true; }
-                            });
+                                // Loop through the file extensions
+                                fileExtensions.forEach(fileExt => {
+                                    // Set the flag if there is match
+                                    if (fileExt.toLowerCase() == item["File_x0020_Type"]?.toLowerCase()) { analyzeFile = true; }
+                                });
+                            }
+
+                            // See if we are analyzing this file
+                            if (analyzeFile) {
+                                // Create a batch request to get the dlp policy on this item
+                                list.Items(item.Id).GetDlpPolicyTip().batch(result => {
+                                    // Ensure a policy exists
+                                    if (typeof (result["GetDlpPolicyTip"]) === "undefined") {
+                                        // Parse the conditions
+                                        result.MatchedConditionDescriptions.results.forEach(condition => {
+                                            let dataItem: IDLPItem = {
+                                                AppliedActionsText: result.AppliedActionsText,
+                                                Author: item["Author"]?.Title,
+                                                ConditionDescription: condition,
+                                                FileExtension: item["File_x0020_Type"],
+                                                FileName: item["FileLeafRef"],
+                                                GeneralText: result.GeneralText,
+                                                LastProcessedTime: result.LastProcessedTime,
+                                                ListId: lib.Id,
+                                                ListTitle: lib.Title,
+                                                Path: item["FileRef"],
+                                                WebId: webId,
+                                                WebUrl: webUrl
+                                            };
+
+                                            // Append the data
+                                            this._items.push(dataItem);
+                                            this._dashboard.Datatable.addRow(dataItem);
+                                        });
+                                    }
+
+                                    // Increment the counter and update the dialog
+                                    this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${batchRequests}...`;
+                                }, batchRequests++ % 25 == 0);
+                            }
+
+                            // Update the dialog
+                            this._elSubNav.children[1].innerHTML = `Creating Batch Requests - Processed ${++itemCounter} items...`;
                         }
-
-                        // See if we are analyzing this file
-                        if (analyzeFile) {
-                            // Create a batch request to get the dlp policy on this item
-                            list.Items(item.Id).GetDlpPolicyTip().batch(result => {
-                                // Ensure a policy exists
-                                if (typeof (result["GetDlpPolicyTip"]) === "undefined") {
-                                    // Parse the conditions
-                                    result.MatchedConditionDescriptions.results.forEach(condition => {
-                                        let dataItem: IDLPItem = {
-                                            AppliedActionsText: result.AppliedActionsText,
-                                            Author: item["Author"]?.Title,
-                                            ConditionDescription: condition,
-                                            FileExtension: item["File_x0020_Type"],
-                                            FileName: item["FileLeafRef"],
-                                            GeneralText: result.GeneralText,
-                                            LastProcessedTime: result.LastProcessedTime,
-                                            ListId: lib.Id,
-                                            ListTitle: lib.Title,
-                                            Path: item["FileRef"],
-                                            WebId: webId,
-                                            WebUrl: webUrl
-                                        };
-
-                                        // Append the data
-                                        this._items.push(dataItem);
-                                        this._dashboard.Datatable.addRow(dataItem);
-                                    });
-                                }
-
-                                // Increment the counter and update the dialog
-                                this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${batchRequests}...`;
-                            }, batchRequests++ % 25 == 0);
-                        }
-
-                        // Update the dialog
-                        this._elSubNav.children[1].innerHTML = `Creating Batch Requests - Processed ${++itemCounter} items...`;
                     }).then(() => {
                         // Update the dialog
                         this._elSubNav.children[1].innerHTML = `Executing Batch Request for ${batchRequests} items...`;

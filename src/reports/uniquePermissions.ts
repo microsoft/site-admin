@@ -55,87 +55,92 @@ export class UniquePermissions {
 
             // Get the items where it has broken inheritance
             let itemCounter = 0;
-            DataSource.loadItems(webUrl, list.Title, { Select }, item => {
-                // Update the dialog
-                this._elSubNav.children[1].innerHTML = `Creating Batch Requests - Processed ${++itemCounter} items...`;
+            DataSource.loadItems({
+                webUrl,
+                listId: list.Id,
+                query: { Select },
+                onItem: item => {
+                    // Update the dialog
+                    this._elSubNav.children[1].innerHTML = `Creating Batch Requests - Processed ${++itemCounter} items...`;
 
-                // See if this item doesn't have unique permissions
-                if (!item.HasUniqueRoleAssignments) { return; }
+                    // See if this item doesn't have unique permissions
+                    if (!item.HasUniqueRoleAssignments) { return; }
 
-                // Get the permissions
-                batch.Items(item.Id).RoleAssignments().query({
-                    Expand: [
-                        "Member/Users", "RoleDefinitionBindings"
-                    ]
-                }).batch(roles => {
-                    // Parse the role assignments
-                    Helper.Executor(roles.results, roleAssignment => {
-                        // Parse the role definitions and create a list of permissions
-                        let roleDefinitions = [];
-                        for (let i = 0; i < roleAssignment.RoleDefinitionBindings.results.length; i++) {
-                            // Add the permission name
-                            roleDefinitions.push(roleAssignment.RoleDefinitionBindings.results[i].Name);
-                        }
-
-                        // See if this is a group
-                        if (roleAssignment.Member["Users"] != null) {
-                            let group: Types.SP.GroupOData = roleAssignment.Member as any;
-
-                            // Parse the users and create a list of members
-                            let members = [];
-                            for (let i = 0; i < group.Users.results.length; i++) {
-                                let user = group.Users.results[i];
-
-                                // Add the user information
-                                members.push(user.Email || user.UserPrincipalName || user.Title);
+                    // Get the permissions
+                    batch.Items(item.Id).RoleAssignments().query({
+                        Expand: [
+                            "Member/Users", "RoleDefinitionBindings"
+                        ]
+                    }).batch(roles => {
+                        // Parse the role assignments
+                        Helper.Executor(roles.results, roleAssignment => {
+                            // Parse the role definitions and create a list of permissions
+                            let roleDefinitions = [];
+                            for (let i = 0; i < roleAssignment.RoleDefinitionBindings.results.length; i++) {
+                                // Add the permission name
+                                roleDefinitions.push(roleAssignment.RoleDefinitionBindings.results[i].Name);
                             }
 
-                            // Add a row for this entry
-                            let listItem = {
-                                FileName: item["FileLeafRef"],
-                                FileUrl: item["FileRef"],
-                                ItemId: item.Id,
-                                ListId: list.Id,
-                                ListName: list.Title,
-                                ListType: list.BaseTemplate,
-                                ListUrl: list.RootFolder.ServerRelativeUrl,
-                                ListViewUrl: list.DefaultDisplayFormUrl,
-                                SiteGroupId: group.Id,
-                                SiteGroupName: group.LoginName,
-                                SiteGroupPermission: roleDefinitions.join(', '),
-                                SiteGroupUrl: DataSource.SiteContext.SiteFullUrl + "/_layouts/15/people.aspx?MembershipGroupId=" + group.Id,
-                                SiteGroupUsers: members.join(', '),
-                                WebUrl: webUrl
-                            };
-                            this._items.push(listItem);
-                            this._dashboard.Datatable.addRow(listItem);
-                        } else {
-                            let user: Types.SP.User = roleAssignment.Member as any;
+                            // See if this is a group
+                            if (roleAssignment.Member["Users"] != null) {
+                                let group: Types.SP.GroupOData = roleAssignment.Member as any;
 
-                            // Add a row for this entry
-                            let listItem = {
-                                FileName: item["FileLeafRef"],
-                                FileUrl: item["FileRef"],
-                                ItemId: item.Id,
-                                ListId: list.Id,
-                                ListName: list.Title,
-                                ListType: list.BaseTemplate,
-                                ListUrl: list.RootFolder.ServerRelativeUrl,
-                                ListViewUrl: list.DefaultDisplayFormUrl,
-                                RoleAssignmentId: roleAssignment.PrincipalId,
-                                SiteGroupId: user.Id,
-                                SiteGroupName: user.Email || user.UserPrincipalName || user.Title,
-                                SiteGroupPermission: roleDefinitions.join(', '),
-                                WebUrl: webUrl
-                            };
-                            this._items.push(listItem);
-                            this._dashboard.Datatable.addRow(listItem);
-                        }
+                                // Parse the users and create a list of members
+                                let members = [];
+                                for (let i = 0; i < group.Users.results.length; i++) {
+                                    let user = group.Users.results[i];
 
-                        // Increment the counter and update the dialog
-                        this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${ctrBatchJobs % 25}...`;
-                    });
-                }, ctrBatchJobs++ % 25 == 0);
+                                    // Add the user information
+                                    members.push(user.Email || user.UserPrincipalName || user.Title);
+                                }
+
+                                // Add a row for this entry
+                                let listItem = {
+                                    FileName: item["FileLeafRef"],
+                                    FileUrl: item["FileRef"],
+                                    ItemId: item.Id,
+                                    ListId: list.Id,
+                                    ListName: list.Title,
+                                    ListType: list.BaseTemplate,
+                                    ListUrl: list.RootFolder.ServerRelativeUrl,
+                                    ListViewUrl: list.DefaultDisplayFormUrl,
+                                    SiteGroupId: group.Id,
+                                    SiteGroupName: group.LoginName,
+                                    SiteGroupPermission: roleDefinitions.join(', '),
+                                    SiteGroupUrl: DataSource.SiteContext.SiteFullUrl + "/_layouts/15/people.aspx?MembershipGroupId=" + group.Id,
+                                    SiteGroupUsers: members.join(', '),
+                                    WebUrl: webUrl
+                                };
+                                this._items.push(listItem);
+                                this._dashboard.Datatable.addRow(listItem);
+                            } else {
+                                let user: Types.SP.User = roleAssignment.Member as any;
+
+                                // Add a row for this entry
+                                let listItem = {
+                                    FileName: item["FileLeafRef"],
+                                    FileUrl: item["FileRef"],
+                                    ItemId: item.Id,
+                                    ListId: list.Id,
+                                    ListName: list.Title,
+                                    ListType: list.BaseTemplate,
+                                    ListUrl: list.RootFolder.ServerRelativeUrl,
+                                    ListViewUrl: list.DefaultDisplayFormUrl,
+                                    RoleAssignmentId: roleAssignment.PrincipalId,
+                                    SiteGroupId: user.Id,
+                                    SiteGroupName: user.Email || user.UserPrincipalName || user.Title,
+                                    SiteGroupPermission: roleDefinitions.join(', '),
+                                    WebUrl: webUrl
+                                };
+                                this._items.push(listItem);
+                                this._dashboard.Datatable.addRow(listItem);
+                            }
+
+                            // Increment the counter and update the dialog
+                            this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${ctrBatchJobs % 25}...`;
+                        });
+                    }, ctrBatchJobs++ % 25 == 0);
+                }
             }).then(() => {
                 // Update the dialog
                 this._elSubNav.children[1].innerHTML = `Executing Batch Request for ${ctrBatchJobs} items...`;
