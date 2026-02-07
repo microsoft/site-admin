@@ -88,46 +88,61 @@ export class SensitivityLabels {
 
             // Parse the libraries
             Helper.Executor(libraries, lib => {
+                let fileItems: ISensitivityLabelItem[] = [];
+
                 // Update the dialog
                 this._elSubNav.children[0].innerHTML = `${siteText} [Analyzing Library ${++counter} of ${libraries.length}]: ${lib.Title}`;
 
                 // Return a promise
                 return new Promise(resolve => {
                     // Update the dialog
-                    this._elSubNav.children[1].innerHTML = `Loading the files for this library...`;
+                    this._elSubNav.children[1].innerHTML = `Analyzing the files for this library...`;
 
                     // Get the files for this library
-                    DataSource.loadFiles(webId, lib.Title).then(files => {
+                    let filesProcessed = 0;
+                    DataSource.loadFiles(webId, lib.Title, null, (file: Types.Microsoft.Graph.driveItem) => {
+                        let hasLabel = file.sensitivityLabel && file.sensitivityLabel.displayName ? true : false;
+
                         // Update the dialog
-                        this._elSubNav.children[1].innerHTML = `Analyzing the files for this library...`;
+                        this._elSubNav.children[1].innerHTML = `Analyzing the files for this library. Files Analyzed: ${++filesProcessed}`;
 
-                        // Parse the files
-                        files.forEach(file => {
-                            let hasLabel = file.sensitivityLabel && file.sensitivityLabel.displayName ? true : false;
+                        // Add the file, based on the flags
+                        if ((withLabelsFl && hasLabel) || (withoutLabelsFl && !hasLabel)) {
+                            let fileInfo = file.name.split('.');
+                            let folderPath = file.parentReference.path.split('root:')[1];
 
-                            // Add the file, based on the flags
-                            if ((withLabelsFl && hasLabel) || (withoutLabelsFl && !hasLabel)) {
-                                let fileInfo = file.name.split('.');
-                                let folderPath = file.parentReference.path.split('root:')[1];
+                            // Append the data
+                            let fileItem = {
+                                Author: file.createdBy.user["email"] || file.createdBy.user["displayName"],
+                                File: file,
+                                FileExtension: fileInfo[fileInfo.length - 1],
+                                FileName: file.name,
+                                ListId: lib.Id,
+                                ListTitle: lib.Title,
+                                Path: `${lib.RootFolder.ServerRelativeUrl}${folderPath}/${file.name}`,
+                                SensitivityLabel: file.sensitivityLabel.displayName,
+                                SensitivityLabelId: file.sensitivityLabel.id,
+                                WebId: webId,
+                                WebUrl: webUrl
+                            };
 
-                                // Append the data
-                                let fileItem = {
-                                    Author: file.createdBy.user["email"],
-                                    File: file,
-                                    FileExtension: fileInfo[fileInfo.length - 1],
-                                    FileName: file.name,
-                                    ListId: lib.Id,
-                                    ListTitle: lib.Title,
-                                    Path: `${lib.RootFolder.ServerRelativeUrl}${folderPath}/${file.name}`,
-                                    SensitivityLabel: file.sensitivityLabel.displayName,
-                                    SensitivityLabelId: file.sensitivityLabel.id,
-                                    WebId: webId,
-                                    WebUrl: webUrl
-                                };
-                                this._items.push(fileItem);
-                                this._dashboard.Datatable.addRow(fileItem);
+                            // Save a reference to the item
+                            this._items.push(fileItem);
+                            fileItems.push(fileItem);
+
+                            // See if we have hit 100 items
+                            if (fileItems.length >= 100) {
+                                // Add the items to the datatable
+                                this._dashboard.Datatable.addRow(fileItems);
+                                fileItems = [];
                             }
-                        });
+                        }
+                    }).then(() => {
+                        // See if items exist
+                        if (fileItems.length > 0) {
+                            // Add the items to the datatable
+                            this._dashboard.Datatable.addRow(fileItems);
+                        }
 
                         // Check the next library
                         resolve(null);

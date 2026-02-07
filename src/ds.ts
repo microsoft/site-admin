@@ -493,12 +493,12 @@ export class DataSource {
     }
 
     // Loads the files for a drive
-    static loadFiles(webId: string, listName?: string, folder?: Types.SP.Folder): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
+    static loadFiles(webId: string, listName?: string, folder?: Types.SP.Folder, onFile?: (file: Types.Microsoft.Graph.driveItem) => void): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
         let files = [];
 
         // Loads the files for a drive
         let getFiles = (driveId: string, folder: string = "") => {
-            let drive = v2.sites({ siteId: this.Site.Id, webId }).drives(driveId);
+            let drive = v2.sites({ siteId: this.Site.Id, webId, targetInfo: { disableProcessing: true } }).drives(driveId);
 
             // Return a promise
             return new Promise(resolve => {
@@ -510,9 +510,12 @@ export class DataSource {
                     Top: 5000
                 }).execute(resp => {
                     // Parse the items
-                    Helper.Executor(resp.results, driveItem => {
+                    Helper.Executor(resp["d"].value, (driveItem: Types.Microsoft.Graph.driveItem) => {
                         // See if this is a file
                         if (driveItem.file) {
+                            // Process the file
+                            onFile ? onFile(driveItem) : null;
+
                             // Append the file
                             files.push(driveItem);
                         } else {
@@ -551,6 +554,32 @@ export class DataSource {
                     return getFiles(drive.id, folder?.Name);
                 }).then(() => { resolve(files); });
             }, reject);
+        });
+    }
+
+    // Loads the items for a list
+    static loadItems(webUrl, listName: string, query: Types.IODataQuery = {}, onItem?: (items: Types.SP.ListItemOData) => void): PromiseLike<Types.SP.ListItemOData[]> {
+        // Return a promise
+        return new Promise((resolve, reject) => {
+            // Default the settings
+            query.GetAllItems = true;
+            query.Top = query.Top || 5000;
+
+            // Get the list items
+            Web(webUrl, {
+                disableProcessing: true,
+                requestDigest: DataSource.SiteContext.FormDigestValue,
+                callbackQuery: onItem ? items => {
+                    // Call the event
+                    items.forEach(item => { onItem(item); });
+                } : null
+            }).Lists(listName).Items().query(query).execute(
+                items => {
+                    // Resolve the request
+                    resolve(items.results);
+                },
+                reject
+            )
         });
     }
 
