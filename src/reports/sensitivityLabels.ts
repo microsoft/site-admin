@@ -281,6 +281,9 @@ export class SensitivityLabels {
                 // Set the flag
                 isProcessing = true;
 
+                // Update the dialog
+                this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] Labelling File: ${file.name}`;
+
                 // Label the file
                 this.labelFile(file, overrideLabelFl, label.text, label.value, justification, responses).then(() => {
                     // Set the flag
