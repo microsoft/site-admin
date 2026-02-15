@@ -1,7 +1,7 @@
 import { List, LoadingDialog } from "dattatable";
 import {
     Components, ContextInfo, DirectorySession, GroupSiteManager, Helper,
-    Search, Site, SPTypes, Types, Web, v2
+    Search, SensitivityLabels, Site, SPTypes, Types, Web, v2
 } from "gd-sprest-bs";
 import { Security } from "./security";
 import Strings from "./strings";
@@ -45,6 +45,7 @@ export interface ISensitivityLabel {
     desc: string;
     id: string;
     name: string;
+    tooltip: string;
 }
 
 /**
@@ -414,6 +415,32 @@ export class DataSource {
         });
     }
 
+    // Loads the drive for a list name
+    static getDriveIdForList(webId: string, listName: string): PromiseLike<string> {
+        // Return a promise
+        return new Promise((resolve, reject) => {
+            // Get the libraries for this site
+            v2.sites({ siteId: DataSource.Site.Id, webId }).drives().execute(resp => {
+                // Find the target drive
+                let drive = resp.results.find(a => { return a.name == listName; });
+
+                // Resolve the request
+                resolve(drive?.id);
+            }, reject);
+        });
+    }
+
+    // Returns the group id from the login name
+    static getGroupId(loginName: string): string {
+        // Get the group id from the login name
+        let userInfo = loginName.split('|');
+        let groupInfo = userInfo[userInfo.length - 1];
+        let groupId = groupInfo.split('_')[0];
+
+        // Ensure it's a guid and return null if it's not
+        return /^[{]?[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}[}]?$/.test(groupId) ? groupId : null;
+    }
+
     // List
     private static _list: List<IListItem> = null;
     static get List(): List<IListItem> { return this._list; }
@@ -479,17 +506,6 @@ export class DataSource {
                 errorFl ? reject() : resolve({ admins, owners })
             });
         });
-    }
-
-    // Returns the group id from the login name
-    static getGroupId(loginName: string): string {
-        // Get the group id from the login name
-        let userInfo = loginName.split('|');
-        let groupInfo = userInfo[userInfo.length - 1];
-        let groupId = groupInfo.split('_')[0];
-
-        // Ensure it's a guid and return null if it's not
-        return /^[{]?[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}[}]?$/.test(groupId) ? groupId : null;
     }
 
     // Loads the files for a drive
@@ -609,45 +625,87 @@ export class DataSource {
     private static loadSensitivityLabels() {
         // Return a promise
         return new Promise(resolve => {
-            // Load the group context
-            GroupSiteManager().getGroupCreationContext().execute(resp => {
-                // Clear the labels
-                this._sensitivityLabels = [];
-                this._sensitivityLabelItems = [
-                    {
-                        text: "",
-                        value: null
+            // Clear the labels
+            this._sensitivityLabels = [];
+            this._sensitivityLabelItems = [
+                {
+                    text: "",
+                    value: null
+                }
+            ];
+
+            // Get the sensitivity labels for the user
+            SensitivityLabels.getLabelsForUser().execute(labels => {
+                // Parse the labels
+                for (let i = 0; i < labels.results.length; i++) {
+                    let label = labels.results[i];
+
+                    // Parse the sub-labels
+                    for (let j = 0; j < label.sublabels.length; j++) {
+                        let subLabel = label.sublabels[j];
+                        let labelName = `${label.displayName} \\ ${subLabel.displayName}`;
+
+                        // Append the label and item
+                        this._sensitivityLabels.push({
+                            desc: subLabel.description,
+                            id: subLabel.id,
+                            name: labelName,
+                            tooltip: subLabel.tooltip
+                        });
+                        this._sensitivityLabelItems.push({
+                            data: subLabel,
+                            text: labelName,
+                            value: subLabel.id
+                        });
                     }
-                ];
-
-                // Parse the sensitivity labels
-                for (let i = 0; i < resp.DataClassificationOptionsNew.results.length; i++) {
-                    let result = resp.DataClassificationOptionsNew.results[i];
-                    let desc = resp.ClassificationDescriptionsNew.results.filter(i => { return i.Key == result.Value; })[0];
-
-                    // Append the label and item
-                    this._sensitivityLabels.push({
-                        desc: desc ? desc.Value : "",
-                        id: result.Key,
-                        name: result.Value
-                    });
-                    this._sensitivityLabelItems.push({
-                        text: result.Value,
-                        value: result.Key
-                    });
                 }
 
-                // Resolve the request
                 resolve(null);
-            }, resolve);
+            }, () => {
+                // Load the group context
+                GroupSiteManager().getGroupCreationContext().execute(resp => {
+                    // Parse the sensitivity labels
+                    for (let i = 0; i < resp.DataClassificationOptionsNew.results.length; i++) {
+                        let result = resp.DataClassificationOptionsNew.results[i];
+                        let desc = resp.ClassificationDescriptionsNew.results.filter(i => { return i.Key == result.Value; })[0];
+
+                        // Append the label and item
+                        this._sensitivityLabels.push({
+                            desc: desc ? desc.Value : "",
+                            id: result.Key,
+                            name: result.Value,
+                            tooltip: ""
+                        });
+                        this._sensitivityLabelItems.push({
+                            text: result.Value,
+                            value: result.Key
+                        });
+                    }
+
+                    // Resolve the request
+                    resolve(null);
+                }, resolve);
+            });
+        });
+    }
+
+    // Site Context
+    private static _siteContext: Types.SP.ContextWebInformation = null;
+    static get SiteContext(): Types.SP.ContextWebInformation { return this._siteContext; }
+    static refreshContext() {
+        // Attach to the refresh token event in the library
+        ContextInfo.enableRefreshToken(() => {
+            // Get the web context of the current web
+            ContextInfo.getWeb(this._siteContext.WebFullUrl).execute(context => {
+                // Set the site context
+                this._siteContext = context.GetContextWebInformation;
+            });
         });
     }
 
     // Loads the site collection information
     private static _site: Types.SP.SiteOData = null;
     static get Site(): Types.SP.SiteOData { return this._site; }
-    private static _siteContext: Types.SP.ContextWebInformation = null;
-    static get SiteContext(): Types.SP.ContextWebInformation { return this._siteContext; }
     static get SiteCustomScriptsEnabled(): boolean { return Helper.hasPermissions(DataSource.Site.RootWeb.EffectiveBasePermissions, SPTypes.BasePermissionTypes.AddAndCustomizePages); }
     private static _siteItems: Components.IDropdownItem[] = null;
     static get SiteItems(): Components.IDropdownItem[] { return this._siteItems; }

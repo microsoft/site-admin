@@ -157,12 +157,14 @@ export class SensitivityLabels {
         // See if this file has a sensitivity label
         if (file.sensitivityLabel?.id && !overrideLabelFl) {
             // Add a response
-            responses.push({
+            let response: ISetSensitivityLabelResponse = {
                 errorFl: false,
                 fileName: file.name,
                 message: `Skipping file, it's already labelled: '${file.sensitivityLabel.displayName}'.`,
                 url: file.webUrl
-            });
+            };
+            responses.push(response);
+            this._dashboard.Datatable.addRow(response);
             return;
         }
 
@@ -186,12 +188,14 @@ export class SensitivityLabels {
                 // Success
                 () => {
                     // Add the response
-                    responses.push({
+                    let response: ISetSensitivityLabelResponse = {
                         errorFl: false,
                         fileName: file.name,
                         message: `The file was successfully labelled: ${label}.`,
                         url: file.webUrl
-                    });
+                    };
+                    responses.push(response);
+                    this._dashboard.Datatable.addRow(response);
 
                     // Resolve the request
                     resolve(responses);
@@ -205,13 +209,15 @@ export class SensitivityLabels {
                     catch { error = err; }
 
                     // Add the response
-                    responses.push({
+                    let response: ISetSensitivityLabelResponse = {
                         errorFl: true,
                         error: err,
                         fileName: file.name,
                         message: `There was an error tagging this file: ${error}`,
                         url: file.webUrl
-                    });
+                    };
+                    responses.push(response);
+                    this._dashboard.Datatable.addRow(response);
 
                     // Resolve the request
                     resolve(responses);
@@ -224,30 +230,97 @@ export class SensitivityLabels {
     private static labelFilesInFolder(webId: string, listName: string, folder: Types.SP.Folder, label: Components.IDropdownItem, overrideLabelFl: boolean, justification: string) {
         let responses: ISetSensitivityLabelResponse[] = [];
 
-        // Show a loading dialog
-        LoadingDialog.setHeader("Loading Items");
-        LoadingDialog.setBody("Loading the files for this library...");
-        LoadingDialog.show();
+        // Show the responses
+        this.showResponses(responses);
+
+        // Update the dialog
+        this._elSubNav.children[0].innerHTML = `Loading files from library: ${listName}`;
+
+        // Process the labels as we load the files
+        let fileCounter = 0;
+        let filesToProcess: Types.Microsoft.Graph.driveItem[] = [];
+        let isRunning = false;
+        let processedCounter = 0;
+        let startProcess = (): PromiseLike<void> => {
+            // Return a promise
+            return new Promise(resolve => {
+                // See if we are already running
+                if (isRunning) {
+                    // Resolve the request
+                    resolve();
+                    return;
+                }
+
+                // Set the flags
+                let isProcessing = false;
+                isRunning = true;
+
+                // Loop while there are files to process
+                let loopIdx = setInterval(() => {
+                    // Do nothing if we are processing an item
+                    if (isProcessing) { return; }
+
+                    // Get the file to process
+                    let file = filesToProcess.splice(0, 1)[0];
+
+                    // See if this file has a sensitivity label
+                    if (file.sensitivityLabel?.id && !overrideLabelFl) {
+                        // Add a response
+                        let response: ISetSensitivityLabelResponse = {
+                            errorFl: false,
+                            fileName: file.name,
+                            message: `Skipping file, it's already labelled: '${file.sensitivityLabel.displayName}'.`,
+                            url: file.webUrl
+                        };
+                        responses.push(response);
+                        this._dashboard.Datatable.addRow(response);
+
+                        // Update the dialog
+                        this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] ${response.message}`;
+
+                        // Check the next file
+                        return;
+                    }
+
+                    // Set the flag
+                    isProcessing = true;
+
+                    // Label the file
+                    this.labelFile(file, overrideLabelFl, label.text, label.value, justification, responses).then(() => {
+                        // Set the flag
+                        isProcessing = false;
+
+                        // Update the dialog
+                        this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] File Labelled: ${file.name}`;
+
+                        // See if we are done
+                        if (filesToProcess.length == 0) {
+                            // Stop the loop
+                            clearInterval(loopIdx);
+
+                            // Set the flag
+                            isRunning = false;
+                        }
+                    });
+                }, 10);
+            });
+        }
 
         // Load the files for this drive
-        DataSource.loadFiles(webId, listName, folder).then(files => {
-            // Update the loading dialog
-            LoadingDialog.setBody("Applying the sensitivity labels to the files...");
+        DataSource.loadFiles(webId, listName, folder, file => {
+            // Add the file to process
+            filesToProcess.push(file);
 
-            // Parse the files
-            let counter = 0;
-            Helper.Executor(files, file => {
-                // Update the loading dialog
-                LoadingDialog.setBody(`Processing ${++counter} of ${files.length} files...`);
+            // Update the dialog
+            this._elSubNav.children[0].innerHTML = `Loading files from library: ${listName} [Files Loaded: ${++fileCounter}]`;
 
-                // Label the file
-                return this.labelFile(file, overrideLabelFl, label.text, label.value, justification, responses);
-            }).then(() => {
-                // Show the responses
-                this.showResponses(responses);
-
-                // Hide the dialog
-                LoadingDialog.hide();
+            // Ensure the process is running
+            startProcess();
+        }).then(() => {
+            // Ensure the process is running
+            startProcess().then(() => {
+                // Clear the sub-nav
+                this._elSubNav.classList.add("d-none");
             });
         });
     }
@@ -726,35 +799,47 @@ export class SensitivityLabels {
         Modal.setType(Components.ModalTypes.Full);
         Modal.setHeader("Set Sensitivity Label Results");
 
-        // Set the body
-        new DataTable({
+        // Set the dashboard
+        this._dashboard = new Dashboard({
             el: Modal.BodyElement,
-            rows: responses,
-            columns: [
-                {
-                    name: "errorFl",
-                    title: "Error?"
-                },
-                {
-                    name: "",
-                    title: "File Name",
-                    onRenderCell: (el, col, item: ISetSensitivityLabelResponse) => {
-                        // Render a link to the file
-                        Components.Button({
-                            el,
-                            text: item.fileName,
-                            href: item.url,
-                            target: "_blank",
-                            type: Components.ButtonTypes.OutlineLink
-                        });
+            navigation: {
+                title: "Senstivity Labels",
+                showFilter: false
+            },
+            table: {
+                rows: responses,
+                columns: [
+                    {
+                        name: "errorFl",
+                        title: "Error?"
+                    },
+                    {
+                        name: "",
+                        title: "File Name",
+                        onRenderCell: (el, col, item: ISetSensitivityLabelResponse) => {
+                            // Render a link to the file
+                            Components.Button({
+                                el,
+                                text: item.fileName,
+                                href: item.url,
+                                target: "_blank",
+                                type: Components.ButtonTypes.OutlineLink
+                            });
+                        }
+                    },
+                    {
+                        name: "message",
+                        title: "Status Message"
                     }
-                },
-                {
-                    name: "message",
-                    title: "Status Message"
-                }
-            ]
+                ]
+            }
         });
+
+        // Set the sub-nav element
+        this._elSubNav = Modal.BodyElement.querySelector("#sub-navigation");
+        this._elSubNav.classList.remove("d-none");
+        this._elSubNav.classList.add("my-2");
+        this._elSubNav.innerHTML = `<div class="h6"></div><div></div>`;
 
         // Set the footer
         Components.TooltipGroup({
