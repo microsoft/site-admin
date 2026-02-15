@@ -241,69 +241,67 @@ export class SensitivityLabels {
         let filesToProcess: Types.Microsoft.Graph.driveItem[] = [];
         let isRunning = false;
         let processedCounter = 0;
-        let startProcess = (): PromiseLike<void> => {
-            // Return a promise
-            return new Promise(resolve => {
-                // See if we are already running
-                if (isRunning) {
-                    // Resolve the request
-                    resolve();
+        let startProcess = (callback?: () => void): PromiseLike<void> => {
+            let onCompleted = callback;
+
+            // Do nothing if we are already running
+            if (isRunning) { return; }
+
+            // Set the flags
+            let isProcessing = false;
+            isRunning = true;
+
+            // Loop while there are files to process
+            let loopIdx = setInterval(() => {
+                // Do nothing if we are processing an item
+                if (isProcessing) { return; }
+
+                // Get the file to process
+                let file = filesToProcess.splice(0, 1)[0];
+
+                // See if this file has a sensitivity label
+                if (file.sensitivityLabel?.id && !overrideLabelFl) {
+                    // Add a response
+                    let response: ISetSensitivityLabelResponse = {
+                        errorFl: false,
+                        fileName: file.name,
+                        message: `Skipping file, it's already labelled: '${file.sensitivityLabel.displayName}'.`,
+                        url: file.webUrl
+                    };
+                    responses.push(response);
+                    this._dashboard.Datatable.addRow(response);
+
+                    // Update the dialog
+                    this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] ${response.message}`;
+
+                    // Check the next file
                     return;
                 }
 
-                // Set the flags
-                let isProcessing = false;
-                isRunning = true;
+                // Set the flag
+                isProcessing = true;
 
-                // Loop while there are files to process
-                let loopIdx = setInterval(() => {
-                    // Do nothing if we are processing an item
-                    if (isProcessing) { return; }
-
-                    // Get the file to process
-                    let file = filesToProcess.splice(0, 1)[0];
-
-                    // See if this file has a sensitivity label
-                    if (file.sensitivityLabel?.id && !overrideLabelFl) {
-                        // Add a response
-                        let response: ISetSensitivityLabelResponse = {
-                            errorFl: false,
-                            fileName: file.name,
-                            message: `Skipping file, it's already labelled: '${file.sensitivityLabel.displayName}'.`,
-                            url: file.webUrl
-                        };
-                        responses.push(response);
-                        this._dashboard.Datatable.addRow(response);
-
-                        // Update the dialog
-                        this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] ${response.message}`;
-
-                        // Check the next file
-                        return;
-                    }
-
+                // Label the file
+                this.labelFile(file, overrideLabelFl, label.text, label.value, justification, responses).then(() => {
                     // Set the flag
-                    isProcessing = true;
+                    isProcessing = false;
 
-                    // Label the file
-                    this.labelFile(file, overrideLabelFl, label.text, label.value, justification, responses).then(() => {
+                    // Update the dialog
+                    this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] File Labelled: ${file.name}`;
+
+                    // See if we are done
+                    if (filesToProcess.length == 0) {
+                        // Stop the loop
+                        clearInterval(loopIdx);
+
                         // Set the flag
-                        isProcessing = false;
+                        isRunning = false;
 
-                        // Update the dialog
-                        this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] File Labelled: ${file.name}`;
-
-                        // See if we are done
-                        if (filesToProcess.length == 0) {
-                            // Stop the loop
-                            clearInterval(loopIdx);
-
-                            // Set the flag
-                            isRunning = false;
-                        }
-                    });
-                }, 10);
-            });
+                        // Call the event
+                        onCompleted ? onCompleted() : null;
+                    }
+                });
+            }, 10);
         }
 
         // Load the files for this drive
@@ -318,7 +316,7 @@ export class SensitivityLabels {
             startProcess();
         }).then(() => {
             // Ensure the process is running
-            startProcess().then(() => {
+            startProcess(() => {
                 // Clear the sub-nav
                 this._elSubNav.classList.add("d-none");
             });
