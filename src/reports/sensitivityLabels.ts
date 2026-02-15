@@ -88,46 +88,61 @@ export class SensitivityLabels {
 
             // Parse the libraries
             Helper.Executor(libraries, lib => {
+                let fileItems: ISensitivityLabelItem[] = [];
+
                 // Update the dialog
                 this._elSubNav.children[0].innerHTML = `${siteText} [Analyzing Library ${++counter} of ${libraries.length}]: ${lib.Title}`;
 
                 // Return a promise
                 return new Promise(resolve => {
                     // Update the dialog
-                    this._elSubNav.children[1].innerHTML = `Loading the files for this library...`;
+                    this._elSubNav.children[1].innerHTML = `Analyzing the files for this library...`;
 
                     // Get the files for this library
-                    DataSource.loadFiles(webId, lib.Title).then(files => {
+                    let filesProcessed = 0;
+                    DataSource.loadFiles(webId, lib.Title, null, (file: Types.Microsoft.Graph.driveItem) => {
+                        let hasLabel = file.sensitivityLabel && file.sensitivityLabel.displayName ? true : false;
+
                         // Update the dialog
-                        this._elSubNav.children[1].innerHTML = `Analyzing the files for this library...`;
+                        this._elSubNav.children[1].innerHTML = `Analyzing the files for this library. Files Analyzed: ${++filesProcessed}`;
 
-                        // Parse the files
-                        files.forEach(file => {
-                            let hasLabel = file.sensitivityLabel && file.sensitivityLabel.displayName ? true : false;
+                        // Add the file, based on the flags
+                        if ((withLabelsFl && hasLabel) || (withoutLabelsFl && !hasLabel)) {
+                            let fileInfo = file.name.split('.');
+                            let folderPath = file.parentReference.path.split('root:')[1];
 
-                            // Add the file, based on the flags
-                            if ((withLabelsFl && hasLabel) || (withoutLabelsFl && !hasLabel)) {
-                                let fileInfo = file.name.split('.');
-                                let folderPath = file.parentReference.path.split('root:')[1];
+                            // Append the data
+                            let fileItem = {
+                                Author: file.createdBy.user["email"] || file.createdBy.user["displayName"],
+                                File: file,
+                                FileExtension: fileInfo[fileInfo.length - 1],
+                                FileName: file.name,
+                                ListId: lib.Id,
+                                ListTitle: lib.Title,
+                                Path: `${lib.RootFolder.ServerRelativeUrl}${folderPath}/${file.name}`,
+                                SensitivityLabel: file.sensitivityLabel.displayName,
+                                SensitivityLabelId: file.sensitivityLabel.id,
+                                WebId: webId,
+                                WebUrl: webUrl
+                            };
 
-                                // Append the data
-                                let fileItem = {
-                                    Author: file.createdBy.user["email"],
-                                    File: file,
-                                    FileExtension: fileInfo[fileInfo.length - 1],
-                                    FileName: file.name,
-                                    ListId: lib.Id,
-                                    ListTitle: lib.Title,
-                                    Path: `${lib.RootFolder.ServerRelativeUrl}${folderPath}/${file.name}`,
-                                    SensitivityLabel: file.sensitivityLabel.displayName,
-                                    SensitivityLabelId: file.sensitivityLabel.id,
-                                    WebId: webId,
-                                    WebUrl: webUrl
-                                };
-                                this._items.push(fileItem);
-                                this._dashboard.Datatable.addRow(fileItem);
+                            // Save a reference to the item
+                            this._items.push(fileItem);
+                            fileItems.push(fileItem);
+
+                            // See if we have hit 100 items
+                            if (fileItems.length >= 100) {
+                                // Add the items to the datatable
+                                this._dashboard.Datatable.addRow(fileItems);
+                                fileItems = [];
                             }
-                        });
+                        }
+                    }).then(() => {
+                        // See if items exist
+                        if (fileItems.length > 0) {
+                            // Add the items to the datatable
+                            this._dashboard.Datatable.addRow(fileItems);
+                        }
 
                         // Check the next library
                         resolve(null);
@@ -142,12 +157,14 @@ export class SensitivityLabels {
         // See if this file has a sensitivity label
         if (file.sensitivityLabel?.id && !overrideLabelFl) {
             // Add a response
-            responses.push({
+            let response: ISetSensitivityLabelResponse = {
                 errorFl: false,
                 fileName: file.name,
                 message: `Skipping file, it's already labelled: '${file.sensitivityLabel.displayName}'.`,
                 url: file.webUrl
-            });
+            };
+            responses.push(response);
+            this._dashboard.Datatable.addRow(response);
             return;
         }
 
@@ -171,12 +188,14 @@ export class SensitivityLabels {
                 // Success
                 () => {
                     // Add the response
-                    responses.push({
+                    let response: ISetSensitivityLabelResponse = {
                         errorFl: false,
                         fileName: file.name,
                         message: `The file was successfully labelled: ${label}.`,
                         url: file.webUrl
-                    });
+                    };
+                    responses.push(response);
+                    this._dashboard.Datatable.addRow(response);
 
                     // Resolve the request
                     resolve(responses);
@@ -190,13 +209,15 @@ export class SensitivityLabels {
                     catch { error = err; }
 
                     // Add the response
-                    responses.push({
+                    let response: ISetSensitivityLabelResponse = {
                         errorFl: true,
                         error: err,
                         fileName: file.name,
                         message: `There was an error tagging this file: ${error}`,
                         url: file.webUrl
-                    });
+                    };
+                    responses.push(response);
+                    this._dashboard.Datatable.addRow(response);
 
                     // Resolve the request
                     resolve(responses);
@@ -209,30 +230,98 @@ export class SensitivityLabels {
     private static labelFilesInFolder(webId: string, listName: string, folder: Types.SP.Folder, label: Components.IDropdownItem, overrideLabelFl: boolean, justification: string) {
         let responses: ISetSensitivityLabelResponse[] = [];
 
-        // Show a loading dialog
-        LoadingDialog.setHeader("Loading Items");
-        LoadingDialog.setBody("Loading the files for this library...");
-        LoadingDialog.show();
+        // Show the responses
+        this.showResponses(responses);
 
-        // Load the files for this drive
-        DataSource.loadFiles(webId, listName, folder).then(files => {
-            // Update the loading dialog
-            LoadingDialog.setBody("Applying the sensitivity labels to the files...");
+        // Update the dialog
+        this._elSubNav.children[0].innerHTML = `Loading files from library: ${listName}`;
 
-            // Parse the files
-            let counter = 0;
-            Helper.Executor(files, file => {
-                // Update the loading dialog
-                LoadingDialog.setBody(`Processing ${++counter} of ${files.length} files...`);
+        // Process the labels as we load the files
+        let fileCounter = 0;
+        let filesToProcess: Types.Microsoft.Graph.driveItem[] = [];
+        let isRunning = false;
+        let processedCounter = 0;
+        let startProcess = (callback?: () => void): PromiseLike<void> => {
+            let onCompleted = callback;
+
+            // Do nothing if we are already running
+            if (isRunning) { return; }
+
+            // Set the flags
+            let isProcessing = false;
+            isRunning = true;
+
+            // Loop while there are files to process
+            let loopIdx = setInterval(() => {
+                // Do nothing if we are processing an item
+                if (isProcessing) { return; }
+
+                // Get the file to process
+                let file = filesToProcess.splice(0, 1)[0];
+
+                // See if this file has a sensitivity label
+                if (file.sensitivityLabel?.id && !overrideLabelFl) {
+                    // Add a response
+                    let response: ISetSensitivityLabelResponse = {
+                        errorFl: false,
+                        fileName: file.name,
+                        message: `Skipping file, it's already labelled: '${file.sensitivityLabel.displayName}'.`,
+                        url: file.webUrl
+                    };
+                    responses.push(response);
+                    this._dashboard.Datatable.addRow(response);
+
+                    // Update the dialog
+                    this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] ${response.message}`;
+
+                    // Check the next file
+                    return;
+                }
+
+                // Set the flag
+                isProcessing = true;
+
+                // Update the dialog
+                this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] Labelling File: ${file.name}`;
 
                 // Label the file
-                return this.labelFile(file, overrideLabelFl, label.text, label.value, justification, responses);
-            }).then(() => {
-                // Show the responses
-                this.showResponses(responses);
+                this.labelFile(file, overrideLabelFl, label.text, label.value, justification, responses).then(() => {
+                    // Set the flag
+                    isProcessing = false;
 
-                // Hide the dialog
-                LoadingDialog.hide();
+                    // Update the dialog
+                    this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] File Labelled: ${file.name}`;
+
+                    // See if we are done
+                    if (filesToProcess.length == 0) {
+                        // Stop the loop
+                        clearInterval(loopIdx);
+
+                        // Set the flag
+                        isRunning = false;
+
+                        // Call the event
+                        onCompleted ? onCompleted() : null;
+                    }
+                });
+            }, 10);
+        }
+
+        // Load the files for this drive
+        DataSource.loadFiles(webId, listName, folder, file => {
+            // Add the file to process
+            filesToProcess.push(file);
+
+            // Update the dialog
+            this._elSubNav.children[0].innerHTML = `Loading files from library: ${listName} [Files Loaded: ${++fileCounter}]`;
+
+            // Ensure the process is running
+            startProcess();
+        }).then(() => {
+            // Ensure the process is running
+            startProcess(() => {
+                // Clear the sub-nav
+                this._elSubNav.classList.add("d-none");
             });
         });
     }
@@ -711,35 +800,47 @@ export class SensitivityLabels {
         Modal.setType(Components.ModalTypes.Full);
         Modal.setHeader("Set Sensitivity Label Results");
 
-        // Set the body
-        new DataTable({
+        // Set the dashboard
+        this._dashboard = new Dashboard({
             el: Modal.BodyElement,
-            rows: responses,
-            columns: [
-                {
-                    name: "errorFl",
-                    title: "Error?"
-                },
-                {
-                    name: "",
-                    title: "File Name",
-                    onRenderCell: (el, col, item: ISetSensitivityLabelResponse) => {
-                        // Render a link to the file
-                        Components.Button({
-                            el,
-                            text: item.fileName,
-                            href: item.url,
-                            target: "_blank",
-                            type: Components.ButtonTypes.OutlineLink
-                        });
+            navigation: {
+                title: "Senstivity Labels",
+                showFilter: false
+            },
+            table: {
+                rows: responses,
+                columns: [
+                    {
+                        name: "errorFl",
+                        title: "Error?"
+                    },
+                    {
+                        name: "",
+                        title: "File Name",
+                        onRenderCell: (el, col, item: ISetSensitivityLabelResponse) => {
+                            // Render a link to the file
+                            Components.Button({
+                                el,
+                                text: item.fileName,
+                                href: item.url,
+                                target: "_blank",
+                                type: Components.ButtonTypes.OutlineLink
+                            });
+                        }
+                    },
+                    {
+                        name: "message",
+                        title: "Status Message"
                     }
-                },
-                {
-                    name: "message",
-                    title: "Status Message"
-                }
-            ]
+                ]
+            }
         });
+
+        // Set the sub-nav element
+        this._elSubNav = Modal.BodyElement.querySelector("#sub-navigation");
+        this._elSubNav.classList.remove("d-none");
+        this._elSubNav.classList.add("my-2");
+        this._elSubNav.innerHTML = `<div class="h6"></div><div></div>`;
 
         // Set the footer
         Components.TooltipGroup({

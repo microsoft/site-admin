@@ -92,22 +92,21 @@ export class DLP {
         this._elSubNav.children[0].innerHTML = "Analyzing Library";
         this._elSubNav.children[1].innerHTML = "Getting all files in this library...";
 
+        // Create the list for the batch requests
+        let batchRequests = 0;
+        let completed = 0;
+        let list = Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().getById(libId);
+
         // Get the item ids for this library
-        Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(libTitle).Items().query({
-            Expand: ["Author"],
-            GetAllItems: true,
-            Select: ["Author/Title", "FileLeafRef", "FileRef", "File_x0020_Type", "Id"],
-            Top: 5000
-        }).execute(items => {
-            let batchRequests = 0;
-            let completed = 0;
-
-            // Update the dialog
-            this._elSubNav.children[1].innerHTML = "Creating batch job for files...";
-
-            // Parse the items and create the batch job
-            let list = Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(libTitle);
-            items.results.forEach(item => {
+        let itemCounter = 0;
+        DataSource.loadItems({
+            webUrl,
+            listId: libId,
+            query: {
+                Expand: ["Author"],
+                Select: ["Author/Title", "FileLeafRef", "FileRef", "File_x0020_Type", "Id"],
+            },
+            onItem: item => {
                 // Create a batch request to get the dlp policy on this item
                 list.Items(item.Id).GetDlpPolicyTip().batch(result => {
                     // Ensure a policy exists
@@ -138,8 +137,11 @@ export class DLP {
                     // Increment the counter and update the dialog
                     this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${batchRequests}...`;
                 }, batchRequests++ % 25 == 0);
-            });
 
+                // Update the dialog
+                this._elSubNav.children[1].innerHTML = `Creating Batch Requests - Processed ${++itemCounter} items...`;
+            }
+        }).then(() => {
             // Update the dialog
             this._elSubNav.children[1].innerHTML = `Executing Batch Request for ${batchRequests} items...`;
 
@@ -168,17 +170,19 @@ export class DLP {
                     let batchRequests = 0;
                     let completed = 0;
 
-                    // Get the item ids for this library
-                    Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(lib.Title).Items().query({
-                        Expand: ["Author"],
-                        GetAllItems: true,
-                        Select: ["Author/Title", "FileLeafRef", "FileRef", "File_x0020_Type", "Id"],
-                        Top: 5000
-                    }).execute(items => {
-                        let list = Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(lib.Title);
+                    // Set the list
+                    let list = Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(lib.Title);
 
-                        // Parse the items and create the batch job
-                        items.results.forEach(item => {
+                    // Get the item ids for this library
+                    let itemCounter = 0;
+                    DataSource.loadItems({
+                        webUrl,
+                        listId: lib.Id,
+                        query: {
+                            Expand: ["Author"],
+                            Select: ["Author/Title", "FileLeafRef", "FileRef", "File_x0020_Type", "Id"]
+                        },
+                        onItem: item => {
                             let analyzeFile = true;
 
                             // See if the file extensions are provided
@@ -226,14 +230,17 @@ export class DLP {
                                     this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${batchRequests}...`;
                                 }, batchRequests++ % 25 == 0);
                             }
-                        });
 
+                            // Update the dialog
+                            this._elSubNav.children[1].innerHTML = `Creating Batch Requests - Processed ${++itemCounter} items...`;
+                        }
+                    }).then(() => {
                         // Update the dialog
                         this._elSubNav.children[1].innerHTML = `Executing Batch Request for ${batchRequests} items...`;
 
                         // Execute the batch request
                         list.execute(resolve);
-                    });
+                    }, resolve);
                 });
             }).then(resolve);
         });

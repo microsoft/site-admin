@@ -45,28 +45,32 @@ export class SearchEEEU {
     private static analyzeList(web: Types.SP.WebOData, list: Types.SP.ListOData): PromiseLike<void> {
         // Return a promise
         return new Promise(resolve => {
+            // Set the fields to query
             let Select = ["Id", "HasUniqueRoleAssignments"];
-
-            // See if this is a document library
             if (list.BaseTemplate == SPTypes.ListTemplateType.DocumentLibrary || list.BaseTemplate == SPTypes.ListTemplateType.PageLibrary) {
                 // Get the file information
                 Select.push("FileLeafRef");
                 Select.push("FileRef");
             }
 
-            // Get the items where it has broken inheritance
-            Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().getById(list.Id).Items().query({
-                GetAllItems: true,
-                Select,
-                Top: 5000
-            }).execute(items => {
-                let ctrBatchJobs = 0;
+            // Create a batch job
+            let completed = 0;
+            let ctrBatchJobs = 0;
+            let batch = Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().getById(list.Id);
 
-                // Create a batch job
-                let batch = Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().getById(list.Id);
+            // Update the dialog
+            this._elSubNav.children[1].innerHTML = `Loading the items...`;
 
-                // Parse the items
-                Helper.Executor(items.results, item => {
+            // Get the items for the list
+            let itemCounter = 0;
+            DataSource.loadItems({
+                webUrl: web.Url,
+                listId: list.Id,
+                query: { Select },
+                onItem: item => {
+                    // Update the dialog
+                    this._elSubNav.children[1].innerHTML = `Creating Batch Requests - Processed ${++itemCounter} items...`;
+
                     // See if this item doesn't have unique permissions
                     if (!item.HasUniqueRoleAssignments) { return; }
 
@@ -104,14 +108,20 @@ export class SearchEEEU {
                             };
                             this._items.push(roleItem);
                             this._dashboard.Datatable.addRow(roleItem);
+
+                            // Increment the counter and update the dialog
+                            this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${ctrBatchJobs % 25}...`;
                         });
                     }, ctrBatchJobs++ % 25 == 0);
-                }).then(() => {
-                    // Execute the batch job
-                    batch.execute(() => {
-                        // Resolve the request
-                        resolve();
-                    });
+                }
+            }).then(() => {
+                // Update the dialog
+                this._elSubNav.children[1].innerHTML = `Executing Batch Request for ${ctrBatchJobs} items...`;
+
+                // Execute the batch jobs
+                batch.execute(() => {
+                    // Resolve the request
+                    resolve();
                 });
             });
         });
@@ -135,11 +145,13 @@ export class SearchEEEU {
                         Select: ["Id", "Title", "BaseTemplate", "HasUniqueRoleAssignments", "RootFolder/ServerRelativeUrl"]
                     }).execute(lists => {
                         let ctrList = 0;
+                        let siteText = this._elSubNav.children[0].innerHTML;
+
 
                         // Parse the lists
                         Helper.Executor(lists.results, list => {
                             // Show a dialog
-                            this._elSubNav.children[1].innerHTML = `Analyzing List ${++ctrList} of ${lists.results.length}...`;
+                            this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing List ${++ctrList} of ${lists.results.length}]: ${list.Title}`;
 
                             // Analyze the list
                             return this.analyzeList(web, list);
