@@ -260,7 +260,8 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         dlpFileExt: this.properties.ReportsDLPFileExt,
         docRententionYears: this.properties.ReportsDocRententionYears,
         docSearchFileExt: this.properties.ReportsDocSearchFileExt,
-        docSearchKeywords: this.properties.ReportsDocSearchKeywords
+        docSearchKeywords: this.properties.ReportsDocSearchKeywords,
+        sensitivityLabelFileExt: this.properties.SensitivityLabelFileExt
       },
       searchProps: {
         description: this.properties.WebPropSearchPropertyDescription,
