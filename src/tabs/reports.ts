@@ -10,6 +10,7 @@ export interface IReportProps {
     docRententionYears?: string;
     docSearchFileExt?: string;
     docSearchKeywords?: string;
+    sensitivityLabelFileExt?: string;
 }
 
 // Report Types

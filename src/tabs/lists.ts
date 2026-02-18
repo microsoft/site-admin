@@ -329,7 +329,7 @@ export class ListsTab {
                                                 // Load the folders for this list
                                                 this.loadFolders(item).then(folders => {
                                                     // Show the senstivity label form
-                                                    SensitivityLabels.setDefaultSensitivityLabelForFiles(item.WebId, item.ListName, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride);
+                                                    SensitivityLabels.setDefaultSensitivityLabelForFiles(item.WebId, item.ListName, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt);
                                                 });
                                             }
                                         }
