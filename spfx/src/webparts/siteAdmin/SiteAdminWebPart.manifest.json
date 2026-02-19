@@ -39,6 +39,7 @@
         "ReportsDLPFileExt": "csv doc docx dot dotx pdf pot potx pps ppsx ppt pptx txt xls xlsx xlt xltx",
         "ReportsDocSearchFileExt": "csv doc docx dot dotx pdf pot potx pps ppsx ppt pptx txt xls xlsx xlt xltx",
         "ReportsDocSearchKeywords": "phi pii ssn",
+        "SensitivityLabelFileExt": "csv doc docx dot dotx pdf pot potx pps ppsx ppt pptx txt xls xlsx xlt xltx",
         "SiteAttestation": false,
         "SiteAttestationText": "This will confirm that you have completed your tasks defined by your governance for site administration.",
         "SitePropAttestationDateDescription": "The last date/time the site was attested for.",

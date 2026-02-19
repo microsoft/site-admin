@@ -154,22 +154,27 @@ export class SensitivityLabels {
 
     // Labels file
     private static labelFile(file: Types.Microsoft.Graph.driveItem, overrideLabelFl: boolean, label: string, labelId: string, justification: string, responses: ISetSensitivityLabelResponse[]): PromiseLike<ISetSensitivityLabelResponse[]> {
-        // See if this file has a sensitivity label
-        if (file.sensitivityLabel?.id && !overrideLabelFl) {
-            // Add a response
-            let response: ISetSensitivityLabelResponse = {
-                errorFl: false,
-                fileName: file.name,
-                message: `Skipping file, it's already labelled: '${file.sensitivityLabel.displayName}'.`,
-                url: file.webUrl
-            };
-            responses.push(response);
-            this._dashboard.Datatable.addRow(response);
-            return;
-        }
-
         // Update the sensitivity label for this file
         return new Promise(resolve => {
+            // See if this file is already has this label
+            // or
+            // See if the file has a label and we aren't overriding them 
+            if (file.sensitivityLabel?.id == labelId || (file.sensitivityLabel?.id && !overrideLabelFl)) {
+                // Add a response
+                let response: ISetSensitivityLabelResponse = {
+                    errorFl: false,
+                    fileName: file.name,
+                    message: `Skipping file, it's already labelled: '${file.sensitivityLabel.displayName}'.`,
+                    url: file.webUrl
+                };
+                responses.push(response);
+                this._dashboard.Datatable.addRow(response);
+
+                // Check the next file
+                resolve(responses);
+                return;
+            }
+
             // Update the sensitivity label
             // The action source allowed values are:
             // * Manual - The label was applied manually by a user.
@@ -227,7 +232,7 @@ export class SensitivityLabels {
     }
 
     // Labels files for a specified folder
-    private static labelFilesInFolder(webId: string, listName: string, folder: Types.SP.Folder, label: Components.IDropdownItem, overrideLabelFl: boolean, justification: string) {
+    private static labelFilesInFolder(webId: string, listName: string, folder: Types.SP.Folder, fileExtensions: string[], label: Components.IDropdownItem, overrideLabelFl: boolean, justification: string) {
         let responses: ISetSensitivityLabelResponse[] = [];
 
         // Show the responses
@@ -240,9 +245,11 @@ export class SensitivityLabels {
         let fileCounter = 0;
         let filesToProcess: Types.Microsoft.Graph.driveItem[] = [];
         let isRunning = false;
+        let onCompleted = null;
         let processedCounter = 0;
         let startProcess = (callback?: () => void): PromiseLike<void> => {
-            let onCompleted = callback;
+            // Set the callback method
+            onCompleted = callback || onCompleted;
 
             // Do nothing if we are already running
             if (isRunning) { return; }
@@ -256,33 +263,56 @@ export class SensitivityLabels {
                 // Do nothing if we are processing an item
                 if (isProcessing) { return; }
 
+                // Do nothing if we are done
+                if (filesToProcess.length == 0) {
+                    // Stop the loop
+                    clearInterval(loopIdx);
+
+                    // Set the flag
+                    isRunning = false;
+
+                    // Call the event
+                    onCompleted ? onCompleted() : null;
+                }
+
                 // Get the file to process
                 let file = filesToProcess.splice(0, 1)[0];
 
-                // See if this file has a sensitivity label
-                if (file.sensitivityLabel?.id && !overrideLabelFl) {
-                    // Add a response
-                    let response: ISetSensitivityLabelResponse = {
-                        errorFl: false,
-                        fileName: file.name,
-                        message: `Skipping file, it's already labelled: '${file.sensitivityLabel.displayName}'.`,
-                        url: file.webUrl
-                    };
-                    responses.push(response);
-                    this._dashboard.Datatable.addRow(response);
+                // See if the file extensions are provided
+                if (fileExtensions && fileExtensions.length > 0) {
+                    let analyzeFile = false
 
-                    // Update the dialog
-                    this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] ${response.message}`;
+                    // Loop through the file extensions
+                    fileExtensions.forEach(fileExt => {
+                        // Set the flag if there is match
+                        if (file.name?.toLowerCase().endsWith(fileExt.toLowerCase())) { analyzeFile = true; }
+                    });
 
-                    // Check the next file
-                    return;
+                    // See if we are not analyzing the file
+                    if (!analyzeFile) {
+                        // Add a response
+                        let response: ISetSensitivityLabelResponse = {
+                            errorFl: false,
+                            fileName: file.name,
+                            message: `Skipping file, file extension not listed to process.`,
+                            url: file.webUrl
+                        };
+                        responses.push(response);
+                        this._dashboard.Datatable.addRow(response);
+
+                        // Update the dialog
+                        this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] ${response.message}`;
+
+                        // Check the next file
+                        return;
+                    }
                 }
 
                 // Set the flag
                 isProcessing = true;
 
                 // Update the dialog
-                this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] Labelling File: ${file.name}`;
+                this._elSubNav.children[1].innerHTML = `[Processed ${processedCounter} of ${fileCounter}] Labelling File: ${file.name}`;
 
                 // Label the file
                 this.labelFile(file, overrideLabelFl, label.text, label.value, justification, responses).then(() => {
@@ -531,7 +561,7 @@ export class SensitivityLabels {
     }
 
     // Shows the form for labeling a list
-    static setDefaultSensitivityLabelForFiles(webId: string, listName: string, defaultLabel: string, folders: Components.IDropdownItem[], disableSensitivityLabelOverride: boolean) {
+    static setDefaultSensitivityLabelForFiles(webId: string, listName: string, defaultLabel: string, folders: Components.IDropdownItem[], disableSensitivityLabelOverride: boolean, fileTypes: string) {
         // Set the modal header
         Modal.clear();
         Modal.setHeader("Set Default Sensitivity Label");
@@ -563,6 +593,12 @@ export class SensitivityLabels {
                     type: Components.FormControlTypes.Dropdown,
                     items: folders
                 } as Components.IFormControlPropsDropdown,
+                {
+                    label: "File Types",
+                    name: "FileTypes",
+                    type: Components.FormControlTypes.TextField,
+                    value: fileTypes
+                },
                 {
                     name: "OverrideLabel",
                     label: "Override Label?",
@@ -631,6 +667,7 @@ export class SensitivityLabels {
                             // Ensure the form is valid
                             if (form.isValid()) {
                                 let values = form.getValues();
+                                let fileExtensions: string[] = values["FileTypes"] ? values["FileTypes"].trim().split(' ') : [];
                                 let folder = values["ListFolder"].data;
                                 let label: Components.IDropdownItem = values["SensitivityLabel"];
                                 let overrideLabelFl: boolean = values["OverrideLabel"];
@@ -640,7 +677,7 @@ export class SensitivityLabels {
                                 justification = justification == "Other" ? values["JustificationOther"] : justification;
 
                                 // Label the files
-                                this.labelFilesInFolder(webId, listName, folder, label, overrideLabelFl, justification);
+                                this.labelFilesInFolder(webId, listName, folder, fileExtensions, label, overrideLabelFl, justification);
                             }
                         }
                     }

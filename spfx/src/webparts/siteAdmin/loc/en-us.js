@@ -7,6 +7,7 @@ define([], function () {
     "ReportsDocRententionYears": "Document Retention Default Years",
     "ReportsDocSearchFileExt": "Document Search Default File Extensions",
     "ReportsDocSearchKeywords": "Document Search Default Keywords",
+    "SensitivityLabelFileExt": "Sensitivity Label File Extensions",
     "SitePropAttestationDate": "Site Attestation Date",
     "SitePropAttestationUser": "Site Attestation User",
     "SitePropClientSideAssets": "Client Side Assets",

@@ -51,6 +51,7 @@ export interface ISiteAdminWebPartProps {
   ReportsDLPFileExt: string;
   ReportsDocSearchFileExt: string;
   ReportsDocSearchKeywords: string;
+  SensitivityLabelFileExt: string;
   SiteAttestation: boolean;
   SiteAttestationText: string;
   SitePropAttestationDateDescription: string;
@@ -163,6 +164,7 @@ declare const SiteAdmin: {
       dlpFileExt?: string;
       docSearchFileExt?: string;
       docSearchKeywords?: string;
+      sensitivityLabelFileExt?: string;
     }
     searchProps?: {
       description: string;
@@ -258,7 +260,8 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         dlpFileExt: this.properties.ReportsDLPFileExt,
         docRententionYears: this.properties.ReportsDocRententionYears,
         docSearchFileExt: this.properties.ReportsDocSearchFileExt,
-        docSearchKeywords: this.properties.ReportsDocSearchKeywords
+        docSearchKeywords: this.properties.ReportsDocSearchKeywords,
+        sensitivityLabelFileExt: this.properties.SensitivityLabelFileExt
       },
       searchProps: {
         description: this.properties.WebPropSearchPropertyDescription,
@@ -493,7 +496,12 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   checked: this.properties.DisableSensitivityLabelOverride,
                   onText: "The admins will only be allowed to apply sensitivity labels to files that haven't been labeled.",
                   offText: "The admins will be allowed to attempt to override sensitivity labels."
-                })
+                }),
+                PropertyPaneTextField("SensitivityLabelFileExt", {
+                  label: strings.SensitivityLabelFileExt,
+                  description: "The default file extensions to search.",
+                  value: this.properties.SensitivityLabelFileExt
+                }),
               ]
             },
             {
