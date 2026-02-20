@@ -514,7 +514,12 @@ export class DataSource {
 
         // Loads the files for a drive
         let getFiles = (driveId: string, folder: string = "") => {
-            let drive = v2.sites({ siteId: this.Site.Id, webId, targetInfo: { disableProcessing: true } }).drives(driveId);
+            let drive = v2.sites({
+                siteId: this.Site.Id, webId, targetInfo: {
+                    disableProcessing: true,
+                    keepalive: true
+                }
+            }).drives(driveId);
 
             // Return a promise
             return new Promise(resolve => {
@@ -549,7 +554,7 @@ export class DataSource {
         // Return a promise
         return new Promise((resolve, reject) => {
             // Get the libraries for this site
-            v2.sites({ siteId: DataSource.Site.Id, webId }).drives().execute(resp => {
+            v2.sites({ siteId: DataSource.Site.Id, webId, targetInfo: { keepalive: true } }).drives().execute(resp => {
                 let drives: Types.Microsoft.Graph.drive[] = [];
 
                 // See if we are searching for a specific library
@@ -591,6 +596,7 @@ export class DataSource {
             // Get the list
             let web = Web(props.webUrl, {
                 disableProcessing: true,
+                keepalive: true,
                 requestDigest: DataSource.SiteContext.FormDigestValue,
                 callbackQuery: props.onItem ? items => {
                     // Call the event

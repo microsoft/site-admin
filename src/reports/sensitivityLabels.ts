@@ -188,7 +188,8 @@ export class SensitivityLabels {
             // * UnknownFutureValue - A placeholder for future use, indicating an unknown or unsupported assignment method.
             v2.drive({
                 driveId: file.parentReference.driveId,
-                siteId: file.parentReference.siteId
+                siteId: file.parentReference.siteId,
+                targetInfo: { keepalive: true }
             }).items(file.id).setSensitivityLabel("Manual", "Privileged", labelId, justification).execute(
                 // Success
                 () => {
