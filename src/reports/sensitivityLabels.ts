@@ -1,4 +1,4 @@
-import { Dashboard, DataTable, Documents, LoadingDialog, Modal } from "dattatable";
+import { Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
 import { Components, Helper, SPTypes, Types, Web, v2 } from "gd-sprest-bs";
 import { fileEarmarkText } from "gd-sprest-bs/build/icons/svgs/fileEarmarkText";
 import { DataSource } from "../ds";
@@ -236,7 +236,10 @@ export class SensitivityLabels {
         let responses: ISetSensitivityLabelResponse[] = [];
 
         // Show the responses
-        this.showResponses(responses);
+        this.showResponses(responses, () => {
+            // Stop the worker process
+            worker.stop();
+        });
 
         // Update the dialog
         this._elSubNav.children[0].innerHTML = `Loading files from library: ${listName}`;
@@ -244,98 +247,80 @@ export class SensitivityLabels {
         // Process the labels as we load the files
         let fileCounter = 0;
         let filesToProcess: Types.Microsoft.Graph.driveItem[] = [];
-        let isRunning = false;
-        let onCompleted = null;
+        let isProcessing = false;
         let processedCounter = 0;
-        let startProcess = (callback?: () => void): PromiseLike<void> => {
-            // Set the callback method
-            onCompleted = callback || onCompleted;
 
-            // Do nothing if we are already running
-            if (isRunning) { return; }
+        // Create a worker process
+        let worker = Helper.WebWorker(() => {
+            // Do nothing if we are processing an item
+            if (isProcessing) { return; }
 
-            // Set the flags
-            let isProcessing = false;
-            isRunning = true;
+            // Do nothing if we are done
+            if (filesToProcess.length == 0) {
+                // Stop the process
+                worker.stop();
 
-            // Loop while there are files to process
-            let loopIdx = setInterval(() => {
-                // Do nothing if we are processing an item
-                if (isProcessing) { return; }
+                // Call the event
+                onCompleted ? onCompleted() : null;
 
-                // Do nothing if we are done
-                if (filesToProcess.length == 0) {
-                    // Stop the loop
-                    clearInterval(loopIdx);
+                // Do nothing
+                return;
+            }
 
-                    // Set the flag
-                    isRunning = false;
+            // Get the file to process
+            let file = filesToProcess.splice(0, 1)[0];
 
-                    // Call the event
-                    onCompleted ? onCompleted() : null;
-                }
+            // See if the file extensions are provided
+            if (fileExtensions && fileExtensions.length > 0) {
+                let analyzeFile = false
 
-                // Get the file to process
-                let file = filesToProcess.splice(0, 1)[0];
+                // Loop through the file extensions
+                fileExtensions.forEach(fileExt => {
+                    // Set the flag if there is match
+                    if (file.name?.toLowerCase().endsWith(fileExt.toLowerCase())) { analyzeFile = true; }
+                });
 
-                // See if the file extensions are provided
-                if (fileExtensions && fileExtensions.length > 0) {
-                    let analyzeFile = false
-
-                    // Loop through the file extensions
-                    fileExtensions.forEach(fileExt => {
-                        // Set the flag if there is match
-                        if (file.name?.toLowerCase().endsWith(fileExt.toLowerCase())) { analyzeFile = true; }
-                    });
-
-                    // See if we are not analyzing the file
-                    if (!analyzeFile) {
-                        // Add a response
-                        let response: ISetSensitivityLabelResponse = {
-                            errorFl: false,
-                            fileName: file.name,
-                            message: `Skipping file, file extension not listed to process.`,
-                            url: file.webUrl
-                        };
-                        responses.push(response);
-                        this._dashboard.Datatable.addRow(response);
-
-                        // Update the dialog
-                        this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] ${response.message}`;
-
-                        // Check the next file
-                        return;
-                    }
-                }
-
-                // Set the flag
-                isProcessing = true;
-
-                // Update the dialog
-                this._elSubNav.children[1].innerHTML = `[Processed ${processedCounter} of ${fileCounter}] Labelling File: ${file.name}`;
-
-                // Label the file
-                this.labelFile(file, overrideLabelFl, label.text, label.value, justification, responses).then(() => {
-                    // Set the flag
-                    isProcessing = false;
+                // See if we are not analyzing the file
+                if (!analyzeFile) {
+                    // Add a response
+                    let response: ISetSensitivityLabelResponse = {
+                        errorFl: false,
+                        fileName: file.name,
+                        message: `Skipping file, file extension not listed to process.`,
+                        url: file.webUrl
+                    };
+                    responses.push(response);
+                    this._dashboard.Datatable.addRow(response);
 
                     // Update the dialog
-                    this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] File Labelled: ${file.name}`;
+                    this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] ${response.message}`;
 
-                    // See if we are done
-                    if (filesToProcess.length == 0) {
-                        // Stop the loop
-                        clearInterval(loopIdx);
+                    // Check the next file
+                    return;
+                }
+            }
 
-                        // Set the flag
-                        isRunning = false;
+            // Set the flag
+            isProcessing = true;
 
-                        // Call the event
-                        onCompleted ? onCompleted() : null;
-                    }
-                });
-            }, 10);
-        }
+            // Update the dialog
+            this._elSubNav.children[1].innerHTML = `[Processing ${processedCounter} of ${fileCounter}] Labelling File: ${file.name}`;
+
+            // Label the file
+            this.labelFile(file, overrideLabelFl, label.text, label.value, justification, responses).then(() => {
+                // Set the flag
+                isProcessing = false;
+
+                // Update the dialog
+                this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] File Labelled: ${file.name}`;
+            });
+        }, 100);
+
+        // Set the completed event
+        let onCompleted = () => {
+            // Clear the sub-nav
+            this._elSubNav.classList.add("d-none");
+        };
 
         // Load the files for this drive
         DataSource.loadFiles(webId, listName, folder, file => {
@@ -346,13 +331,7 @@ export class SensitivityLabels {
             this._elSubNav.children[0].innerHTML = `Loading files from library: ${listName} [Files Loaded: ${++fileCounter}]`;
 
             // Ensure the process is running
-            startProcess();
-        }).then(() => {
-            // Ensure the process is running
-            startProcess(() => {
-                // Clear the sub-nav
-                this._elSubNav.classList.add("d-none");
-            });
+            worker.start();
         });
     }
 
@@ -831,11 +810,14 @@ export class SensitivityLabels {
     }
 
     // Shows the responses for setting the sensitivity labels
-    private static showResponses(responses: ISetSensitivityLabelResponse[]) {
+    private static showResponses(responses: ISetSensitivityLabelResponse[], onClose?: () => void) {
         // Clear the modal and set the header
         Modal.clear();
         Modal.setType(Components.ModalTypes.Full);
         Modal.setHeader("Set Sensitivity Label Results");
+
+        // Set the close event
+        Modal.setCloseEvent(onClose);
 
         // Set the dashboard
         this._dashboard = new Dashboard({
