@@ -233,7 +233,7 @@ export class SensitivityLabels {
     }
 
     // Labels files for a specified folder
-    private static labelFilesInFolder(webId: string, listName: string, folder: Types.SP.Folder, fileExtensions: string[], label: Components.IDropdownItem, overrideLabelFl: boolean, justification: string) {
+    private static labelFilesInFolder(webId: string, listName: string, folder: Types.SP.Folder, fileExtensions: string[], label: Components.IDropdownItem, replaceLabel: Components.IDropdownItem, overrideLabelFl: boolean, justification: string) {
         let responses: ISetSensitivityLabelResponse[] = [];
 
         // Show the responses
@@ -301,14 +301,37 @@ export class SensitivityLabels {
                 }
             }
 
+            // See if we are replacing a label
+            if (replaceLabel) {
+                // Set the flag
+                overrideLabelFl = true;
+
+                // See if file is not labelled with the target
+                if (file.sensitivityLabel?.id != label.value) {
+                    // Add a response
+                    let response: ISetSensitivityLabelResponse = {
+                        errorFl: false,
+                        fileName: file.name,
+                        message: `Skipping file, replacing '${label.text}' label, file label: '${file.sensitivityLabel.displayName}.`,
+                        url: file.webUrl
+                    };
+                    responses.push(response);
+                    this._dashboard.Datatable.addRow(response);
+                    return;
+                }
+            }
+
             // Set the flag
             isProcessing = true;
 
             // Update the dialog
             this._elSubNav.children[1].innerHTML = `[Processing ${processedCounter} of ${fileCounter}] Labelling File: ${file.name}`;
 
+            // Set the label for this file
+            let fileLabel = replaceLabel || label;
+
             // Label the file
-            this.labelFile(file, overrideLabelFl, label.text, label.value, justification, responses).then(() => {
+            this.labelFile(file, overrideLabelFl, fileLabel.text, fileLabel.value, justification, responses).then(() => {
                 // Set the flag
                 isProcessing = false;
 
@@ -567,6 +590,14 @@ export class SensitivityLabels {
                     }
                 } as Components.IFormControlPropsDropdown,
                 {
+                    name: "ReplaceLabel",
+                    label: "Replace Sensitivity Label:",
+                    description: "This will replace the selected label with this label.",
+                    items: DataSource.SensitivityLabelItems,
+                    type: Components.FormControlTypes.Dropdown,
+                    value: defaultLabel
+                } as Components.IFormControlPropsDropdown,
+                {
                     name: "ListFolder",
                     label: "Select a Folder:",
                     description: "Targets a specific folder to tag, otherwise will apply to all files in the library.",
@@ -650,6 +681,7 @@ export class SensitivityLabels {
                                 let fileExtensions: string[] = values["FileTypes"] ? values["FileTypes"].trim().split(' ') : [];
                                 let folder = values["ListFolder"].data;
                                 let label: Components.IDropdownItem = values["SensitivityLabel"];
+                                let replaceLabel: Components.IDropdownItem = values["ReplaceLabel"];
                                 let overrideLabelFl: boolean = values["OverrideLabel"];
 
                                 // Update the justification
@@ -657,7 +689,7 @@ export class SensitivityLabels {
                                 justification = justification == "Other" ? values["JustificationOther"] : justification;
 
                                 // Label the files
-                                this.labelFilesInFolder(webId, listName, folder, fileExtensions, label, overrideLabelFl, justification);
+                                this.labelFilesInFolder(webId, listName, folder, fileExtensions, label, replaceLabel, overrideLabelFl, justification);
                             }
                         }
                     }
