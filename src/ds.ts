@@ -562,7 +562,7 @@ export class DataSource {
                     // See if we are getting a specific folder
                     if (folder) {
                         // Get the folder
-                        drive.getFolder(folder.ServerRelativeUrl).execute(folder => {
+                        drive.getFolder(folder.Name).execute(folder => {
                             // Get the files
                             getFiles(drive.id, folder.id).then(() => { resolve(files); });
                         });
