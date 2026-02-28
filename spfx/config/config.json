@@ -14,7 +14,7 @@
   "externals": {
     "main-lib": {
       "globalName": "main-lib",
-      "path": "../dist/site-admin.min.js"
+      "path": "../dist/site-admin.js"
     }
   },
   "localizedResources": {

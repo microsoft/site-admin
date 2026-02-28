@@ -509,22 +509,21 @@ export class DataSource {
     }
 
     // Loads the files for a drive
-    static loadFiles(webId: string, listName?: string, folder?: Types.SP.Folder, onFile?: (file: Types.Microsoft.Graph.driveItem) => void): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
+    static loadFiles(webId: string, listName: string, folder?: Types.SP.Folder, onFile?: (file: Types.Microsoft.Graph.driveItem) => void): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
         let files = [];
 
         // Loads the files for a drive
-        let getFiles = (driveId: string, folder: string = "") => {
-            let drive = v2.sites({
+        let getFiles = (driveId: string, folderId: string) => {
+            let driveFolder = v2.sites({
                 siteId: this.Site.Id, webId, targetInfo: {
                     disableProcessing: true,
                     keepalive: true
                 }
-            }).drives(driveId);
+            }).drives(driveId).items(folderId);
 
             // Return a promise
             return new Promise(resolve => {
                 // Get the files for the folder
-                let driveFolder = folder ? drive.getFolder(folder) : drive.root();
                 driveFolder.children().query({
                     GetAllItems: true,
                     Select: ["createdBy", "driveId", "file", "folder", "id", "name", "parentReference", "sensitivityLabel", "webUrl"],
@@ -539,9 +538,11 @@ export class DataSource {
 
                             // Append the file
                             files.push(driveItem);
-                        } else {
+                        }
+                        // Else, it's a folder
+                        else if (driveItem.folder) {
                             // Get the items for this folder
-                            return getFiles(driveId, (folder ? folder + "/" : "") + driveItem.name);
+                            return getFiles(driveId, driveItem.id);
                         }
                     }).then(() => {
                         // Resolve the request
@@ -553,27 +554,29 @@ export class DataSource {
 
         // Return a promise
         return new Promise((resolve, reject) => {
-            // Get the libraries for this site
+            // Get the library
             v2.sites({ siteId: DataSource.Site.Id, webId, targetInfo: { keepalive: true } }).drives().execute(resp => {
-                let drives: Types.Microsoft.Graph.drive[] = [];
-
-                // See if we are searching for a specific library
-                if (listName) {
-                    // Find the target drive
-                    let drive = resp.results.find(a => { return a.name == listName; });
-                    if (drive) { drives.push(drive); }
-                } else {
-                    // Parse the drives
-                    for (let i = 0; i < resp.results.length; i++) {
-                        let drive = resp.results.find(a => { return a.name == drives[i].name; });
-                        if (drive) { drives.push(drive); }
+                // Find the target drive
+                let drive = resp.results.find(a => { return a.name == listName; });
+                if (drive) {
+                    // See if we are getting a specific folder
+                    if (folder) {
+                        // Get the folder
+                        drive.getFolder(folder.ServerRelativeUrl).execute(folder => {
+                            // Get the files
+                            getFiles(drive.id, folder.id).then(() => { resolve(files); });
+                        });
+                    } else {
+                        // Get the root folder
+                        drive.root().execute(rootFolder => {
+                            // Get the files
+                            getFiles(drive.id, rootFolder.id).then(() => { resolve(files); });
+                        });
                     }
+                } else {
+                    // Resolve the request
+                    resolve(files);
                 }
-
-                // Parse the drives
-                Helper.Executor(drives, drive => {
-                    return getFiles(drive.id, folder?.Name);
-                }).then(() => { resolve(files); });
             }, reject);
         });
     }
