@@ -11,18 +11,20 @@ export class LoadForm {
     private _form: Components.IForm = null;
     private _popover: Components.IPopover = null;
     private _onSuccess: () => void = null;
+    private _onLoadOneDrive: () => void = null;
 
     // Renders the modal
-    constructor(elForm: HTMLElement, elFooter: HTMLElement, hideLoadAdminOwnerBtn: boolean = false, onSuccess: () => void) {
+    constructor(elForm: HTMLElement, elFooter: HTMLElement, hideLoadAdminOwnerBtn: boolean = false, hideLoadOneDriveBtn: boolean = false, onSuccess: () => void, onLoadOneDrive: () => void) {
         this._onSuccess = onSuccess;
+        this._onLoadOneDrive = onLoadOneDrive;
 
         // Render the form and footer
         this.renderForm(elForm);
-        this.renderFooter(elFooter, hideLoadAdminOwnerBtn);
+        this.renderFooter(elFooter, hideLoadAdminOwnerBtn, hideLoadOneDriveBtn);
     }
 
     // Renders the footer
-    private renderFooter(el: HTMLElement, hideLoadAdminOwnerBtn: boolean) {
+    private renderFooter(el: HTMLElement, hideLoadAdminOwnerBtn: boolean, hideLoadOneDriveBtn: boolean) {
         // Clear the element
         while (el.firstChild) { el.removeChild(el.firstChild); }
 
@@ -36,6 +38,18 @@ export class LoadForm {
                     onClick: () => {
                         // Load the admins/owners of the site
                         this.viewAdminsOwners();
+                    }
+                }
+            });
+        }
+        if (!hideLoadOneDriveBtn) {
+            tooltips.push({
+                content: "Loads the current user's OneDrive, to run reports against.",
+                btnProps: {
+                    text: "Load OneDrive",
+                    onClick: () => {
+                        // Load the onedrive site
+                        this.viewOneDrive();
                     }
                 }
             });
@@ -251,7 +265,7 @@ export class LoadForm {
     }
 
     // Shows the modal
-    static showModal(hideLoadAdminOwnerBtn: boolean = false, onSuccess: () => void) {
+    static showModal(hideLoadAdminOwnerBtn: boolean = false, hideLoadOneDriveBtn: boolean = false, onSuccess: () => void, onLoadOneDrive: () => void) {
         // Clear the modal
         Modal.clear();
 
@@ -259,7 +273,7 @@ export class LoadForm {
         Modal.setHeader("Load Site");
 
         // Create the form/footer
-        new LoadForm(Modal.BodyElement, Modal.FooterElement, hideLoadAdminOwnerBtn, onSuccess);
+        new LoadForm(Modal.BodyElement, Modal.FooterElement, hideLoadAdminOwnerBtn, hideLoadOneDriveBtn, onSuccess, onLoadOneDrive);
 
         // Show the modal
         Modal.show();
@@ -288,7 +302,7 @@ export class LoadForm {
                     LoadingDialog.hide();
                     Modal.hide();
 
-                    // Call the success method
+                    // Call the event
                     this._onSuccess();
                 },
 
@@ -389,5 +403,40 @@ export class LoadForm {
                 }
             );
         }
+    }
+
+    private viewOneDrive() {
+        // Ensure the popover is hidden
+        this._popover.hide();
+
+        // Show a loading dialog
+        LoadingDialog.setHeader("Loading OneDrive Site");
+        LoadingDialog.setBody("This will close after the site is loaded...");
+        LoadingDialog.show();
+
+        // Load the onedrive site
+        DataSource.loadOneDrive().then(
+            // Success
+            () => {
+                // Hide the dialog
+                LoadingDialog.hide();
+
+                // Call the event
+                this._onLoadOneDrive();
+            },
+
+            // Error
+            () => {
+                // Close the dialog
+                LoadingDialog.hide();
+
+                // Update the validation
+                let ctrl = this._form.getControl("url");
+                ctrl.updateValidation(ctrl.el, {
+                    isValid: false,
+                    invalidMessage: "Unable to load the OneDrive site."
+                });
+            }
+        );
     }
 }
