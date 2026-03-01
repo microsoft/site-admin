@@ -712,6 +712,23 @@ export class DataSource {
         });
     }
 
+    // Loads the onedrive site
+    private static _oneDriveWeb: Types.SP.WebOData = null;
+    static get OneDriveWeb(): Types.SP.WebOData { return this._oneDriveWeb; }
+    static loadOneDrive(): PromiseLike<void> {
+        // Return a promise
+        return new Promise((resolve, reject) => {
+            // Load the web
+            Web.getOneDrive().query({
+                Expand: ["Lists"]
+            }).execute(web => {
+                // Save the reference and resolve the request
+                this._oneDriveWeb = web;
+                resolve();
+            }, reject);
+        });
+    }
+
     // Loads the site collection information
     private static _site: Types.SP.SiteOData = null;
     static get Site(): Types.SP.SiteOData { return this._site; }
