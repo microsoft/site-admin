@@ -250,9 +250,9 @@ export class DocRetention {
 
         // Search the site
         Search.postQuery<ISearchItem>({
-            url: loadOneDrive ? DataSource.OneDriveWeb.Url : DataSource.SiteContext.SiteFullUrl,
+            url: DataSource.SiteContext.SiteFullUrl,
             getAllItems: true,
-            targetInfo: loadOneDrive ? null : { requestDigest: DataSource.SiteContext.FormDigestValue },
+            targetInfo: { requestDigest: DataSource.SiteContext.FormDigestValue },
             query: {
                 Querytext: `IsDocument: true LastModifiedTime<${startDate} path: ${loadOneDrive ? DataSource.OneDriveWeb.Url : DataSource.SiteContext.SiteFullUrl}`,
                 SelectProperties: {

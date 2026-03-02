@@ -27,6 +27,8 @@ const CSVFields = [
 ]
 
 export class SearchDocs {
+    private static _loadOneDrive: boolean = false;
+
     // Deletes a document
     private static deleteDocument(item: ISearchItem) {
         // Display a loading dialog
@@ -266,6 +268,8 @@ export class SearchDocs {
 
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
+        let loadOneDrive: boolean = values["LoadOneDrive"] == "true";
+
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Site");
         LoadingDialog.setBody("Searching the content on this site...");
@@ -277,7 +281,7 @@ export class SearchDocs {
 
         // Set the query
         let query: Types.Microsoft.Office.Server.Search.REST.SearchRequest = {
-            Querytext: `${searchTerms.join(" OR ")} IsDocument: true path: ${DataSource.SiteContext.SiteFullUrl}`,
+            Querytext: `${searchTerms.join(" OR ")} IsDocument: true path: ${loadOneDrive ? DataSource.OneDriveWeb.Url : DataSource.SiteContext.SiteFullUrl}`,
             RowLimit: 500,
             SelectProperties: {
                 results: [
