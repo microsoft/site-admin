@@ -35,6 +35,7 @@ export class SearchUsers {
     private static _dashboard: Dashboard = null;
     private static _elSubNav: HTMLElement = null;
     private static _items: ISearchItem[] = null;
+    private static _loadOneDrive: boolean = false;
 
     // Get the group user information
     private static analyzeRoleAssignments(web: Types.SP.WebOData, search: string | Types.SP.User, userInfo: IUserInfo): PromiseLike<void> {
@@ -73,7 +74,8 @@ export class SearchUsers {
                         resolve(null);
                     } else if (role.Member.PrincipalType == SPTypes.PrincipalTypes.SharePointGroup) {
                         // Get the members for this group
-                        Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).SiteGroups().getById(role.Member.Id).Users().execute(users => {
+                        let dstWeb = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+                        dstWeb.SiteGroups().getById(role.Member.Id).Users().execute(users => {
                             // Parse the users
                             Helper.Executor(users.results, user => {
                                 // Get the group id
@@ -244,7 +246,8 @@ export class SearchUsers {
             this._elSubNav.children[1].innerHTML = `Analyzing the user groups...`;
 
             // Get the groups the user is associated with
-            Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).SiteUsers(userInfo.Id).Groups().execute(groups => {
+            let dstWeb = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+            dstWeb.SiteUsers(userInfo.Id).Groups().execute(groups => {
                 // Parse the groups the member belongs to
                 Helper.Executor(groups.results, group => {
                     // Parse the roles
@@ -312,7 +315,8 @@ export class SearchUsers {
             // See if we are searching by a string
             if (typeof (user) === "string") {
                 // Get the user information list
-                Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists("User Information List").Items().query({
+                let web = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+                web.Lists("User Information List").Items().query({
                     Filter: `substringof('${user}', Name) or substringof('${user}', Title) or substringof('${user}', UserName)`,
                     Select: ["Id", "Name", "EMail", "Title", "UserName"],
                     GetAllItems: true,
@@ -337,7 +341,8 @@ export class SearchUsers {
                 }, reject);
             } else {
                 // Get the user
-                Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists("User Information List").Items().query({
+                let web = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+                web.Lists("User Information List").Items().query({
                     Filter: "Id eq " + user.Id,
                     Select: ["Id", "Name", "EMail", "Title", "UserName"]
                 }).execute(items => {
@@ -632,6 +637,8 @@ export class SearchUsers {
 
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: any }, onClose: () => void) {
+        this._loadOneDrive = values["LoadOneDrive"] == "true";
+
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Site");
         LoadingDialog.setBody("Searching the current permissions of the site...");
@@ -654,7 +661,12 @@ export class SearchUsers {
         LoadingDialog.hide();
 
         // Determine the webs to target
-        let siteItems: Components.IDropdownItem[] = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
+        let siteItems: Components.IDropdownItem[] = null;
+        if (this._loadOneDrive) {
+            siteItems = [{ text: DataSource.OneDriveWeb.Url, value: DataSource.OneDriveWeb.Id }] as any;
+        } else {
+            siteItems = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
+        }
 
         // Parse all webs
         let counter = 0;
@@ -666,7 +678,8 @@ export class SearchUsers {
             // Return a promise
             return new Promise(resolve => {
                 // Get the permissions
-                Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue }).query({
+                let web = this._loadOneDrive ? Web.getOneDrive() : Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue });
+                web.query({
                     Expand: [
                         "RoleAssignments", "RoleAssignments/Groups", "RoleAssignments/Member",
                         "RoleAssignments/RoleDefinitionBindings", "SiteGroups"

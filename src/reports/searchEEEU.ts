@@ -240,7 +240,8 @@ export class SearchEEEU {
             }
 
             // Get the groups the user is associated with
-            Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).SiteUsers(userInfo.Id).Groups().execute(groups => {
+            let dstWeb = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+            dstWeb.SiteUsers(userInfo.Id).Groups().execute(groups => {
                 // Parse the groups the member belongs to
                 Helper.Executor(groups.results, group => {
                     // Parse the roles
@@ -279,7 +280,8 @@ export class SearchEEEU {
             let users: IUserInfo[] = [];
 
             // Get the user information list
-            Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists("User Information List").Items().query({
+            let web = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+            web.Lists("User Information List").Items().query({
                 Filter: `Title eq 'Everyone' or substringof('spo-grid-all-users', Name)`,
                 Select: ["Id", "Name", "EMail", "Title", "UserName"],
                 GetAllItems: true,

@@ -35,6 +35,8 @@ const CSVFields = [
 ]
 
 export class DocRetention {
+    private static _loadOneDrive: boolean = false;
+
     // Deletes a document
     private static deleteDocument(item: ISearchItem) {
         // Display a loading dialog
@@ -236,6 +238,8 @@ export class DocRetention {
 
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
+        let loadOneDrive: boolean = values["LoadOneDrive"] == "true";
+
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Site");
         LoadingDialog.setBody("Searching the site for files...");
@@ -246,11 +250,11 @@ export class DocRetention {
 
         // Search the site
         Search.postQuery<ISearchItem>({
-            url: DataSource.SiteContext.SiteFullUrl,
+            url: loadOneDrive ? DataSource.OneDriveWeb.Url : DataSource.SiteContext.SiteFullUrl,
             getAllItems: true,
-            targetInfo: { requestDigest: DataSource.SiteContext.FormDigestValue },
+            targetInfo: loadOneDrive ? null : { requestDigest: DataSource.SiteContext.FormDigestValue },
             query: {
-                Querytext: `IsDocument: true LastModifiedTime<${startDate} path: ${DataSource.SiteContext.SiteFullUrl}`,
+                Querytext: `IsDocument: true LastModifiedTime<${startDate} path: ${loadOneDrive ? DataSource.OneDriveWeb.Url : DataSource.SiteContext.SiteFullUrl}`,
                 SelectProperties: {
                     results: [
                         "Author", "FileExtension", "HitHighlightedSummary", "LastModifiedTime",
