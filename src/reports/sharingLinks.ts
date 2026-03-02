@@ -41,14 +41,14 @@ export class SharingLinks {
         return new Promise(resolve => {
             // Find the document by its id
             Search.postQuery<{ FileExtension: string; Path: string; SPWebUrl: string; Title: string }>({
-                url: DataSource.SiteContext.SiteFullUrl,
+                url: this._loadOneDrive ? ContextInfo.siteAbsoluteUrl : DataSource.SiteContext.SiteFullUrl,
                 query: {
                     Querytext: "UniqueID: " + docInfo.docId,
                     SelectProperties: {
                         results: ["FileExtension", "Path", "SPWebUrl", "Title"]
                     }
                 },
-                targetInfo: { requestDigest: DataSource.SiteContext.FormDigestValue }
+                targetInfo: { requestDigest: this._loadOneDrive ? ContextInfo.formDigestValue : DataSource.SiteContext.FormDigestValue }
             }).then(search => {
                 let result = search.results[0];
 

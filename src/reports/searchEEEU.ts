@@ -86,7 +86,7 @@ export class SearchEEEU {
                     }).batch(roles => {
                         // Parse the role assignments
                         Helper.Executor(roles.results, roleAssignment => {
-                            let roleDefinition = roleAssignment.RoleDefinitionBindings.results[0];
+                            let roleDef = roleAssignment.RoleDefinitionBindings.results[0];
                             let user: Types.SP.User = roleAssignment.Member as any;
 
                             // Add a row for this entry
@@ -104,8 +104,8 @@ export class SearchEEEU {
                                 LoginName: user.LoginName,
                                 ListUrl: list.RootFolder.ServerRelativeUrl,
                                 Name: user.Title || user.LoginName,
-                                Role: roleDefinition.Name,
-                                RoleInfo: roleDefinition.Description || "",
+                                Role: roleDef?.Name || "",
+                                RoleInfo: roleDef?.Description || "",
                                 WebUrl: web.Url,
                                 WebTitle: web.Title
                             };
@@ -214,6 +214,7 @@ export class SearchEEEU {
             // Parse the roles
             for (let i = 0; i < web.RoleAssignments.results.length; i++) {
                 let role: Types.SP.RoleAssignmentOData = web.RoleAssignments.results[i] as any;
+                let roleDef = role.RoleDefinitionBindings.results[0];
 
                 // See if this role is the user
                 if (role.Member.LoginName == userInfo.Name) {
@@ -228,8 +229,8 @@ export class SearchEEEU {
                         Group: "",
                         GroupId: 0,
                         GroupInfo: "",
-                        Role: role.RoleDefinitionBindings.results[0].Name,
-                        RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
+                        Role: roleDef?.Name || "",
+                        RoleInfo: roleDef?.Description || ""
                     };
                     this._items.push(roleItem);
                     this._dashboard.Datatable.addRow(roleItem);
@@ -250,6 +251,8 @@ export class SearchEEEU {
 
                         // See if the user belongs to this role
                         if (role.Member.LoginName == group.LoginName) {
+                            let roleDef = role.RoleDefinitionBindings.results[0];
+
                             // Add the user information
                             let roleItem = {
                                 WebUrl: web.Url,
@@ -261,8 +264,8 @@ export class SearchEEEU {
                                 Group: group.Title,
                                 GroupId: group.Id,
                                 GroupInfo: group.Description || "",
-                                Role: role.RoleDefinitionBindings.results[0].Name,
-                                RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
+                                Role: roleDef?.Name || "",
+                                RoleInfo: roleDef?.Description || ""
                             };
                             this._items.push(roleItem);
                             this._dashboard.Datatable.addRow(roleItem);
