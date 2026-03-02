@@ -1,5 +1,5 @@
 import { Dashboard, Documents, LoadingDialog } from "dattatable";
-import { Components, Search, Types, Web } from "gd-sprest-bs";
+import { Components, ContextInfo, Search, Types, Web } from "gd-sprest-bs";
 import { fileEarmarkText } from "gd-sprest-bs/build/icons/svgs/fileEarmarkText";
 import { fileEarmarkArrowDown } from "gd-sprest-bs/build/icons/svgs/fileEarmarkArrowDown";
 import { trash } from "gd-sprest-bs/build/icons/svgs/trash";
@@ -302,7 +302,7 @@ export class SearchDocs {
         // Search for the content
         Search.postQuery({
             getAllItems: true,
-            url: DataSource.SiteContext.SiteFullUrl,
+            url: this._loadOneDrive ? ContextInfo.siteAbsoluteUrl : DataSource.SiteContext.SiteFullUrl,
             targetInfo: { requestDigest: DataSource.SiteContext.FormDigestValue },
             query
         }).then(search => {
