@@ -37,15 +37,17 @@ export class ReportsTab {
     private _el: HTMLElement = null;
     private _disableSensitivityLabelOverride: boolean = null;
     private _form: Components.IForm = null;
+    private _loadOneDrive: boolean = false;
     private _reportProps: IReportProps = null;
     private _searchProps: ISearchProps = null;
     private _selectedReport: string = null;
 
     // Constructor
-    constructor(el: HTMLElement, appProps: IAppProps) {
+    constructor(el: HTMLElement, appProps: IAppProps, loadOneDrive: boolean) {
         this._auditOnly = !DataSource.IsAdmin || (appProps.auditOnly ? true : false);
         this._el = el;
         this._disableSensitivityLabelOverride = appProps.disableSensitivityLabelOverride;
+        this._loadOneDrive = loadOneDrive;
         this._reportProps = appProps.reportProps;
         this._searchProps = appProps.searchProps;
 
@@ -220,46 +222,50 @@ export class ReportsTab {
                 // Ensure the form is required
                 if (!this._form.isValid()) { return; }
 
+                // Set the form values
+                let formValues = this._form.getValues();
+                formValues["LoadOneDrive"] = this._loadOneDrive ? "true" : "false";
+
                 // Run the report
                 switch (this._selectedReport) {
                     case ReportTypes.DLP:
-                        Reports.DLP.run(this._el, this._auditOnly, this._form.getValues(), () => {
+                        Reports.DLP.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.DocRetention:
-                        Reports.DocRetention.run(this._el, this._auditOnly, this._form.getValues(), () => {
+                        Reports.DocRetention.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.ExternalShares:
-                        Reports.ExternalShares.run(this._el, this._auditOnly, this._form.getValues(), () => {
+                        Reports.ExternalShares.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.ExternalUsers:
-                        Reports.ExternalUsers.run(this._el, this._auditOnly, this._form.getValues(), () => {
+                        Reports.ExternalUsers.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.Permissions:
-                        Reports.Permissions.run(this._el, this._auditOnly, this._form.getValues(), () => {
+                        Reports.Permissions.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.SearchDocs:
-                        Reports.SearchDocs.run(this._el, this._auditOnly, this._form.getValues(), () => {
+                        Reports.SearchDocs.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.SearchEEEU:
-                        Reports.SearchEEEU.run(this._el, this._auditOnly, this._form.getValues(), () => {
+                        Reports.SearchEEEU.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });
@@ -273,9 +279,8 @@ export class ReportsTab {
                         break;
                     case ReportTypes.SearchUsers:
                         // Ensure the values exist
-                        let values = this._form.getValues();
-                        if (values.UserName || values.PeoplePicker.length > 0) {
-                            Reports.SearchUsers.run(this._el, this._auditOnly, values, () => {
+                        if (formValues.UserName || formValues.PeoplePicker.length > 0) {
+                            Reports.SearchUsers.run(this._el, this._auditOnly, formValues, () => {
                                 // Render this component
                                 this.render(this._selectedReport);
                             });
@@ -294,19 +299,19 @@ export class ReportsTab {
                         }
                         break;
                     case ReportTypes.SensitivityLabels:
-                        Reports.SensitivityLabels.run(this._el, this._auditOnly, this._form.getValues(), () => {
+                        Reports.SensitivityLabels.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.SharingLinks:
-                        Reports.SharingLinks.run(this._el, this._auditOnly, this._form.getValues(), () => {
+                        Reports.SharingLinks.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.UniquePermissions:
-                        Reports.UniquePermissions.run(this._el, this._auditOnly, this._form.getValues(), () => {
+                        Reports.UniquePermissions.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });

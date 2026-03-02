@@ -23,6 +23,7 @@ export interface IAppProps {
     disableSensitivityLabelOverride?: boolean;
     el: HTMLElement;
     hideLoadAdminOwnerBtn?: boolean;
+    hideLoadOneDriveBtn?: boolean;
     hideTabs: {
         appPermissions?: boolean;
         auditTools?: boolean;
@@ -51,7 +52,7 @@ export class App {
     private _props: IAppProps = null;
 
     // Constructor
-    constructor(props: IAppProps) {
+    constructor(props: IAppProps, loadOneDrive: boolean) {
         this._props = props;
 
         // Add the class for bootstrap
@@ -71,10 +72,15 @@ export class App {
         // Render the dashboard
         this.renderNavigation(elRow);
 
-        // See if data has been loaded
-        if (DataSource.Site) {
+        // See if we are loading onedrive
+        if (loadOneDrive) {
             // Render the tabs
-            this.renderTabs(elRow.children[1] as HTMLElement);
+            this.renderTabs(elRow.children[1] as HTMLElement, true);
+        }
+        // Else, see if data has been loaded
+        else if (DataSource.Site) {
+            // Render the tabs
+            this.renderTabs(elRow.children[1] as HTMLElement, false);
         } else {
             // Render the load form
             this.renderForm(elRow.children[1] as HTMLElement);
@@ -92,10 +98,14 @@ export class App {
         `;
 
         // Render the form
-        new LoadForm(el.children[0].children[0] as HTMLElement, el.children[0].children[1] as HTMLElement, this._props.hideLoadAdminOwnerBtn, () => {
-            // Render the tabs
-            new App(this._props);
-        });
+        new LoadForm(el.children[0].children[0] as HTMLElement, el.children[0].children[1] as HTMLElement,
+            this._props.hideLoadAdminOwnerBtn, this._props.hideLoadOneDriveBtn, () => {
+                // Render the tabs
+                new App(this._props, false);
+            }, () => {
+                // Render the tabs
+                new App(this._props, true);
+            });
     }
 
     // Renders the navigation
@@ -110,9 +120,12 @@ export class App {
                 text: "Load Site",
                 onClick: () => {
                     // Show the load form
-                    LoadForm.showModal(this._props.hideLoadAdminOwnerBtn, () => {
+                    LoadForm.showModal(this._props.hideLoadAdminOwnerBtn, this._props.hideLoadOneDriveBtn, () => {
                         // Render the tabs
-                        this.renderTabs(elRow.children[1] as HTMLElement);
+                        this.renderTabs(elRow.children[1] as HTMLElement, false);
+                    }, () => {
+                        // Render the tabs
+                        this.renderTabs(elRow.children[1] as HTMLElement, true);
                     });
                 }
             });
@@ -158,7 +171,7 @@ export class App {
     }
 
     // Renders the tabs
-    private renderTabs(el: HTMLElement,) {
+    private renderTabs(el: HTMLElement, loadOneDrive: boolean) {
         // Clear the tabs element
         while (el.firstChild) { el.removeChild(el.firstChild); }
 
@@ -168,7 +181,15 @@ export class App {
             className: "mt-1 mb-4",
             rows: [
                 {
-                    columns: [
+                    columns: loadOneDrive ? [
+                        {
+                            control: {
+                                label: "OneDrive Site Url:",
+                                type: Components.FormControlTypes.Readonly,
+                                value: DataSource.OneDriveWeb.Url
+                            }
+                        }
+                    ] : [
                         {
                             size: 6,
                             control: {
@@ -214,6 +235,6 @@ export class App {
         });
 
         // Render the tabs
-        let tabs = new Tabs(el, this._props);
+        let tabs = new Tabs(el, this._props, loadOneDrive);
     }
 }

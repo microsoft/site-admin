@@ -583,6 +583,7 @@ export class DataSource {
 
     // Loads the items for a list
     static loadItems(props: {
+        isOnedrive?: boolean
         listId?: string;
         listName?: string,
         query: Types.IODataQuery,
@@ -597,7 +598,14 @@ export class DataSource {
             props.query.Top = props.query.Top || 5000;
 
             // Get the list
-            let web = Web(props.webUrl, {
+            let web = props.isOnedrive ? Web.getOneDrive({
+                disableProcessing: true,
+                keepalive: true,
+                callbackQuery: props.onItem ? items => {
+                    // Call the event
+                    items.forEach(item => { props.onItem(item); });
+                } : null
+            }) : Web(props.webUrl, {
                 disableProcessing: true,
                 keepalive: true,
                 requestDigest: DataSource.SiteContext.FormDigestValue,
@@ -608,7 +616,8 @@ export class DataSource {
             });
 
             // Get the items
-            (props.listName ? web.Lists(props.listName) : web.Lists().getById(props.listId)).Items().query(props.query).execute(
+            let list = props.listName ? web.Lists(props.listName) : web.Lists().getById(props.listId);
+            list.Items().query(props.query).execute(
                 items => {
                     // Resolve the request
                     resolve(items.results);
