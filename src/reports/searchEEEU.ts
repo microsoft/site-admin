@@ -40,6 +40,7 @@ export class SearchEEEU {
     private static _dashboard: Dashboard = null;
     private static _elSubNav: HTMLElement = null;
     private static _items: ISearchItem[] = null;
+    private static _loadOneDrive: boolean = null;
 
     // Analyzes a lists
     private static analyzeList(web: Types.SP.WebOData, list: Types.SP.ListOData): PromiseLike<void> {
@@ -56,7 +57,8 @@ export class SearchEEEU {
             // Create a batch job
             let completed = 0;
             let ctrBatchJobs = 0;
-            let batch = Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().getById(list.Id);
+            let batchWeb = this._loadOneDrive ? Web.getOneDrive() : Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue });
+            let batch = batchWeb.Lists().getById(list.Id);
 
             // Update the dialog
             this._elSubNav.children[1].innerHTML = `Loading the items...`;
@@ -64,8 +66,9 @@ export class SearchEEEU {
             // Get the items for the list
             let itemCounter = 0;
             DataSource.loadItems({
-                webUrl: web.Url,
+                isOnedrive: this._loadOneDrive,
                 listId: list.Id,
+                webUrl: web.Url,
                 query: { Select },
                 onItem: item => {
                     // Update the dialog
@@ -139,19 +142,20 @@ export class SearchEEEU {
                     this._elSubNav.children[1].innerHTML = `Analyzing lists...`;
 
                     // Get the lists
-                    Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().query({
+                    let site = this._loadOneDrive ? Web.getOneDrive() : Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue });
+                    site.Lists().query({
                         Filter: "Hidden eq false",
                         Expand: ["RootFolder"],
                         Select: ["Id", "Title", "BaseTemplate", "HasUniqueRoleAssignments", "RootFolder/ServerRelativeUrl"]
-                    }).execute(lists => {
+                    }).execute(resp => {
                         let ctrList = 0;
                         let siteText = this._elSubNav.children[0].innerHTML;
 
-
                         // Parse the lists
-                        Helper.Executor(lists.results, list => {
+                        let lists = this._loadOneDrive ? resp["value"] : resp.results;
+                        Helper.Executor(lists, list => {
                             // Show a dialog
-                            this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing List ${++ctrList} of ${lists.results.length}]: ${list.Title}`;
+                            this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing List ${++ctrList} of ${lists.length}]: ${list.Title}`;
 
                             // Analyze the list
                             return this.analyzeList(web, list);
@@ -649,6 +653,8 @@ export class SearchEEEU {
 
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: any }, onClose: () => void) {
+        this._loadOneDrive = values["LoadOneDrive"] == "true";
+
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Site");
         LoadingDialog.setBody("Searching the current permissions of the site...");
@@ -670,7 +676,12 @@ export class SearchEEEU {
         LoadingDialog.hide();
 
         // Determine the webs to target
-        let siteItems: Components.IDropdownItem[] = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
+        let siteItems: Components.IDropdownItem[] = null;
+        if (this._loadOneDrive) {
+            siteItems = [{ text: DataSource.OneDriveWeb.Url, value: DataSource.OneDriveWeb.Id }] as any;
+        } else {
+            siteItems = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
+        }
 
         // Parse all webs
         let counter = 0;
@@ -682,7 +693,8 @@ export class SearchEEEU {
             // Return a promise
             return new Promise(resolve => {
                 // Get the permissions
-                Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue }).query({
+                let web = this._loadOneDrive ? Web.getOneDrive() : Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue });
+                web.query({
                     Expand: [
                         "RoleAssignments", "RoleAssignments/Groups", "RoleAssignments/Member",
                         "RoleAssignments/RoleDefinitionBindings", "SiteGroups"
