@@ -268,7 +268,7 @@ export class SearchDocs {
 
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
-        let loadOneDrive: boolean = values["LoadOneDrive"] == "true";
+        this._loadOneDrive = values["LoadOneDrive"] == "true";
 
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Site");
@@ -281,7 +281,7 @@ export class SearchDocs {
 
         // Set the query
         let query: Types.Microsoft.Office.Server.Search.REST.SearchRequest = {
-            Querytext: `${searchTerms.join(" OR ")} IsDocument: true path: ${loadOneDrive ? DataSource.OneDriveWeb.Url : DataSource.SiteContext.SiteFullUrl}`,
+            Querytext: `${searchTerms.join(" OR ")} IsDocument: true path: ${this._loadOneDrive ? DataSource.OneDriveWeb.Url : DataSource.SiteContext.SiteFullUrl}`,
             RowLimit: 500,
             SelectProperties: {
                 results: [
@@ -303,7 +303,7 @@ export class SearchDocs {
         Search.postQuery({
             getAllItems: true,
             url: this._loadOneDrive ? ContextInfo.siteAbsoluteUrl : DataSource.SiteContext.SiteFullUrl,
-            targetInfo: { requestDigest: DataSource.SiteContext.FormDigestValue },
+            targetInfo: { requestDigest: this._loadOneDrive ? ContextInfo.formDigestValue : DataSource.SiteContext.FormDigestValue },
             query
         }).then(search => {
             // Clear the element

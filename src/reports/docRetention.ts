@@ -238,7 +238,7 @@ export class DocRetention {
 
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
-        let loadOneDrive: boolean = values["LoadOneDrive"] == "true";
+        this._loadOneDrive = values["LoadOneDrive"] == "true";
 
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Site");
@@ -252,9 +252,9 @@ export class DocRetention {
         Search.postQuery<ISearchItem>({
             url: this._loadOneDrive ? ContextInfo.siteAbsoluteUrl : DataSource.SiteContext.SiteFullUrl,
             getAllItems: true,
-            targetInfo: { requestDigest: DataSource.SiteContext.FormDigestValue },
+            targetInfo: { requestDigest: this._loadOneDrive ? ContextInfo.formDigestValue : DataSource.SiteContext.FormDigestValue },
             query: {
-                Querytext: `IsDocument: true LastModifiedTime<${startDate} path: ${loadOneDrive ? DataSource.OneDriveWeb.Url : DataSource.SiteContext.SiteFullUrl}`,
+                Querytext: `IsDocument: true LastModifiedTime<${startDate} path: ${this._loadOneDrive ? DataSource.OneDriveWeb.Url : DataSource.SiteContext.SiteFullUrl}`,
                 SelectProperties: {
                     results: [
                         "Author", "FileExtension", "HitHighlightedSummary", "LastModifiedTime",
