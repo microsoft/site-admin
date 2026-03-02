@@ -33,6 +33,7 @@ const CSVFields = [
 
 export class SharingLinks {
     private static _items: IGroupInfo[] = [];
+    private static _loadOneDrive: boolean = false;
 
     // Gets the associated file for this sharing link
     private static analyzeDocInfo(rootWeb: Types.SP.WebOData, docInfo: { docId: string, group: Types.SP.Group, roleName: string, userInfo: IUserInfo }): PromiseLike<void> {
@@ -85,7 +86,7 @@ export class SharingLinks {
         // Return a promise
         return new Promise(resolve => {
             let docInfo: { docId: string, group: Types.SP.Group, roleName: string, userInfo: IUserInfo }[] = [];
-            let web = Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+            let web = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
 
             // Update the loading dialog
             LoadingDialog.setBody(`Creating the batch job to get the group information...`);
@@ -382,6 +383,8 @@ export class SharingLinks {
 
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
+        this._loadOneDrive = values["LoadOneDrive"] == "true";
+
         // Show a loading dialog
         LoadingDialog.setHeader("Loading Security Groups");
         LoadingDialog.setBody("Loading the permissions for this site...");
@@ -393,7 +396,8 @@ export class SharingLinks {
         let users: IUserInfo[] = [];
 
         // Load the group information
-        Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).query({
+        let web = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+        web.query({
             Expand: [
                 "ParentWeb", "RoleAssignments", "RoleAssignments/Groups", "RoleAssignments/Member",
                 "RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings"
@@ -403,7 +407,8 @@ export class SharingLinks {
             LoadingDialog.setBody("Loading the sharing link groups...");
 
             // Get the users for this site
-            Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists("User Information List").Items().query({
+            let dstWeb = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+            dstWeb.Lists("User Information List").Items().query({
                 Filter: "substringof('SharingLinks', Name)",
                 Select: ["Id", "Name", "EMail", "Title"],
                 GetAllItems: true,

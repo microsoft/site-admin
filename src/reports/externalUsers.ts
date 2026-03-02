@@ -32,6 +32,7 @@ const CSVFields = [
 
 export class ExternalUsers {
     private static _items: IGroupInfo[] = [];
+    private static _loadOneDrive: boolean = false;
 
     // Analyzes the user information
     private static analyzeUserInformation(rootWeb: Types.SP.WebOData, user: Types.SP.UserOData, userInfo: IUserInfo) {
@@ -78,7 +79,7 @@ export class ExternalUsers {
     private static analyzeUsers(rootWeb: Types.SP.WebOData, externalUsers: IUserInfo[]): PromiseLike<void> {
         // Return a promise
         return new Promise(resolve => {
-            let web = Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+            let web = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
 
             // Update the loading dialog
             LoadingDialog.setBody(`Creating the batch job to get the user information...`);
@@ -399,6 +400,7 @@ export class ExternalUsers {
 
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
+        this._loadOneDrive = values["LoadOneDrive"] == "true";
         let users: IUserInfo[] = [];
 
         // Show a loading dialog
@@ -410,7 +412,10 @@ export class ExternalUsers {
         this._items = [];
 
         // Load the group information
-        Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).query({
+        let web = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.SiteContext.SiteFullUrl, {
+            requestDigest: DataSource.SiteContext.FormDigestValue
+        });
+        web.query({
             Expand: [
                 "ParentWeb", "RoleAssignments", "RoleAssignments/Groups", "RoleAssignments/Member",
                 "RoleAssignments/RoleDefinitionBindings"
@@ -420,7 +425,10 @@ export class ExternalUsers {
             LoadingDialog.setBody("Loading the site users...");
 
             // Get the users for this site
-            Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists("User Information List").Items().query({
+            let dstWeb = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.SiteContext.SiteFullUrl, {
+                requestDigest: DataSource.SiteContext.FormDigestValue
+            });
+            dstWeb.Lists("User Information List").Items().query({
                 Filter: "substringof('%23ext%23', Name)",
                 Select: ["Id", "Name", "EMail", "Title"],
                 GetAllItems: true,
