@@ -252,8 +252,12 @@ export class UniquePermissions {
                                             text: "View",
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
+                                                // Set the url
+                                                let url = this._loadOneDrive ? DataSource.OneDriveSite.Url : "";
+                                                url += item.ListViewUrl + "?ID=" + item.ItemId
+
                                                 // Show the security group
-                                                window.open(item.ListViewUrl + "?ID=" + item.ItemId, "_blank");
+                                                window.open(url, "_blank");
                                             }
                                         }
                                     },
