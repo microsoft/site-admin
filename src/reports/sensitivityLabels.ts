@@ -541,7 +541,7 @@ export class SensitivityLabels {
                 // Get the libraries for this site
                 let web = this._loadOneDrive ? Web.getOneDrive() : Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue });
                 web.Lists().query({
-                    Filter: `Hidden eq false and BaseTemplate eq ${SPTypes.ListTemplateType.DocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.PageLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.MySiteDocumentLibrary}`,
+                    Filter: `Hidden eq false and BaseTemplate eq ${SPTypes.ListTemplateType.DocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.MySiteDocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.PageLibrary}`,
                     Expand: ["RootFolder"],
                     GetAllItems: true,
                     Select: ["Id", "Title", "RootFolder/ServerRelativeUrl"],

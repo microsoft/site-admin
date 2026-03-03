@@ -48,7 +48,9 @@ export class SearchEEEU {
         return new Promise(resolve => {
             // Set the fields to query
             let Select = ["Id", "HasUniqueRoleAssignments"];
-            if (list.BaseTemplate == SPTypes.ListTemplateType.DocumentLibrary || list.BaseTemplate == SPTypes.ListTemplateType.PageLibrary) {
+            if (list.BaseTemplate == SPTypes.ListTemplateType.DocumentLibrary ||
+                list.BaseTemplate == SPTypes.ListTemplateType.MySiteDocumentLibrary ||
+                list.BaseTemplate == SPTypes.ListTemplateType.PageLibrary) {
                 // Get the file information
                 Select.push("FileLeafRef");
                 Select.push("FileRef");

@@ -263,6 +263,7 @@ export class ListsTab {
                         title: "",
                         onRenderCell: (el, col, item: IList, rowIdx) => {
                             let isLibrary = item.ListTemplateType == SPTypes.ListTemplateType.DocumentLibrary ||
+                                item.ListTemplateType == SPTypes.ListTemplateType.MySiteDocumentLibrary ||
                                 item.ListTemplateType == SPTypes.ListTemplateType.WebPageLibrary
 
                             // Render the buttons

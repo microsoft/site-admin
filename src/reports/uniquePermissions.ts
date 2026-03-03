@@ -40,7 +40,9 @@ export class UniquePermissions {
             let Select = ["Id", "HasUniqueRoleAssignments"];
 
             // See if this is a document library
-            if (list.BaseTemplate == SPTypes.ListTemplateType.DocumentLibrary || list.BaseTemplate == SPTypes.ListTemplateType.PageLibrary) {
+            if (list.BaseTemplate == SPTypes.ListTemplateType.DocumentLibrary ||
+                list.BaseTemplate == SPTypes.ListTemplateType.MySiteDocumentLibrary ||
+                list.BaseTemplate == SPTypes.ListTemplateType.PageLibrary) {
                 // Get the file information
                 Select.push("FileLeafRef");
                 Select.push("FileRef");
@@ -110,7 +112,7 @@ export class UniquePermissions {
                                     SiteGroupId: group.Id,
                                     SiteGroupName: group.LoginName,
                                     SiteGroupPermission: roleDefinitions.join(', '),
-                                    SiteGroupUrl: DataSource.SiteContext.SiteFullUrl + "/_layouts/15/people.aspx?MembershipGroupId=" + group.Id,
+                                    SiteGroupUrl: (this._loadOneDrive ? DataSource.OneDriveSite.Url : DataSource.SiteContext.SiteFullUrl) + "/_layouts/15/people.aspx?MembershipGroupId=" + group.Id,
                                     SiteGroupUsers: members.join(', '),
                                     WebUrl: webUrl
                                 };
