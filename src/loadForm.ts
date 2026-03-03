@@ -154,6 +154,9 @@ export class LoadForm {
                             if (ev["keyCode"] === 13) {
                                 ev.preventDefault();
 
+                                // Hide the popover
+                                this._popover.hide();
+
                                 // Submit the request
                                 this.submitForm();
                             }
