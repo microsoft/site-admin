@@ -63,6 +63,78 @@ export class ReportsTab {
         // Clear the element
         while (this._el.firstChild) { this._el.removeChild(this._el.firstChild); }
 
+        // Set the reports to display
+        let items: Components.IDropdownItem[] = [
+            {
+                text: "Data Loss Prevention",
+                data: "Finds files that has DLP applied to it.",
+                value: ReportTypes.DLP
+            },
+            {
+                text: "Document Retention",
+                data: "Find documents older than a specified date.",
+                value: ReportTypes.DocRetention
+            },
+            {
+                text: "External Shares",
+                data: "Scans for documents that have been shared externally.",
+                value: ReportTypes.ExternalShares
+            },
+            {
+                text: "External Users",
+                data: "Scans the user information list for 'external' user accounts.",
+                value: ReportTypes.ExternalUsers
+            },
+            {
+                text: "Permissions",
+                data: "Scans all users/groups that have permissions to the site.",
+                value: ReportTypes.Permissions
+            },
+            {
+                text: "Search Documents",
+                data: "Find documents by keywords.",
+                value: ReportTypes.SearchDocs
+            },
+            {
+                text: "Search EEEU",
+                data: "Search for the 'Every' and 'Everyone exception external users' accounts.",
+                value: ReportTypes.SearchEEEU
+            },
+            {
+                text: this._searchProps.reportName || "Search Property",
+                data: "Find sites by search property.",
+                value: ReportTypes.SearchProp,
+                isDisabled: this._searchProps.managedProperty && DataSource.SearchPropItems ? false : true
+            },
+            {
+                text: "Search Users",
+                data: "Search users by keyword or account.",
+                value: ReportTypes.SearchUsers
+            },
+            {
+                text: "Sensitivity Labels",
+                data: "Search for files that have sensitivity labels.",
+                value: ReportTypes.SensitivityLabels
+            },
+            {
+                text: "Sharing Links",
+                data: "Scans for any 'Sharing Link' groups.",
+                value: ReportTypes.SharingLinks
+            },
+            {
+                text: "Unique Permissions",
+                data: "Scans for items that have unique permissions.",
+                value: ReportTypes.UniquePermissions
+            }
+        ];
+
+        // See if this is onedrive
+        if (this._loadOneDrive) {
+            // Remove some of the reports
+            items.splice(8, 1);
+            items.splice(7, 1);
+        }
+
         // Render a form
         this._form = Components.Form({
             el: this._el,
@@ -73,69 +145,7 @@ export class ReportsTab {
                     description: "Select a report to run against this site.",
                     type: Components.FormControlTypes.Dropdown,
                     value: this._selectedReport,
-                    items: [
-                        {
-                            text: "Data Loss Prevention",
-                            data: "Finds files that has DLP applied to it.",
-                            value: ReportTypes.DLP
-                        },
-                        {
-                            text: "Document Retention",
-                            data: "Find documents older than a specified date.",
-                            value: ReportTypes.DocRetention
-                        },
-                        {
-                            text: "External Shares",
-                            data: "Scans for documents that have been shared externally.",
-                            value: ReportTypes.ExternalShares
-                        },
-                        {
-                            text: "External Users",
-                            data: "Scans the user information list for 'external' user accounts.",
-                            value: ReportTypes.ExternalUsers
-                        },
-                        {
-                            text: "Permissions",
-                            data: "Scans all users/groups that have permissions to the site.",
-                            value: ReportTypes.Permissions
-                        },
-                        {
-                            text: "Search Documents",
-                            data: "Find documents by keywords.",
-                            value: ReportTypes.SearchDocs
-                        },
-                        {
-                            text: "Search EEEU",
-                            data: "Search for the 'Every' and 'Everyone exception external users' accounts.",
-                            value: ReportTypes.SearchEEEU
-                        },
-                        {
-                            text: this._searchProps.reportName || "Search Property",
-                            data: "Find sites by search property.",
-                            value: ReportTypes.SearchProp,
-                            isDisabled: this._searchProps.managedProperty && DataSource.SearchPropItems ? false : true
-                        },
-                        {
-                            text: "Search Users",
-                            data: "Search users by keyword or account.",
-                            value: ReportTypes.SearchUsers
-                        },
-                        {
-                            text: "Sensitivity Labels",
-                            data: "Search for files that have sensitivity labels.",
-                            value: ReportTypes.SensitivityLabels
-                        },
-                        {
-                            text: "Sharing Links",
-                            data: "Scans for any 'Sharing Link' groups.",
-                            value: ReportTypes.SharingLinks
-                        },
-                        {
-                            text: "Unique Permissions",
-                            data: "Scans for items that have unique permissions.",
-                            value: ReportTypes.UniquePermissions
-                        }
-                    ],
+                    items,
                     onChange: item => {
                         // Render the form for this report
                         this.render(item?.value);

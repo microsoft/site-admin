@@ -253,7 +253,7 @@ export class UniquePermissions {
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
                                                 // Set the url
-                                                let url = this._loadOneDrive ? DataSource.OneDriveSite.Url : "";
+                                                let url = (this._loadOneDrive ? DataSource.OneDriveSite.Url : "").split('/personal/')[0];
                                                 url += item.ListViewUrl + "?ID=" + item.ItemId
 
                                                 // Show the security group
