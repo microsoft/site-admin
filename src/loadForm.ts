@@ -281,9 +281,6 @@ export class LoadForm {
 
     // Submits the form
     private submitForm() {
-        // Ensure the popover is hidden
-        this._popover.hide();
-
         // Validate the form
         if (this._form.isValid()) {
             let ctrl = this._form.getControl("url");
@@ -323,9 +320,6 @@ export class LoadForm {
 
     // Views the admins/owners of the site
     private viewAdminsOwners() {
-        // Ensure the popover is hidden
-        this._popover.hide();
-
         // Validate the form
         if (this._form.isValid()) {
             let ctrl = this._form.getControl("url");
@@ -406,9 +400,6 @@ export class LoadForm {
     }
 
     private viewOneDrive() {
-        // Ensure the popover is hidden
-        this._popover.hide();
-
         // Show a loading dialog
         LoadingDialog.setHeader("Loading OneDrive Site");
         LoadingDialog.setBody("This will close after the site is loaded...");
@@ -418,8 +409,9 @@ export class LoadForm {
         DataSource.loadOneDrive().then(
             // Success
             () => {
-                // Hide the dialog
+                // Hide the dialogs
                 LoadingDialog.hide();
+                Modal.hide();
 
                 // Call the event
                 this._onLoadOneDrive();
