@@ -511,7 +511,7 @@ export class DataSource {
     // Loads the files for a drive
     static loadFiles(webId: string, listName: string, listUrl: string, folder?: Types.SP.Folder, onFile?: (file: Types.Microsoft.Graph.driveItem) => void): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
         let files = [];
-        let isOneDrive = webId == DataSource.OneDriveWeb.Id;
+        let isOneDrive = webId == DataSource.OneDriveWeb?.Id;
 
         // Loads the files for a drive
         let getFiles = (driveId: string, folderId: string) => {
