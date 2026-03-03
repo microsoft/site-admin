@@ -660,22 +660,38 @@ export class DataSource {
                 for (let i = 0; i < labels.results.length; i++) {
                     let label = labels.results[i];
 
-                    // Parse the sub-labels
-                    for (let j = 0; j < label.sublabels.length; j++) {
-                        let subLabel = label.sublabels[j];
-                        let labelName = `${label.displayName} \\ ${subLabel.displayName}`;
+                    // See if there are sub-labels
+                    if (label.sublabels?.length > 0) {
+                        // Parse the sub-labels
+                        for (let j = 0; j < label.sublabels.length; j++) {
+                            let subLabel = label.sublabels[j];
+                            let labelName = `${label.displayName} \\ ${subLabel.displayName}`;
 
+                            // Append the label and item
+                            this._sensitivityLabels.push({
+                                desc: subLabel.description,
+                                id: subLabel.id,
+                                name: labelName,
+                                tooltip: subLabel.tooltip
+                            });
+                            this._sensitivityLabelItems.push({
+                                data: subLabel,
+                                text: labelName,
+                                value: subLabel.id
+                            });
+                        }
+                    } else {
                         // Append the label and item
                         this._sensitivityLabels.push({
-                            desc: subLabel.description,
-                            id: subLabel.id,
-                            name: labelName,
-                            tooltip: subLabel.tooltip
+                            desc: label.description,
+                            id: label.id,
+                            name: label.displayName,
+                            tooltip: label.tooltip
                         });
                         this._sensitivityLabelItems.push({
-                            data: subLabel,
-                            text: labelName,
-                            value: subLabel.id
+                            data: label,
+                            text: label.displayName,
+                            value: label.id
                         });
                     }
                 }
