@@ -509,13 +509,15 @@ export class DataSource {
     }
 
     // Loads the files for a drive
-    static loadFiles(webId: string, listName: string, folder?: Types.SP.Folder, onFile?: (file: Types.Microsoft.Graph.driveItem) => void): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
+    static loadFiles(webId: string, listName: string, listUrl: string, folder?: Types.SP.Folder, onFile?: (file: Types.Microsoft.Graph.driveItem) => void): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
         let files = [];
+        let isOneDrive = webId == DataSource.OneDriveWeb.Id;
 
         // Loads the files for a drive
         let getFiles = (driveId: string, folderId: string) => {
             let driveFolder = v2.sites({
-                siteId: this.Site.Id, webId, targetInfo: {
+                siteId: isOneDrive ? this.OneDriveSite.Id : this.Site.Id,
+                webId, targetInfo: {
                     disableProcessing: true,
                     keepalive: true
                 }
@@ -555,9 +557,9 @@ export class DataSource {
         // Return a promise
         return new Promise((resolve, reject) => {
             // Get the library
-            v2.sites({ siteId: DataSource.Site.Id, webId, targetInfo: { keepalive: true } }).drives().execute(resp => {
+            v2.sites({ siteId: isOneDrive ? this.OneDriveSite.Id : this.Site.Id, webId, targetInfo: { keepalive: true } }).drives().execute(resp => {
                 // Find the target drive
-                let drive = resp.results.find(a => { return a.name == listName; });
+                let drive = resp.results.find(a => { return a.name == listName || a.webUrl.endsWith(listUrl); });
                 if (drive) {
                     // See if we are getting a specific folder
                     if (folder) {
@@ -722,18 +724,24 @@ export class DataSource {
     }
 
     // Loads the onedrive site
-    private static _oneDriveWeb: Types.SP.WebOData = null;
-    static get OneDriveWeb(): Types.SP.WebOData { return this._oneDriveWeb; }
+    private static _oneDriveSite: Types.SP.Site = null;
+    private static _oneDriveWeb: Types.SP.Web = null;
+    static get OneDriveSite(): Types.SP.Site { return this._oneDriveSite; }
+    static get OneDriveWeb(): Types.SP.Web { return this._oneDriveWeb; }
     static loadOneDrive(): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve, reject) => {
-            // Load the web
-            Web.getOneDrive().query({
-                Expand: ["Lists"]
-            }).execute(web => {
-                // Save the reference and resolve the request
-                this._oneDriveWeb = web;
-                resolve();
+            // Load the site
+            Site.getOneDrive().execute(site => {
+                // Set the site
+                this._oneDriveSite = site;
+
+                // Load the web
+                Web.getOneDrive().execute(web => {
+                    // Save the reference and resolve the request
+                    this._oneDriveWeb = web;
+                    resolve();
+                }, reject);
             }, reject);
         });
     }
