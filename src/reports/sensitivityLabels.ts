@@ -603,7 +603,17 @@ export class SensitivityLabels {
                     description: "This will replace the selected label with this label.",
                     items: DataSource.SensitivityLabelItems,
                     type: Components.FormControlTypes.Dropdown,
-                    value: defaultLabel
+                    value: defaultLabel,
+                    onChange: (item) => {
+                        // See if an item was selected
+                        if (item && item.value) {
+                            // Hide the override label option
+                            form.getControl("OverrideLabel").hide();
+                        } else {
+                            // Show the override label option
+                            form.getControl("OverrideLabel").show();
+                        }
+                    }
                 } as Components.IFormControlPropsDropdown,
                 {
                     name: "ListFolder",
