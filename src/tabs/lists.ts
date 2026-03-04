@@ -350,7 +350,7 @@ export class ListsTab {
         this._elSubNav = this._el.querySelector("#sub-navigation");
         this._elSubNav.classList.remove("d-none");
         this._elSubNav.classList.add("my-2");
-        this._elSubNav.innerHTML = `<div class="h6"></div>`;
+        this._elSubNav.innerHTML = `<div class="h6">Loading the webs...</div>`;
     }
 
     // Reverts the item permissions
