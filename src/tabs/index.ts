@@ -49,7 +49,7 @@ export class Tabs {
     // Event when the webs are loaded
     onWebsLoaded(webs: Components.IDropdownItem[]) {
         // Update the tabs
-        this._tabLists.setWebs(webs);
+        this._tabLists.loadLists(false);
         this._tabReports.setWebs(webs);
     }
 
@@ -193,7 +193,8 @@ export class Tabs {
                 // Update the tab name
                 this._elWebTab.innerHTML = DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "Top Site" : "Sub Site";
 
-                // Refresh the web tab
+                // Refresh the tabs
+                this._tabLists.loadLists(false);
                 this._tabWeb.refresh();
 
                 // Hide the loading dialog
