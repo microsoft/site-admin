@@ -54,6 +54,7 @@ export class SensitivityLabels {
     private static _dashboard: Dashboard = null;
     private static _elSubNav: HTMLElement = null;
     private static _items: ISensitivityLabelItem[] = [];
+    private static _loadOneDrive: boolean = false;
 
     // Gets the form fields to display
     static getFormFields(): Components.IFormControlProps[] {
@@ -100,7 +101,7 @@ export class SensitivityLabels {
 
                     // Get the files for this library
                     let filesProcessed = 0;
-                    DataSource.loadFiles(webId, lib.Title, null, (file: Types.Microsoft.Graph.driveItem) => {
+                    DataSource.loadFiles(webId, lib.Title, lib.RootFolder.ServerRelativeUrl, null, (file: Types.Microsoft.Graph.driveItem) => {
                         let hasLabel = file.sensitivityLabel && file.sensitivityLabel.displayName ? true : false;
 
                         // Update the dialog
@@ -233,7 +234,7 @@ export class SensitivityLabels {
     }
 
     // Labels files for a specified folder
-    private static labelFilesInFolder(webId: string, listName: string, folder: Types.SP.Folder, fileExtensions: string[], label: Components.IDropdownItem, replaceLabel: Components.IDropdownItem, overrideLabelFl: boolean, justification: string) {
+    private static labelFilesInFolder(webId: string, listName: string, listUrl: string, folder: Types.SP.Folder, fileExtensions: string[], label: Components.IDropdownItem, replaceLabel: Components.IDropdownItem, overrideLabelFl: boolean, justification: string) {
         let responses: ISetSensitivityLabelResponse[] = [];
 
         // Show the responses
@@ -347,7 +348,7 @@ export class SensitivityLabels {
         };
 
         // Load the files for this drive
-        DataSource.loadFiles(webId, listName, folder, file => {
+        DataSource.loadFiles(webId, listName, listUrl, folder, file => {
             // Add the file to process
             filesToProcess.push(file);
 
@@ -493,6 +494,7 @@ export class SensitivityLabels {
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
         let data: IWebItem[] = [];
+        this._loadOneDrive = values["LoadOneDrive"] == "true";
 
         // Clear the items
         this._items = [];
@@ -520,7 +522,12 @@ export class SensitivityLabels {
         LoadingDialog.hide();
 
         // Determine the webs to target
-        let siteItems: Components.IDropdownItem[] = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
+        let siteItems: Components.IDropdownItem[] = null;
+        if (this._loadOneDrive) {
+            siteItems = [{ text: DataSource.OneDriveWeb.Url, value: DataSource.OneDriveWeb.Id }] as any;
+        } else {
+            siteItems = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
+        }
 
         // Parse the webs
         let counter = 0;
@@ -532,8 +539,9 @@ export class SensitivityLabels {
             // Return a promise
             return new Promise(resolve => {
                 // Get the libraries for this site
-                Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().query({
-                    Filter: `Hidden eq false and BaseTemplate eq ${SPTypes.ListTemplateType.DocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.PageLibrary}`,
+                let web = this._loadOneDrive ? Web.getOneDrive() : Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue });
+                web.Lists().query({
+                    Filter: `Hidden eq false and BaseTemplate eq ${SPTypes.ListTemplateType.DocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.MySiteDocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.PageLibrary}`,
                     Expand: ["RootFolder"],
                     GetAllItems: true,
                     Select: ["Id", "Title", "RootFolder/ServerRelativeUrl"],
@@ -564,7 +572,7 @@ export class SensitivityLabels {
     }
 
     // Shows the form for labeling a list
-    static setDefaultSensitivityLabelForFiles(webId: string, listName: string, defaultLabel: string, folders: Components.IDropdownItem[], disableSensitivityLabelOverride: boolean, fileTypes: string) {
+    static setDefaultSensitivityLabelForFiles(webId: string, listName: string, listUrl: string, defaultLabel: string, folders: Components.IDropdownItem[], disableSensitivityLabelOverride: boolean, fileTypes: string) {
         // Set the modal header
         Modal.clear();
         Modal.setHeader("Set Default Sensitivity Label");
@@ -689,7 +697,7 @@ export class SensitivityLabels {
                                 justification = justification == "Other" ? values["JustificationOther"] : justification;
 
                                 // Label the files
-                                this.labelFilesInFolder(webId, listName, folder, fileExtensions, label, replaceLabel, overrideLabelFl, justification);
+                                this.labelFilesInFolder(webId, listName, listUrl, folder, fileExtensions, label, replaceLabel, overrideLabelFl, justification);
                             }
                         }
                     }

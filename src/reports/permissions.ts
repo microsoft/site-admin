@@ -36,6 +36,7 @@ export class Permissions {
     private static _elSubNav: HTMLElement = null;
     private static _groupIds: { [key: string]: Types.SP.Directory.GroupOData } = null;
     private static _groupIdErrors: string[] = null;
+    private static _loadOneDrive: boolean = false;
     private static _roleMapper: { [key: string]: Types.SP.User } = null;
     private static _items: IPermissionItem[] = null;
 
@@ -172,7 +173,8 @@ export class Permissions {
                 if (role.Member.PrincipalType == SPTypes.PrincipalTypes.User) { resolve(null); return; }
 
                 // Get the owner information
-                Web(webUrl).RoleAssignments(role.PrincipalId).query({ Expand: ["Member/Owner", "Member/Users"], Select: ["Member/Owner", "Member/Users"] }).execute(roleQuery => {
+                let web = this._loadOneDrive ? Web.getOneDrive() : Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+                web.RoleAssignments(role.PrincipalId).query({ Expand: ["Member/Owner", "Member/Users"], Select: ["Member/Owner", "Member/Users"] }).execute(roleQuery => {
                     // Update the owner and users
                     role.Member["Owner"] = roleQuery.Member["Owner"];
                     role.Member["Users"] = roleQuery.Member["Users"];
@@ -648,6 +650,8 @@ export class Permissions {
 
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: any }, onClose: () => void) {
+        this._loadOneDrive = values["LoadOneDrive"] == "true";
+
         // Show a loading dialog
         LoadingDialog.setHeader("Getting Site Roles");
         LoadingDialog.setBody("Searching the current permissions of the site...");
@@ -669,7 +673,12 @@ export class Permissions {
         LoadingDialog.hide();
 
         // Determine the webs to target
-        let siteItems: Components.IDropdownItem[] = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
+        let siteItems: Components.IDropdownItem[] = null;
+        if (this._loadOneDrive) {
+            siteItems = [{ text: DataSource.OneDriveWeb.Url, value: DataSource.OneDriveWeb.Id }] as any;
+        } else {
+            siteItems = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
+        }
 
         // Parse all webs
         let counter = 0;
@@ -685,7 +694,8 @@ export class Permissions {
             // Return a promise
             return new Promise(resolve => {
                 // Get the permissions for the site
-                Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue }).RoleAssignments().query({
+                let web = this._loadOneDrive ? Web.getOneDrive() : Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue });
+                web.RoleAssignments().query({
                     Expand: [
                         "Member", "Member/Groups", "RoleDefinitionBindings"
                     ]
@@ -694,7 +704,8 @@ export class Permissions {
                     this._elSubNav.children[1].innerHTML = `Analyzing the roles for web ${counter} of ${siteItems.length}...`;
 
                     // Analyze the roles
-                    this.analyzeRoles(roles.results, siteItem.text, siteItem.data ? siteItem.data.Title : DataSource.Site.RootWeb.Title).then(resolve);
+                    let webTitle = siteItem.data ? siteItem.data.Title : (this._loadOneDrive ? DataSource.OneDriveWeb.Title : DataSource.Site.RootWeb.Title);
+                    this.analyzeRoles(roles.results, siteItem.text, webTitle).then(resolve);
                 });
             });
         }).then(() => {

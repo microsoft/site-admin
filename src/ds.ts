@@ -509,13 +509,15 @@ export class DataSource {
     }
 
     // Loads the files for a drive
-    static loadFiles(webId: string, listName: string, folder?: Types.SP.Folder, onFile?: (file: Types.Microsoft.Graph.driveItem) => void): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
+    static loadFiles(webId: string, listName: string, listUrl: string, folder?: Types.SP.Folder, onFile?: (file: Types.Microsoft.Graph.driveItem) => void): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
         let files = [];
+        let isOneDrive = webId == DataSource.OneDriveWeb?.Id;
 
         // Loads the files for a drive
         let getFiles = (driveId: string, folderId: string) => {
             let driveFolder = v2.sites({
-                siteId: this.Site.Id, webId, targetInfo: {
+                siteId: isOneDrive ? this.OneDriveSite.Id : this.Site.Id,
+                webId, targetInfo: {
                     disableProcessing: true,
                     keepalive: true
                 }
@@ -555,9 +557,9 @@ export class DataSource {
         // Return a promise
         return new Promise((resolve, reject) => {
             // Get the library
-            v2.sites({ siteId: DataSource.Site.Id, webId, targetInfo: { keepalive: true } }).drives().execute(resp => {
+            v2.sites({ siteId: isOneDrive ? this.OneDriveSite.Id : this.Site.Id, webId, targetInfo: { keepalive: true } }).drives().execute(resp => {
                 // Find the target drive
-                let drive = resp.results.find(a => { return a.name == listName; });
+                let drive = resp.results.find(a => { return a.name == listName || a.webUrl.endsWith(listUrl); });
                 if (drive) {
                     // See if we are getting a specific folder
                     if (folder) {
@@ -583,6 +585,7 @@ export class DataSource {
 
     // Loads the items for a list
     static loadItems(props: {
+        isOnedrive?: boolean
         listId?: string;
         listName?: string,
         query: Types.IODataQuery,
@@ -597,7 +600,14 @@ export class DataSource {
             props.query.Top = props.query.Top || 5000;
 
             // Get the list
-            let web = Web(props.webUrl, {
+            let web = props.isOnedrive ? Web.getOneDrive({
+                disableProcessing: true,
+                keepalive: true,
+                callbackQuery: props.onItem ? items => {
+                    // Call the event
+                    items.forEach(item => { props.onItem(item); });
+                } : null
+            }) : Web(props.webUrl, {
                 disableProcessing: true,
                 keepalive: true,
                 requestDigest: DataSource.SiteContext.FormDigestValue,
@@ -608,7 +618,8 @@ export class DataSource {
             });
 
             // Get the items
-            (props.listName ? web.Lists(props.listName) : web.Lists().getById(props.listId)).Items().query(props.query).execute(
+            let list = props.listName ? web.Lists(props.listName) : web.Lists().getById(props.listId);
+            list.Items().query(props.query).execute(
                 items => {
                     // Resolve the request
                     resolve(items.results);
@@ -649,22 +660,38 @@ export class DataSource {
                 for (let i = 0; i < labels.results.length; i++) {
                     let label = labels.results[i];
 
-                    // Parse the sub-labels
-                    for (let j = 0; j < label.sublabels.length; j++) {
-                        let subLabel = label.sublabels[j];
-                        let labelName = `${label.displayName} \\ ${subLabel.displayName}`;
+                    // See if there are sub-labels
+                    if (label.sublabels?.length > 0) {
+                        // Parse the sub-labels
+                        for (let j = 0; j < label.sublabels.length; j++) {
+                            let subLabel = label.sublabels[j];
+                            let labelName = `${label.displayName} \\ ${subLabel.displayName}`;
 
+                            // Append the label and item
+                            this._sensitivityLabels.push({
+                                desc: subLabel.description,
+                                id: subLabel.id,
+                                name: labelName,
+                                tooltip: subLabel.tooltip
+                            });
+                            this._sensitivityLabelItems.push({
+                                data: subLabel,
+                                text: labelName,
+                                value: subLabel.id
+                            });
+                        }
+                    } else {
                         // Append the label and item
                         this._sensitivityLabels.push({
-                            desc: subLabel.description,
-                            id: subLabel.id,
-                            name: labelName,
-                            tooltip: subLabel.tooltip
+                            desc: label.description,
+                            id: label.id,
+                            name: label.displayName,
+                            tooltip: label.tooltip
                         });
                         this._sensitivityLabelItems.push({
-                            data: subLabel,
-                            text: labelName,
-                            value: subLabel.id
+                            data: label,
+                            text: label.displayName,
+                            value: label.id
                         });
                     }
                 }
@@ -709,6 +736,29 @@ export class DataSource {
                 // Set the site context
                 this._siteContext = context.GetContextWebInformation;
             });
+        });
+    }
+
+    // Loads the onedrive site
+    private static _oneDriveSite: Types.SP.Site = null;
+    private static _oneDriveWeb: Types.SP.Web = null;
+    static get OneDriveSite(): Types.SP.Site { return this._oneDriveSite; }
+    static get OneDriveWeb(): Types.SP.Web { return this._oneDriveWeb; }
+    static loadOneDrive(): PromiseLike<void> {
+        // Return a promise
+        return new Promise((resolve, reject) => {
+            // Load the site
+            Site.getOneDrive().execute(site => {
+                // Set the site
+                this._oneDriveSite = site;
+
+                // Load the web
+                Web.getOneDrive().execute(web => {
+                    // Save the reference and resolve the request
+                    this._oneDriveWeb = web;
+                    resolve();
+                }, reject);
+            }, reject);
         });
     }
 

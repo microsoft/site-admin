@@ -1,5 +1,5 @@
 import { Dashboard, Documents, LoadingDialog } from "dattatable";
-import { Components, Search, Types, Web } from "gd-sprest-bs";
+import { Components, ContextInfo, Search, Types, Web } from "gd-sprest-bs";
 import { fileEarmark } from "gd-sprest-bs/build/icons/svgs/fileEarmark";
 import { fileEarmarkArrowDown } from "gd-sprest-bs/build/icons/svgs/fileEarmarkArrowDown";
 import { trash } from "gd-sprest-bs/build/icons/svgs/trash";
@@ -27,6 +27,8 @@ const CSVFields = [
 ]
 
 export class ExternalShares {
+    private static _loadOneDrive: boolean = false;
+
     // Deletes a document
     private static deleteDocument(item: ISearchItem) {
         // Display a loading dialog
@@ -223,6 +225,8 @@ export class ExternalShares {
 
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
+        this._loadOneDrive = values["LoadOneDrive"] == "true";
+
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Site");
         LoadingDialog.setBody("Searching the content on this site...");
@@ -230,7 +234,7 @@ export class ExternalShares {
 
         // Set the query
         let query: Types.Microsoft.Office.Server.Search.REST.SearchRequest = {
-            Querytext: `ViewableByExternalUsers: true IsDocument: true path: ${DataSource.SiteContext.SiteFullUrl}`,
+            Querytext: `ViewableByExternalUsers: true IsDocument: true path: ${this._loadOneDrive ? DataSource.OneDriveWeb.Url : DataSource.SiteContext.SiteFullUrl}`,
             RowLimit: 500,
             SelectProperties: {
                 results: [
@@ -243,8 +247,8 @@ export class ExternalShares {
         // Search for the content
         Search.postQuery({
             getAllItems: true,
-            url: DataSource.SiteContext.SiteFullUrl,
-            targetInfo: { requestDigest: DataSource.SiteContext.FormDigestValue },
+            url: this._loadOneDrive ? ContextInfo.siteAbsoluteUrl : DataSource.SiteContext.SiteFullUrl,
+            targetInfo: { requestDigest: this._loadOneDrive ? ContextInfo.formDigestValue : DataSource.SiteContext.FormDigestValue },
             query
         }).then(search => {
             // Clear the element

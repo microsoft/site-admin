@@ -40,6 +40,7 @@ export class SearchEEEU {
     private static _dashboard: Dashboard = null;
     private static _elSubNav: HTMLElement = null;
     private static _items: ISearchItem[] = null;
+    private static _loadOneDrive: boolean = null;
 
     // Analyzes a lists
     private static analyzeList(web: Types.SP.WebOData, list: Types.SP.ListOData): PromiseLike<void> {
@@ -47,7 +48,9 @@ export class SearchEEEU {
         return new Promise(resolve => {
             // Set the fields to query
             let Select = ["Id", "HasUniqueRoleAssignments"];
-            if (list.BaseTemplate == SPTypes.ListTemplateType.DocumentLibrary || list.BaseTemplate == SPTypes.ListTemplateType.PageLibrary) {
+            if (list.BaseTemplate == SPTypes.ListTemplateType.DocumentLibrary ||
+                list.BaseTemplate == SPTypes.ListTemplateType.MySiteDocumentLibrary ||
+                list.BaseTemplate == SPTypes.ListTemplateType.PageLibrary) {
                 // Get the file information
                 Select.push("FileLeafRef");
                 Select.push("FileRef");
@@ -56,7 +59,8 @@ export class SearchEEEU {
             // Create a batch job
             let completed = 0;
             let ctrBatchJobs = 0;
-            let batch = Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().getById(list.Id);
+            let batchWeb = this._loadOneDrive ? Web.getOneDrive() : Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue });
+            let batch = batchWeb.Lists().getById(list.Id);
 
             // Update the dialog
             this._elSubNav.children[1].innerHTML = `Loading the items...`;
@@ -64,8 +68,9 @@ export class SearchEEEU {
             // Get the items for the list
             let itemCounter = 0;
             DataSource.loadItems({
-                webUrl: web.Url,
+                isOnedrive: this._loadOneDrive,
                 listId: list.Id,
+                webUrl: web.Url,
                 query: { Select },
                 onItem: item => {
                     // Update the dialog
@@ -83,7 +88,7 @@ export class SearchEEEU {
                     }).batch(roles => {
                         // Parse the role assignments
                         Helper.Executor(roles.results, roleAssignment => {
-                            let roleDefinition = roleAssignment.RoleDefinitionBindings.results[0];
+                            let roleDef = roleAssignment.RoleDefinitionBindings.results[0];
                             let user: Types.SP.User = roleAssignment.Member as any;
 
                             // Add a row for this entry
@@ -101,8 +106,8 @@ export class SearchEEEU {
                                 LoginName: user.LoginName,
                                 ListUrl: list.RootFolder.ServerRelativeUrl,
                                 Name: user.Title || user.LoginName,
-                                Role: roleDefinition.Name,
-                                RoleInfo: roleDefinition.Description || "",
+                                Role: roleDef?.Name || "",
+                                RoleInfo: roleDef?.Description || "",
                                 WebUrl: web.Url,
                                 WebTitle: web.Title
                             };
@@ -139,19 +144,20 @@ export class SearchEEEU {
                     this._elSubNav.children[1].innerHTML = `Analyzing lists...`;
 
                     // Get the lists
-                    Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().query({
+                    let site = this._loadOneDrive ? Web.getOneDrive() : Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue });
+                    site.Lists().query({
                         Filter: "Hidden eq false",
                         Expand: ["RootFolder"],
                         Select: ["Id", "Title", "BaseTemplate", "HasUniqueRoleAssignments", "RootFolder/ServerRelativeUrl"]
-                    }).execute(lists => {
+                    }).execute(resp => {
                         let ctrList = 0;
                         let siteText = this._elSubNav.children[0].innerHTML;
 
-
                         // Parse the lists
-                        Helper.Executor(lists.results, list => {
+                        let lists = this._loadOneDrive ? resp["value"] : resp.results;
+                        Helper.Executor(lists, list => {
                             // Show a dialog
-                            this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing List ${++ctrList} of ${lists.results.length}]: ${list.Title}`;
+                            this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing List ${++ctrList} of ${lists.length}]: ${list.Title}`;
 
                             // Analyze the list
                             return this.analyzeList(web, list);
@@ -210,6 +216,7 @@ export class SearchEEEU {
             // Parse the roles
             for (let i = 0; i < web.RoleAssignments.results.length; i++) {
                 let role: Types.SP.RoleAssignmentOData = web.RoleAssignments.results[i] as any;
+                let roleDef = role.RoleDefinitionBindings.results[0];
 
                 // See if this role is the user
                 if (role.Member.LoginName == userInfo.Name) {
@@ -224,8 +231,8 @@ export class SearchEEEU {
                         Group: "",
                         GroupId: 0,
                         GroupInfo: "",
-                        Role: role.RoleDefinitionBindings.results[0].Name,
-                        RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
+                        Role: roleDef?.Name || "",
+                        RoleInfo: roleDef?.Description || ""
                     };
                     this._items.push(roleItem);
                     this._dashboard.Datatable.addRow(roleItem);
@@ -236,7 +243,8 @@ export class SearchEEEU {
             }
 
             // Get the groups the user is associated with
-            Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).SiteUsers(userInfo.Id).Groups().execute(groups => {
+            let dstWeb = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+            dstWeb.SiteUsers(userInfo.Id).Groups().execute(groups => {
                 // Parse the groups the member belongs to
                 Helper.Executor(groups.results, group => {
                     // Parse the roles
@@ -245,6 +253,8 @@ export class SearchEEEU {
 
                         // See if the user belongs to this role
                         if (role.Member.LoginName == group.LoginName) {
+                            let roleDef = role.RoleDefinitionBindings.results[0];
+
                             // Add the user information
                             let roleItem = {
                                 WebUrl: web.Url,
@@ -256,8 +266,8 @@ export class SearchEEEU {
                                 Group: group.Title,
                                 GroupId: group.Id,
                                 GroupInfo: group.Description || "",
-                                Role: role.RoleDefinitionBindings.results[0].Name,
-                                RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
+                                Role: roleDef?.Name || "",
+                                RoleInfo: roleDef?.Description || ""
                             };
                             this._items.push(roleItem);
                             this._dashboard.Datatable.addRow(roleItem);
@@ -275,7 +285,8 @@ export class SearchEEEU {
             let users: IUserInfo[] = [];
 
             // Get the user information list
-            Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists("User Information List").Items().query({
+            let web = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+            web.Lists("User Information List").Items().query({
                 Filter: `Title eq 'Everyone' or substringof('spo-grid-all-users', Name)`,
                 Select: ["Id", "Name", "EMail", "Title", "UserName"],
                 GetAllItems: true,
@@ -649,6 +660,8 @@ export class SearchEEEU {
 
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: any }, onClose: () => void) {
+        this._loadOneDrive = values["LoadOneDrive"] == "true";
+
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Site");
         LoadingDialog.setBody("Searching the current permissions of the site...");
@@ -670,7 +683,12 @@ export class SearchEEEU {
         LoadingDialog.hide();
 
         // Determine the webs to target
-        let siteItems: Components.IDropdownItem[] = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
+        let siteItems: Components.IDropdownItem[] = null;
+        if (this._loadOneDrive) {
+            siteItems = [{ text: DataSource.OneDriveWeb.Url, value: DataSource.OneDriveWeb.Id }] as any;
+        } else {
+            siteItems = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
+        }
 
         // Parse all webs
         let counter = 0;
@@ -682,7 +700,8 @@ export class SearchEEEU {
             // Return a promise
             return new Promise(resolve => {
                 // Get the permissions
-                Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue }).query({
+                let web = this._loadOneDrive ? Web.getOneDrive() : Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue });
+                web.query({
                     Expand: [
                         "RoleAssignments", "RoleAssignments/Groups", "RoleAssignments/Member",
                         "RoleAssignments/RoleDefinitionBindings", "SiteGroups"

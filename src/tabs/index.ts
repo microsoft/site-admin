@@ -19,6 +19,7 @@ import { WebTab } from "./web";
 export class Tabs {
     private _el: HTMLElement = null;
     private _elWebTab: HTMLElement = null;
+    private _loadOneDrive: boolean = false;
     private _webRequests: IChangeRequest[];
     private _tabAppPermissions: AppPermissionsTab = null;
     private _tabChanges: ChangesTab = null;
@@ -30,8 +31,9 @@ export class Tabs {
     private _tabWeb: WebTab = null;
 
     // Constructor
-    constructor(el: HTMLElement, appProps: IAppProps) {
+    constructor(el: HTMLElement, appProps: IAppProps, loadOneDrive: boolean) {
         this._el = el;
+        this._loadOneDrive = loadOneDrive;
         this._webRequests = [];
 
         // See if the search properties exist
@@ -41,7 +43,7 @@ export class Tabs {
         }
 
         // Render the tabs
-        this.render(appProps);
+        this.render(appProps, loadOneDrive);
     }
 
     // Event when the webs are loaded
@@ -52,11 +54,11 @@ export class Tabs {
     }
 
     // Renders the tabs
-    private render(appProps: IAppProps) {
-        let auditOnly = !DataSource.IsAdmin || appProps.auditOnly;
+    private render(appProps: IAppProps, loadOneDrive: boolean) {
+        let auditOnly = loadOneDrive || !DataSource.IsAdmin || appProps.auditOnly;
 
         // Show the info tab by default always
-        let items: Components.IListGroupItem[] = [{
+        let items: Components.IListGroupItem[] = loadOneDrive ? [] : [{
             tabName: "Information",
             isActive: true,
             onRender: (el) => {
@@ -102,7 +104,7 @@ export class Tabs {
                 }
             });
         }
-        if (!appProps.hideTabs.lists) {
+        if (!loadOneDrive && !appProps.hideTabs.lists) {
             items.push({
                 tabName: "Lists/Libraries",
                 onRender: (el) => {
@@ -111,12 +113,13 @@ export class Tabs {
                 }
             });
         }
-        if (!appProps.hideTabs.auditTools) {
+        if (loadOneDrive || !appProps.hideTabs.auditTools) {
             items.push({
+                isActive: loadOneDrive,
                 tabName: "Audit Tools",
                 onRender: (el) => {
                     // Render the tab
-                    this._tabReports = new ReportsTab(el, appProps);
+                    this._tabReports = new ReportsTab(el, appProps, loadOneDrive);
                 }
             });
         }

@@ -263,6 +263,7 @@ export class ListsTab {
                         title: "",
                         onRenderCell: (el, col, item: IList, rowIdx) => {
                             let isLibrary = item.ListTemplateType == SPTypes.ListTemplateType.DocumentLibrary ||
+                                item.ListTemplateType == SPTypes.ListTemplateType.MySiteDocumentLibrary ||
                                 item.ListTemplateType == SPTypes.ListTemplateType.WebPageLibrary
 
                             // Render the buttons
@@ -329,7 +330,7 @@ export class ListsTab {
                                                 // Load the folders for this list
                                                 this.loadFolders(item).then(folders => {
                                                     // Show the senstivity label form
-                                                    SensitivityLabels.setDefaultSensitivityLabelForFiles(item.WebId, item.ListName, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt);
+                                                    SensitivityLabels.setDefaultSensitivityLabelForFiles(item.WebId, item.ListName, item.ListUrl, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt);
                                                 });
                                             }
                                         }

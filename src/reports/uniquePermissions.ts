@@ -31,6 +31,7 @@ export class UniquePermissions {
     private static _dashboard: Dashboard = null;
     private static _elSubNav: HTMLElement = null;
     private static _items: IPermission[] = [];
+    private static _loadOneDrive: boolean = false;
 
     // Analyzes a list
     private static analyzeList(webUrl: string, list: Types.SP.ListOData): PromiseLike<void> {
@@ -39,7 +40,9 @@ export class UniquePermissions {
             let Select = ["Id", "HasUniqueRoleAssignments"];
 
             // See if this is a document library
-            if (list.BaseTemplate == SPTypes.ListTemplateType.DocumentLibrary || list.BaseTemplate == SPTypes.ListTemplateType.PageLibrary) {
+            if (list.BaseTemplate == SPTypes.ListTemplateType.DocumentLibrary ||
+                list.BaseTemplate == SPTypes.ListTemplateType.MySiteDocumentLibrary ||
+                list.BaseTemplate == SPTypes.ListTemplateType.PageLibrary) {
                 // Get the file information
                 Select.push("FileLeafRef");
                 Select.push("FileRef");
@@ -51,13 +54,15 @@ export class UniquePermissions {
             // Create a batch job
             let completed = 0;
             let ctrBatchJobs = 0;
-            let batch = Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().getById(list.Id);
+            let web = this._loadOneDrive ? Web.getOneDrive() : Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+            let batch = web.Lists().getById(list.Id);
 
             // Get the items where it has broken inheritance
             let itemCounter = 0;
             DataSource.loadItems({
-                webUrl,
+                isOnedrive: this._loadOneDrive,
                 listId: list.Id,
+                webUrl,
                 query: { Select },
                 onItem: item => {
                     // Update the dialog
@@ -107,7 +112,7 @@ export class UniquePermissions {
                                     SiteGroupId: group.Id,
                                     SiteGroupName: group.LoginName,
                                     SiteGroupPermission: roleDefinitions.join(', '),
-                                    SiteGroupUrl: DataSource.SiteContext.SiteFullUrl + "/_layouts/15/people.aspx?MembershipGroupId=" + group.Id,
+                                    SiteGroupUrl: (this._loadOneDrive ? DataSource.OneDriveSite.Url : DataSource.SiteContext.SiteFullUrl) + "/_layouts/15/people.aspx?MembershipGroupId=" + group.Id,
                                     SiteGroupUsers: members.join(', '),
                                     WebUrl: webUrl
                                 };
@@ -247,8 +252,12 @@ export class UniquePermissions {
                                             text: "View",
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
+                                                // Set the url
+                                                let url = (this._loadOneDrive ? DataSource.OneDriveSite.Url : "").split('/personal/')[0];
+                                                url += item.ListViewUrl + "?ID=" + item.ItemId
+
                                                 // Show the security group
-                                                window.open(item.ListViewUrl + "?ID=" + item.ItemId, "_blank");
+                                                window.open(url, "_blank");
                                             }
                                         }
                                     },
@@ -315,6 +324,8 @@ export class UniquePermissions {
 
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
+        this._loadOneDrive = values["LoadOneDrive"] == "true";
+
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Lists");
         LoadingDialog.setBody("Searching the site...");
@@ -333,7 +344,12 @@ export class UniquePermissions {
         LoadingDialog.hide();
 
         // Determine the webs to target
-        let siteItems: Components.IDropdownItem[] = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
+        let siteItems: Components.IDropdownItem[] = null;
+        if (this._loadOneDrive) {
+            siteItems = [{ text: DataSource.OneDriveWeb.Url, value: DataSource.OneDriveWeb.Id }] as any;
+        } else {
+            siteItems = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
+        }
 
         // Parse all the webs
         let counter = 0;
@@ -346,7 +362,8 @@ export class UniquePermissions {
             // Return a promise
             return new Promise(resolve => {
                 // Get the lists
-                Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().query({
+                let web = this._loadOneDrive ? Web.getOneDrive() : Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue });
+                web.Lists().query({
                     Filter: "Hidden eq false",
                     Expand: ["DefaultDisplayFormUrl", "DefaultViewFormUrl", "RootFolder"],
                     Select: ["BaseTemplate", "Id", "Title", "HasUniqueRoleAssignments", "RootFolder/ServerRelativeUrl"]

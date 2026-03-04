@@ -47,6 +47,7 @@ export class DLP {
     private static _dashboard: Dashboard = null;
     private static _elSubNav: HTMLElement = null;
     private static _items: IDLPItem[] = [];
+    private static _loadOneDrive: boolean = false;
 
     // Gets the form fields to display
     static getFormFields(fileExt: string = ""): Components.IFormControlProps[] {
@@ -95,7 +96,8 @@ export class DLP {
         // Create the list for the batch requests
         let batchRequests = 0;
         let completed = 0;
-        let list = Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().getById(libId);
+        let web = this._loadOneDrive ? Web.getOneDrive() : Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+        let list = web.Lists().getById(libId);
 
         // Get the item ids for this library
         let itemCounter = 0;
@@ -171,13 +173,15 @@ export class DLP {
                     let completed = 0;
 
                     // Set the list
-                    let list = Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(lib.Title);
+                    let web = this._loadOneDrive ? Web.getOneDrive() : Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+                    let list = web.Lists(lib.Title);
 
                     // Get the item ids for this library
                     let itemCounter = 0;
                     DataSource.loadItems({
-                        webUrl,
+                        isOnedrive: this._loadOneDrive,
                         listId: lib.Id,
+                        webUrl,
                         query: {
                             Expand: ["Author"],
                             Select: ["Author/Title", "FileLeafRef", "FileRef", "File_x0020_Type", "Id"]
@@ -369,6 +373,7 @@ export class DLP {
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
         let data: IWebItem[] = [];
+        this._loadOneDrive = values["LoadOneDrive"] == "true";
 
         // Clear the items
         this._items = [];
@@ -391,7 +396,12 @@ export class DLP {
         LoadingDialog.hide();
 
         // Determine the webs to target
-        let siteItems: Components.IDropdownItem[] = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
+        let siteItems: Components.IDropdownItem[] = null;
+        if (this._loadOneDrive) {
+            siteItems = [{ text: DataSource.OneDriveWeb.Url, value: DataSource.OneDriveWeb.Id }] as any;
+        } else {
+            siteItems = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
+        }
 
         // Parse the webs
         let counter = 0;
@@ -402,8 +412,9 @@ export class DLP {
             // Return a promise
             return new Promise(resolve => {
                 // Get the libraries for this site
-                Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists().query({
-                    Filter: `Hidden eq false and BaseTemplate eq ${SPTypes.ListTemplateType.DocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.PageLibrary}`,
+                let web = this._loadOneDrive ? Web.getOneDrive() : Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue });
+                web.Lists().query({
+                    Filter: `Hidden eq false and BaseTemplate eq ${SPTypes.ListTemplateType.DocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.MySiteDocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.PageLibrary}`,
                     GetAllItems: true,
                     Select: ["Id", "Title"],
                     Top: 5000

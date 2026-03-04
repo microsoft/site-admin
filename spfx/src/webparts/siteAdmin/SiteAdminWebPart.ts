@@ -42,6 +42,7 @@ export interface ISiteAdminWebPartProps {
   HideFeaturesTab: boolean;
   HideListsTab: boolean;
   HideLoadAdminOwnerBtn: boolean;
+  HideLoadOneDriveBtn: boolean;
   HideManagementTab: boolean;
   HideSearchTab: boolean;
   HideWebsTab: boolean;
@@ -145,6 +146,7 @@ declare const SiteAdmin: {
     title?: string;
     disableSensitivityLabelOverride?: boolean;
     hideLoadAdminOwnerBtn: boolean;
+    hideLoadOneDriveBtn: boolean;
     hideTabs: {
       appPermissions: boolean;
       auditTools: boolean;
@@ -244,6 +246,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       el: this.domElement,
       disableSensitivityLabelOverride: this.properties.DisableSensitivityLabelOverride,
       hideLoadAdminOwnerBtn: this.properties.HideLoadAdminOwnerBtn,
+      hideLoadOneDriveBtn: this.properties.HideLoadOneDriveBtn,
       hideTabs: {
         appPermissions: this.properties.HideAppPermissionsTab,
         auditTools: this.properties.HideAuditToolsTab,
@@ -425,6 +428,12 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   checked: this.properties.HideLoadAdminOwnerBtn,
                   onText: "The option to view a site's admins/owners will be hidden.",
                   offText: "The option to view a site's admins/owners will be visible."
+                }),
+                PropertyPaneToggle("HideLoadOneDriveBtn", {
+                  label: "Hide Load OneDrive Button",
+                  checked: this.properties.HideLoadOneDriveBtn,
+                  onText: "The option to run reports against the user's OneDrive will be hidden.",
+                  offText: "The option to run reports against the user's OneDrive will be visible."
                 }),
                 PropertyPaneToggle("SiteAttestation", {
                   label: "Site Attestation Feature",

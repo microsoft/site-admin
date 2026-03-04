@@ -37,15 +37,17 @@ export class ReportsTab {
     private _el: HTMLElement = null;
     private _disableSensitivityLabelOverride: boolean = null;
     private _form: Components.IForm = null;
+    private _loadOneDrive: boolean = false;
     private _reportProps: IReportProps = null;
     private _searchProps: ISearchProps = null;
     private _selectedReport: string = null;
 
     // Constructor
-    constructor(el: HTMLElement, appProps: IAppProps) {
+    constructor(el: HTMLElement, appProps: IAppProps, loadOneDrive: boolean) {
         this._auditOnly = !DataSource.IsAdmin || (appProps.auditOnly ? true : false);
         this._el = el;
         this._disableSensitivityLabelOverride = appProps.disableSensitivityLabelOverride;
+        this._loadOneDrive = loadOneDrive;
         this._reportProps = appProps.reportProps;
         this._searchProps = appProps.searchProps;
 
@@ -61,6 +63,78 @@ export class ReportsTab {
         // Clear the element
         while (this._el.firstChild) { this._el.removeChild(this._el.firstChild); }
 
+        // Set the reports to display
+        let items: Components.IDropdownItem[] = [
+            {
+                text: "Data Loss Prevention",
+                data: "Finds files that has DLP applied to it.",
+                value: ReportTypes.DLP
+            },
+            {
+                text: "Document Retention",
+                data: "Find documents older than a specified date.",
+                value: ReportTypes.DocRetention
+            },
+            {
+                text: "External Shares",
+                data: "Scans for documents that have been shared externally.",
+                value: ReportTypes.ExternalShares
+            },
+            {
+                text: "External Users",
+                data: "Scans the user information list for 'external' user accounts.",
+                value: ReportTypes.ExternalUsers
+            },
+            {
+                text: "Permissions",
+                data: "Scans all users/groups that have permissions to the site.",
+                value: ReportTypes.Permissions
+            },
+            {
+                text: "Search Documents",
+                data: "Find documents by keywords.",
+                value: ReportTypes.SearchDocs
+            },
+            {
+                text: "Search EEEU",
+                data: "Search for the 'Every' and 'Everyone exception external users' accounts.",
+                value: ReportTypes.SearchEEEU
+            },
+            {
+                text: this._searchProps.reportName || "Search Property",
+                data: "Find sites by search property.",
+                value: ReportTypes.SearchProp,
+                isDisabled: this._searchProps.managedProperty && DataSource.SearchPropItems ? false : true
+            },
+            {
+                text: "Search Users",
+                data: "Search users by keyword or account.",
+                value: ReportTypes.SearchUsers
+            },
+            {
+                text: "Sensitivity Labels",
+                data: "Search for files that have sensitivity labels.",
+                value: ReportTypes.SensitivityLabels
+            },
+            {
+                text: "Sharing Links",
+                data: "Scans for any 'Sharing Link' groups.",
+                value: ReportTypes.SharingLinks
+            },
+            {
+                text: "Unique Permissions",
+                data: "Scans for items that have unique permissions.",
+                value: ReportTypes.UniquePermissions
+            }
+        ];
+
+        // See if this is onedrive
+        if (this._loadOneDrive) {
+            // Remove some of the reports
+            items.splice(8, 1);
+            items.splice(7, 1);
+        }
+
         // Render a form
         this._form = Components.Form({
             el: this._el,
@@ -71,69 +145,7 @@ export class ReportsTab {
                     description: "Select a report to run against this site.",
                     type: Components.FormControlTypes.Dropdown,
                     value: this._selectedReport,
-                    items: [
-                        {
-                            text: "Data Loss Prevention",
-                            data: "Finds files that has DLP applied to it.",
-                            value: ReportTypes.DLP
-                        },
-                        {
-                            text: "Document Retention",
-                            data: "Find documents older than a specified date.",
-                            value: ReportTypes.DocRetention
-                        },
-                        {
-                            text: "External Shares",
-                            data: "Scans for documents that have been shared externally.",
-                            value: ReportTypes.ExternalShares
-                        },
-                        {
-                            text: "External Users",
-                            data: "Scans the user information list for 'external' user accounts.",
-                            value: ReportTypes.ExternalUsers
-                        },
-                        {
-                            text: "Permissions",
-                            data: "Scans all users/groups that have permissions to the site.",
-                            value: ReportTypes.Permissions
-                        },
-                        {
-                            text: "Search Documents",
-                            data: "Find documents by keywords.",
-                            value: ReportTypes.SearchDocs
-                        },
-                        {
-                            text: "Search EEEU",
-                            data: "Search for the 'Every' and 'Everyone exception external users' accounts.",
-                            value: ReportTypes.SearchEEEU
-                        },
-                        {
-                            text: this._searchProps.reportName || "Search Property",
-                            data: "Find sites by search property.",
-                            value: ReportTypes.SearchProp,
-                            isDisabled: this._searchProps.managedProperty && DataSource.SearchPropItems ? false : true
-                        },
-                        {
-                            text: "Search Users",
-                            data: "Search users by keyword or account.",
-                            value: ReportTypes.SearchUsers
-                        },
-                        {
-                            text: "Sensitivity Labels",
-                            data: "Search for files that have sensitivity labels.",
-                            value: ReportTypes.SensitivityLabels
-                        },
-                        {
-                            text: "Sharing Links",
-                            data: "Scans for any 'Sharing Link' groups.",
-                            value: ReportTypes.SharingLinks
-                        },
-                        {
-                            text: "Unique Permissions",
-                            data: "Scans for items that have unique permissions.",
-                            value: ReportTypes.UniquePermissions
-                        }
-                    ],
+                    items,
                     onChange: item => {
                         // Render the form for this report
                         this.render(item?.value);
@@ -220,46 +232,50 @@ export class ReportsTab {
                 // Ensure the form is required
                 if (!this._form.isValid()) { return; }
 
+                // Set the form values
+                let formValues = this._form.getValues();
+                formValues["LoadOneDrive"] = this._loadOneDrive ? "true" : "false";
+
                 // Run the report
                 switch (this._selectedReport) {
                     case ReportTypes.DLP:
-                        Reports.DLP.run(this._el, this._auditOnly, this._form.getValues(), () => {
+                        Reports.DLP.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.DocRetention:
-                        Reports.DocRetention.run(this._el, this._auditOnly, this._form.getValues(), () => {
+                        Reports.DocRetention.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.ExternalShares:
-                        Reports.ExternalShares.run(this._el, this._auditOnly, this._form.getValues(), () => {
+                        Reports.ExternalShares.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.ExternalUsers:
-                        Reports.ExternalUsers.run(this._el, this._auditOnly, this._form.getValues(), () => {
+                        Reports.ExternalUsers.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.Permissions:
-                        Reports.Permissions.run(this._el, this._auditOnly, this._form.getValues(), () => {
+                        Reports.Permissions.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.SearchDocs:
-                        Reports.SearchDocs.run(this._el, this._auditOnly, this._form.getValues(), () => {
+                        Reports.SearchDocs.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.SearchEEEU:
-                        Reports.SearchEEEU.run(this._el, this._auditOnly, this._form.getValues(), () => {
+                        Reports.SearchEEEU.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });
@@ -273,9 +289,8 @@ export class ReportsTab {
                         break;
                     case ReportTypes.SearchUsers:
                         // Ensure the values exist
-                        let values = this._form.getValues();
-                        if (values.UserName || values.PeoplePicker.length > 0) {
-                            Reports.SearchUsers.run(this._el, this._auditOnly, values, () => {
+                        if (formValues.UserName || formValues.PeoplePicker.length > 0) {
+                            Reports.SearchUsers.run(this._el, this._auditOnly, formValues, () => {
                                 // Render this component
                                 this.render(this._selectedReport);
                             });
@@ -294,19 +309,19 @@ export class ReportsTab {
                         }
                         break;
                     case ReportTypes.SensitivityLabels:
-                        Reports.SensitivityLabels.run(this._el, this._auditOnly, this._form.getValues(), () => {
+                        Reports.SensitivityLabels.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.SharingLinks:
-                        Reports.SharingLinks.run(this._el, this._auditOnly, this._form.getValues(), () => {
+                        Reports.SharingLinks.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });
                         break;
                     case ReportTypes.UniquePermissions:
-                        Reports.UniquePermissions.run(this._el, this._auditOnly, this._form.getValues(), () => {
+                        Reports.UniquePermissions.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });
