@@ -70,7 +70,7 @@ export class App {
         let elRow = this._props.el.children[0] as HTMLElement;
 
         // Render the dashboard
-        this.renderNavigation(elRow);
+        this.renderNavigation(elRow, loadOneDrive);
 
         // See if we are loading onedrive
         if (loadOneDrive) {
@@ -109,11 +109,11 @@ export class App {
     }
 
     // Renders the navigation
-    private renderNavigation(elRow: HTMLElement) {
+    private renderNavigation(elRow: HTMLElement, loadOneDrive: boolean) {
         let itemsEnd: Components.INavbarItem[] = [];
 
         // Show the load site button if data has already been loaded
-        if (DataSource.Site) {
+        if (DataSource.Site || loadOneDrive) {
             itemsEnd.push({
                 className: "btn-outline-light",
                 isButton: true,
