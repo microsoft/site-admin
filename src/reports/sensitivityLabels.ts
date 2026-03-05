@@ -318,6 +318,11 @@ export class SensitivityLabels {
                     };
                     responses.push(response);
                     this._dashboard.Datatable.addRow(response);
+
+                    // Update the dialog
+                    this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] ${response.message}`;
+
+                    // Check the next file
                     return;
                 }
             }
@@ -727,7 +732,7 @@ export class SensitivityLabels {
                                 justification = justification == "Other" ? values["JustificationOther"] : justification;
 
                                 // Label the files
-                                this.labelFilesInFolder(webId, listName, listUrl, folder, fileExtensions, label, replaceLabel, overrideLabelFl, justification);
+                                this.labelFilesInFolder(webId, listName, listUrl, folder, fileExtensions, label, replaceLabel?.value ? replaceLabel : null, overrideLabelFl, justification);
                             }
                         }
                     }
