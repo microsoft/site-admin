@@ -357,6 +357,9 @@ export class SensitivityLabels {
 
             // Ensure the process is running
             worker.start();
+        }).then(() => {
+            // Ensure the process is running
+            worker.start();
         });
     }
 
@@ -613,6 +616,23 @@ export class SensitivityLabels {
                             // Show the override label option
                             form.getControl("OverrideLabel").show();
                         }
+                    },
+                    onValidate: (ctrl, results) => {
+                        let item = results.value as Components.IDropdownItem;;
+
+                        // See if a value exists
+                        if (item?.value) {
+                            // Get the source value
+                            let sourceItem = form.getControl("SensitivityLabel").getValue() as Components.IDropdownItem;
+                            if (sourceItem?.value == item.value) {
+                                // Set the validation
+                                results.isValid = false;
+                                results.invalidMessage = "The replace label cannot be the same as the sensitivity label.";
+                            }
+                        }
+
+                        // Return the results
+                        return results;
                     }
                 } as Components.IFormControlPropsDropdown,
                 {
@@ -623,8 +643,8 @@ export class SensitivityLabels {
                     items: folders
                 } as Components.IFormControlPropsDropdown,
                 {
-                    label: "File Types",
                     name: "FileTypes",
+                    label: "File Types",
                     type: Components.FormControlTypes.TextField,
                     value: fileTypes
                 },
