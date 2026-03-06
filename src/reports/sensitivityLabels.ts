@@ -581,6 +581,8 @@ export class SensitivityLabels {
 
     // Shows the form for labeling a list
     static setDefaultSensitivityLabelForFiles(webId: string, listName: string, listUrl: string, defaultLabel: string, folders: Components.IDropdownItem[], disableSensitivityLabelOverride: boolean, fileTypes: string) {
+        let defaultItem: Components.IDropdownItem = { text: "All Folders", value: "" };
+
         // Set the modal header
         Modal.clear();
         Modal.setHeader("Set Default Sensitivity Label");
@@ -641,13 +643,6 @@ export class SensitivityLabels {
                     }
                 } as Components.IFormControlPropsDropdown,
                 {
-                    name: "ListFolder",
-                    label: "Select a Folder:",
-                    description: "Targets a specific folder to tag, otherwise will apply to all files in the library.",
-                    type: Components.FormControlTypes.Dropdown,
-                    items: folders
-                } as Components.IFormControlPropsDropdown,
-                {
                     name: "FileTypes",
                     label: "File Types",
                     type: Components.FormControlTypes.TextField,
@@ -705,7 +700,175 @@ export class SensitivityLabels {
                         return results;
                     }
                 } as Components.IFormControlPropsTextField,
-            ]
+                {
+                    name: "ListFolder",
+                    label: "Select a Folder:",
+                    description: "Targets a specific folder to tag, otherwise will apply to all files in the library.",
+                    type: Components.FormControlTypes.Dropdown,
+                    items: folders,
+                    onChange: (item) => {
+                        // Clear the sub-folder
+                        let subFolder = form.getControl("ListSubFolder1");
+                        subFolder.dropdown.setItems([defaultItem]);
+
+                        // See if a folder is selected
+                        if (item && item.value) {
+                            // Show the folder
+                            subFolder.show();
+
+                            // Set the dropdown items
+                            subFolder.dropdown.setItems([defaultItem]);
+
+                            // Load the folders
+                            DataSource.loadFolders(webId, listName, listUrl, item.value).then(items => {
+                                // Set the dropdown items
+                                subFolder.dropdown.setItems([defaultItem].concat(items));
+                            });
+                        } else {
+                            subFolder.hide();
+                        }
+                    }
+                } as Components.IFormControlPropsDropdown,
+                {
+                    name: "ListSubFolder1",
+                    label: "Select a Sub-Folder:",
+                    description: "Targets a specific folder to tag, otherwise will apply to all files in this folder.",
+                    type: Components.FormControlTypes.Dropdown,
+                    onChange: (item) => {
+                        // Clear the sub-folder
+                        let subFolder = form.getControl("ListSubFolder2");
+                        subFolder.dropdown.setItems([]);
+
+                        // See if a folder is selected
+                        if (item && item.value) {
+                            // Show the folder
+                            subFolder.show();
+
+                            // Set the dropdown items
+                            subFolder.dropdown.setItems([defaultItem]);
+
+                            // Load the folders
+                            DataSource.loadFolders(webId, listName, listUrl, item.value).then(items => {
+                                // Set the dropdown items
+                                subFolder.dropdown.setItems([defaultItem].concat(items));
+                            });
+                        } else {
+                            // Hide the folder
+                            subFolder.hide();
+                        }
+                    }
+                } as Components.IFormControlPropsDropdown,
+                {
+                    name: "ListSubFolder2",
+                    label: "Select a Sub-Folder:",
+                    description: "Targets a specific folder to tag, otherwise will apply to all files in this folder.",
+                    type: Components.FormControlTypes.Dropdown,
+                    onChange: (item) => {
+                        // Clear the sub-folder
+                        let subFolder = form.getControl("ListSubFolder3");
+                        subFolder.dropdown.setItems([]);
+
+                        // See if a folder is selected
+                        if (item && item.value) {
+                            // Show the folder
+                            subFolder.show();
+
+                            // Set the dropdown items
+                            subFolder.dropdown.setItems([defaultItem]);
+
+                            // Load the folders
+                            DataSource.loadFolders(webId, listName, listUrl, item.value).then(items => {
+                                // Set the dropdown items
+                                subFolder.dropdown.setItems([defaultItem].concat(items));
+                            });
+                        } else {
+                            // Hide the folder
+                            subFolder.hide();
+                        }
+                    }
+                } as Components.IFormControlPropsDropdown,
+                {
+                    name: "ListSubFolder3",
+                    label: "Select a Sub-Folder:",
+                    description: "Targets a specific folder to tag, otherwise will apply to all files in this folder.",
+                    type: Components.FormControlTypes.Dropdown,
+                    onChange: (item) => {
+                        // Clear the sub-folder
+                        let subFolder = form.getControl("ListSubFolder4");
+                        subFolder.dropdown.setItems([]);
+
+                        // See if a folder is selected
+                        if (item && item.value) {
+                            // Show the folder
+                            subFolder.show();
+
+                            // Set the dropdown items
+                            subFolder.dropdown.setItems([defaultItem]);
+
+                            // Load the folders
+                            DataSource.loadFolders(webId, listName, listUrl, item.value).then(items => {
+                                // Set the dropdown items
+                                subFolder.dropdown.setItems([defaultItem].concat(items));
+                            });
+                        } else {
+                            // Hide the folder
+                            subFolder.hide();
+                        }
+                    }
+                } as Components.IFormControlPropsDropdown,
+                {
+                    name: "ListSubFolder4",
+                    label: "Select a Sub-Folder:",
+                    description: "Targets a specific folder to tag, otherwise will apply to all files in this folder.",
+                    type: Components.FormControlTypes.Dropdown,
+                    onChange: (item) => {
+                        // Clear the sub-folder
+                        let subFolder = form.getControl("ListSubFolder5");
+                        subFolder.dropdown.setItems([]);
+
+                        // See if a folder is selected
+                        if (item && item.value) {
+                            // Show the folder
+                            subFolder.show();
+
+                            // Set the dropdown items
+                            subFolder.dropdown.setItems([defaultItem]);
+
+                            // Load the folders
+                            DataSource.loadFolders(webId, listName, listUrl, item.value).then(items => {
+                                // Set the dropdown items
+                                subFolder.dropdown.setItems([defaultItem].concat(items));
+                            });
+                        } else {
+                            // Hide the folder
+                            subFolder.hide();
+                        }
+                    }
+                } as Components.IFormControlPropsDropdown,
+                {
+                    name: "ListSubFolder5",
+                    label: "Select a Sub-Folder:",
+                    description: "Targets a specific folder to tag, otherwise will apply to all files in this folder.",
+                    type: Components.FormControlTypes.Dropdown,
+                    onControlRendered: ctrl => { ctrl.hide(); },
+                    onChange: (item) => {
+                        let subFolder = form.getControl("ListSubFolder5");
+
+                        // See if items exist
+                        if (item) {
+                            // Show the folder
+                            subFolder.show();
+                        } else {
+                            // Hide the folder
+                            subFolder.hide();
+                        }
+                    }
+                } as Components.IFormControlPropsDropdown
+            ],
+            onRendered: () => {
+                // Hide the sub-folders
+                form.getControl("ListSubFolder1").dropdown.setItems([]);
+            }
         });
 
         // Set the footer
@@ -722,17 +885,25 @@ export class SensitivityLabels {
                             if (form.isValid()) {
                                 let values = form.getValues();
                                 let fileExtensions: string[] = values["FileTypes"] ? values["FileTypes"].trim().split(' ') : [];
-                                let folder = values["ListFolder"].data;
                                 let label: Components.IDropdownItem = values["SensitivityLabel"];
                                 let replaceLabel: Components.IDropdownItem = values["ReplaceLabel"];
                                 let overrideLabelFl: boolean = values["OverrideLabel"];
+
+                                // Set the target folder
+                                let folder = values["ListFolder"].data;
+                                let subFolder1 = values["ListSubFolder1"]?.data;
+                                let subFolder2 = values["ListSubFolder2"]?.data;
+                                let subFolder3 = values["ListSubFolder3"]?.data;
+                                let subFolder4 = values["ListSubFolder4"]?.data;
+                                let subFolder5 = values["ListSubFolder5"]?.data;
+                                let targetFolder = subFolder5 || subFolder4 || subFolder3 || subFolder2 || subFolder1 || folder;
 
                                 // Update the justification
                                 let justification = values["Justification"].text;
                                 justification = justification == "Other" ? values["JustificationOther"] : justification;
 
                                 // Label the files
-                                this.labelFilesInFolder(webId, listName, listUrl, folder, fileExtensions, label, replaceLabel?.value ? replaceLabel : null, overrideLabelFl, justification);
+                                this.labelFilesInFolder(webId, listName, listUrl, targetFolder, fileExtensions, label, replaceLabel?.value ? replaceLabel : null, overrideLabelFl, justification);
                             }
                         }
                     }

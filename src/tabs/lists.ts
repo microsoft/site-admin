@@ -70,36 +70,6 @@ export class ListsTab {
         this._dt.Datatable.addRow(item);
     }
 
-    // Loads the root folders for the list
-    private loadFolders(item: IList): PromiseLike<Components.IDropdownItem[]> {
-        // Return a promise
-        return new Promise(resolve => {
-            let items: Components.IDropdownItem[] = [{ text: "All Files in Library", value: null }];
-
-            // Load the folders for this list
-            Web(item.WebUrl).Lists().getById(item.ListId).RootFolder().Folders().query({ Expand: ["ListItemAllFields"], OrderBy: ["Name"] }).execute(folders => {
-                // Parse the folders
-                folders.results.forEach(folder => {
-                    // Ensure an item exists for this folder
-                    if (folder.ListItemAllFields?.Id > 0) {
-                        // Add the item
-                        items.push({
-                            data: folder,
-                            text: folder.Name,
-                            value: folder.Name
-                        });
-                    }
-                });
-
-                // Resolve the request
-                resolve(items);
-            }, () => {
-                // Shouldn't happen but we'll render a blank list
-                resolve(items);
-            });
-        });
-    }
-
     // Loads the lists
     loadLists(showHiddenLists: boolean = false): PromiseLike<void> {
         // Update the sub-nav
@@ -310,7 +280,7 @@ export class ListsTab {
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
                                                 // Load the folders for this list
-                                                this.loadFolders(item).then(folders => {
+                                                DataSource.loadFolders(item.WebId, item.ListName, item.ListUrl).then(folders => {
                                                     // Show the senstivity label form
                                                     SensitivityLabels.setDefaultSensitivityLabelForFiles(item.WebId, item.ListName, item.ListUrl, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt);
                                                 });
