@@ -48,8 +48,7 @@ export class Tabs {
 
     // Event when the webs are loaded
     onWebsLoaded(webs: Components.IDropdownItem[]) {
-        // Update the tabs
-        this._tabLists.loadLists(false);
+        // Update the webs
         this._tabReports.setWebs(webs);
     }
 

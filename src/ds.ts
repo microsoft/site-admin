@@ -509,7 +509,7 @@ export class DataSource {
     }
 
     // Loads the files for a drive
-    static loadFiles(webId: string, listName: string, listUrl: string, folder?: Types.SP.Folder, onFile?: (file: Types.Microsoft.Graph.driveItem) => void): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
+    static loadFiles(webId: string, driveId: string, folderId: string, onFile?: (file: Types.Microsoft.Graph.driveItem) => void): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
         let files = [];
         let isOneDrive = webId == DataSource.OneDriveWeb?.Id;
 
@@ -557,29 +557,82 @@ export class DataSource {
         // Return a promise
         return new Promise((resolve, reject) => {
             // Get the library
-            v2.sites({ siteId: isOneDrive ? this.OneDriveSite.Id : this.Site.Id, webId, targetInfo: { keepalive: true } }).drives().execute(resp => {
-                // Find the target drive
-                let drive = resp.results.find(a => { return a.name == listName || a.webUrl.endsWith(listUrl); });
-                if (drive) {
-                    // See if we are getting a specific folder
-                    if (folder) {
-                        // Get the folder
-                        drive.getFolder(folder.Name).execute(folder => {
-                            // Get the files
-                            getFiles(drive.id, folder.id).then(() => { resolve(files); });
-                        });
-                    } else {
-                        // Get the root folder
-                        drive.root().execute(rootFolder => {
-                            // Get the files
-                            getFiles(drive.id, rootFolder.id).then(() => { resolve(files); });
-                        });
+            let drive = v2.sites({ siteId: isOneDrive ? this.OneDriveSite.Id : this.Site.Id, webId, targetInfo: { keepalive: true } }).drives(driveId);
+            // See if we are getting a specific folder
+            if (folderId) {
+                // Get the files
+                getFiles(driveId, folderId).then(() => { resolve(files); });
+            } else {
+                // Get the root folder
+                drive.root().execute(rootFolder => {
+                    // Get the files
+                    getFiles(driveId, rootFolder.id).then(() => { resolve(files); });
+                }, reject);
+            }
+        });
+    }
+
+    // Loads the folders for a library
+    static loadFolders(webId: string, driveId: string, folderId?: string): PromiseLike<Components.IDropdownItem[]> {
+        let folders: Components.IDropdownItem[] = [];
+        let isOneDrive = webId == DataSource.OneDriveWeb?.Id;
+
+        // Gets the items for a folder
+        let getFolders = (driveId: string, folderId: string) => {
+            // Return a promise
+            return new Promise(resolve => {
+                // Get the files for the folder
+                v2.sites({
+                    siteId: isOneDrive ? this.OneDriveSite.Id : this.Site.Id,
+                    webId, targetInfo: {
+                        disableProcessing: true,
+                        keepalive: true
                     }
-                } else {
+                }).drives(driveId).items(folderId).children().query({
+                    Filter: "folder ne null",
+                    GetAllItems: true,
+                    Select: ["driveId", "folder", "id", "name"],
+                    Top: 5000
+                }).execute(resp => {
+                    // Parse the items
+                    Helper.Executor(resp["d"].value, (driveItem: Types.Microsoft.Graph.driveItem) => {
+                        // Add the folder item
+                        folders.push({
+                            data: driveItem,
+                            text: driveItem.name,
+                            value: driveItem.id
+                        });
+                    }).then(() => {
+                        // Resolve the request
+                        resolve(folders);
+                    });
+                });
+            });
+        }
+
+        // Return a promise
+        return new Promise((resolve, reject) => {
+            // See if the folder exists
+            if (folderId) {
+                // Load the items for this folder
+                getFolders(driveId, folderId).then(() => {
                     // Resolve the request
-                    resolve(files);
-                }
-            }, reject);
+                    resolve(folders);
+                });
+            } else {
+                // Get the root folder
+                v2.drive({
+                    driveId,
+                    webId,
+                    siteId: isOneDrive ? this.OneDriveSite.Id : this.Site.Id,
+                }).root().execute(root => {
+                    // Load the items for this folder
+                    getFolders(driveId, root.id).then(() => {
+                        // Resolve the request
+                        resolve(folders);
+                    });
+                }, reject);
+            }
         });
     }
 
