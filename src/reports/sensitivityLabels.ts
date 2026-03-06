@@ -81,7 +81,7 @@ export class SensitivityLabels {
     }
 
     // Analyzes the libraries
-    private static analyzeLibraries(webId: string, webUrl: string, libraries: Types.SP.ListOData[], withLabelsFl, withoutLabelsFl) {
+    private static analyzeLibraries(webId: string, webUrl: string, libraries: Types.SP.ListOData[], drives: Types.Microsoft.Graph.drive[], withLabelsFl, withoutLabelsFl) {
         // Return a promise
         return new Promise(resolve => {
             let counter = 0;
@@ -94,6 +94,14 @@ export class SensitivityLabels {
                 // Update the dialog
                 this._elSubNav.children[0].innerHTML = `${siteText} [Analyzing Library ${++counter} of ${libraries.length}]: ${lib.Title}`;
 
+                // Get the drive for this library
+                let drive = drives.find(drive => {
+                    return drive.name == lib.Title || drive.webUrl.endsWith(lib.RootFolder.ServerRelativeUrl);
+                });
+
+                // Ensure a drive exists, otherwise check the next library
+                if (drive == null) { return; }
+
                 // Return a promise
                 return new Promise(resolve => {
                     // Update the dialog
@@ -101,7 +109,7 @@ export class SensitivityLabels {
 
                     // Get the files for this library
                     let filesProcessed = 0;
-                    DataSource.loadFiles(webId, lib.Title, lib.RootFolder.ServerRelativeUrl, null, (file: Types.Microsoft.Graph.driveItem) => {
+                    DataSource.loadFiles(webId, drive.id, null, (file: Types.Microsoft.Graph.driveItem) => {
                         let hasLabel = file.sensitivityLabel && file.sensitivityLabel.displayName ? true : false;
 
                         // Update the dialog
@@ -234,7 +242,7 @@ export class SensitivityLabels {
     }
 
     // Labels files for a specified folder
-    private static labelFilesInFolder(webId: string, listName: string, listUrl: string, folder: Types.SP.Folder, fileExtensions: string[], label: Components.IDropdownItem, replaceLabel: Components.IDropdownItem, overrideLabelFl: boolean, justification: string) {
+    private static labelFilesInFolder(webId: string, listName: string, driveId: string, folderId: string, fileExtensions: string[], label: Components.IDropdownItem, replaceLabel: Components.IDropdownItem, overrideLabelFl: boolean, justification: string) {
         let responses: ISetSensitivityLabelResponse[] = [];
 
         // Show the responses
@@ -353,7 +361,7 @@ export class SensitivityLabels {
         };
 
         // Load the files for this drive
-        DataSource.loadFiles(webId, listName, listUrl, folder, file => {
+        DataSource.loadFiles(webId, driveId, folderId, file => {
             // Add the file to process
             filesToProcess.push(file);
 
@@ -569,8 +577,14 @@ export class SensitivityLabels {
                     // Update the dialog
                     this._elSubNav.children[1].innerHTML = "Loading the files for the libraries...";
 
-                    // Analyze the libraries
-                    this.analyzeLibraries(siteItem.value, siteItem.text, libs.results, withLabelsFl, withoutLabelsFl).then(resolve);
+                    // Get the drives for this web
+                    v2.drives({
+                        siteId: this._loadOneDrive ? DataSource.OneDriveSite.Id : DataSource.Site.Id,
+                        webId: this._loadOneDrive ? DataSource.OneDriveWeb.Id : DataSource.Web.Id
+                    }).execute(drives => {
+                        // Analyze the libraries
+                        this.analyzeLibraries(siteItem.value, siteItem.text, libs.results, drives.results, withLabelsFl, withoutLabelsFl).then(resolve);
+                    });
                 });
             });
         }).then(() => {
@@ -580,7 +594,7 @@ export class SensitivityLabels {
     }
 
     // Shows the form for labeling a list
-    static setDefaultSensitivityLabelForFiles(webId: string, listName: string, listUrl: string, defaultLabel: string, folders: Components.IDropdownItem[], disableSensitivityLabelOverride: boolean, fileTypes: string) {
+    static setDefaultSensitivityLabelForFiles(webId: string, listName: string, driveId: string, defaultLabel: string, folders: Components.IDropdownItem[], disableSensitivityLabelOverride: boolean, fileTypes: string) {
         let defaultItem: Components.IDropdownItem = { text: "All Folders", value: "" };
 
         // Set the modal header
@@ -591,6 +605,10 @@ export class SensitivityLabels {
         let form = Components.Form({
             el: Modal.BodyElement,
             groupClassName: "mb-3",
+            onRendered: () => {
+                // Set the folders to trigger the change events for the sub-folders
+                form.getControl("ListFolder").dropdown.setItems([defaultItem].concat(folders));
+            },
             controls: [
                 {
                     name: "SensitivityLabel",
@@ -705,7 +723,6 @@ export class SensitivityLabels {
                     label: "Select a Folder:",
                     description: "Targets a specific folder to tag, otherwise will apply to all files in the library.",
                     type: Components.FormControlTypes.Dropdown,
-                    items: folders,
                     onChange: (item) => {
                         // Clear the sub-folder
                         let subFolder = form.getControl("ListSubFolder1");
@@ -720,7 +737,7 @@ export class SensitivityLabels {
                             subFolder.dropdown.setItems([defaultItem]);
 
                             // Load the folders
-                            DataSource.loadFolders(webId, listName, listUrl, item.value).then(items => {
+                            DataSource.loadFolders(webId, driveId, item.value).then(items => {
                                 // Set the dropdown items
                                 subFolder.dropdown.setItems([defaultItem].concat(items));
                             });
@@ -748,7 +765,7 @@ export class SensitivityLabels {
                             subFolder.dropdown.setItems([defaultItem]);
 
                             // Load the folders
-                            DataSource.loadFolders(webId, listName, listUrl, item.value).then(items => {
+                            DataSource.loadFolders(webId, driveId, item.value).then(items => {
                                 // Set the dropdown items
                                 subFolder.dropdown.setItems([defaultItem].concat(items));
                             });
@@ -777,7 +794,7 @@ export class SensitivityLabels {
                             subFolder.dropdown.setItems([defaultItem]);
 
                             // Load the folders
-                            DataSource.loadFolders(webId, listName, listUrl, item.value).then(items => {
+                            DataSource.loadFolders(webId, driveId, item.value).then(items => {
                                 // Set the dropdown items
                                 subFolder.dropdown.setItems([defaultItem].concat(items));
                             });
@@ -806,7 +823,7 @@ export class SensitivityLabels {
                             subFolder.dropdown.setItems([defaultItem]);
 
                             // Load the folders
-                            DataSource.loadFolders(webId, listName, listUrl, item.value).then(items => {
+                            DataSource.loadFolders(webId, driveId, item.value).then(items => {
                                 // Set the dropdown items
                                 subFolder.dropdown.setItems([defaultItem].concat(items));
                             });
@@ -835,7 +852,7 @@ export class SensitivityLabels {
                             subFolder.dropdown.setItems([defaultItem]);
 
                             // Load the folders
-                            DataSource.loadFolders(webId, listName, listUrl, item.value).then(items => {
+                            DataSource.loadFolders(webId, driveId, item.value).then(items => {
                                 // Set the dropdown items
                                 subFolder.dropdown.setItems([defaultItem].concat(items));
                             });
@@ -864,11 +881,7 @@ export class SensitivityLabels {
                         }
                     }
                 } as Components.IFormControlPropsDropdown
-            ],
-            onRendered: () => {
-                // Hide the sub-folders
-                form.getControl("ListSubFolder1").dropdown.setItems([]);
-            }
+            ]
         });
 
         // Set the footer
@@ -903,7 +916,7 @@ export class SensitivityLabels {
                                 justification = justification == "Other" ? values["JustificationOther"] : justification;
 
                                 // Label the files
-                                this.labelFilesInFolder(webId, listName, listUrl, targetFolder, fileExtensions, label, replaceLabel?.value ? replaceLabel : null, overrideLabelFl, justification);
+                                this.labelFilesInFolder(webId, listName, driveId, targetFolder?.id, fileExtensions, label, replaceLabel?.value ? replaceLabel : null, overrideLabelFl, justification);
                             }
                         }
                     }

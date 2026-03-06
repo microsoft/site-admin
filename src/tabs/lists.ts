@@ -1,5 +1,5 @@
 import { Dashboard, Modal, LoadingDialog } from "dattatable";
-import { Components, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
+import { Components, Helper, SPTypes, Types, v2, Web } from "gd-sprest-bs";
 import { ExportCSV } from "../reports/exportCSV";
 import { IAppProps } from "../app";
 import { DataSource } from "../ds";
@@ -9,6 +9,7 @@ import { SensitivityLabels } from "../reports/sensitivityLabels";
 interface IList {
     BaseTemplate: number;
     DefaultSensitivityLabel: string;
+    DriveId: string;
     HasUniqueRoleAssignments: boolean;
     IncludedInSearch: boolean;
     ItemCount: number;
@@ -49,11 +50,17 @@ export class ListsTab {
     }
 
     // Analyzes a list
-    private analyzeList(webUrl: string, webId: string, list: Types.SP.ListOData) {
+    private analyzeList(webUrl: string, webId: string, list: Types.SP.ListOData, drives: Types.Microsoft.Graph.drive[]) {
+        // See if a drive exists for this list
+        let drive = drives.find(drive => {
+            return drive.name == list.Title || drive.webUrl.endsWith(list.RootFolder.ServerRelativeUrl);
+        });
+
         // Add a row for this entry
         let item: IList = {
             BaseTemplate: list.BaseTemplate,
             DefaultSensitivityLabel: list.DefaultSensitivityLabelForLibrary,
+            DriveId: drive?.id,
             HasUniqueRoleAssignments: list.HasUniqueRoleAssignments,
             IncludedInSearch: !list.NoCrawl,
             ItemCount: list.ItemCount,
@@ -106,6 +113,7 @@ export class ListsTab {
             web.Lists().query({
                 Filter,
                 Expand: ["DefaultViewFormUrl", "RootFolder"],
+                OrderBy: ["Title"],
                 Select: [
                     "BaseTemplate", "DefaultSensitivityLabelForLibrary", "Id", "NoCrawl",
                     "ItemCount", "Title", "HasUniqueRoleAssignments", "RootFolder/ServerRelativeUrl"
@@ -113,19 +121,22 @@ export class ListsTab {
             }).execute(lists => {
                 let ctrList = 0;
 
-                // Parse the lists
-                Helper.Executor(lists.results, list => {
-                    // Update the status
-                    this._elSubNav.children[0].innerHTML = `Analyzing List ${++ctrList} of ${lists.results.length}...`;
+                // Get the drives for this web
+                v2.drives({ siteId: DataSource.Site.Id, webId: DataSource.Web.Id }).execute(drives => {
+                    // Parse the lists
+                    Helper.Executor(lists.results, list => {
+                        // Update the status
+                        this._elSubNav.children[0].innerHTML = `Analyzing List ${++ctrList} of ${lists.results.length}...`;
 
-                    // Analyze the list
-                    return this.analyzeList(DataSource.Web.Url, DataSource.Web.Id, list);
-                }).then(() => {
-                    // Hide the sub-nav
-                    this._elSubNav.classList.add("d-none");
+                        // Analyze the list
+                        return this.analyzeList(DataSource.Web.Url, DataSource.Web.Id, list, drives.results);
+                    }).then(() => {
+                        // Hide the sub-nav
+                        this._elSubNav.classList.add("d-none");
 
-                    // Resolve the request
-                    resolve();
+                        // Resolve the request
+                        resolve();
+                    });
                 });
             }, true);
         });
@@ -255,8 +266,8 @@ export class ListsTab {
                             if (!this._appProps.auditOnly) {
                                 let tooltip: Components.ITooltip = null;
 
-                                // Ensure this is a library
-                                if (isLibrary) {
+                                // Ensure this is a library and has a drive
+                                if (isLibrary && item.DriveId) {
                                     // Set the default label
                                     tooltips.add({
                                         content: "Click to set the default sensitivity label.",
@@ -280,9 +291,9 @@ export class ListsTab {
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
                                                 // Load the folders for this list
-                                                DataSource.loadFolders(item.WebId, item.ListName, item.ListUrl).then(folders => {
+                                                DataSource.loadFolders(item.WebId, item.DriveId).then(folders => {
                                                     // Show the senstivity label form
-                                                    SensitivityLabels.setDefaultSensitivityLabelForFiles(item.WebId, item.ListName, item.ListUrl, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt);
+                                                    SensitivityLabels.setDefaultSensitivityLabelForFiles(item.WebId, item.ListName, item.DriveId, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt);
                                                 });
                                             }
                                         }
