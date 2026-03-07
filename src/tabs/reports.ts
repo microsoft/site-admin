@@ -33,6 +33,7 @@ enum ReportTypes {
  * Reports Tab
  */
 export class ReportsTab {
+    private _appProps: IAppProps = null;
     private _auditOnly: boolean = null;
     private _el: HTMLElement = null;
     private _disableSensitivityLabelOverride: boolean = null;
@@ -44,6 +45,7 @@ export class ReportsTab {
 
     // Constructor
     constructor(el: HTMLElement, appProps: IAppProps, loadOneDrive: boolean) {
+        this._appProps = appProps;
         this._auditOnly = !DataSource.IsAdmin || (appProps.auditOnly ? true : false);
         this._el = el;
         this._disableSensitivityLabelOverride = appProps.disableSensitivityLabelOverride;
@@ -64,69 +66,98 @@ export class ReportsTab {
         while (this._el.firstChild) { this._el.removeChild(this._el.firstChild); }
 
         // Set the reports to display
-        let items: Components.IDropdownItem[] = [
-            {
+        let items: Components.IDropdownItem[] = [];
+
+        // Add the reports
+        if (typeof (this._appProps.hideReports.dlp) === "undefined" || this._appProps.hideReports.dlp != true) {
+            items.push({
                 text: "Data Loss Prevention",
                 data: "Finds files that has DLP applied to it.",
                 value: ReportTypes.DLP
-            },
-            {
+            });
+        }
+        if (typeof (this._appProps.hideReports.docRetention) === "undefined" || this._appProps.hideReports.docRetention != true) {
+            items.push({
                 text: "Document Retention",
                 data: "Find documents older than a specified date.",
                 value: ReportTypes.DocRetention
-            },
-            {
+            });
+        }
+        if (typeof (this._appProps.hideReports.externalShares) === "undefined" || this._appProps.hideReports.externalShares != true) {
+            items.push({
                 text: "External Shares",
                 data: "Scans for documents that have been shared externally.",
                 value: ReportTypes.ExternalShares
-            },
-            {
+            });
+        }
+        if (typeof (this._appProps.hideReports.externalUsers) === "undefined" || this._appProps.hideReports.externalUsers != true) {
+            items.push({
                 text: "External Users",
                 data: "Scans the user information list for 'external' user accounts.",
                 value: ReportTypes.ExternalUsers
-            },
-            {
+            });
+        }
+        if (typeof (this._appProps.hideReports.permissions) === "undefined" || this._appProps.hideReports.permissions != true) {
+            items.push({
                 text: "Permissions",
                 data: "Scans all users/groups that have permissions to the site.",
                 value: ReportTypes.Permissions
-            },
-            {
+            });
+        }
+        if (typeof (this._appProps.hideReports.searchDocs) === "undefined" || this._appProps.hideReports.searchDocs != true) {
+            items.push({
                 text: "Search Documents",
                 data: "Find documents by keywords.",
                 value: ReportTypes.SearchDocs
-            },
-            {
+            });
+        }
+        if (typeof (this._appProps.hideReports.searchEEEU) === "undefined" || this._appProps.hideReports.searchEEEU != true) {
+            items.push({
                 text: "Search EEEU",
                 data: "Search for the 'Every' and 'Everyone exception external users' accounts.",
                 value: ReportTypes.SearchEEEU
-            },
-            {
-                text: this._searchProps.reportName || "Search Property",
-                data: "Find sites by search property.",
-                value: ReportTypes.SearchProp,
-                isDisabled: this._searchProps.managedProperty && DataSource.SearchPropItems ? false : true
-            },
-            {
+            });
+        }
+        if (typeof (this._appProps.hideReports.searchProp) === "undefined" || this._appProps.hideReports.searchProp != true) {
+            // Ensure the property is set
+            if (this._searchProps.reportName) {
+                items.push({
+                    text: this._searchProps.reportName || "Search Property",
+                    data: "Find sites by search property.",
+                    value: ReportTypes.SearchProp,
+                    isDisabled: this._searchProps.managedProperty && DataSource.SearchPropItems ? false : true
+                });
+            }
+        }
+        if (typeof (this._appProps.hideReports.searchUsers) === "undefined" || this._appProps.hideReports.searchUsers != true) {
+            items.push({
                 text: "Search Users",
                 data: "Search users by keyword or account.",
                 value: ReportTypes.SearchUsers
-            },
-            {
+            });
+        }
+        if (typeof (this._appProps.hideReports.sensitivityLabels) === "undefined" || this._appProps.hideReports.sensitivityLabels != true) {
+            items.push({
                 text: "Sensitivity Labels",
                 data: "Search for files that have sensitivity labels.",
                 value: ReportTypes.SensitivityLabels
-            },
-            {
+            });
+        }
+        if (typeof (this._appProps.hideReports.sharingLinks) === "undefined" || this._appProps.hideReports.sharingLinks != true) {
+            items.push({
                 text: "Sharing Links",
                 data: "Scans for any 'Sharing Link' groups.",
                 value: ReportTypes.SharingLinks
-            },
-            {
+            });
+        }
+        if (typeof (this._appProps.hideReports.uniquePermissions) === "undefined" || this._appProps.hideReports.uniquePermissions != true) {
+            items.push({
                 text: "Unique Permissions",
                 data: "Scans for items that have unique permissions.",
                 value: ReportTypes.UniquePermissions
-            }
-        ];
+            });
+        }
+
 
         // See if this is onedrive
         if (this._loadOneDrive) {

@@ -263,7 +263,7 @@ export class ListsTab {
                             }
 
                             // Add the options to make changes
-                            if (!this._appProps.auditOnly) {
+                            if (!this._appProps.auditOnly || !this._appProps.hideReports?.sensitivityLabels) {
                                 let tooltip: Components.ITooltip = null;
 
                                 // Ensure this is a library and has a drive

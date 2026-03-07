@@ -46,6 +46,19 @@ export interface ISiteAdminWebPartProps {
   HideManagementTab: boolean;
   HideSearchTab: boolean;
   HideWebsTab: boolean;
+  HideReportDLP: boolean;
+  HideReportDocRetention: boolean;
+  HideReportExternalShares: boolean;
+  HideReportExternalUsers: boolean;
+  HideReportPermissions: boolean;
+  HideReportRetention: boolean;
+  HideReportSearchDocs: boolean;
+  HideReportSearchEEEU: boolean;
+  HideReportSearchProp: boolean;
+  HideReportSearchUsers: boolean;
+  HideReportSensitivityLabels: boolean;
+  HideReportSharingLinks: boolean;
+  HideReportUniquePermissions: boolean;
   MaxStorage: number;
   MaxStorageDescription: string;
   ReportsDocRententionYears: string;
@@ -147,6 +160,21 @@ declare const SiteAdmin: {
     disableSensitivityLabelOverride?: boolean;
     hideLoadAdminOwnerBtn: boolean;
     hideLoadOneDriveBtn: boolean;
+    hideReports: {
+      dlp: boolean;
+      docRetention: boolean;
+      externalShares: boolean;
+      externalUsers: boolean;
+      permissions: boolean;
+      retention: boolean;
+      searchDocs: boolean;
+      searchEEEU: boolean;
+      searchProp: boolean;
+      searchUsers: boolean;
+      sensitivityLabels: boolean;
+      sharingLinks: boolean;
+      uniquePermissions: boolean;
+    },
     hideTabs: {
       appPermissions: boolean;
       auditTools: boolean;
@@ -247,6 +275,21 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       disableSensitivityLabelOverride: this.properties.DisableSensitivityLabelOverride,
       hideLoadAdminOwnerBtn: this.properties.HideLoadAdminOwnerBtn,
       hideLoadOneDriveBtn: this.properties.HideLoadOneDriveBtn,
+      hideReports: {
+        dlp: this.properties.HideReportDLP,
+        docRetention: this.properties.HideReportDocRetention,
+        externalShares: this.properties.HideReportExternalShares,
+        externalUsers: this.properties.HideReportExternalUsers,
+        permissions: this.properties.HideReportPermissions,
+        retention: this.properties.HideReportRetention,
+        searchDocs: this.properties.HideReportSearchDocs,
+        searchEEEU: this.properties.HideReportSearchEEEU,
+        searchProp: this.properties.HideReportSearchProp,
+        searchUsers: this.properties.HideReportSearchUsers,
+        sensitivityLabels: this.properties.HideReportSensitivityLabels,
+        sharingLinks: this.properties.HideReportSharingLinks,
+        uniquePermissions: this.properties.HideReportUniquePermissions
+      },
       hideTabs: {
         appPermissions: this.properties.HideAppPermissionsTab,
         auditTools: this.properties.HideAuditToolsTab,
@@ -622,6 +665,93 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         {
           groups: [
             this.generateGroup("Web Properties", this._webProps)
+          ]
+        },
+        {
+          groups: [
+            {
+              groupName: "Show/Hide Reports",
+              groupFields: [
+                PropertyPaneToggle("HideReportDLP", {
+                  label: "Data Loss Prevention (DLP):",
+                  checked: this.properties.HideReportDLP,
+                  onText: "The DLP report will be hidden.",
+                  offText: "The DLP report will be visible."
+                }),
+                PropertyPaneToggle("HideReportDocRetention", {
+                  label: "Document Retention:",
+                  checked: this.properties.HideReportDocRetention,
+                  onText: "The document retention report will be hidden.",
+                  offText: "The document retention report will be visible."
+                }),
+                PropertyPaneToggle("HideReportExternalShares", {
+                  label: "External Shares:",
+                  checked: this.properties.HideReportExternalShares,
+                  onText: "The external shares report will be hidden.",
+                  offText: "The external shares report will be visible."
+                }),
+                PropertyPaneToggle("HideReportExternalUsers", {
+                  label: "External Users:",
+                  checked: this.properties.HideReportExternalUsers,
+                  onText: "The external users report will be hidden.",
+                  offText: "The external users report will be visible."
+                }),
+                PropertyPaneToggle("HideReportPermissions", {
+                  label: "Permissions:",
+                  checked: this.properties.HideReportPermissions,
+                  onText: "The permissions report will be hidden.",
+                  offText: "The permissions report will be visible."
+                }),
+                PropertyPaneToggle("HideReportRetention", {
+                  label: "Retention:",
+                  checked: this.properties.HideReportRetention,
+                  onText: "The retention report will be hidden.",
+                  offText: "The retention report will be visible."
+                }),
+                PropertyPaneToggle("HideReportSearchDocs", {
+                  label: "Document Search:",
+                  checked: this.properties.HideReportSearchDocs,
+                  onText: "The document search report will be hidden.",
+                  offText: "The document search report will be visible."
+                }),
+                PropertyPaneToggle("HideReportSearchEEEU", {
+                  label: "Search EEEU:",
+                  checked: this.properties.HideReportSearchEEEU,
+                  onText: "The search EEEU report will be hidden.",
+                  offText: "The search EEEU report will be visible."
+                }),
+                PropertyPaneToggle("HideReportSearchProp", {
+                  label: "Search Property:",
+                  checked: this.properties.HideReportSearchProp,
+                  onText: "The search property report will be hidden.",
+                  offText: "The search property report will be visible."
+                }),
+                PropertyPaneToggle("HideReportSearchUsers", {
+                  label: "Search Users:",
+                  checked: this.properties.HideReportSearchUsers,
+                  onText: "The search users report will be hidden.",
+                  offText: "The search users report will be visible."
+                }),
+                PropertyPaneToggle("HideReportSensitivityLabels", {
+                  label: "Sensivitity Labels Override:",
+                  checked: this.properties.HideReportSensitivityLabels,
+                  onText: "The sensitivity labels report will be hidden.",
+                  offText: "The sensitivity labels report will be visible."
+                }),
+                PropertyPaneToggle("HideReportSharingLinks", {
+                  label: "Sharing Links:",
+                  checked: this.properties.HideReportSharingLinks,
+                  onText: "The sharing links report will be hidden.",
+                  offText: "The sharing links report will be visible."
+                }),
+                PropertyPaneToggle("HideReportUniquePermissions", {
+                  label: "Unique Permissions:",
+                  checked: this.properties.HideReportUniquePermissions,
+                  onText: "The unique permissions report will be hidden.",
+                  offText: "The unique permissions report will be visible."
+                })
+              ]
+            }
           ]
         },
         {
