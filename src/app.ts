@@ -24,6 +24,21 @@ export interface IAppProps {
     el: HTMLElement;
     hideLoadAdminOwnerBtn?: boolean;
     hideLoadOneDriveBtn?: boolean;
+    hideReports: {
+        dlp?: boolean;
+        docRetention?: boolean;
+        externalShares?: boolean;
+        externalUsers?: boolean;
+        permissions?: boolean;
+        retention?: boolean;
+        searchDocs?: boolean;
+        searchEEEU?: boolean;
+        searchProp?: boolean;
+        searchUsers?: boolean;
+        sensitivityLabels?: boolean;
+        sharingLinks?: boolean;
+        uniquePermissions?: boolean;
+    }
     hideTabs: {
         appPermissions?: boolean;
         auditTools?: boolean;
