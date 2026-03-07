@@ -218,8 +218,7 @@ export class App {
                             control: {
                                 label: "Sub Site Url:",
                                 type: Components.FormControlTypes.Dropdown,
-                                isDisabled: this._props.auditOnly,
-                                items: [this._props.auditOnly ? { text: DataSource.Site.Url } : { text: "Loading Sites..." }],
+                                items: [{ text: "Loading Sites..." }],
                                 value: DataSource.Web.Id,
                                 required: true,
                                 onChange: item => {
@@ -234,9 +233,6 @@ export class App {
                                     DataSource.getAllWebs(DataSource.Site.Url).then(() => {
                                         // Update the tabs
                                         tabs.onWebsLoaded(DataSource.SiteItems);
-
-                                        // If it's not enabled, do not update the dropdown
-                                        if (ctrl.props.isDisabled) { return; }
 
                                         // Update the control
                                         ctrl.dropdown.setItems(DataSource.SiteItems);
