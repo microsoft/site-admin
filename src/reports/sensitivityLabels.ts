@@ -599,7 +599,7 @@ export class SensitivityLabels {
 
         // Set the modal header
         Modal.clear();
-        Modal.setHeader("Set Default Sensitivity Label");
+        Modal.setHeader("Set Sensitivity Label");
 
         // Set the form
         let form = Components.Form({
