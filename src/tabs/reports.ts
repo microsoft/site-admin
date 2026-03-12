@@ -58,7 +58,7 @@ export class ReportsTab {
     }
 
     // Renders the tab
-    private render(selectedReport: string = ReportTypes.DLP) {
+    private render(selectedReport?: string) {
         // Set the selected report
         this._selectedReport = selectedReport;
 
@@ -158,6 +158,8 @@ export class ReportsTab {
             });
         }
 
+        // Set the default report
+        this._selectedReport = this._selectedReport || items[0]?.value;
 
         // See if this is onedrive
         if (this._loadOneDrive) {
