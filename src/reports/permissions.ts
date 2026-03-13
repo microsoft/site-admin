@@ -41,7 +41,7 @@ export class Permissions {
     private static _items: IPermissionItem[] = null;
 
     // Analyze the group ids
-    private static analyzeGroupIds(groupIds: string[]): PromiseLike<void> {
+    private static analyzeGroupIds(webUrl: string, groupIds: string[]): PromiseLike<void> {
         // Return a promise
         return new Promise(resolve => {
             // Try to get the groups
@@ -83,6 +83,9 @@ export class Permissions {
 
                 // Parse the items
                 this._items.forEach(item => {
+                    // See if this is for the target web
+                    if (item.WebUrl != webUrl) { return; }
+
                     // Clear the groups
                     item.GroupMembers = [];
                     item.GroupMembersAsString = [];
@@ -296,7 +299,7 @@ export class Permissions {
                 });
 
                 // Analyze the group ids
-                this.analyzeGroupIds(groupIds).then(() => {
+                this.analyzeGroupIds(webUrl, groupIds).then(() => {
                     // Resolve the values
                     resolve();
                 });
@@ -469,56 +472,31 @@ export class Permissions {
                 columns: [
                     {
                         name: "",
-                        title: "Role Name",
+                        title: "Role Info",
                         onRenderCell: (el, col, item: IPermissionItem) => {
-                            // Render a view link
-                            Components.Tooltip({
-                                el,
-                                content: "Click to view the group/user information in another tab.",
-                                btnProps: {
-                                    text: item.Name,
-                                    type: Components.ButtonTypes.OutlinePrimary,
-                                    onClick: () => {
-                                        let url: string = null;
+                            // Set the order/search values
+                            el.setAttribute("data-filter", item.Name);
+                            el.setAttribute("data-order", item.Name);
 
-                                        // Display the users
-                                        switch (item.Type) {
-                                            case "AD Group":
-                                                url = `${item.WebUrl}/${ContextInfo.layoutsUrl}/userdisp.aspx?ID=${item.Id}`;
-                                                break;
-                                            case "M365 Group":
-                                                url = item.GroupUrl;
-                                                break;
-                                            case "Site Group":
-                                                url = `${item.WebUrl}/${ContextInfo.layoutsUrl}/people.aspx?MembershipGroupId=${item.Id}`;
-                                                break;
-                                            case "User":
-                                                url = `${item.WebUrl}/${ContextInfo.layoutsUrl}/userdisp.aspx?ID=${item.Id}`;
-                                                break;
-                                        }
-
-                                        // Open the url in a new tab
-                                        window.open(url, "_blank");
-                                    }
-                                }
-                            });
+                            // Render the role information
+                            el.innerHTML = `
+                                <div><strong>Name: </strong>${item.Name}</div>
+                                <div><strong>Type: </strong>${item.Type}</div>
+                                <div><strong>Web: </strong>${item.WebUrl}</div>
+                            `;
                         }
                     },
                     {
-                        name: "Type",
-                        title: "Role Type"
-                    },
-                    {
                         name: "Everyone",
-                        title: "Has Everyone?"
+                        title: "Has<br/>Everyone?"
                     },
                     {
                         name: "EEEU",
-                        title: "Has EEEU?"
+                        title: "Has<br/>EEEU?"
                     },
                     {
                         name: "",
-                        title: "M365 Groups",
+                        title: "M365<br/>Groups",
                         onRenderCell: (el, col, item: IPermissionItem) => {
                             // Set the value
                             el.innerHTML = item.GroupIds.length.toString();
@@ -530,7 +508,7 @@ export class Permissions {
                     },
                     {
                         name: "",
-                        title: "M365 Users",
+                        title: "M365<br/>Users",
                         onRenderCell: (el, col, item: IPermissionItem) => {
                             // Set the value
                             el.innerHTML = item.GroupMembersAsString.length.toString();
@@ -542,7 +520,7 @@ export class Permissions {
                     },
                     {
                         name: "",
-                        title: "AD Accounts",
+                        title: "AD<br/>Accounts",
                         onRenderCell: (el, col, item: IPermissionItem) => {
                             // Ensure the site members exist
                             if (item.SiteMembers) {
@@ -569,7 +547,7 @@ export class Permissions {
                     },
                     {
                         name: "",
-                        title: "Site Users",
+                        title: "Site<br/>Users",
                         onRenderCell: (el, col, item: IPermissionItem) => {
                             if (item.Type == "User") {
                                 el.innerHTML = "1";
@@ -590,7 +568,7 @@ export class Permissions {
                     },
                     {
                         name: "",
-                        title: "Permission",
+                        title: "Permissions",
                         onRenderCell: (el, col, item: IPermissionItem) => {
                             // Parse the roles
                             for (let i = 0; i < item.Roles.length; i++) {
@@ -619,10 +597,39 @@ export class Permissions {
                         name: "",
                         title: "",
                         onRenderCell: (el, col, item: IPermissionItem) => {
+                            let tooltips: Components.ITooltipProps[] = [{
+                                content: "Click to view the group/user information in another tab.",
+                                btnProps: {
+                                    text: item.Name,
+                                    type: Components.ButtonTypes.OutlinePrimary,
+                                    onClick: () => {
+                                        let url: string = null;
+
+                                        // Display the users
+                                        switch (item.Type) {
+                                            case "AD Group":
+                                                url = `${item.WebUrl}/${ContextInfo.layoutsUrl}/userdisp.aspx?ID=${item.Id}`;
+                                                break;
+                                            case "M365 Group":
+                                                url = item.GroupUrl;
+                                                break;
+                                            case "Site Group":
+                                                url = `${item.WebUrl}/${ContextInfo.layoutsUrl}/people.aspx?MembershipGroupId=${item.Id}`;
+                                                break;
+                                            case "User":
+                                                url = `${item.WebUrl}/${ContextInfo.layoutsUrl}/userdisp.aspx?ID=${item.Id}`;
+                                                break;
+                                        }
+
+                                        // Open the url in a new tab
+                                        window.open(url, "_blank");
+                                    }
+                                }
+                            }];
+
                             // See if members exist
                             if (item.Type == "M365 Group" || item.Type == "Site Group") {
-                                Components.Tooltip({
-                                    el,
+                                tooltips.push({
                                     content: "Click to view the members in this group.",
                                     btnProps: {
                                         text: "View Users",
@@ -635,6 +642,14 @@ export class Permissions {
                                     }
                                 });
                             }
+
+                            // Render the tooltips
+                            Components.TooltipGroup({
+                                el,
+                                tooltips,
+                                isSmall: true,
+                                isVertical: true
+                            });
                         }
                     }
                 ]
