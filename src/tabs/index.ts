@@ -177,24 +177,31 @@ export class Tabs {
 
     // Method to refresh the web tab
     refreshWebTab(url: string) {
-        // Update the requests
-        if (this._tabWeb) {
+        // Ensure the lists or web tab exists
+        if (this._tabLists || this._tabWeb) {
             // Show a loading dialog
             LoadingDialog.setHeader("Loading Web");
             LoadingDialog.setBody("Loading the selected web...");
             LoadingDialog.show();
 
             // Append the sub-webs
-            this._webRequests = this._webRequests.concat(this._tabWeb.getRequests());
+            if (this._tabWeb) {
+                this._webRequests = this._webRequests.concat(this._tabWeb.getRequests());
+            }
 
-            // Load the web
+            // Load the web information
             DataSource.loadWebInfo(url).then(() => {
-                // Update the tab name
-                this._elWebTab.innerHTML = DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "Top Site" : "Sub Site";
+                // See if the tab exists
+                if (this._tabWeb) {
+                    // Update the tab name
+                    this._elWebTab.innerHTML = DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "Top Site" : "Sub Site";
 
-                // Refresh the tabs
-                this._tabLists.loadLists(false);
-                this._tabWeb.refresh();
+                    // Refresh the tabs
+                    this._tabWeb ? this._tabWeb.refresh() : null;
+                }
+
+                // Refresh the lists tabs
+                this._tabLists ? this._tabLists.loadLists(false) : null;
 
                 // Hide the loading dialog
                 LoadingDialog.hide();
