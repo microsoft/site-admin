@@ -1091,9 +1091,12 @@ export class SensitivityLabels {
                         title: "Error?"
                     },
                     {
-                        name: "",
+                        name: "fileName",
                         title: "File Name",
                         onRenderCell: (el, col, item: ISetSensitivityLabelResponse) => {
+                            // Clear the element
+                            el.innerHTML = "";
+
                             // Render a link to the file
                             Components.Button({
                                 el,

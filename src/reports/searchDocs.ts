@@ -160,7 +160,7 @@ export class SearchDocs {
                         }
                     },
                     {
-                        name: "",
+                        name: "HitHighlightedSummary",
                         title: "Search Result",
                         onRenderCell: (el, col, item: ISearchItem) => {
                             // Add the data-filter attribute for searching notes properly
@@ -185,6 +185,9 @@ export class SearchDocs {
                                     target: span
                                 });
                             }
+
+                            // Clear the element
+                            el.innerHTML = "";
 
                             // Append the span
                             el.appendChild(span);
