@@ -142,6 +142,106 @@ export class ListsTab {
         });
     }
 
+    // Generate the actions
+    private generateActions(el: HTMLElement, item: IList, rowIdx: number) {
+        let isLibrary = item.ListTemplateType == SPTypes.ListTemplateType.DocumentLibrary ||
+            item.ListTemplateType == SPTypes.ListTemplateType.MySiteDocumentLibrary ||
+            item.ListTemplateType == SPTypes.ListTemplateType.WebPageLibrary
+
+        // Render the buttons
+        let tooltips = Components.TooltipGroup({
+            el,
+            tooltips: [
+                {
+                    content: "Click to view the list.",
+                    btnProps: {
+                        text: "View List",
+                        type: Components.ButtonTypes.OutlinePrimary,
+                        onClick: () => {
+                            // Show the list/library
+                            window.open(item.ListUrl, "_blank");
+                        }
+                    }
+                }
+            ]
+        });
+
+        // See if this is a library
+        if (isLibrary) {
+            tooltips.add({
+                content: "Click to run a DLP report.",
+                btnProps: {
+                    text: "DLP Report",
+                    type: Components.ButtonTypes.OutlinePrimary,
+                    onClick: () => {
+                        // Run the DLP report for this library
+                        DLP.analyzeLibrary(item.WebId, item.WebUrl, item.ListId, item.ListName);
+                    }
+                }
+            });
+        }
+
+        // Add the options to make changes
+        if (!this._appProps.auditOnly || !this._appProps.hideReports?.sensitivityLabels) {
+            let tooltip: Components.ITooltip = null;
+
+            // Ensure this is a library and has a drive
+            if (isLibrary && item.DriveId) {
+                // Set the default label
+                tooltips.add({
+                    content: "Click to set the default sensitivity label.",
+                    btnProps: {
+                        isDisabled: !DataSource.HasSensitivityLabels,
+                        text: "Default Label",
+                        type: Components.ButtonTypes.OutlinePrimary,
+                        onClick: () => {
+                            // Show the form
+                            this.setDefaultSensitivityLabel(item);
+                        }
+                    }
+                });
+
+                // Label the files in bulk
+                tooltips.add({
+                    content: "Click to set the default sensitivity label for any files that aren't currently labelled.",
+                    btnProps: {
+                        isDisabled: !DataSource.HasSensitivityLabels,
+                        text: "Label Files",
+                        type: Components.ButtonTypes.OutlinePrimary,
+                        onClick: () => {
+                            // Load the folders for this list
+                            DataSource.loadFolders(item.WebId, item.DriveId).then(folders => {
+                                // Show the senstivity label form
+                                SensitivityLabels.setDefaultSensitivityLabelForFiles(item.WebId, item.ListName, item.DriveId, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt);
+                            });
+                        }
+                    }
+                });
+            }
+
+            // Update the list to be in or out of the search index
+            tooltips.add({
+                assignTo: obj => { tooltip = obj; },
+                content: `Click to ${item.IncludedInSearch ? "remove" : "add"} the content from the search index.`,
+                btnProps: {
+                    text: "Update Search",
+                    type: Components.ButtonTypes.OutlinePrimary,
+                    onClick: () => {
+                        // Show the form
+                        this.setListSearch(item, () => {
+                            // Flip the flag
+                            item.IncludedInSearch = !item.IncludedInSearch;
+                            tooltip.setContent(`Click to ${item.IncludedInSearch ? "remove" : "add"} the content from the search index.`);
+
+                            // Update the row cell
+                            this._dt.updateCell(rowIdx, 4, item.IncludedInSearch);
+                        });
+                    }
+                }
+            });
+        }
+    }
+
     // Renders the tab
     private render() {
         // Clear the element
@@ -166,9 +266,10 @@ export class ListsTab {
             table: {
                 rows: this._items,
                 onRendering: dtProps => {
+                    /*
                     dtProps.columnDefs = [
                         {
-                            "targets": 6,
+                            "targets": 5,
                             "orderable": false,
                             "searchable": false
                         }
@@ -176,30 +277,29 @@ export class ListsTab {
 
                     // Order by the 1st column by default; ascending
                     dtProps.order = [[0, "asc"]];
+                    */
 
                     // Return the properties
                     return dtProps;
                 },
                 columns: [
                     {
-                        name: "WebUrl",
-                        title: "Url"
-                    },
-                    {
-                        name: "",
+                        name: "ListName",
                         title: "List Info",
                         onRenderCell: (el, col, item: IList) => {
-                            // Render the list information
+                            // Render the info
                             el.innerHTML = `
-                                <span><b>Name: </b>${item.ListName}</span>
+                                <b>Name: </b>${item.ListName}
                                 <br/>
-                                <span><b>Type: </b>${item.ListTemplate || ""}</span>
+                                <b>Type: </b>${item.ListTemplate}
+                                <br/>
+                                <b>Url: </b>${item.ListUrl}
                             `;
                         }
                     },
                     {
                         name: "ItemCount",
-                        title: "# of Items"
+                        title: "Item Count"
                     },
                     {
                         name: "DefaultSensitivityLabel",
@@ -225,102 +325,8 @@ export class ListsTab {
                         name: "",
                         title: "",
                         onRenderCell: (el, col, item: IList, rowIdx) => {
-                            let isLibrary = item.ListTemplateType == SPTypes.ListTemplateType.DocumentLibrary ||
-                                item.ListTemplateType == SPTypes.ListTemplateType.MySiteDocumentLibrary ||
-                                item.ListTemplateType == SPTypes.ListTemplateType.WebPageLibrary
-
-                            // Render the buttons
-                            let tooltips = Components.TooltipGroup({
-                                el,
-                                tooltips: [
-                                    {
-                                        content: "Click to view the list.",
-                                        btnProps: {
-                                            text: "View List",
-                                            type: Components.ButtonTypes.OutlinePrimary,
-                                            onClick: () => {
-                                                // Show the list/library
-                                                window.open(item.ListUrl, "_blank");
-                                            }
-                                        }
-                                    }
-                                ]
-                            });
-
-                            // See if this is a library
-                            if (isLibrary) {
-                                tooltips.add({
-                                    content: "Click to run a DLP report.",
-                                    btnProps: {
-                                        text: "DLP Report",
-                                        type: Components.ButtonTypes.OutlinePrimary,
-                                        onClick: () => {
-                                            // Run the DLP report for this library
-                                            DLP.analyzeLibrary(item.WebId, item.WebUrl, item.ListId, item.ListName);
-                                        }
-                                    }
-                                });
-                            }
-
-                            // Add the options to make changes
-                            if (!this._appProps.auditOnly || !this._appProps.hideReports?.sensitivityLabels) {
-                                let tooltip: Components.ITooltip = null;
-
-                                // Ensure this is a library and has a drive
-                                if (isLibrary && item.DriveId) {
-                                    // Set the default label
-                                    tooltips.add({
-                                        content: "Click to set the default sensitivity label.",
-                                        btnProps: {
-                                            isDisabled: !DataSource.HasSensitivityLabels,
-                                            text: "Default Label",
-                                            type: Components.ButtonTypes.OutlinePrimary,
-                                            onClick: () => {
-                                                // Show the form
-                                                this.setDefaultSensitivityLabel(item);
-                                            }
-                                        }
-                                    });
-
-                                    // Label the files in bulk
-                                    tooltips.add({
-                                        content: "Click to set the default sensitivity label for any files that aren't currently labelled.",
-                                        btnProps: {
-                                            isDisabled: !DataSource.HasSensitivityLabels,
-                                            text: "Label Files",
-                                            type: Components.ButtonTypes.OutlinePrimary,
-                                            onClick: () => {
-                                                // Load the folders for this list
-                                                DataSource.loadFolders(item.WebId, item.DriveId).then(folders => {
-                                                    // Show the senstivity label form
-                                                    SensitivityLabels.setDefaultSensitivityLabelForFiles(item.WebId, item.ListName, item.DriveId, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt);
-                                                });
-                                            }
-                                        }
-                                    });
-                                }
-
-                                // Update the list to be in or out of the search index
-                                tooltips.add({
-                                    assignTo: obj => { tooltip = obj; },
-                                    content: `Click to ${item.IncludedInSearch ? "remove" : "add"} the content from the search index.`,
-                                    btnProps: {
-                                        text: "Update Search",
-                                        type: Components.ButtonTypes.OutlinePrimary,
-                                        onClick: () => {
-                                            // Show the form
-                                            this.setListSearch(item, () => {
-                                                // Flip the flag
-                                                item.IncludedInSearch = !item.IncludedInSearch;
-                                                tooltip.setContent(`Click to ${item.IncludedInSearch ? "remove" : "add"} the content from the search index.`);
-
-                                                // Update the row cell
-                                                this._dt.updateCell(rowIdx, 4, item.IncludedInSearch);
-                                            });
-                                        }
-                                    }
-                                });
-                            }
+                            // Generate the actions
+                            this.generateActions(el, item, rowIdx);
                         }
                     }
                 ]

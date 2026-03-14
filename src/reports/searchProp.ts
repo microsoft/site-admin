@@ -91,13 +91,9 @@ export class SearchProp {
                 },
                 columns: [
                     {
-                        name: "",
+                        name: "Title",
                         title: "Site Information",
                         onRenderCell: (el, col, item: ISearchItem) => {
-                            // Set the sort/filter values
-                            el.setAttribute("data-filter", item.Path);
-                            el.setAttribute("data-sort", item.Path);
-
                             // Render the activity
                             el.innerHTML = `
                                 <div><b>Title: </b><a href="#" target="_blank">${item.Title}</a></div>

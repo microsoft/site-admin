@@ -67,8 +67,9 @@ export class DLP {
         // Clear the items
         this._items = [];
 
-        // Set the modal
+        // Set the modal header
         Modal.clear();
+        Modal.setType(Components.ModalTypes.Large);
         Modal.setHeader("Data Loss Prevention Report");
 
         // Show the results
@@ -304,12 +305,9 @@ export class DLP {
                         title: "Created By"
                     },
                     {
-                        name: "",
+                        name: "Path",
                         title: "File",
                         onRenderCell: (el, col, item: IDLPItem) => {
-                            // Set the sort value
-                            el.setAttribute("data-order", item.Path);
-
                             // Show the file info
                             el.innerHTML = `
                                 <b>Name: </b>${item.FileName}

@@ -423,7 +423,7 @@ export class SearchEEEU {
                 },
                 columns: [
                     {
-                        name: "",
+                        name: "Name",
                         title: "Object Type",
                         onRenderCell: (el, col, item: ISearchItem) => {
                             // Set the object type
@@ -434,7 +434,7 @@ export class SearchEEEU {
 
                             // Render the info
                             el.innerHTML = `
-                                ${item.Name}
+                                <b>Name: </b>${item.Name}
                                 <br/>
                                 <b>Type: </b>${objType}
                             `;
@@ -448,11 +448,6 @@ export class SearchEEEU {
                         name: "GroupInfo",
                         title: "Group Detail",
                         onRenderCell: (el) => {
-                            // Add the data-filter attribute for searching notes properly
-                            el.setAttribute("data-filter", el.innerHTML);
-                            // Add the data-order attribute for sorting notes properly
-                            el.setAttribute("data-order", el.innerHTML);
-
                             // Declare a span element
                             let span = document.createElement("span");
                             span.className = "notes";
@@ -473,6 +468,7 @@ export class SearchEEEU {
 
                             // Clear the element
                             el.innerHTML = "";
+
                             // Append the span
                             el.appendChild(span);
                         }

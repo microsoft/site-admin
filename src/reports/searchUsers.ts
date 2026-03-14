@@ -462,7 +462,7 @@ export class SearchUsers {
                         title: "User Name"
                     },
                     {
-                        name: "",
+                        name: "Email",
                         title: "Login/Email",
                         onRenderCell: (el, col, item: ISearchItem) => {
                             // Render the login and email information
@@ -481,11 +481,6 @@ export class SearchUsers {
                         name: "GroupInfo",
                         title: "Group Detail",
                         onRenderCell: (el) => {
-                            // Add the data-filter attribute for searching notes properly
-                            el.setAttribute("data-filter", el.innerHTML);
-                            // Add the data-order attribute for sorting notes properly
-                            el.setAttribute("data-order", el.innerHTML);
-
                             // Declare a span element
                             let span = document.createElement("span");
                             span.className = "notes";
@@ -506,6 +501,7 @@ export class SearchUsers {
 
                             // Clear the element
                             el.innerHTML = "";
+
                             // Append the span
                             el.appendChild(span);
                         }
@@ -518,11 +514,6 @@ export class SearchUsers {
                         name: "RoleInfo",
                         title: "Permission Detail",
                         onRenderCell: (el) => {
-                            // Add the data-filter attribute for searching notes properly
-                            el.setAttribute("data-filter", el.innerHTML);
-                            // Add the data-order attribute for sorting notes properly
-                            el.setAttribute("data-order", el.innerHTML);
-
                             // Declare a span element
                             let span = document.createElement("span");
                             span.className = "notes";
@@ -543,6 +534,7 @@ export class SearchUsers {
 
                             // Clear the element
                             el.innerHTML = "";
+
                             // Append the span
                             el.appendChild(span);
                         }

@@ -430,12 +430,9 @@ export class SensitivityLabels {
                         title: "File"
                     },
                     {
-                        name: "",
+                        name: "Path",
                         title: "File Info",
                         onRenderCell: (el, col, item: ISensitivityLabelItem) => {
-                            // Set the sort value
-                            el.setAttribute("data-order", item.Path);
-
                             // Show the file info
                             el.innerHTML = `
                                 <b>Created By: </b>${item.Author}
@@ -1094,9 +1091,12 @@ export class SensitivityLabels {
                         title: "Error?"
                     },
                     {
-                        name: "",
+                        name: "fileName",
                         title: "File Name",
                         onRenderCell: (el, col, item: ISetSensitivityLabelResponse) => {
+                            // Clear the element
+                            el.innerHTML = "";
+
                             // Render a link to the file
                             Components.Button({
                                 el,
