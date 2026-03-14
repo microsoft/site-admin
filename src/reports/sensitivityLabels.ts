@@ -55,13 +55,14 @@ export class SensitivityLabels {
     private static _elSubNav: HTMLElement = null;
     private static _items: ISensitivityLabelItem[] = [];
     private static _loadOneDrive: boolean = false;
+    private static _filterLabels: string[] = [];
 
     // Gets the form fields to display
     static getFormFields(): Components.IFormControlProps[] {
         return [
             {
                 name: "SearchType",
-                className: "mb-3",
+                className: "my-3",
                 type: Components.FormControlTypes.MultiSwitch,
                 required: true,
                 errorMessage: "A selection is required.",
@@ -76,7 +77,16 @@ export class SensitivityLabels {
                         label: "Find all files without a label"
                     }
                 ]
-            } as Components.IFormControlPropsMultiSwitch
+            } as Components.IFormControlPropsMultiSwitch,
+            {
+                name: "FilterLabel",
+                className: "mb-3",
+                type: Components.FormControlTypes.MultiDropdownCheckbox,
+                items: DataSource.SensitivityLabelItems.slice(1),
+                label: "Find Files with Label:",
+                placeholder: "Select Label(s)",
+                description: "Filter results for specific sensitivity label(s)."
+            } as Components.IFormControlPropsMultiDropdownCheckbox
         ];
     }
 
@@ -117,6 +127,12 @@ export class SensitivityLabels {
 
                         // Add the file, based on the flags
                         if ((withLabelsFl && hasLabel) || (withoutLabelsFl && !hasLabel)) {
+                            // See if we are filter for a label
+                            if (this._filterLabels.length > 0) {
+                                // See if this is a target label
+                                if (this._filterLabels.indexOf(file.sensitivityLabel.id) < 0) { return; }
+                            }
+
                             let fileInfo = file.name.split('.');
                             let folderPath = file.parentReference.path.split('root:')[1];
 
@@ -518,6 +534,13 @@ export class SensitivityLabels {
         (values["SearchType"] as any as Components.ICheckboxGroupItem[]).forEach(item => {
             withLabelsFl = item.name == "WithLabels" ? true : withLabelsFl;
             withoutLabelsFl = item.name == "WithoutLabels" ? true : withoutLabelsFl;
+        });
+
+        // Set the labels filter
+        this._filterLabels = [];
+        let labels = values["FilterLabel"] as any as Components.IDropdownItem[];
+        (labels || []).forEach(label => {
+            this._filterLabels.push(label.value);
         });
 
         // Show a loading dialog
