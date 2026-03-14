@@ -54,7 +54,7 @@ export class Tabs {
 
     // Renders the tabs
     private render(appProps: IAppProps, loadOneDrive: boolean) {
-        let auditOnly = loadOneDrive || !DataSource.IsAdmin || appProps.auditOnly;
+        let auditOnly = !DataSource.IsAdmin || appProps.auditOnly;
 
         // Show the info tab by default always
         let items: Components.IListGroupItem[] = loadOneDrive ? [] : [{
@@ -67,7 +67,7 @@ export class Tabs {
         }];
 
         // Add the tabs
-        if (!auditOnly && !appProps.hideTabs.search && !isEmpty(appProps.searchProps) && appProps.searchProps.key) {
+        if (!(auditOnly || loadOneDrive) && !appProps.hideTabs.search && !isEmpty(appProps.searchProps) && appProps.searchProps.key) {
             items.push({
                 tabName: appProps.searchProps.tabName || "Search Property",
                 onRender: (el) => {
@@ -76,7 +76,7 @@ export class Tabs {
                 }
             });
         }
-        if (!auditOnly && !appProps.hideTabs.management) {
+        if (!(auditOnly || loadOneDrive) && !appProps.hideTabs.management) {
             items.push({
                 tabName: "Management",
                 onRender: (el) => {
@@ -85,7 +85,7 @@ export class Tabs {
                 }
             });
         }
-        if (!auditOnly && !appProps.hideTabs.features) {
+        if (!(auditOnly || loadOneDrive) && !appProps.hideTabs.features) {
             items.push({
                 tabName: "Features",
                 onRender: (el) => {
@@ -94,7 +94,7 @@ export class Tabs {
                 }
             });
         }
-        if (!auditOnly && !appProps.hideTabs.appPermissions) {
+        if (!(auditOnly || loadOneDrive) && !appProps.hideTabs.appPermissions) {
             items.push({
                 tabName: "App Permissions",
                 onRender: (el) => {
@@ -122,7 +122,7 @@ export class Tabs {
                 }
             });
         }
-        if (!auditOnly && !appProps.hideTabs.webs) {
+        if (!(auditOnly || loadOneDrive) && !appProps.hideTabs.webs) {
             items.push({
                 tabName: DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "Top Site" : "Sub Site",
                 onRenderTab: el => {
@@ -135,7 +135,7 @@ export class Tabs {
                 }
             });
         }
-        if (!auditOnly) {
+        if (!(auditOnly || loadOneDrive)) {
             // Add the changes
             items.push({
                 tabName: "Changes",

@@ -46,12 +46,17 @@ export class ReportsTab {
     // Constructor
     constructor(el: HTMLElement, appProps: IAppProps, loadOneDrive: boolean) {
         this._appProps = appProps;
-        this._auditOnly = !DataSource.IsAdmin || (appProps.auditOnly ? true : false);
         this._el = el;
         this._disableSensitivityLabelOverride = appProps.disableSensitivityLabelOverride;
         this._loadOneDrive = loadOneDrive;
         this._reportProps = appProps.reportProps;
         this._searchProps = appProps.searchProps;
+
+        // Determine if this is in audit mode
+        this._auditOnly = !DataSource.IsAdmin || (appProps.auditOnly ? true : false);
+        if (loadOneDrive) {
+            this._auditOnly = appProps.auditOnly ? true : false;
+        }
 
         // Render the tab
         this.render();

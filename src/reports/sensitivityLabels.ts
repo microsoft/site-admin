@@ -1038,11 +1038,18 @@ export class SensitivityLabels {
                                     if (!responses[0].errorFl) {
                                         // Call the event
                                         onUpdate(label.text);
-
-                                        // Hide the dialogs
-                                        LoadingDialog.hide();
-                                        Modal.hide();
+                                    } else {
+                                        // Set the error
+                                        let ctrl = form.getControl("SensitivityLabel");
+                                        ctrl.updateValidation(ctrl.el, {
+                                            isValid: false,
+                                            invalidMessage: responses[0].message
+                                        });
                                     }
+
+                                    // Hide the dialogs
+                                    LoadingDialog.hide();
+                                    Modal.hide();
                                 });
                             }
                         }
