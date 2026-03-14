@@ -430,12 +430,9 @@ export class SensitivityLabels {
                         title: "File"
                     },
                     {
-                        name: "",
+                        name: "Path",
                         title: "File Info",
                         onRenderCell: (el, col, item: ISensitivityLabelItem) => {
-                            // Set the sort value
-                            el.setAttribute("data-order", item.Path);
-
                             // Show the file info
                             el.innerHTML = `
                                 <b>Created By: </b>${item.Author}

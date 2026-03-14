@@ -471,13 +471,9 @@ export class Permissions {
                 },
                 columns: [
                     {
-                        name: "",
+                        name: "Name",
                         title: "Role Info",
                         onRenderCell: (el, col, item: IPermissionItem) => {
-                            // Set the order/search values
-                            el.setAttribute("data-filter", item.Name);
-                            el.setAttribute("data-order", item.Name);
-
                             // Render the role information
                             el.innerHTML = `
                                 <div><strong>Name: </strong>${item.Name}</div>
