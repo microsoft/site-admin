@@ -41,6 +41,7 @@ export interface ISiteAdminWebPartProps {
   HideAuditToolsTab: boolean;
   HideFeaturesTab: boolean;
   HideListsTab: boolean;
+  HideCreateSiteBtn: boolean;
   HideLoadAdminOwnerBtn: boolean;
   HideLoadOneDriveBtn: boolean;
   HideManagementTab: boolean;
@@ -158,6 +159,7 @@ declare const SiteAdmin: {
     el: HTMLElement;
     title?: string;
     disableSensitivityLabelOverride?: boolean;
+    hideCreateSiteBtn?: boolean;
     hideLoadAdminOwnerBtn: boolean;
     hideLoadOneDriveBtn: boolean;
     hideReports: {
@@ -273,6 +275,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       context: this.context,
       el: this.domElement,
       disableSensitivityLabelOverride: this.properties.DisableSensitivityLabelOverride,
+      hideCreateSiteBtn: this.properties.HideCreateSiteBtn,
       hideLoadAdminOwnerBtn: this.properties.HideLoadAdminOwnerBtn,
       hideLoadOneDriveBtn: this.properties.HideLoadOneDriveBtn,
       hideReports: {
@@ -465,6 +468,18 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   checked: this.properties.AuditOnly,
                   onText: "The site admins/owners will only see the Information and Audit Tools tabs.",
                   offText: "The site owners will only see the Information and Audit Tools tabs."
+                }),
+                PropertyPaneToggle("HideCreateSiteBtn", {
+                  label: "Hide Create Site Button",
+                  checked: this.properties.HideCreateSiteBtn,
+                  onText: "The option to create a new site will be hidden.",
+                  offText: "The option to create a new site will be visible."
+                }),
+                PropertyPaneToggle("HideLoadAdminOwnerBtn", {
+                  label: "Hide Load Admin/Owner Button",
+                  checked: this.properties.HideLoadAdminOwnerBtn,
+                  onText: "The option to view a site's admins/owners will be hidden.",
+                  offText: "The option to view a site's admins/owners will be visible."
                 }),
                 PropertyPaneToggle("HideLoadAdminOwnerBtn", {
                   label: "Hide Load Admin/Owner Button",

@@ -22,6 +22,7 @@ export interface IAppProps {
     context?: any;
     disableSensitivityLabelOverride?: boolean;
     el: HTMLElement;
+    hideCreateSiteBtn?: boolean;
     hideLoadAdminOwnerBtn?: boolean;
     hideLoadOneDriveBtn?: boolean;
     hideReports: {
