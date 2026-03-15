@@ -163,12 +163,6 @@ export class SearchDocs {
                         name: "HitHighlightedSummary",
                         title: "Search Result",
                         onRenderCell: (el, col, item: ISearchItem) => {
-                            // Add the data-filter attribute for searching notes properly
-                            el.setAttribute("data-filter", item.HitHighlightedSummary);
-
-                            // Add the data-order attribute for sorting notes properly
-                            el.setAttribute("data-order", item.HitHighlightedSummary);
-
                             // Declare a span element
                             let span = document.createElement("span");
 

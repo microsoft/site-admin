@@ -481,11 +481,6 @@ export class SearchEEEU {
                         name: "RoleInfo",
                         title: "Permission Detail",
                         onRenderCell: (el) => {
-                            // Add the data-filter attribute for searching notes properly
-                            el.setAttribute("data-filter", el.innerHTML);
-                            // Add the data-order attribute for sorting notes properly
-                            el.setAttribute("data-order", el.innerHTML);
-
                             // Declare a span element
                             let span = document.createElement("span");
                             span.className = "notes";

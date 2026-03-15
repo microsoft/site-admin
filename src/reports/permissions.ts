@@ -496,10 +496,6 @@ export class Permissions {
                         onRenderCell: (el, col, item: IPermissionItem) => {
                             // Set the value
                             el.innerHTML = item.GroupIds.length.toString();
-
-                            // Set the filter and order values
-                            el.setAttribute("data-filter", el.innerHTML);
-                            el.setAttribute("data-order", el.innerHTML);
                         }
                     },
                     {
@@ -508,10 +504,6 @@ export class Permissions {
                         onRenderCell: (el, col, item: IPermissionItem) => {
                             // Set the value
                             el.innerHTML = item.GroupMembersAsString.length.toString();
-
-                            // Set the filter and order values
-                            el.setAttribute("data-filter", el.innerHTML);
-                            el.setAttribute("data-order", el.innerHTML);
                         }
                     },
                     {
@@ -535,10 +527,6 @@ export class Permissions {
                                 // Set the value
                                 el.innerHTML = users.length.toString();
                             }
-
-                            // Set the filter and order values
-                            el.setAttribute("data-filter", el.innerHTML);
-                            el.setAttribute("data-order", el.innerHTML);
                         }
                     },
                     {
@@ -556,10 +544,6 @@ export class Permissions {
                                 // Set the value
                                 el.innerHTML = users.length.toString();
                             }
-
-                            // Set the filter and order values
-                            el.setAttribute("data-filter", el.innerHTML);
-                            el.setAttribute("data-order", el.innerHTML);
                         }
                     },
                     {
