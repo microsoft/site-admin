@@ -2,12 +2,12 @@ import { ContextInfo, SPTypes } from "gd-sprest-bs";
 
 // Sets the context information
 // This is for SPFx or Teams solutions
-export const setContext = (context, sourceUrl?: string) => {
+export const setContext = (context, maxRequests: number) => {
     // Set the context
     ContextInfo.setPageContext(context.pageContext);
 
     // Update the source url
-    Strings.SourceUrl = sourceUrl || ContextInfo.webServerRelativeUrl;
+    Strings.MaxRequests = typeof (maxRequests) === "number" ? maxRequests : Strings.MaxRequests;
 }
 
 /**
@@ -19,6 +19,7 @@ const Strings = {
     Lists: {
         Main: "Site Admin Requests"
     },
+    MaxRequests: 1,
     ProjectName: "Site Admin",
     ProjectDescription: "Application for adminitrators to make requests for changes on their site collections.",
     SourceUrl: ContextInfo.webServerRelativeUrl,

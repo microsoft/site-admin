@@ -2,6 +2,7 @@ import { Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
 import { Components, Helper, SPTypes, Types, Web, v2 } from "gd-sprest-bs";
 import { fileEarmarkText } from "gd-sprest-bs/build/icons/svgs/fileEarmarkText";
 import { DataSource } from "../ds";
+import Strings from "../strings";
 import { ExportCSV } from "./exportCSV";
 
 interface ISensitivityLabelItem {
@@ -278,8 +279,8 @@ export class SensitivityLabels {
 
         // Create a worker process
         let worker = Helper.WebWorker(() => {
-            // Do nothing if we are processing an item
-            if (processingCounter > 2) { return; }
+            // Do nothing if we are processing the max files at once
+            if (processingCounter > Strings.MaxRequests) { return; }
 
             // Do nothing if we are done
             if (filesToProcess.length == 0) {
