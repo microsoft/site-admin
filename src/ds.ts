@@ -1162,17 +1162,23 @@ export class DataSource {
                     return;
                 }
 
-                // Validate the group name
-                DirectorySession().validateGroupName(title, groupAlias).execute(result => {
-                    // See if it's valid
-                    if (result.IsValidName) {
-                        // Resolve the request
-                        resolve();
-                    } else {
-                        // Reject the request
-                        reject(result.AliasErrorDetails?.ValidationErrorMessage || result.ErrorMessage);
-                    }
-                });
+                // See if the group alias is defined
+                if (groupAlias) {
+                    // Validate the group name
+                    DirectorySession().validateGroupName(title, groupAlias).execute(result => {
+                        // See if it's valid
+                        if (result.IsValidName) {
+                            // Resolve the request
+                            resolve();
+                        } else {
+                            // Reject the request
+                            reject(result.AliasErrorDetails?.ValidationErrorMessage || result.ErrorMessage);
+                        }
+                    });
+                } else {
+                    // Resolve the request
+                    resolve();
+                }
             });
         });
     }

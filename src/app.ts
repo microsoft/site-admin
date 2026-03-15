@@ -316,6 +316,8 @@ export class App {
                     name: "Template",
                     label: "Site Template:",
                     type: Components.FormControlTypes.Dropdown,
+                    required: true,
+                    errorMessage: "A site template is required.",
                     items: [
                         { text: "Team Site (No M365 Group)", value: "STS#3" },
                         { text: "Team Site (M365 Group)", value: "GROUP#0" },
@@ -338,6 +340,7 @@ export class App {
                             // Ensure the form is valid
                             if (form.isValid()) {
                                 let values = form.getValues();
+                                let validateGroupAlias = values["Template"].value == "STS#3";
 
                                 // Show a loading dialog
                                 LoadingDialog.setHeader("Validating the Site Information");
@@ -345,7 +348,7 @@ export class App {
                                 LoadingDialog.show();
 
                                 // Validate the site info
-                                DataSource.validateSiteCreationInfo(values["Title"], values["GroupAlias"], values["Url"]).then(() => {
+                                DataSource.validateSiteCreationInfo(values["Title"], validateGroupAlias ? values["GroupAlias"] : null, values["Url"]).then(() => {
                                     // Update the dialog
                                     LoadingDialog.setHeader("Creating Site Request");
                                     LoadingDialog.setBody("Creating the request for a new site. This will close when it completes.");
