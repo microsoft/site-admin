@@ -50,6 +50,7 @@ export interface IAppProps {
         webs?: boolean;
     }
     imageReferences: string[];
+    maxRequests?: number;
     maxStorageDesc?: string;
     maxStorageSize?: number;
     reportProps?: IReportProps;

@@ -1,6 +1,7 @@
 define([], function () {
   return {
     "AppTitle": "App Title",
+    "MaxRequests": "Max Requests Allowed",
     "MaxStorage": "Max Storage Allowed",
     "MaxStorageDescription": "Max Storage Description",
     "ReportsDLPFileExt": "DLP Default File Extensions",

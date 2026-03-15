@@ -60,6 +60,7 @@ export interface ISiteAdminWebPartProps {
   HideReportSensitivityLabels: boolean;
   HideReportSharingLinks: boolean;
   HideReportUniquePermissions: boolean;
+  MaxRequests: number;
   MaxStorage: number;
   MaxStorageDescription: string;
   ReportsDocRententionYears: string;
@@ -187,6 +188,7 @@ declare const SiteAdmin: {
       webs: boolean;
     }
     imageReferences: string[];
+    maxRequests?: number;
     maxStorageDesc?: string;
     maxStorageSize?: number;
     siteAttestation?: boolean;
@@ -303,6 +305,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         webs: this.properties.HideWebsTab ? true : false
       },
       imageReferences,
+      maxRequests: this.properties.MaxRequests,
       maxStorageDesc: this.properties.MaxStorageDescription,
       maxStorageSize: this.properties.MaxStorage,
       reportProps: {
@@ -569,6 +572,22 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   description: "The default file extensions to search.",
                   value: this.properties.SensitivityLabelFileExt
                 }),
+                PropertyPaneDropdown("MaxRequests", {
+                  label: strings.MaxRequests,
+                  selectedKey: this.properties.MaxRequests,
+                  options: [
+                    { key: "1", text: "1" },
+                    { key: "2", text: "2" },
+                    { key: "3", text: "3" },
+                    { key: "4", text: "4" },
+                    { key: "5", text: "5" },
+                    { key: "6", text: "6" },
+                    { key: "7", text: "7" },
+                    { key: "8", text: "8" },
+                    { key: "9", text: "9" },
+                    { key: "10", text: "10" }
+                  ]
+                })
               ]
             },
             {
