@@ -291,7 +291,19 @@ export class App {
                 {
                     name: "GroupAlias",
                     label: "Group Alias:",
-                    type: Components.FormControlTypes.Readonly
+                    type: Components.FormControlTypes.TextField,
+                    onValidate: (ctrl, results) => {
+                        // See what template is selected
+                        let template = form.getControl("Template").getValue().value;
+                        if (template != "STS#3") {
+                            // Ensure a value exists
+                            results.isValid = results.value ? true : false;
+                            results.invalidMessage = "A group alias is required for M365 Group connected sites.";
+                        }
+
+                        // Return the results
+                        return results;
+                    }
                 } as Components.IFormControlPropsTextField,
                 {
                     name: "Url",
@@ -357,7 +369,13 @@ export class App {
                                     DataSource.addRequest(values["Url"], [{
                                         key: RequestTypes.CreateSite,
                                         message: "",
-                                        value: JSON.stringify(values)
+                                        value: JSON.stringify({
+                                            Description: values["Description"],
+                                            GroupAlias: values["GroupAlias"],
+                                            Template: values["Template"].value,
+                                            Title: values["Title"],
+                                            Url: values["Url"]
+                                        })
                                     }]).then(() => {
                                         // Hide the dialogs
                                         Modal.hide();
