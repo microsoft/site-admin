@@ -503,31 +503,31 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   label: strings.MaxBatchSize,
                   selectedKey: this.properties.MaxBatchSize,
                   options: [
-                    { key: "5", text: "5" },
-                    { key: "10", text: "10" },
-                    { key: "15", text: "15" },
-                    { key: "20", text: "20" },
-                    { key: "25", text: "25" },
-                    { key: "35", text: "35" },
-                    { key: "50", text: "50" },
-                    { key: "75", text: "75" },
-                    { key: "100", text: "100" }
+                    { key: 5, text: "5" },
+                    { key: 10, text: "10" },
+                    { key: 15, text: "15" },
+                    { key: 20, text: "20" },
+                    { key: 25, text: "25" },
+                    { key: 35, text: "35" },
+                    { key: 50, text: "50" },
+                    { key: 75, text: "75" },
+                    { key: 100, text: "100" }
                   ]
                 }),
                 PropertyPaneDropdown("MaxRequests", {
                   label: strings.MaxRequests,
                   selectedKey: this.properties.MaxRequests,
                   options: [
-                    { key: "1", text: "1" },
-                    { key: "2", text: "2" },
-                    { key: "3", text: "3" },
-                    { key: "4", text: "4" },
-                    { key: "5", text: "5" },
-                    { key: "6", text: "6" },
-                    { key: "7", text: "7" },
-                    { key: "8", text: "8" },
-                    { key: "9", text: "9" },
-                    { key: "10", text: "10" }
+                    { key: 1, text: "1" },
+                    { key: 2, text: "2" },
+                    { key: 3, text: "3" },
+                    { key: 4, text: "4" },
+                    { key: 5, text: "5" },
+                    { key: 6, text: "6" },
+                    { key: 7, text: "7" },
+                    { key: 8, text: "8" },
+                    { key: 9, text: "9" },
+                    { key: 10, text: "10" }
                   ]
                 }),
                 PropertyPaneToggle("SiteAttestation", {
@@ -641,18 +641,18 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   label: strings.ReportsDocRententionYears,
                   selectedKey: this.properties.ReportsDocRententionYears,
                   options: [
-                    { key: 1, text: "1" },
-                    { key: 2, text: "2" },
-                    { key: 3, text: "3" },
-                    { key: 4, text: "4" },
-                    { key: 5, text: "5" },
-                    { key: 6, text: "6" },
-                    { key: 7, text: "7" },
-                    { key: 8, text: "8" },
-                    { key: 9, text: "9" },
-                    { key: 10, text: "10" },
-                    { key: 15, text: "15" },
-                    { key: 20, text: "20" }
+                    { key: "1", text: "1" },
+                    { key: "2", text: "2" },
+                    { key: "3", text: "3" },
+                    { key: "4", text: "4" },
+                    { key: "5", text: "5" },
+                    { key: "6", text: "6" },
+                    { key: "7", text: "7" },
+                    { key: "8", text: "8" },
+                    { key: "9", text: "9" },
+                    { key: "10", text: "10" },
+                    { key: "15", text: "15" },
+                    { key: "20", text: "20" }
                   ]
                 }),
                 PropertyPaneTextField("ReportsDocSearchFileExt", {

@@ -363,11 +363,11 @@ export class SensitivityLabels {
 
             // Label the file
             this.labelFile(file, overrideLabelFl, fileLabel.text, fileLabel.value, justification, responses).then(() => {
-                // Decrement the # of files being processed
-                processingCounter--;
-
                 // Update the dialog
                 this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] File Labelled: ${file.name}`;
+
+                // Decrement the # of files being processed
+                processingCounter--;
             });
         }, 100);
 
