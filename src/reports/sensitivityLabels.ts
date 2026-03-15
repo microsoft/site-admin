@@ -2,6 +2,7 @@ import { Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
 import { Components, Helper, SPTypes, Types, Web, v2 } from "gd-sprest-bs";
 import { fileEarmarkText } from "gd-sprest-bs/build/icons/svgs/fileEarmarkText";
 import { DataSource } from "../ds";
+import Strings from "../strings";
 import { ExportCSV } from "./exportCSV";
 
 interface ISensitivityLabelItem {
@@ -273,13 +274,13 @@ export class SensitivityLabels {
         // Process the labels as we load the files
         let fileCounter = 0;
         let filesToProcess: Types.Microsoft.Graph.driveItem[] = [];
-        let isProcessing = false;
+        let processingCounter = 0;
         let processedCounter = 0;
 
         // Create a worker process
         let worker = Helper.WebWorker(() => {
-            // Do nothing if we are processing an item
-            if (isProcessing) { return; }
+            // Do nothing if we are processing the max files at once
+            if (processingCounter >= Strings.MaxRequests) { return; }
 
             // Do nothing if we are done
             if (filesToProcess.length == 0) {
@@ -351,8 +352,8 @@ export class SensitivityLabels {
                 }
             }
 
-            // Set the flag
-            isProcessing = true;
+            // Increment the # of files being processed
+            processingCounter++;
 
             // Update the dialog
             this._elSubNav.children[1].innerHTML = `[Processing ${processedCounter} of ${fileCounter}] Labelling File: ${file.name}`;
@@ -362,11 +363,11 @@ export class SensitivityLabels {
 
             // Label the file
             this.labelFile(file, overrideLabelFl, fileLabel.text, fileLabel.value, justification, responses).then(() => {
-                // Set the flag
-                isProcessing = false;
-
                 // Update the dialog
                 this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] File Labelled: ${file.name}`;
+
+                // Decrement the # of files being processed
+                processingCounter--;
             });
         }, 100);
 

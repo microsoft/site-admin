@@ -2,6 +2,7 @@ import { Dashboard, Documents, LoadingDialog } from "dattatable";
 import { Components, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
 import { cardList } from "gd-sprest-bs/build/icons/svgs/cardList";
 import { DataSource } from "../ds";
+import Strings from "../strings";
 import { ExportCSV } from "./exportCSV";
 
 interface IPermission {
@@ -142,9 +143,9 @@ export class UniquePermissions {
                             }
 
                             // Increment the counter and update the dialog
-                            this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${ctrBatchJobs % 25}...`;
+                            this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${ctrBatchJobs % Strings.MaxBatchSize}...`;
                         });
-                    }, ctrBatchJobs++ % 25 == 0);
+                    }, ctrBatchJobs++ % Strings.MaxBatchSize == 0);
                 }
             }).then(() => {
                 // Update the dialog

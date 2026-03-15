@@ -139,7 +139,7 @@ export class DLP {
 
                     // Increment the counter and update the dialog
                     this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${batchRequests}...`;
-                }, batchRequests++ % 25 == 0);
+                }, batchRequests++ % Strings.MaxBatchSize == 0);
 
                 // Update the dialog
                 this._elSubNav.children[1].innerHTML = `Creating Batch Requests - Processed ${++itemCounter} items...`;
@@ -233,7 +233,7 @@ export class DLP {
 
                                     // Increment the counter and update the dialog
                                     this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${batchRequests}...`;
-                                }, batchRequests++ % 25 == 0);
+                                }, batchRequests++ % Strings.MaxBatchSize == 0);
                             }
 
                             // Update the dialog

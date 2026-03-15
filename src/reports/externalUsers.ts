@@ -3,6 +3,7 @@ import { Components, ContextInfo, Helper, Types, Web } from "gd-sprest-bs";
 import { fileEarmark } from "gd-sprest-bs/build/icons/svgs/fileEarmark";
 import { personX } from "gd-sprest-bs/build/icons/svgs/personX";
 import { DataSource } from "../ds";
+import Strings from "../strings";
 import { ExportCSV } from "./exportCSV";
 
 interface IGroupInfo {
@@ -102,7 +103,7 @@ export class ExternalUsers {
                 }).batch(user => {
                     // Add the user
                     users.push(user);
-                }, userIds.length % 25 == 0);
+                }, userIds.length % Strings.MaxBatchSize == 0);
             });
 
             // Update the loading dialog
