@@ -247,6 +247,43 @@ if ($item -ne $null) {
                     $output = "The client side assets library will not bypass the block download policy.";
                 }
             }
+            "Company Wide Sharing Links" {
+                # See if we are disabling company wide sharing links
+                if ($value -eq "true") {
+                    # Log
+                    Write-Host "Setting the DisableCompanyWideSharingLinks to true...";
+
+                    # Disable the company wide sharing links
+                    Set-PnPSite -Identity $siteUrl -DisableCompanyWideSharingLinks $true;
+
+                    # Set the output
+                    $output = "The company wide sharing links has been disabled for this site collection.";
+                }
+                else {
+                    # Log
+                    Write-Host "Setting the DisableCompanyWideSharingLinks to false...";
+
+                    # Enable the company wide sharing links
+                    Set-PnPSite -Identity $siteUrl -DisableCompanyWideSharingLinks $false;
+
+                    # Set the output
+                    $output = "The company wide sharing links has been enabled for this site collection.";
+                }
+            }
+            "Create Site" {
+                # Log
+                Write-Host "Creating a new site...";
+                Write-Host "Title: $($value["Title"])";
+                Write-Host "Description: $($value["Description"])";
+                Write-Host "Url: $($value["Url"])";
+                Write-Host "Template: $($value["Template"])";
+
+                # Create the subsite
+                $site = New-PnPSite -Title $value["Title"] -Url $value["Url"] -Template $value["Template"] -Description $value["Description"];
+
+                # Set the output
+                $output = "A new site was created at: $($site.Url)";
+            }
             "Custom Script" {
                 # See if we are enabling custom scripts
                 if ($value -eq "true") {
@@ -308,29 +345,6 @@ if ($item -ne $null) {
                 # Disable custom scripts
                 #Set-PnPTenantSite -Identity $siteUrl -DenyAddAndCustomizePages $true;
                 Set-PnPSite -Identity $siteUrl -NoScriptSite $true;
-            }
-            "Company Wide Sharing Links" {
-                # See if we are disabling company wide sharing links
-                if ($value -eq "true") {
-                    # Log
-                    Write-Host "Setting the DisableCompanyWideSharingLinks to true...";
-
-                    # Disable the company wide sharing links
-                    Set-PnPSite -Identity $siteUrl -DisableCompanyWideSharingLinks $true;
-
-                    # Set the output
-                    $output = "The company wide sharing links has been disabled for this site collection.";
-                }
-                else {
-                    # Log
-                    Write-Host "Setting the DisableCompanyWideSharingLinks to false...";
-
-                    # Enable the company wide sharing links
-                    Set-PnPSite -Identity $siteUrl -DisableCompanyWideSharingLinks $false;
-
-                    # Set the output
-                    $output = "The company wide sharing links has been enabled for this site collection.";
-                }
             }
             "Increase Storage" {
                 # See if we are enabling custom scripts
