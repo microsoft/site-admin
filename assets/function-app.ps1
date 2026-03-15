@@ -279,7 +279,11 @@ if ($item -ne $null) {
                 Write-Host "Template: $($value["Template"])";
 
                 # Create the subsite
-                $site = New-PnPSite -Title $value["Title"] -Url $value["Url"] -Template $value["Template"] -Description $value["Description"];
+                $site = New-PnPSite -Alias $value["GroupAlias"] `
+                    -Title $value["Title"] `
+                    -Description $value["Description"] `
+                    -Template $value["Template"] `
+                    -Url $value["Url"];
 
                 # Set the output
                 $output = "A new site was created at: $($site.Url)";
