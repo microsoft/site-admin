@@ -34,6 +34,7 @@
         "AppTitle": "Site Admin Tool",
         "AuditOnly": false,
         "DisableSensitivityLabelOverride": false,
+        "MaxRequests": 1,
         "MaxStorage": 25,
         "MaxStorageDescription": "The max threshold has been met.",
         "ReportsDLPFileExt": "csv doc docx dot dotx pdf pot potx pps ppsx ppt pptx txt xls xlsx xlt xltx",
