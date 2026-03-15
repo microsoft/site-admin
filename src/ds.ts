@@ -63,6 +63,7 @@ export interface IUserInfo {
 export enum RequestTypes {
     AppCatalog = "App Catalog",
     ClientSideAssets = "Client Side Assets",
+    CreateSite = "Create Site",
     CustomScript = "Custom Script",
     DisableCompanyWideSharingLinks = "Company Wide Sharing Links",
     IncreaseStorage = "Increase Storage",
@@ -1142,6 +1143,43 @@ export class DataSource {
                     }
                 }
             );
+        });
+    }
+
+    // Validates the site creation information
+    static validateSiteCreationInfo(title: string, groupAlias: string, url: string): PromiseLike<void> {
+        // Return a promise
+        return new Promise((resolve, reject) => {
+            // Get the web
+            Web(url).execute(() => {
+                // Site already exists
+                reject("A site already exists at this url. Please choose a different url.");
+            }, (err) => {
+                // Ensure it's not a permission issue
+                if (err.status == 403) {
+                    // User doesn't have access to site, but it exists
+                    reject("A site already exists at this url. Please choose a different url.");
+                    return;
+                }
+
+                // See if the group alias is defined
+                if (groupAlias) {
+                    // Validate the group name
+                    DirectorySession().validateGroupName(title, groupAlias).execute(result => {
+                        // See if it's valid
+                        if (result.IsValidName) {
+                            // Resolve the request
+                            resolve();
+                        } else {
+                            // Reject the request
+                            reject(result.AliasErrorDetails?.ValidationErrorMessage || result.ErrorMessage);
+                        }
+                    });
+                } else {
+                    // Resolve the request
+                    resolve();
+                }
+            });
         });
     }
 }

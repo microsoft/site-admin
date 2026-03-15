@@ -41,6 +41,7 @@ export interface ISiteAdminWebPartProps {
   HideAuditToolsTab: boolean;
   HideFeaturesTab: boolean;
   HideListsTab: boolean;
+  HideCreateSiteBtn: boolean;
   HideLoadAdminOwnerBtn: boolean;
   HideLoadOneDriveBtn: boolean;
   HideManagementTab: boolean;
@@ -158,6 +159,7 @@ declare const SiteAdmin: {
     el: HTMLElement;
     title?: string;
     disableSensitivityLabelOverride?: boolean;
+    hideCreateSiteBtn?: boolean;
     hideLoadAdminOwnerBtn: boolean;
     hideLoadOneDriveBtn: boolean;
     hideReports: {
@@ -272,32 +274,33 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       auditOnly: this.properties.AuditOnly,
       context: this.context,
       el: this.domElement,
-      disableSensitivityLabelOverride: this.properties.DisableSensitivityLabelOverride,
-      hideLoadAdminOwnerBtn: this.properties.HideLoadAdminOwnerBtn,
-      hideLoadOneDriveBtn: this.properties.HideLoadOneDriveBtn,
+      disableSensitivityLabelOverride: this.properties.DisableSensitivityLabelOverride ? true : false,
+      hideCreateSiteBtn: this.properties.HideCreateSiteBtn ? true : false,
+      hideLoadAdminOwnerBtn: this.properties.HideLoadAdminOwnerBtn ? true : false,
+      hideLoadOneDriveBtn: this.properties.HideLoadOneDriveBtn ? true : false,
       hideReports: {
-        dlp: this.properties.HideReportDLP,
-        docRetention: this.properties.HideReportDocRetention,
-        externalShares: this.properties.HideReportExternalShares,
-        externalUsers: this.properties.HideReportExternalUsers,
-        permissions: this.properties.HideReportPermissions,
-        retention: this.properties.HideReportRetention,
-        searchDocs: this.properties.HideReportSearchDocs,
-        searchEEEU: this.properties.HideReportSearchEEEU,
-        searchProp: this.properties.HideReportSearchProp,
-        searchUsers: this.properties.HideReportSearchUsers,
-        sensitivityLabels: this.properties.HideReportSensitivityLabels,
-        sharingLinks: this.properties.HideReportSharingLinks,
-        uniquePermissions: this.properties.HideReportUniquePermissions
+        dlp: this.properties.HideReportDLP ? true : false,
+        docRetention: this.properties.HideReportDocRetention ? true : false,
+        externalShares: this.properties.HideReportExternalShares ? true : false,
+        externalUsers: this.properties.HideReportExternalUsers ? true : false,
+        permissions: this.properties.HideReportPermissions ? true : false,
+        retention: this.properties.HideReportRetention ? true : false,
+        searchDocs: this.properties.HideReportSearchDocs ? true : false,
+        searchEEEU: this.properties.HideReportSearchEEEU ? true : false,
+        searchProp: this.properties.HideReportSearchProp ? true : false,
+        searchUsers: this.properties.HideReportSearchUsers ? true : false,
+        sensitivityLabels: this.properties.HideReportSensitivityLabels ? true : false,
+        sharingLinks: this.properties.HideReportSharingLinks ? true : false,
+        uniquePermissions: this.properties.HideReportUniquePermissions ? true : false
       },
       hideTabs: {
-        appPermissions: this.properties.HideAppPermissionsTab,
-        auditTools: this.properties.HideAuditToolsTab,
-        features: this.properties.HideFeaturesTab,
-        lists: this.properties.HideListsTab,
-        management: this.properties.HideManagementTab,
-        search: this.properties.HideSearchTab,
-        webs: this.properties.HideWebsTab
+        appPermissions: this.properties.HideAppPermissionsTab ? true : false,
+        auditTools: this.properties.HideAuditToolsTab ? true : false,
+        features: this.properties.HideFeaturesTab ? true : false,
+        lists: this.properties.HideListsTab ? true : false,
+        management: this.properties.HideManagementTab ? true : false,
+        search: this.properties.HideSearchTab ? true : false,
+        webs: this.properties.HideWebsTab ? true : false
       },
       imageReferences,
       maxStorageDesc: this.properties.MaxStorageDescription,
@@ -465,6 +468,18 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   checked: this.properties.AuditOnly,
                   onText: "The site admins/owners will only see the Information and Audit Tools tabs.",
                   offText: "The site owners will only see the Information and Audit Tools tabs."
+                }),
+                PropertyPaneToggle("HideCreateSiteBtn", {
+                  label: "Hide Create Site Button",
+                  checked: this.properties.HideCreateSiteBtn,
+                  onText: "The option to create a new site will be hidden.",
+                  offText: "The option to create a new site will be visible."
+                }),
+                PropertyPaneToggle("HideLoadAdminOwnerBtn", {
+                  label: "Hide Load Admin/Owner Button",
+                  checked: this.properties.HideLoadAdminOwnerBtn,
+                  onText: "The option to view a site's admins/owners will be hidden.",
+                  offText: "The option to view a site's admins/owners will be visible."
                 }),
                 PropertyPaneToggle("HideLoadAdminOwnerBtn", {
                   label: "Hide Load Admin/Owner Button",

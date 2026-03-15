@@ -1,7 +1,7 @@
-import { Navigation } from "dattatable";
+import { LoadingDialog, Modal, Navigation } from "dattatable";
 import { Components } from "gd-sprest-bs";
 import { generateIcon } from "gd-sprest-bs/build/icons/generate.js";
-import { DataSource } from "./ds";
+import { DataSource, RequestTypes } from "./ds";
 import { InstallationModal } from "./install";
 import { LoadForm } from "./loadForm";
 import Strings from "./strings";
@@ -22,6 +22,7 @@ export interface IAppProps {
     context?: any;
     disableSensitivityLabelOverride?: boolean;
     el: HTMLElement;
+    hideCreateSiteBtn?: boolean;
     hideLoadAdminOwnerBtn?: boolean;
     hideLoadOneDriveBtn?: boolean;
     hideReports: {
@@ -127,10 +128,24 @@ export class App {
     private renderNavigation(elRow: HTMLElement, loadOneDrive: boolean) {
         let itemsEnd: Components.INavbarItem[] = [];
 
+        // See if we are showing the create site button
+        if (!this._props.hideCreateSiteBtn) {
+            // Add the create site button
+            itemsEnd.push({
+                className: "btn-outline-light ms-2",
+                isButton: true,
+                text: "Create Site",
+                onClick: () => {
+                    // Show the create site form
+                    this.showCreateSiteForm();
+                }
+            })
+        }
+
         // Show the load site button if data has already been loaded
         if (DataSource.Site || loadOneDrive) {
             itemsEnd.push({
-                className: "btn-outline-light",
+                className: "btn-outline-light ms-2",
                 isButton: true,
                 text: "Load Site",
                 onClick: () => {
@@ -247,5 +262,140 @@ export class App {
 
         // Render the tabs
         let tabs = new Tabs(el, this._props, loadOneDrive);
+    }
+
+    // The create site form
+    private showCreateSiteForm() {
+        // Clear the modal
+        Modal.clear();
+
+        // Set the header
+        Modal.setHeader("Create Site");
+
+        // Set the form
+        let form = Components.Form({
+            el: Modal.BodyElement,
+            controls: [
+                {
+                    name: "Title",
+                    label: "Site Title:",
+                    type: Components.FormControlTypes.TextField,
+                    required: true,
+                    errorMessage: "The name of the site is required.",
+                    onChange: value => {
+                        // Set the default url value
+                        form.getControl("GroupAlias").textbox.setValue(value.replace(/\s/g, ""));
+                        form.getControl("Url").textbox.setValue(value.replace(/\s/g, "").toLowerCase());
+                    }
+                } as Components.IFormControlPropsTextField,
+                {
+                    name: "GroupAlias",
+                    label: "Group Alias:",
+                    type: Components.FormControlTypes.Readonly
+                } as Components.IFormControlPropsTextField,
+                {
+                    name: "Url",
+                    label: "Site URL:",
+                    type: Components.FormControlTypes.TextField,
+                    required: true,
+                    errorMessage: "The URL of the site is required.",
+                    prependedDropdown: {
+                        updateLabel: true,
+                        items: [
+                            { text: "/sites/", value: "/sites/", isSelected: true },
+                            { text: "/teams/", value: "/teams/" }
+                        ]
+                    }
+                } as Components.IFormControlPropsTextField,
+                {
+                    name: "Description",
+                    label: "Site Description:",
+                    type: Components.FormControlTypes.TextField
+                } as Components.IFormControlPropsTextField,
+                {
+                    name: "Template",
+                    label: "Site Template:",
+                    type: Components.FormControlTypes.Dropdown,
+                    required: true,
+                    errorMessage: "A site template is required.",
+                    items: [
+                        { text: "Team Site (No M365 Group)", value: "STS#3" },
+                        { text: "Team Site (M365 Group)", value: "GROUP#0" },
+                        { text: "Communication Site", value: "SITEPAGEPUBLISHING#0" }
+                    ]
+                } as Components.IFormControlPropsDropdown
+            ]
+        });
+
+        // Set the footer
+        Components.TooltipGroup({
+            el: Modal.FooterElement,
+            tooltips: [
+                {
+                    content: "Submits the request to create a new site.",
+                    btnProps: {
+                        text: "Create",
+                        type: Components.ButtonTypes.OutlinePrimary,
+                        onClick: () => {
+                            // Ensure the form is valid
+                            if (form.isValid()) {
+                                let values = form.getValues();
+                                let validateGroupAlias = values["Template"].value == "STS#3";
+
+                                // Show a loading dialog
+                                LoadingDialog.setHeader("Validating the Site Information");
+                                LoadingDialog.setBody("Validating the site information...");
+                                LoadingDialog.show();
+
+                                // Validate the site info
+                                DataSource.validateSiteCreationInfo(values["Title"], validateGroupAlias ? values["GroupAlias"] : null, values["Url"]).then(() => {
+                                    // Update the dialog
+                                    LoadingDialog.setHeader("Creating Site Request");
+                                    LoadingDialog.setBody("Creating the request for a new site. This will close when it completes.");
+
+                                    // Create the request for the site
+                                    DataSource.addRequest(values["Url"], [{
+                                        key: RequestTypes.CreateSite,
+                                        message: "",
+                                        value: JSON.stringify(values)
+                                    }]).then(() => {
+                                        // Hide the dialogs
+                                        Modal.hide();
+                                        LoadingDialog.hide();
+                                    });
+                                }, (invalidMessage: string) => {
+                                    // Update the validation
+                                    let ctrl = invalidMessage.startsWith("A site already exists") ? form.getControl("Url") : form.getControl("GroupAlias");
+
+                                    // Update the validation
+                                    ctrl.updateValidation(ctrl.el, {
+                                        isValid: false,
+                                        invalidMessage
+                                    });
+
+                                    // Hide the dialog
+                                    LoadingDialog.hide();
+                                    return;
+                                });
+                            }
+                        }
+                    }
+                },
+                {
+                    content: "Closes the form.",
+                    btnProps: {
+                        text: "Close",
+                        type: Components.ButtonTypes.OutlineSecondary,
+                        onClick: () => {
+                            // Hide the modal
+                            Modal.hide();
+                        }
+                    }
+                }
+            ]
+        });
+
+        // Show the form
+        Modal.show();
     }
 }
