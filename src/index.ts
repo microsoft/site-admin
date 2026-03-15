@@ -19,7 +19,7 @@ const GlobalVariable = {
         // See if the page context exists
         if (props.context) {
             // Set the context
-            setContext(props.context, props.maxRequests);
+            setContext(props.context, props.maxBatchSize, props.maxRequests);
 
             // Update the configuration
             Configuration.setWebUrl(ContextInfo.webServerRelativeUrl);

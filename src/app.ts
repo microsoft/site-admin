@@ -50,6 +50,7 @@ export interface IAppProps {
         webs?: boolean;
     }
     imageReferences: string[];
+    maxBatchSize?: number;
     maxRequests?: number;
     maxStorageDesc?: string;
     maxStorageSize?: number;
