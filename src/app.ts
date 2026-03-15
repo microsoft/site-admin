@@ -273,7 +273,6 @@ export class App {
         Modal.setHeader("Create Site");
 
         // Set the form
-        let ddlSiteType: Components.IDropdown = null;
         let form = Components.Form({
             el: Modal.BodyElement,
             controls: [
