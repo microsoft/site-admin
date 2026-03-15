@@ -1,5 +1,6 @@
 declare interface ISiteAdminWebPartStrings {
   AppTitle: string;
+  MaxBatchSize: string;
   MaxRequests: string;
   MaxStorage: string;
   MaxStorageDescription: string;

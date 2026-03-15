@@ -34,6 +34,7 @@
         "AppTitle": "Site Admin Tool",
         "AuditOnly": false,
         "DisableSensitivityLabelOverride": false,
+        "MaxBatchSize": 25,
         "MaxRequests": 1,
         "MaxStorage": 25,
         "MaxStorageDescription": "The max threshold has been met.",

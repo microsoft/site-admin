@@ -1,6 +1,7 @@
 define([], function () {
   return {
     "AppTitle": "App Title",
+    "MaxBatchSize": "Max Batch Size",
     "MaxRequests": "Max Requests Allowed",
     "MaxStorage": "Max Storage Allowed",
     "MaxStorageDescription": "Max Storage Description",

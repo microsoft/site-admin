@@ -60,6 +60,7 @@ export interface ISiteAdminWebPartProps {
   HideReportSensitivityLabels: boolean;
   HideReportSharingLinks: boolean;
   HideReportUniquePermissions: boolean;
+  MaxBatchSize: number;
   MaxRequests: number;
   MaxStorage: number;
   MaxStorageDescription: string;
@@ -188,6 +189,7 @@ declare const SiteAdmin: {
       webs: boolean;
     }
     imageReferences: string[];
+    maxBatchSize?: number;
     maxRequests?: number;
     maxStorageDesc?: string;
     maxStorageSize?: number;
@@ -305,6 +307,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         webs: this.properties.HideWebsTab ? true : false
       },
       imageReferences,
+      maxBatchSize: this.properties.MaxBatchSize,
       maxRequests: this.properties.MaxRequests,
       maxStorageDesc: this.properties.MaxStorageDescription,
       maxStorageSize: this.properties.MaxStorage,
@@ -496,6 +499,37 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   onText: "The option to run reports against the user's OneDrive will be hidden.",
                   offText: "The option to run reports against the user's OneDrive will be visible."
                 }),
+                PropertyPaneDropdown("MaxBatchSize", {
+                  label: strings.MaxBatchSize,
+                  selectedKey: this.properties.MaxBatchSize,
+                  options: [
+                    { key: "5", text: "5" },
+                    { key: "10", text: "10" },
+                    { key: "15", text: "15" },
+                    { key: "20", text: "20" },
+                    { key: "25", text: "25" },
+                    { key: "35", text: "35" },
+                    { key: "50", text: "50" },
+                    { key: "75", text: "75" },
+                    { key: "100", text: "100" }
+                  ]
+                }),
+                PropertyPaneDropdown("MaxRequests", {
+                  label: strings.MaxRequests,
+                  selectedKey: this.properties.MaxRequests,
+                  options: [
+                    { key: "1", text: "1" },
+                    { key: "2", text: "2" },
+                    { key: "3", text: "3" },
+                    { key: "4", text: "4" },
+                    { key: "5", text: "5" },
+                    { key: "6", text: "6" },
+                    { key: "7", text: "7" },
+                    { key: "8", text: "8" },
+                    { key: "9", text: "9" },
+                    { key: "10", text: "10" }
+                  ]
+                }),
                 PropertyPaneToggle("SiteAttestation", {
                   label: "Site Attestation Feature",
                   checked: this.properties.SiteAttestation,
@@ -571,22 +605,6 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   label: strings.SensitivityLabelFileExt,
                   description: "The default file extensions to search.",
                   value: this.properties.SensitivityLabelFileExt
-                }),
-                PropertyPaneDropdown("MaxRequests", {
-                  label: strings.MaxRequests,
-                  selectedKey: this.properties.MaxRequests,
-                  options: [
-                    { key: "1", text: "1" },
-                    { key: "2", text: "2" },
-                    { key: "3", text: "3" },
-                    { key: "4", text: "4" },
-                    { key: "5", text: "5" },
-                    { key: "6", text: "6" },
-                    { key: "7", text: "7" },
-                    { key: "8", text: "8" },
-                    { key: "9", text: "9" },
-                    { key: "10", text: "10" }
-                  ]
                 })
               ]
             },
@@ -596,12 +614,12 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                 PropertyPaneDropdown("MaxStorage", {
                   label: strings.MaxStorage,
                   options: [
-                    { key: "1", text: "1 TB" },
-                    { key: "5", text: "5 TB" },
-                    { key: "10", text: "10 TB" },
-                    { key: "15", text: "15 TB" },
-                    { key: "20", text: "20 TB" },
-                    { key: "25", text: "25 TB" }
+                    { key: 1, text: "1 TB" },
+                    { key: 5, text: "5 TB" },
+                    { key: 10, text: "10 TB" },
+                    { key: 15, text: "15 TB" },
+                    { key: 20, text: "20 TB" },
+                    { key: 25, text: "25 TB" }
                   ]
                 }),
                 PropertyPaneTextField("MaxStorageDescription", {
@@ -623,18 +641,18 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   label: strings.ReportsDocRententionYears,
                   selectedKey: this.properties.ReportsDocRententionYears,
                   options: [
-                    { key: "1", text: "1" },
-                    { key: "2", text: "2" },
-                    { key: "3", text: "3" },
-                    { key: "4", text: "4" },
-                    { key: "5", text: "5" },
-                    { key: "6", text: "6" },
-                    { key: "7", text: "7" },
-                    { key: "8", text: "8" },
-                    { key: "9", text: "9" },
-                    { key: "10", text: "10" },
-                    { key: "15", text: "15" },
-                    { key: "20", text: "20" }
+                    { key: 1, text: "1" },
+                    { key: 2, text: "2" },
+                    { key: 3, text: "3" },
+                    { key: 4, text: "4" },
+                    { key: 5, text: "5" },
+                    { key: 6, text: "6" },
+                    { key: 7, text: "7" },
+                    { key: 8, text: "8" },
+                    { key: 9, text: "9" },
+                    { key: 10, text: "10" },
+                    { key: 15, text: "15" },
+                    { key: 20, text: "20" }
                   ]
                 }),
                 PropertyPaneTextField("ReportsDocSearchFileExt", {
