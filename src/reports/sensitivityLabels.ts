@@ -280,7 +280,7 @@ export class SensitivityLabels {
         // Create a worker process
         let worker = Helper.WebWorker(() => {
             // Do nothing if we are processing the max files at once
-            if (processingCounter > Strings.MaxRequests) { return; }
+            if (processingCounter >= Strings.MaxRequests) { return; }
 
             // Do nothing if we are done
             if (filesToProcess.length == 0) {
