@@ -388,6 +388,9 @@ export class SensitivityLabels {
             // Ensure the process is running
             worker.start();
         }).then(() => {
+            // Update the dialog
+            this._elSubNav.children[0].innerHTML = `Library: ${listName} [Files Loaded: ${++fileCounter}]`;
+
             // Ensure the process is running
             worker.start();
         });
