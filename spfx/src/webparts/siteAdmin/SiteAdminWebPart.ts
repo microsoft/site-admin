@@ -522,12 +522,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                     { key: 2, text: "2" },
                     { key: 3, text: "3" },
                     { key: 4, text: "4" },
-                    { key: 5, text: "5" },
-                    { key: 6, text: "6" },
-                    { key: 7, text: "7" },
-                    { key: 8, text: "8" },
-                    { key: 9, text: "9" },
-                    { key: 10, text: "10" }
+                    { key: 5, text: "5" }
                   ]
                 }),
                 PropertyPaneToggle("SiteAttestation", {
