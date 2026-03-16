@@ -266,7 +266,6 @@ export class ListsTab {
             table: {
                 rows: this._items,
                 onRendering: dtProps => {
-                    /*
                     dtProps.columnDefs = [
                         {
                             "targets": 5,
@@ -277,7 +276,6 @@ export class ListsTab {
 
                     // Order by the 1st column by default; ascending
                     dtProps.order = [[0, "asc"]];
-                    */
 
                     // Return the properties
                     return dtProps;

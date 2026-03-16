@@ -69,7 +69,7 @@ export class DLP {
 
         // Set the modal header
         Modal.clear();
-        Modal.setType(Components.ModalTypes.Large);
+        Modal.setType(Components.ModalTypes.XLarge);
         Modal.setHeader("Data Loss Prevention Report");
 
         // Show the results
