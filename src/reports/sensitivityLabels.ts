@@ -361,14 +361,26 @@ export class SensitivityLabels {
             // Set the label for this file
             let fileLabel = replaceLabel || label;
 
-            // Label the file
-            this.labelFile(file, overrideLabelFl, fileLabel.text, fileLabel.value, justification, responses).then(() => {
-                // Update the dialog
-                this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] File Labelled: ${file.name}`;
+            // Labels the file
+            let labelFile = () => {
+                // Label the file
+                this.labelFile(file, overrideLabelFl, fileLabel.text, fileLabel.value, justification, responses).then(() => {
+                    // Update the dialog
+                    this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] File Labelled: ${file.name}`;
 
-                // Decrement the # of files being processed
-                processingCounter--;
-            });
+                    // Decrement the # of files being processed
+                    processingCounter--;
+                });
+            }
+
+            // See if we are sending multiple requests
+            if (Strings.MaxRequests > 1) {
+                // Set a timeout to avoid throttling
+                setTimeout(labelFile, 250 * processingCounter);
+            } else {
+                // Label the file
+                labelFile();
+            }
         }, 100);
 
         // Set the completed event
