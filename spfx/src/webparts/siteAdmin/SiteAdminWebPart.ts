@@ -487,12 +487,6 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   onText: "The option to view a site's admins/owners will be hidden.",
                   offText: "The option to view a site's admins/owners will be visible."
                 }),
-                PropertyPaneToggle("HideLoadAdminOwnerBtn", {
-                  label: "Hide Load Admin/Owner Button",
-                  checked: this.properties.HideLoadAdminOwnerBtn,
-                  onText: "The option to view a site's admins/owners will be hidden.",
-                  offText: "The option to view a site's admins/owners will be visible."
-                }),
                 PropertyPaneToggle("HideLoadOneDriveBtn", {
                   label: "Hide Load OneDrive Button",
                   checked: this.properties.HideLoadOneDriveBtn,
