@@ -510,9 +510,10 @@ export class DataSource {
     }
 
     // Loads the files for a drive
-    static loadFiles(webId: string, driveId: string, folderId: string, onFile?: (file: Types.Microsoft.Graph.driveItem) => void): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
+    static loadFiles(webId: string, driveId: string, folderId: string, onFile?: (file: Types.Microsoft.Graph.driveItem) => boolean | void): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
         let files = [];
         let isOneDrive = webId == DataSource.OneDriveWeb?.Id;
+        let stopFl = false;
 
         // Loads the files for a drive
         let getFiles = (driveId: string, folderId: string) => {
@@ -527,17 +528,27 @@ export class DataSource {
             // Return a promise
             return new Promise(resolve => {
                 // Get the files for the folder
-                driveFolder.children().query({
+                let folders = driveFolder.children();
+                folders.query({
                     GetAllItems: true,
                     Select: ["createdBy", "driveId", "file", "folder", "id", "name", "parentReference", "sensitivityLabel", "webUrl"],
                     Top: 5000
                 }).execute(resp => {
                     // Parse the items
                     Helper.Executor(resp["d"].value, (driveItem: Types.Microsoft.Graph.driveItem) => {
+                        if (stopFl) { return; }
+
                         // See if this is a file
                         if (driveItem.file) {
                             // Process the file
-                            onFile ? onFile(driveItem) : null;
+                            let returnVal = onFile ? onFile(driveItem) : null;
+                            if (returnVal) {
+                                // Set the flag
+                                stopFl = true;
+
+                                // Stop the requests
+                                folders["stop"]();
+                            }
 
                             // Append the file
                             files.push(driveItem);
@@ -607,6 +618,9 @@ export class DataSource {
                         // Resolve the request
                         resolve(folders);
                     });
+                }, () => {
+                    // No folders exist
+                    resolve(folders);
                 });
             });
         }
@@ -643,7 +657,7 @@ export class DataSource {
         listId?: string;
         listName?: string,
         query: Types.IODataQuery,
-        onItem?: (items: Types.SP.ListItemOData) => void,
+        onItem?: (items: Types.SP.ListItemOData) => boolean | void,
         webUrl: string
     }): PromiseLike<Types.SP.ListItemOData[]> {
         // Return a promise
@@ -659,7 +673,12 @@ export class DataSource {
                 keepalive: true,
                 callbackQuery: props.onItem ? items => {
                     // Call the event
-                    items.forEach(item => { props.onItem(item); });
+                    items.forEach(item => {
+                        if (props.onItem(item)) {
+                            // Stop the requests
+                            web["stop"]();
+                        }
+                    });
                 } : null
             }) : Web(props.webUrl, {
                 disableProcessing: true,
@@ -667,7 +686,12 @@ export class DataSource {
                 requestDigest: DataSource.SiteContext.FormDigestValue,
                 callbackQuery: props.onItem ? items => {
                     // Call the event
-                    items.forEach(item => { props.onItem(item); });
+                    items.forEach(item => {
+                        if (props.onItem(item)) {
+                            // Stop the requests
+                            web["stop"]();
+                        }
+                    });
                 } : null
             });
 

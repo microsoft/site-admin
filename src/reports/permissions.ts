@@ -36,9 +36,10 @@ export class Permissions {
     private static _elSubNav: HTMLElement = null;
     private static _groupIds: { [key: string]: Types.SP.Directory.GroupOData } = null;
     private static _groupIdErrors: string[] = null;
+    private static _items: IPermissionItem[] = null;
     private static _loadOneDrive: boolean = false;
     private static _roleMapper: { [key: string]: Types.SP.User } = null;
-    private static _items: IPermissionItem[] = null;
+    private static _stopFl: boolean = false;
 
     // Analyze the group ids
     private static analyzeGroupIds(webUrl: string, groupIds: string[]): PromiseLike<void> {
@@ -416,6 +417,9 @@ export class Permissions {
             className: "btn-outline-light",
             isButton: true,
             onClick: () => {
+                // Set the stop flag
+                this._stopFl = true;
+
                 // Call the close event
                 onClose();
             }
@@ -646,6 +650,7 @@ export class Permissions {
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: any }, onClose: () => void) {
         this._loadOneDrive = values["LoadOneDrive"] == "true";
+        this._stopFl = false;
 
         // Show a loading dialog
         LoadingDialog.setHeader("Getting Site Roles");
@@ -678,6 +683,9 @@ export class Permissions {
         // Parse all webs
         let counter = 0;
         Helper.Executor(siteItems, siteItem => {
+            // See if we are stopping this process
+            if (this._stopFl) { return; }
+
             // Update the status
             this._elSubNav.children[0].innerHTML = `Searching Site ${++counter} of ${siteItems.length}`;
             this._elSubNav.children[1].innerHTML = "Getting the roles for the web...";
@@ -708,6 +716,9 @@ export class Permissions {
             this._elSubNav.classList.add("d-none");
         });
     }
+
+    // Stops the report
+    static stop() { this._stopFl = true; }
 
     // Views the users for an item
     private static viewUsers(item: IPermissionItem) {
