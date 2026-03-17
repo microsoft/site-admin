@@ -42,6 +42,7 @@ export class SearchEEEU {
     private static _elSubNav: HTMLElement = null;
     private static _items: ISearchItem[] = null;
     private static _loadOneDrive: boolean = null;
+    private static _stopFl: boolean = false;
 
     // Analyzes a lists
     private static analyzeList(web: Types.SP.WebOData, list: Types.SP.ListOData): PromiseLike<void> {
@@ -119,6 +120,9 @@ export class SearchEEEU {
                             this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${ctrBatchJobs % Strings.MaxBatchSize}...`;
                         });
                     }, ctrBatchJobs++ % Strings.MaxBatchSize == 0);
+
+                    // Return the stop flag
+                    return this._stopFl;
                 }
             }).then(() => {
                 // Update the dialog
@@ -157,6 +161,9 @@ export class SearchEEEU {
                         // Parse the lists
                         let lists = this._loadOneDrive ? resp["value"] : resp.results;
                         Helper.Executor(lists, list => {
+                            // See if we are stopping this process
+                            if (this._stopFl) { return; }
+
                             // Show a dialog
                             this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing List ${++ctrList} of ${lists.length}]: ${list.Title}`;
 
@@ -391,6 +398,9 @@ export class SearchEEEU {
                     className: "btn-outline-light",
                     isButton: true,
                     onClick: () => {
+                        // Set the stop flag
+                        this._stopFl = true;
+
                         // Call the close event
                         onClose();
                     }
@@ -653,6 +663,7 @@ export class SearchEEEU {
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: any }, onClose: () => void) {
         this._loadOneDrive = values["LoadOneDrive"] == "true";
+        this._stopFl = false;
 
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Site");
@@ -685,6 +696,9 @@ export class SearchEEEU {
         // Parse all webs
         let counter = 0;
         Helper.Executor(siteItems, siteItem => {
+            // See if we are stopping this process
+            if (this._stopFl) { return; }
+
             // Update the status
             this._elSubNav.children[0].innerHTML = `Searching Site ${++counter} of ${siteItems.length}`;
             this._elSubNav.children[1].innerHTML = "Getting the info for the web...";
@@ -711,4 +725,7 @@ export class SearchEEEU {
             this._elSubNav.classList.add("d-none");
         });
     }
+
+    // Stops the report
+    static stop() { this._stopFl = true; }
 }

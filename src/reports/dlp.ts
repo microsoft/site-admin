@@ -48,6 +48,7 @@ export class DLP {
     private static _elSubNav: HTMLElement = null;
     private static _items: IDLPItem[] = [];
     private static _loadOneDrive: boolean = false;
+    private static _stopFl: boolean = false;
 
     // Gets the form fields to display
     static getFormFields(fileExt: string = ""): Components.IFormControlProps[] {
@@ -143,6 +144,9 @@ export class DLP {
 
                 // Update the dialog
                 this._elSubNav.children[1].innerHTML = `Creating Batch Requests - Processed ${++itemCounter} items...`;
+
+                // Return the stop flag
+                return this._stopFl;
             }
         }).then(() => {
             // Update the dialog
@@ -165,6 +169,9 @@ export class DLP {
 
             // Parse the libraries
             Helper.Executor(libraries, lib => {
+                // See if we are stopping this process
+                if (this._stopFl) { return; }
+
                 // Update the dialog
                 this._elSubNav.children[0].innerHTML = `${siteText} [Analyzing Library ${++counter} of ${libraries.length}]: ${lib.Title}`;
 
@@ -238,6 +245,9 @@ export class DLP {
 
                             // Update the dialog
                             this._elSubNav.children[1].innerHTML = `Creating Batch Requests - Processed ${++itemCounter} items...`;
+
+                            // Return the stop flag
+                            return this._stopFl;
                         }
                     }).then(() => {
                         // Update the dialog
@@ -264,6 +274,9 @@ export class DLP {
                     className: "btn-outline-light",
                     isButton: true,
                     onClick: () => {
+                        // Set the stop flag
+                        this._stopFl = true;
+
                         // Call the close event
                         onClose();
                     }
@@ -372,6 +385,7 @@ export class DLP {
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
         let data: IWebItem[] = [];
         this._loadOneDrive = values["LoadOneDrive"] == "true";
+        this._stopFl = false;
 
         // Clear the items
         this._items = [];
@@ -404,6 +418,9 @@ export class DLP {
         // Parse the webs
         let counter = 0;
         Helper.Executor(siteItems, siteItem => {
+            // See if we are stopping this process
+            if (this._stopFl) { return; }
+
             // Update the status
             this._elSubNav.children[0].innerHTML = `Searching Site ${++counter} of ${siteItems.length}`;
 
@@ -440,4 +457,7 @@ export class DLP {
             this._elSubNav.classList.add("d-none");
         });
     }
+
+    // Stops the report
+    static stop() { this._stopFl = true; }
 }

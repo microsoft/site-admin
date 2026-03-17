@@ -33,6 +33,7 @@ export class UniquePermissions {
     private static _elSubNav: HTMLElement = null;
     private static _items: IPermission[] = [];
     private static _loadOneDrive: boolean = false;
+    private static _stopFl: boolean = false;
 
     // Analyzes a list
     private static analyzeList(webUrl: string, list: Types.SP.ListOData): PromiseLike<void> {
@@ -146,6 +147,9 @@ export class UniquePermissions {
                             this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${ctrBatchJobs % Strings.MaxBatchSize}...`;
                         });
                     }, ctrBatchJobs++ % Strings.MaxBatchSize == 0);
+
+                    // Return the stop flag
+                    return this._stopFl;
                 }
             }).then(() => {
                 // Update the dialog
@@ -176,6 +180,9 @@ export class UniquePermissions {
                     className: "btn-outline-light",
                     isButton: true,
                     onClick: () => {
+                        // Set the stop flag
+                        this._stopFl = true;
+
                         // Call the close event
                         onClose();
                     }
@@ -326,6 +333,7 @@ export class UniquePermissions {
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
         this._loadOneDrive = values["LoadOneDrive"] == "true";
+        this._stopFl = false;
 
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Lists");
@@ -355,6 +363,9 @@ export class UniquePermissions {
         // Parse all the webs
         let counter = 0;
         Helper.Executor(siteItems, siteItem => {
+            // See if we are stopping this process
+            if (this._stopFl) { return; }
+
             // Update the status
             let siteText = `Searching Site ${++counter} of ${siteItems.length}`;
             this._elSubNav.children[0].innerHTML = siteText;
@@ -376,6 +387,9 @@ export class UniquePermissions {
 
                     // Parse the lists
                     Helper.Executor(lists.results, list => {
+                        // See if we are stopping this process
+                        if (this._stopFl) { return; }
+
                         // Update the dialog
                         this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing Library ${++ctrList} of ${lists.results.length}]: ${list.Title}`;
 
@@ -389,4 +403,7 @@ export class UniquePermissions {
             this._elSubNav.classList.add("d-none");
         });
     }
+
+    // Stops the report
+    static stop() { this._stopFl = true; }
 }
