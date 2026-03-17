@@ -547,7 +547,7 @@ export class DataSource {
                                 stopFl = true;
 
                                 // Stop the requests
-                                folders["stop"]();
+                                folders.stop();
                             }
 
                             // Append the file
@@ -676,7 +676,7 @@ export class DataSource {
                     items.forEach(item => {
                         if (props.onItem(item)) {
                             // Stop the requests
-                            web["stop"]();
+                            web.stop();
                         }
                     });
                 } : null
@@ -689,7 +689,7 @@ export class DataSource {
                     items.forEach(item => {
                         if (props.onItem(item)) {
                             // Stop the requests
-                            web["stop"]();
+                            web.stop();
                         }
                     });
                 } : null
