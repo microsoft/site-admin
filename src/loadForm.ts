@@ -154,9 +154,6 @@ export class LoadForm {
                             if (ev["keyCode"] === 13) {
                                 ev.preventDefault();
 
-                                // Hide the popover
-                                this._popover.hide();
-
                                 // Submit the request
                                 this.submitForm();
                             }
@@ -284,6 +281,9 @@ export class LoadForm {
 
     // Submits the form
     private submitForm() {
+        // Hide the popover
+        this._popover.hide();
+
         // Validate the form
         if (this._form.isValid()) {
             let ctrl = this._form.getControl("url");
