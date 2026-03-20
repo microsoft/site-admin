@@ -186,28 +186,9 @@ export class SensitivityLabels {
     }
 
     // Labels file
-    private static labelFile(file: Types.Microsoft.Graph.driveItem, overrideLabelFl: boolean, label: string, labelId: string, justification: string, responses: ISetSensitivityLabelResponse[]): PromiseLike<ISetSensitivityLabelResponse[]> {
+    private static labelFile(file: Types.Microsoft.Graph.driveItem, label: string, labelId: string, justification: string, responses: ISetSensitivityLabelResponse[]): PromiseLike<ISetSensitivityLabelResponse[]> {
         // Update the sensitivity label for this file
         return new Promise(resolve => {
-            // See if this file is already has this label
-            // or
-            // See if the file has a label and we aren't overriding them 
-            if (file.sensitivityLabel?.id == labelId || (file.sensitivityLabel?.id && !overrideLabelFl)) {
-                // Add a response
-                let response: ISetSensitivityLabelResponse = {
-                    errorFl: false,
-                    fileName: file.name,
-                    message: `Skipping file, it's already labelled: '${file.sensitivityLabel.displayName}'.`,
-                    url: file.webUrl
-                };
-                responses.push(response);
-                this._dashboard.Datatable.addRow(response);
-
-                // Check the next file
-                resolve(responses);
-                return;
-            }
-
             // Update the sensitivity label
             // The action source allowed values are:
             // * Manual - The label was applied manually by a user.
@@ -365,19 +346,37 @@ export class SensitivityLabels {
                 }
             }
 
+            // Set the label for this file
+            let fileLabel = replaceLabel || label;
+
+            // See if this file is already has this label
+            // or
+            // See if the file has a label and we aren't overriding them 
+            if (file.sensitivityLabel?.id == fileLabel.value || (file.sensitivityLabel?.id && !overrideLabelFl)) {
+                // Add a response
+                let response: ISetSensitivityLabelResponse = {
+                    errorFl: false,
+                    fileName: file.name,
+                    message: `Skipping file, it's already labelled: '${file.sensitivityLabel.displayName}'.`,
+                    url: file.webUrl
+                };
+                responses.push(response);
+                this._dashboard.Datatable.addRow(response);
+
+                // Check the next file
+                return;
+            }
+
             // Increment the # of files being processed
             processingCounter++;
 
             // Update the dialog
             this._elSubNav.children[1].innerHTML = `[Processing ${processedCounter} of ${fileCounter}] Labelling File: ${file.name}`;
 
-            // Set the label for this file
-            let fileLabel = replaceLabel || label;
-
             // Labels the file
             let labelFile = () => {
                 // Label the file
-                this.labelFile(file, overrideLabelFl, fileLabel.text, fileLabel.value, justification, responses).then(() => {
+                this.labelFile(file, fileLabel.text, fileLabel.value, justification, responses).then(() => {
                     // Update the dialog
                     this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] File Labelled: ${file.name}`;
 
@@ -1095,7 +1094,7 @@ export class SensitivityLabels {
                                 LoadingDialog.show();
 
                                 // Label the file
-                                this.labelFile(file, true, label.text, label.value, justification, []).then(responses => {
+                                this.labelFile(file, label.text, label.value, justification, []).then(responses => {
                                     // See if it was successful
                                     if (!responses[0].errorFl) {
                                         // Call the event
