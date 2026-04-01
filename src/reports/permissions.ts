@@ -102,38 +102,52 @@ export class Permissions {
                         return;
                     }
 
-                    // Parse the group ids
-                    item.GroupIds.forEach(groupId => {
-                        // Get the group
-                        let group = this._groupIds[groupId];
-                        if (group) {
-                            // Add the members/owners
-                            item.GroupMembers = item.GroupMembers.concat(group.members.results);
-                            item.GroupOwners = item.GroupOwners.concat(group.owners.results);
-                            item.GroupUrl = group.calendarUrl.replace("calendar/group", "groups") + "/members";
+                    // Parse the site members
+                    item.SiteMembers.forEach(member => {
+                        // See if this is a group
+                        if (member.PrincipalType == SPTypes.PrincipalTypes.SecurityGroup) {
+                            // Get the group id
+                            let groupId = DataSource.getGroupId(member.LoginName);
+                            let group = this._groupIds[groupId];
+                            if (group) {
+                                // See if this is a reference to the owner's group
+                                if (member.LoginName.endsWith("_o")) {
+                                    // Add the owners
+                                    item.GroupOwners = item.GroupOwners.concat(group.owners.results);
+
+                                    // Parse the group owners
+                                    item.GroupOwners.forEach(owner => {
+                                        // Add the member name
+                                        item.GroupOwnersAsString.push(owner.mail);
+                                    });
+
+                                    // Remove duplicates
+                                    item.GroupOwnersAsString = item.GroupOwnersAsString.filter((value, idx, self) => {
+                                        return self.indexOf(value) === idx;
+                                    });
+                                } else {
+                                    // Add the members
+                                    item.GroupMembers = item.GroupMembers.concat(group.members.results);
+
+                                    // Parse the group members
+                                    item.GroupMembers.forEach(member => {
+                                        // Add the member name
+                                        item.GroupMembersAsString.push(member.mail);
+                                    });
+
+                                    // Remove duplicates
+                                    item.GroupMembersAsString = item.GroupMembersAsString.filter((value, idx, self) => {
+                                        return self.indexOf(value) === idx;
+                                    });
+                                }
+
+                                // Set the group url
+                                item.GroupUrl = group.calendarUrl.replace("calendar/group", "groups") + "/members";
+                            }
+                        } else {
+                            // Add the member name
+                            item.SiteMembersAsString.push(member.Email || member.UserPrincipalName || member.LoginName);
                         }
-                    });
-
-                    // Parse the group members
-                    item.GroupMembers.forEach(member => {
-                        // Add the member name
-                        item.GroupMembersAsString.push(member.mail);
-                    });
-
-                    // Remove duplicates
-                    item.GroupMembersAsString = item.GroupMembersAsString.filter((value, idx, self) => {
-                        return self.indexOf(value) === idx;
-                    });
-
-                    // Parse the group owners
-                    item.GroupOwners.forEach(owner => {
-                        // Add the member name
-                        item.GroupOwnersAsString.push(owner.mail);
-                    });
-
-                    // Remove duplicates
-                    item.GroupOwnersAsString = item.GroupOwnersAsString.filter((value, idx, self) => {
-                        return self.indexOf(value) === idx;
                     });
 
                     // Parse the site members
