@@ -1,5 +1,9 @@
 {
     "compilerOptions": {
+        "esModuleInterop": false,
+        "ignoreDeprecations": "6.0",
+        "noUncheckedSideEffectImports": false,
+        "strict": false,
         "target": "es5",
         "lib": [
             "dom",
