@@ -6,19 +6,25 @@ param($Request, $TriggerMetadata)
 ############################################### Global Vars ###############################################
 # The variables need to be filled out for the PnP Auth connection to work
 # appUrl - The site containing the app and list
-# azureEnv - The environment the tenant belongs to
+# azureEnv - The environment value required for the PnP connection.
+#            This is only needed for connecting to GCC, GCC-High or DoD environment. Possible values:
+#            USGovernment
+#            USGovernmentDoD
+#            USGovernmentHigh
 # cert - The thumbprint of the certificate
 # clientId - The client id of the app registration
-# tenant - The domain of the tenant
 # listName - The list name containing the requests
-# searchProp - The custom search property used to tag sites
+# tenant - The domain of the tenant
+# searchProp - The property bag key used to store the custom search property to tag sites
+# siteAttestationDateProp - The property bag key used to store the site attestation date
+# siteAttestationUserProp - The property bag key used to store the site attestation user
 ###########################################################################################################
 $appUrl = "https://tenant.sharepoint.com/sites/admin";
 #$azureEnv = "USGovernmentDoD";
 $cert = $env:WEBSITE_LOAD_CERTIFICATES;
 $clientId = $env:CLIENT_ID;
-$tenant = $env:TENANT_ID;
 $listName = "Site Admin Requests";
+$tenant = $env:TENANT_ID;
 $searchProp = "BusinessUnit";
 $siteAttestationDateProp = "AttestationDate";
 $siteAttestationUserProp = "AttestationUser";
@@ -131,8 +137,14 @@ Write-Host "Client ID: $clientId";
 Write-Host "Tenant: $tenant";
 Write-Host "List Name: $listName";
 Write-Host "Connecting with PnP PowerShell..."
-Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert;
-#Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert -AzureEnvironment $azureEnv;
+
+# See if we have set the azure environment
+if ($azureEnv) {
+    Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert;
+}
+else {
+    Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert -AzureEnvironment $azureEnv;
+}
 ############################################### SP Connection ###############################################
 
 ############################################### Main App ###############################################
@@ -159,9 +171,15 @@ if ($item -ne $null) {
         Write-Host "Request Type: $requestType";
         Write-Host "Request Value: $value";
 
-        # Connect to the site
-        Connect-PnPOnline -Url $siteUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert;
-        #Connect-PnPOnline -Url $siteUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert -AzureEnvironment $azureEnv;
+        # See if we have set the azure environment
+        if ($azureEnv) {
+            # Connect to the site
+            Connect-PnPOnline -Url $siteUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert -AzureEnvironment $azureEnv;
+        }
+        else {
+            # Connect to the site
+            Connect-PnPOnline -Url $siteUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert;
+        }
 
         # Check to make sure the user requesting the change is an admin
         if (-not(IsSiteCollectionAdmin -UserEmail $item["Author"].EMail)) {
@@ -451,9 +469,15 @@ if ($item -ne $null) {
         # Log
         Write-Host "Setting the request item status to Completed...";
 
-        # Connect to the main site
-        Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert;
-        #Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert -AzureEnvironment $azureEnv;
+        # See if we have set the azure environment
+        if ($azureEnv) {
+            # Connect to the main site
+            Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert -AzureEnvironment $azureEnv;
+        }
+        else {
+            # Connect to the main site
+            Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert;
+        }
 
         # Update the item status
         Set-PnpListItem -List $listName -Identity $item.Id -Values @{ "Status" = "Completed" };
