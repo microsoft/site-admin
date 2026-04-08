@@ -57,23 +57,56 @@ export class Permissions {
                     if (this._groupIds[groupId] || this._groupIdErrors.indexOf(groupId) >= 0) { resolve(null); return; }
 
                     // Get the group information
-                    DirectorySession().group(groupId).query({
-                        Expand: ["members", "owners"],
-                        Select: [
-                            "calendarUrl", "displayName", "id", "isPublic", "mail",
-                            "members/principalName", "members/id", "members/displayName", "members/mail",
-                            "owners/principalName", "owners/id", "owners/displayName", "owners/mail"
-                        ]
-                    }).execute(group => {
-                        // Add the group information to the mapper
-                        this._groupIds[group.id] = group;
+                    let ds = DirectorySession().group(groupId);
 
-                        // Try the next group
-                        resolve(null);
-                    }, () => {
-                        // Append the error
-                        this._groupIdErrors.push(groupId);
+                    // Get the group information
+                    ds.query({
+                        Select: ["calendarUrl", "displayName", "id", "isPublic", "mail"]
+                    }).batch(group => {
+                        // Ensure the group was found
+                        if (group?.id) {
+                            // Save the group information
+                            this._groupIds[groupId] = group;
+                        } else {
+                            // Append the error
+                            this._groupIdErrors.push(groupId);
+                        }
+                    });
 
+                    // Get the members
+                    ds.members().query({
+                        GetAllItems: true,
+                        Top: 5000,
+                        Select: ["principalName", "id", "displayName", "mail"]
+                    }).batch(members => {
+                        // Ensure members were found
+                        if (members.results?.length >= 0) {
+                            // Add the group information to the mapper
+                            this._groupIds[groupId].members = members as any;
+                        } else {
+                            // Append the error
+                            this._groupIdErrors.push(groupId);
+                        }
+                    });
+
+                    // Get the owners
+                    ds.owners().query({
+                        GetAllItems: true,
+                        Top: 5000,
+                        Select: ["principalName", "id", "displayName", "mail"]
+                    }).batch(owners => {
+                        // Ensure members were found
+                        if (owners.results?.length >= 0) {
+                            // Add the group information to the mapper
+                            this._groupIds[groupId].owners = owners as any;
+                        } else {
+                            // Append the error
+                            this._groupIdErrors.push(groupId);
+                        }
+                    });
+
+                    // Execute the request
+                    ds.execute(() => {
                         // Try the next group
                         resolve(null);
                     });
