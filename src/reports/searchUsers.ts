@@ -14,6 +14,7 @@ interface ISearchItem {
     GroupInfo?: string;
     Id?: number;
     IsM365Group?: boolean;
+    M365GroupUrl?: string;
     WebTitle: string;
     WebUrl: string;
 }
@@ -122,23 +123,31 @@ export class SearchUsers {
                     // Return a promise
                     return new Promise(resolve => {
                         let groupInfo = groupId.split('_');
+                        let groupName: string = null;
+                        let groupUrl: string = null;
                         let isOwner = groupInfo.length > 1;
 
                         // Get the group information
-                        DirectorySession().group(groupInfo[0]).query({
-                            Expand: ["members", "owners"],
-                            Select: [
-                                "displayName", "id",
-                                "members/principalName", "members/id", "members/displayName", "members/mail",
-                                "owners/principalName", "owners/id", "owners/displayName", "owners/mail"
-                            ]
-                        }).execute(group => {
+                        let ds = DirectorySession().group(groupInfo[0]);
+                        ds.query({
+                            Select: ["calendarUrl", "displayName", "id"]
+                        }).batch(group => {
+                            // Set the group name
+                            groupName = group.displayName;
+                            groupUrl = group.calendarUrl.replace("calendar/group", "groups") + "/members";
+                        });
+
+                        // Get the owners/members for the group
+                        (isOwner ? ds.owners() : ds.members()).query({
+                            GetAllItems: true,
+                            Top: 5000,
+                            Select: ["principalName", "id", "displayName", "mail"]
+                        }).batch(users => {
                             let role = groups[groupId];
 
                             // Parse the users
-                            let users = isOwner ? group.owners.results : group.members.results;
-                            for (let i = 0; i < users.length; i++) {
-                                let user = users[i];
+                            for (let i = 0; i < users?.results.length; i++) {
+                                let user = users.results[i];
 
                                 // See if we are searching by string
                                 if (typeof (search) === "string") {
@@ -148,14 +157,15 @@ export class SearchUsers {
                                         let userItem = {
                                             WebUrl: web.Url,
                                             WebTitle: web.Title,
-                                            Id: userInfo.Id,
-                                            LoginName: userInfo.Name,
-                                            Name: userInfo.Title || userInfo.Name,
-                                            Email: userInfo.EMail,
+                                            Id: user.id,
+                                            LoginName: user.mail,
+                                            Name: user.displayName,
+                                            Email: user.mail,
                                             Group: role.Member.Title,
                                             GroupId: role.Member.Id,
-                                            GroupInfo: `${group.displayName} M365 Group ${isOwner ? "owner" : "member"}`,
+                                            GroupInfo: `${groupName} M365 Group ${isOwner ? "owner" : "member"}`,
                                             IsM365Group: true,
+                                            M365GroupUrl: groupUrl,
                                             Role: role.RoleDefinitionBindings.results[0].Name,
                                             RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
                                         };
@@ -169,14 +179,15 @@ export class SearchUsers {
                                     let userItem = {
                                         WebUrl: web.Url,
                                         WebTitle: web.Title,
-                                        Id: userInfo.Id,
-                                        LoginName: userInfo.Name,
-                                        Name: userInfo.Title || userInfo.Name,
-                                        Email: userInfo.EMail,
+                                        Id: user.id,
+                                        LoginName: user.mail,
+                                        Name: user.displayName,
+                                        Email: user.mail,
                                         Group: role.Member.Title,
                                         GroupId: role.Member.Id,
-                                        GroupInfo: `${group.displayName} M365 Group ${isOwner ? "owner" : "member"}`,
+                                        GroupInfo: `${groupName} M365 Group ${isOwner ? "owner" : "member"}`,
                                         IsM365Group: true,
+                                        M365GroupUrl: groupUrl,
                                         Role: role.RoleDefinitionBindings.results[0].Name,
                                         RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
                                     };
@@ -184,10 +195,10 @@ export class SearchUsers {
                                     this._dashboard.Datatable.addRow(userItem);
                                 }
                             }
+                        });
 
-                            // Try the next group
-                            resolve(null);
-                        }, () => {
+                        // Execute the request
+                        ds.execute(() => {
                             // Try the next group
                             resolve(null);
                         });

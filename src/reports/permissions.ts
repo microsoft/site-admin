@@ -58,8 +58,6 @@ export class Permissions {
 
                     // Get the group information
                     let ds = DirectorySession().group(groupId);
-
-                    // Get the group information
                     ds.query({
                         Select: ["calendarUrl", "displayName", "id", "isPublic", "mail"]
                     }).batch(group => {
