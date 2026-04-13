@@ -27,12 +27,18 @@ export class SearchPropTab {
         this._searchProps = searchProps;
 
         // Set the current value
-        this._currValue = DataSource.Site.RootWeb.AllProperties[this._searchProps.key];
+        this._currValue = DataSource.Site.RootWeb.AllProperties[this.getEncodedKey(this._searchProps.key)];
         this._newValue = this._currValue;
 
         // Render the tab
         this.render();
     }
+
+    // Returns the encodes value for a search property key
+    private getEncodedKey(value: string): string {
+        return value.replace(/[^A-Za-z0-9]/g, ch => `_x${ch.codePointAt(0).toString(16).padStart(4, "0")}_`);
+    }
+
 
     // Gets the controls to render
     private getControls() {
