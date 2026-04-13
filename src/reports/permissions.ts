@@ -11,6 +11,7 @@ interface IPermissionItem {
     GroupMembersAsString?: string[];
     GroupOwners?: Types.SP.Directory.User[];
     GroupOwnersAsString?: string[];
+    GroupUsersCount?: number;
     GroupUrl?: string;
     Id?: number;
     LoginName: string;
@@ -33,6 +34,7 @@ const CSVFields = [
 
 export class Permissions {
     private static _dashboard: Dashboard = null;
+    private static _elDashboard: HTMLElement = null;
     private static _elSubNav: HTMLElement = null;
     private static _groupIds: { [key: string]: Types.SP.Directory.GroupOData } = null;
     private static _groupIdErrors: string[] = null;
@@ -60,51 +62,42 @@ export class Permissions {
                     let ds = DirectorySession().group(groupId);
                     ds.query({
                         Select: ["calendarUrl", "displayName", "id", "isPublic", "mail"]
-                    }).batch(group => {
-                        // Ensure the group was found
-                        if (group?.id) {
-                            // Save the group information
-                            this._groupIds[groupId] = group;
-                        } else {
-                            // Append the error
-                            this._groupIdErrors.push(groupId);
-                        }
-                    });
+                    }).execute(group => {
+                        // Save the group information
+                        this._groupIds[groupId] = group;
 
-                    // Get the members
-                    ds.members().query({
-                        GetAllItems: true,
-                        Top: 5000,
-                        Select: ["principalName", "id", "displayName", "mail"]
-                    }).batch(members => {
-                        // Ensure members were found
-                        if (members.results?.length >= 0) {
+                        // Get the group members
+                        ds.members().query({
+                            GetAllItems: true,
+                            Top: 5000,
+                            Select: ["principalName", "id", "displayName", "mail"]
+                        }).execute(members => {
                             // Add the group information to the mapper
                             this._groupIds[groupId].members = members as any;
-                        } else {
-                            // Append the error
-                            this._groupIdErrors.push(groupId);
-                        }
-                    });
+                        }, () => {
+                            // Try the next group
+                            resolve(null);
+                        });
 
-                    // Get the owners
-                    ds.owners().query({
-                        GetAllItems: true,
-                        Top: 5000,
-                        Select: ["principalName", "id", "displayName", "mail"]
-                    }).batch(owners => {
-                        // Ensure members were found
-                        if (owners.results?.length >= 0) {
+                        // Get the group owners
+                        ds.owners().query({
+                            GetAllItems: true,
+                            Top: 5000,
+                            Select: ["principalName", "id", "displayName", "mail"]
+                        }).execute(owners => {
                             // Add the group information to the mapper
                             this._groupIds[groupId].owners = owners as any;
-                        } else {
-                            // Append the error
-                            this._groupIdErrors.push(groupId);
-                        }
-                    });
 
-                    // Execute the request
-                    ds.execute(() => {
+                            // Try the next group
+                            resolve(null);
+                        }, () => {
+                            // Try the next group
+                            resolve(null);
+                        }, true);
+                    }, () => {
+                        // Append the error
+                        this._groupIdErrors.push(groupId);
+
                         // Try the next group
                         resolve(null);
                     });
@@ -123,6 +116,7 @@ export class Permissions {
                     item.GroupMembersAsString = [];
                     item.GroupOwners = [];
                     item.GroupOwnersAsString = [];
+                    item.GroupUsersCount = 0;
                     item.SiteMembersAsString = [];
                     item.SiteOwnersAsString = [];
 
@@ -202,6 +196,9 @@ export class Permissions {
                     item.SiteOwnersAsString = item.SiteOwnersAsString.filter((value, idx, self) => {
                         return self.indexOf(value) === idx;
                     });
+
+                    // Set the group users count
+                    item.GroupUsersCount = item.GroupOwnersAsString.length + item.GroupMembersAsString.length;
 
                     // Add the row
                     this._dashboard.Datatable.addRow(item);
@@ -456,6 +453,8 @@ export class Permissions {
 
     // Renders the search summary
     private static renderSummary(el: HTMLElement, auditOnly: boolean, items: IPermissionItem[], onClose: () => void) {
+        this._elDashboard = el;
+
         // Create the nav items
         let navItems: Components.INavbarItem[] = [{
             text: "New Search",
@@ -470,19 +469,16 @@ export class Permissions {
             }
         }];
 
-        // See if there are errors
-        if (this._groupIdErrors.length > 0) {
-            // Show the error button
-            navItems.push({
-                text: "Errors",
-                className: "btn-outline-light ms-2",
-                isButton: true,
-                onClick: () => {
-                    // Display the errors
-                    this.renderErrors();
-                }
-            })
-        }
+        // Show the error button
+        navItems.push({
+            text: "Errors",
+            className: "btn-outline-light ms-2",
+            isButton: true,
+            onClick: () => {
+                // Display the errors
+                this.renderErrors();
+            }
+        });
 
         // Render the summary
         this._dashboard = new Dashboard({
@@ -504,13 +500,11 @@ export class Permissions {
             table: {
                 rows: items,
                 onRendering: dtProps => {
-                    dtProps.columnDefs = [
-                        {
-                            "targets": 8,
-                            "orderable": false,
-                            "searchable": false
-                        }
-                    ];
+                    dtProps.columnDefs.push({
+                        "targets": 8,
+                        "orderable": false,
+                        "searchable": false
+                    });
 
                     // Order by the 1st column
                     dtProps.order = [[0, "asc"]];
@@ -544,6 +538,7 @@ export class Permissions {
                         title: "M365<br/>Groups",
                         onRenderCell: (el, col, item: IPermissionItem) => {
                             // Set the value
+                            el.setAttribute("data-order", item.GroupIds.length.toString());
                             el.innerHTML = item.GroupIds.length.toString();
                         }
                     },
@@ -552,7 +547,8 @@ export class Permissions {
                         title: "M365<br/>Users",
                         onRenderCell: (el, col, item: IPermissionItem) => {
                             // Set the value
-                            el.innerHTML = item.GroupMembersAsString.length.toString();
+                            el.setAttribute("data-order", item.GroupUsersCount.toString());
+                            el.innerHTML = item.GroupUsersCount.toString();
                         }
                     },
                     {
@@ -574,6 +570,7 @@ export class Permissions {
                                 });
 
                                 // Set the value
+                                el.setAttribute("data-order", users.length.toString());
                                 el.innerHTML = users.length.toString();
                             }
                         }
@@ -584,6 +581,7 @@ export class Permissions {
                         onRenderCell: (el, col, item: IPermissionItem) => {
                             if (item.Type == "User") {
                                 el.innerHTML = "1";
+                                el.setAttribute("data-order", "1");
                             } else if (item.SiteMembers) {
                                 // Get the users
                                 let users = item.SiteMembers.filter((value, idx, self) => {
@@ -591,6 +589,7 @@ export class Permissions {
                                 });
 
                                 // Set the value
+                                el.setAttribute("data-order", users.length.toString());
                                 el.innerHTML = users.length.toString();
                             }
                         }
@@ -759,6 +758,15 @@ export class Permissions {
         }).then(() => {
             // Hide the sub-nav
             this._elSubNav.classList.add("d-none");
+
+            // See if no errors exist
+            if (this._groupIdErrors.length == 0) {
+                // Get the error button
+                let elNav = this._elDashboard.querySelector("#navigation .navbar-nav");
+
+                // Remove the last button
+                elNav.querySelector("li:last-child").remove();
+            }
         });
     }
 
