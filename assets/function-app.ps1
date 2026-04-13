@@ -140,10 +140,10 @@ Write-Host "Connecting with PnP PowerShell..."
 
 # See if we have set the azure environment
 if ($azureEnv) {
-    Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert;
+    Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert -AzureEnvironment $azureEnv;
 }
 else {
-    Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert -AzureEnvironment $azureEnv;
+    Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert;
 }
 ############################################### SP Connection ###############################################
 
