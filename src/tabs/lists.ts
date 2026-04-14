@@ -7,6 +7,7 @@ import { ReportTypes } from "./reports";
 import { DLP } from "../reports/dlp";
 import { SearchEEEU } from "../reports/searchEEEU";
 import { SensitivityLabels } from "../reports/sensitivityLabels";
+import { UniquePermissions } from "../reports/uniquePermissions";
 
 interface IList {
     BaseTemplate: number;
@@ -497,9 +498,7 @@ export class ListsTab {
                 items.push({
                     text: "Sensitivity Labels",
                     data: "Click to view sensitivity label options.",
-                    value: ReportTypes.SensitivityLabels,
-                    onClick: () => {
-                    }
+                    value: ReportTypes.SensitivityLabels
                 });
             }
         }
@@ -518,7 +517,7 @@ export class ListsTab {
         Modal.setHeader("Select Report");
 
         // Set the body
-        Components.Form({
+        let form = Components.Form({
             el: Modal.BodyElement,
             controls: [
                 {
@@ -528,30 +527,7 @@ export class ListsTab {
                     items,
                     type: Components.FormControlTypes.Dropdown,
                     required: true,
-                    errorMessage: "A report selection is required.",
-                    onChange: (selectedItem) => {
-                        // Show the form for the selected report
-                        switch (selectedItem?.value) {
-                            case ReportTypes.DLP:
-                                // Run the DLP report for this library
-                                DLP.analyzeLibrary(item.WebId, item.WebUrl, item.ListId, item.ListName);
-                                break;
-                            case ReportTypes.SearchEEEU:
-                                // Run the EEEU report for this library
-                                SearchEEEU.searchList(item.WebUrl, item.ListName, this._appProps.auditOnly);
-                                break;
-                            case ReportTypes.SensitivityLabels:
-                                // Load the folders for this list
-                                DataSource.loadFolders(item.WebId, item.DriveId).then(folders => {
-                                    // Show the senstivity label form
-                                    SensitivityLabels.setDefaultSensitivityLabelForFiles(item.WebId, item.ListName, item.DriveId, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt);
-                                });
-                                break;
-                            case ReportTypes.UniquePermissions:
-                                // TODO: Create a method to search this list for unique pemrissions
-                                break;
-                        }
-                    }
+                    errorMessage: "A report selection is required."
                 } as Components.IFormControlPropsDropdown
             ]
         });
@@ -560,6 +536,41 @@ export class ListsTab {
         Components.TooltipGroup({
             el: Modal.FooterElement,
             tooltips: [
+                {
+                    content: "Click to run the selected report against the selected list.",
+                    btnProps: {
+                        text: "Run Report",
+                        onClick: () => {
+                            // Validate the form
+                            if (form.isValid()) {
+                                let selectedReport = form.getValues()["ReportType"].value;
+
+                                // Show the form for the selected report
+                                switch (selectedReport) {
+                                    case ReportTypes.DLP:
+                                        // Run the DLP report for this library
+                                        DLP.searchLibrary(item.WebId, item.WebUrl, item.ListId, item.ListName);
+                                        break;
+                                    case ReportTypes.SearchEEEU:
+                                        // Run the EEEU report for this library
+                                        SearchEEEU.searchList(item.WebUrl, item.ListName, this._appProps.auditOnly);
+                                        break;
+                                    case ReportTypes.SensitivityLabels:
+                                        // Load the folders for this list
+                                        DataSource.loadFolders(item.WebId, item.DriveId).then(folders => {
+                                            // Show the senstivity label form
+                                            SensitivityLabels.showLibraryForm(item.WebId, item.ListName, item.DriveId, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt);
+                                        });
+                                        break;
+                                    case ReportTypes.UniquePermissions:
+                                        // Run the unique permissions report for this library
+                                        UniquePermissions.searchList(item.WebUrl, item.ListName, this._appProps.auditOnly);
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                },
                 {
                     content: "Closes the dialog.",
                     btnProps: {

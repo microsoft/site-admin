@@ -736,11 +736,34 @@ export class SearchEEEU {
 
         // Clear the modal
         Modal.clear();
-        Modal.setType(Components.ModalTypes.XLarge);
+        Modal.setType(Components.ModalTypes.Full);
         Modal.setHeader("Data Loss Prevention Report");
+        Modal.setCloseEvent(() => {
+            // Set the flag
+            this.stop();
+        });
+
+        // Render the footer
+        Components.ButtonGroup({
+            el: Modal.FooterElement,
+            buttons: [
+                {
+                    text: "Close",
+                    type: Components.ButtonTypes.OutlinePrimary,
+                    onClick: () => {
+                        // Set the flag
+                        this.stop();
+                        Modal.hide();
+                    }
+                }
+            ]
+        });
 
         // Render the summary
         this.renderSummary(Modal.BodyElement, auditOnly, this._items);
+
+        // Show the modal
+        Modal.show();
 
         // Update the status
         this._elSubNav.children[0].innerHTML = `Searching List: ${listName}`;

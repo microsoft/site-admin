@@ -8,8 +8,15 @@
     }
 }
 
+/** Ensure the modal is under the top bar */
+#core-modal {
+    .modal:has(> .modal-fullscreen) {
+        margin-top: 50px;
+    }
+}
+
 /** Set the popover width */
-.search-sites > .popover {
+.search-sites>.popover {
     max-height: 500px;
     max-width: fit-content;
     overflow-y: auto;
