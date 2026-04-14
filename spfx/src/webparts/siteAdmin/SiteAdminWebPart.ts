@@ -273,6 +273,21 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       };
     }
 
+    // Determine the size
+    let maxStorageSize = this.properties.MaxStorage;
+    if (maxStorageSize) {
+      // See if this is in TB
+      if (maxStorageSize.toString().indexOf("TB") > 0) {
+        // Remove the TB and convert to a number
+        maxStorageSize = parseInt(maxStorageSize.toString().replace("TB", ""));
+      }
+      // Else, see if this is in GB
+      else if (maxStorageSize.toString().indexOf("GB") > 0) {
+        // Remove the GB, and convert to a number in TB
+        maxStorageSize = parseInt(maxStorageSize.toString().replace("GB", "")) / 1000;
+      }
+    }
+
     // Render the solution
     SiteAdmin.render({
       auditOnly: this.properties.AuditOnly,
@@ -310,7 +325,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       maxBatchSize: this.properties.MaxBatchSize,
       maxRequests: this.properties.MaxRequests,
       maxStorageDesc: this.properties.MaxStorageDescription,
-      maxStorageSize: this.properties.MaxStorage,
+      maxStorageSize,
       reportProps: {
         dlpFileExt: this.properties.ReportsDLPFileExt,
         docRententionYears: this.properties.ReportsDocRententionYears,
@@ -608,12 +623,18 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                 PropertyPaneDropdown("MaxStorage", {
                   label: strings.MaxStorage,
                   options: [
-                    { key: 1, text: "1 TB" },
-                    { key: 5, text: "5 TB" },
-                    { key: 10, text: "10 TB" },
-                    { key: 15, text: "15 TB" },
-                    { key: 20, text: "20 TB" },
-                    { key: 25, text: "25 TB" }
+                    { key: "10GB", text: "10 GB" },
+                    { key: "25GB", text: "25 GB" },
+                    { key: "50GB", text: "50 GB" },
+                    { key: "100GB", text: "100 GB" },
+                    { key: "250GB", text: "250 GB" },
+                    { key: "500GB", text: "500 GB" },
+                    { key: "1TB", text: "1 TB" },
+                    { key: "5TB", text: "5 TB" },
+                    { key: "10TB", text: "10 TB" },
+                    { key: "15TB", text: "15 TB" },
+                    { key: "20TB", text: "20 TB" },
+                    { key: "25TB", text: "25 TB" }
                   ]
                 }),
                 PropertyPaneTextField("MaxStorageDescription", {
