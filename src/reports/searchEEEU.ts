@@ -1,4 +1,4 @@
-import { Dashboard, Documents, LoadingDialog } from "dattatable";
+import { Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
 import { Components, ContextInfo, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
 import { DataSource } from "../ds";
 import Strings from "../strings";
@@ -386,14 +386,14 @@ export class SearchEEEU {
     }
 
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, auditOnly: boolean, items: ISearchItem[], onClose: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, items: ISearchItem[], onClose?: () => void) {
         // Render the summary
         this._dashboard = new Dashboard({
             el,
             navigation: {
                 title: "Search EEEU",
                 showFilter: false,
-                items: [{
+                items: onClose ? [{
                     text: "New Search",
                     className: "btn-outline-light",
                     isButton: true,
@@ -404,7 +404,7 @@ export class SearchEEEU {
                         // Call the close event
                         onClose();
                     }
-                }],
+                }] : null,
                 itemsEnd: [{
                     text: "Export to CSV",
                     className: "btn-outline-light me-2",
@@ -723,6 +723,74 @@ export class SearchEEEU {
         }).then(() => {
             // Hide the sub-nav
             this._elSubNav.classList.add("d-none");
+        });
+    }
+
+    // Searches a list for EEEU
+    static searchList(webUrl: string, listName: string, auditOnly: boolean) {
+        this._loadOneDrive = false;
+        this._stopFl = false;
+
+        // Clear the items
+        this._items = [];
+
+        // Clear the modal
+        Modal.clear();
+        Modal.setType(Components.ModalTypes.Full);
+        Modal.setHeader("Data Loss Prevention Report");
+        Modal.setCloseEvent(() => {
+            // Set the flag
+            this.stop();
+        });
+
+        // Render the footer
+        Components.ButtonGroup({
+            el: Modal.FooterElement,
+            buttons: [
+                {
+                    text: "Close",
+                    type: Components.ButtonTypes.OutlinePrimary,
+                    onClick: () => {
+                        // Set the flag
+                        this.stop();
+                        Modal.hide();
+                    }
+                }
+            ]
+        });
+
+        // Render the summary
+        this.renderSummary(Modal.BodyElement, auditOnly, this._items);
+
+        // Show the modal
+        Modal.show();
+
+        // Update the status
+        this._elSubNav.children[0].innerHTML = `Searching List: ${listName}`;
+        this._elSubNav.children[1].innerHTML = "Getting the info for the web...";
+
+        // Get the permissions
+        let web = Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+        web.query({
+            Expand: [
+                "RoleAssignments", "RoleAssignments/Groups", "RoleAssignments/Member",
+                "RoleAssignments/RoleDefinitionBindings", "SiteGroups"
+            ]
+        }).execute(webInfo => {
+            // Update the dialog
+            this._elSubNav.children[1].innerHTML = `Analyzing the list...`;
+
+            // Get the list information
+            web.Lists(listName).query({
+                Expand: ["RootFolder"],
+                Select: ["Id", "Title", "BaseTemplate", "HasUniqueRoleAssignments", "RootFolder/ServerRelativeUrl"]
+            }).execute(list => {
+                // Analyze the list
+                this.analyzeList(webInfo, list).then(() => {
+                    // Hide the sub-nav
+                    this._elSubNav.classList.add("d-none");
+                });
+            });
         });
     }
 

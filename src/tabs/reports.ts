@@ -14,7 +14,7 @@ export interface IReportProps {
 }
 
 // Report Types
-enum ReportTypes {
+export enum ReportTypes {
     DLP = "DLP",
     DocRetention = "DocRetention",
     ExternalShares = "ExternalShares",

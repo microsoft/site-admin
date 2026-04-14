@@ -63,103 +63,6 @@ export class DLP {
         ];
     }
 
-    // Analyzes a single library
-    static analyzeLibrary(webId: string, webUrl: string, libId: string, libTitle: string) {
-        // Clear the items
-        this._items = [];
-
-        // Set the modal header
-        Modal.clear();
-        Modal.setType(Components.ModalTypes.XLarge);
-        Modal.setHeader("Data Loss Prevention Report");
-
-        // Show the results
-        this.renderSummary(Modal.BodyElement, false, false);
-
-        // Render the footer
-        Components.ButtonGroup({
-            el: Modal.FooterElement,
-            buttons: [
-                {
-                    text: "Close",
-                    type: Components.ButtonTypes.OutlinePrimary,
-                    onClick: () => { Modal.hide(); }
-                }
-            ]
-        });
-
-        // Show the modal
-        Modal.show();
-
-        // Update the status
-        this._elSubNav.children[0].innerHTML = "Analyzing Library";
-        this._elSubNav.children[1].innerHTML = "Getting all files in this library...";
-
-        // Create the list for the batch requests
-        let batchRequests = 0;
-        let completed = 0;
-        let web = this._loadOneDrive ? Web.getOneDrive() : Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
-        let list = web.Lists().getById(libId);
-
-        // Get the item ids for this library
-        let itemCounter = 0;
-        DataSource.loadItems({
-            webUrl,
-            listId: libId,
-            query: {
-                Expand: ["Author"],
-                Select: ["Author/Title", "FileLeafRef", "FileRef", "File_x0020_Type", "Id"],
-            },
-            onItem: item => {
-                // Create a batch request to get the dlp policy on this item
-                list.Items(item.Id).GetDlpPolicyTip().batch(result => {
-                    // Ensure a policy exists
-                    if (typeof (result["GetDlpPolicyTip"]) === "undefined") {
-                        // Parse the conditions
-                        result.MatchedConditionDescriptions.results.forEach(condition => {
-                            let dataItem: IDLPItem = {
-                                AppliedActionsText: result.AppliedActionsText,
-                                Author: item["Author"]?.Title,
-                                ConditionDescription: condition,
-                                FileExtension: item["File_x0020_Type"],
-                                FileName: item["FileLeafRef"],
-                                GeneralText: result.GeneralText,
-                                LastProcessedTime: result.LastProcessedTime,
-                                ListId: libId,
-                                ListTitle: libTitle,
-                                Path: item["FileRef"],
-                                WebId: webId,
-                                WebUrl: webUrl
-                            };
-
-                            // Append the data
-                            this._items.push(dataItem);
-                            this._dashboard.Datatable.addRow(dataItem);
-                        });
-                    }
-
-                    // Increment the counter and update the dialog
-                    this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${batchRequests}...`;
-                }, batchRequests++ % Strings.MaxBatchSize == 0);
-
-                // Update the dialog
-                this._elSubNav.children[1].innerHTML = `Creating Batch Requests - Processed ${++itemCounter} items...`;
-
-                // Return the stop flag
-                return this._stopFl;
-            }
-        }).then(() => {
-            // Update the dialog
-            this._elSubNav.children[1].innerHTML = `Executing Batch Request for ${batchRequests} items...`;
-
-            // Execute the batch request
-            list.execute(() => {
-                // Hide the sub-nav
-                this._elSubNav.classList.add("d-none");
-            });
-        });
-    }
-
     // Analyzes the libraries
     private static analyzeLibraries(webId: string, webUrl: string, libraries: Types.SP.ListOData[], fileExtensions: string[]) {
         // Return a promise
@@ -455,6 +358,111 @@ export class DLP {
         }).then(() => {
             // Hide the sub-nav
             this._elSubNav.classList.add("d-none");
+        });
+    }
+
+    // Searches a library for DLP conditions
+    static searchLibrary(webId: string, webUrl: string, libId: string, libTitle: string) {
+        // Clear the items
+        this._items = [];
+
+        // Set the modal header
+        Modal.clear();
+        Modal.setType(Components.ModalTypes.Full);
+        Modal.setHeader("Data Loss Prevention Report");
+        Modal.setCloseEvent(() => {
+            // Set the flag
+            this.stop();
+        });
+
+        // Render the footer
+        Components.ButtonGroup({
+            el: Modal.FooterElement,
+            buttons: [
+                {
+                    text: "Close",
+                    type: Components.ButtonTypes.OutlinePrimary,
+                    onClick: () => {
+                        // Set the flag
+                        this.stop();
+                        Modal.hide();
+                    }
+                }
+            ]
+        });
+
+        // Show the results
+        this.renderSummary(Modal.BodyElement, false, false);
+
+        // Show the modal
+        Modal.show();
+
+        // Update the status
+        this._elSubNav.children[0].innerHTML = "Analyzing Library";
+        this._elSubNav.children[1].innerHTML = "Getting all files in this library...";
+
+        // Create the list for the batch requests
+        let batchRequests = 0;
+        let completed = 0;
+        let web = this._loadOneDrive ? Web.getOneDrive() : Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+        let list = web.Lists().getById(libId);
+
+        // Get the item ids for this library
+        let itemCounter = 0;
+        DataSource.loadItems({
+            webUrl,
+            listId: libId,
+            query: {
+                Expand: ["Author"],
+                Select: ["Author/Title", "FileLeafRef", "FileRef", "File_x0020_Type", "Id"],
+            },
+            onItem: item => {
+                // Create a batch request to get the dlp policy on this item
+                list.Items(item.Id).GetDlpPolicyTip().batch(result => {
+                    // Ensure a policy exists
+                    if (typeof (result["GetDlpPolicyTip"]) === "undefined") {
+                        // Parse the conditions
+                        result.MatchedConditionDescriptions.results.forEach(condition => {
+                            let dataItem: IDLPItem = {
+                                AppliedActionsText: result.AppliedActionsText,
+                                Author: item["Author"]?.Title,
+                                ConditionDescription: condition,
+                                FileExtension: item["File_x0020_Type"],
+                                FileName: item["FileLeafRef"],
+                                GeneralText: result.GeneralText,
+                                LastProcessedTime: result.LastProcessedTime,
+                                ListId: libId,
+                                ListTitle: libTitle,
+                                Path: item["FileRef"],
+                                WebId: webId,
+                                WebUrl: webUrl
+                            };
+
+                            // Append the data
+                            this._items.push(dataItem);
+                            this._dashboard.Datatable.addRow(dataItem);
+                        });
+                    }
+
+                    // Increment the counter and update the dialog
+                    this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${batchRequests}...`;
+                }, batchRequests++ % Strings.MaxBatchSize == 0);
+
+                // Update the dialog
+                this._elSubNav.children[1].innerHTML = `Creating Batch Requests - Processed ${++itemCounter} items...`;
+
+                // Return the stop flag
+                return this._stopFl;
+            }
+        }).then(() => {
+            // Update the dialog
+            this._elSubNav.children[1].innerHTML = `Executing Batch Request for ${batchRequests} items...`;
+
+            // Execute the batch request
+            list.execute(() => {
+                // Hide the sub-nav
+                this._elSubNav.classList.add("d-none");
+            });
         });
     }
 

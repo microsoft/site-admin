@@ -651,8 +651,145 @@ export class SensitivityLabels {
         });
     }
 
-    // Shows the form for labeling a list
-    static setDefaultSensitivityLabelForFiles(webId: string, listName: string, driveId: string, defaultLabel: string, folders: Components.IDropdownItem[], disableSensitivityLabelOverride: boolean, fileTypes: string) {
+    // Shows the form to label a file
+    private static showLabelFileForm(file: Types.Microsoft.Graph.driveItem, onUpdate: (label: string) => void) {
+        // Set the modal header
+        Modal.clear();
+        Modal.setHeader("Set Sensitivity Label");
+
+        // Set the form
+        let form = Components.Form({
+            el: Modal.BodyElement,
+            groupClassName: "mb-3",
+            controls: [
+                {
+                    name: "SensitivityLabel",
+                    label: "Select Sensitivity Label:",
+                    description: "This will set any file that isn't currently labelled.",
+                    errorMessage: "A sensitivity label is required.",
+                    items: DataSource.SensitivityLabelItems,
+                    type: Components.FormControlTypes.Dropdown,
+                    required: true,
+                    onValidate: (ctrl, results) => {
+                        // Ensure a selection exists
+                        results.isValid = results.value && results.value.text ? true : false;
+                        return results;
+                    }
+                } as Components.IFormControlPropsDropdown,
+                {
+                    name: "Justification",
+                    label: "Justification:",
+                    description: "Your organization requires justification to change this label.",
+                    type: Components.FormControlTypes.Dropdown,
+                    required: true,
+                    items: [
+                        { text: "Previous label no longer applies" },
+                        { text: "Previous label was incorrect" },
+                        { text: "Other" }
+                    ],
+                    onChange: (item) => {
+                        let ctrlTextbox = form.getControl("JustificationOther");
+
+                        // See if we are showing it
+                        if (item.text == "Other") {
+                            // Show it
+                            ctrlTextbox.show();
+                        } else {
+                            // Hide it
+                            ctrlTextbox.hide();
+                        }
+                    }
+                } as Components.IFormControlPropsDropdown,
+                {
+                    name: "JustificationOther",
+                    label: "Explain Justification:",
+                    description: "Do not enter sensitive information",
+                    className: "d-none",
+                    type: Components.FormControlTypes.TextField,
+                    errorMessage: "A justification is required.",
+                    onValidate: (ctrl, results) => {
+                        let item = form.getValues()["Justification"] as Components.IDropdownItem;
+
+                        // See if we are expecting a justification
+                        if (item.text == "Other") {
+                            // Set the falg
+                            results.isValid = results.value ? true : false;
+                        }
+
+                        // Return the results
+                        return results;
+                    }
+                } as Components.IFormControlPropsTextField,
+            ]
+        });
+
+        // Set the footer
+        Components.TooltipGroup({
+            el: Modal.FooterElement,
+            tooltips: [
+                {
+                    content: "Sets the default sensitivity label to the selected option.",
+                    btnProps: {
+                        text: "Update",
+                        type: Components.ButtonTypes.OutlinePrimary,
+                        onClick: () => {
+                            // Ensure the form is valid
+                            if (form.isValid()) {
+                                let values = form.getValues();
+                                let label: Components.IDropdownItem = values["SensitivityLabel"];
+
+                                // Update the justification
+                                let justification = values["Justification"].text;
+                                justification = justification == "Other" ? values["JustificationOther"] : justification;
+
+                                // Show a loading dialog
+                                LoadingDialog.setHeader("Setting Label");
+                                LoadingDialog.setBody("Updating the label for this file.");
+                                LoadingDialog.show();
+
+                                // Label the file
+                                this.labelFile(file, label.text, label.value, justification, []).then(responses => {
+                                    // See if it was successful
+                                    if (!responses[0].errorFl) {
+                                        // Call the event
+                                        onUpdate(label.text);
+                                    } else {
+                                        // Set the error
+                                        let ctrl = form.getControl("SensitivityLabel");
+                                        ctrl.updateValidation(ctrl.el, {
+                                            isValid: false,
+                                            invalidMessage: responses[0].message
+                                        });
+                                    }
+
+                                    // Hide the dialogs
+                                    LoadingDialog.hide();
+                                    Modal.hide();
+                                });
+                            }
+                        }
+                    }
+                },
+                {
+                    content: "Closes the dialog.",
+                    btnProps: {
+                        text: "Close",
+                        type: Components.ButtonTypes.OutlineSecondary,
+                        onClick: () => {
+                            // Close the modal
+                            Modal.hide();
+                        }
+                    }
+                }
+            ]
+        });
+
+        // Show the modal
+        Modal.show();
+    }
+
+    // Shows the form for a library
+    static showLibraryForm(webId: string, listName: string, driveId: string, defaultLabel: string, folders: Components.IDropdownItem[], disableSensitivityLabelOverride: boolean, fileTypes: string) {
         let defaultItem: Components.IDropdownItem = { text: "All Folders", value: "" };
 
         // Set the modal header
@@ -975,143 +1112,6 @@ export class SensitivityLabels {
 
                                 // Label the files
                                 this.labelFilesInFolder(webId, listName, driveId, targetFolder?.id, fileExtensions, label, replaceLabel?.value ? replaceLabel : null, overrideLabelFl, justification);
-                            }
-                        }
-                    }
-                },
-                {
-                    content: "Closes the dialog.",
-                    btnProps: {
-                        text: "Close",
-                        type: Components.ButtonTypes.OutlineSecondary,
-                        onClick: () => {
-                            // Close the modal
-                            Modal.hide();
-                        }
-                    }
-                }
-            ]
-        });
-
-        // Show the modal
-        Modal.show();
-    }
-
-    // Shows the form to label a file
-    private static showLabelFileForm(file: Types.Microsoft.Graph.driveItem, onUpdate: (label: string) => void) {
-        // Set the modal header
-        Modal.clear();
-        Modal.setHeader("Set Sensitivity Label");
-
-        // Set the form
-        let form = Components.Form({
-            el: Modal.BodyElement,
-            groupClassName: "mb-3",
-            controls: [
-                {
-                    name: "SensitivityLabel",
-                    label: "Select Sensitivity Label:",
-                    description: "This will set any file that isn't currently labelled.",
-                    errorMessage: "A sensitivity label is required.",
-                    items: DataSource.SensitivityLabelItems,
-                    type: Components.FormControlTypes.Dropdown,
-                    required: true,
-                    onValidate: (ctrl, results) => {
-                        // Ensure a selection exists
-                        results.isValid = results.value && results.value.text ? true : false;
-                        return results;
-                    }
-                } as Components.IFormControlPropsDropdown,
-                {
-                    name: "Justification",
-                    label: "Justification:",
-                    description: "Your organization requires justification to change this label.",
-                    type: Components.FormControlTypes.Dropdown,
-                    required: true,
-                    items: [
-                        { text: "Previous label no longer applies" },
-                        { text: "Previous label was incorrect" },
-                        { text: "Other" }
-                    ],
-                    onChange: (item) => {
-                        let ctrlTextbox = form.getControl("JustificationOther");
-
-                        // See if we are showing it
-                        if (item.text == "Other") {
-                            // Show it
-                            ctrlTextbox.show();
-                        } else {
-                            // Hide it
-                            ctrlTextbox.hide();
-                        }
-                    }
-                } as Components.IFormControlPropsDropdown,
-                {
-                    name: "JustificationOther",
-                    label: "Explain Justification:",
-                    description: "Do not enter sensitive information",
-                    className: "d-none",
-                    type: Components.FormControlTypes.TextField,
-                    errorMessage: "A justification is required.",
-                    onValidate: (ctrl, results) => {
-                        let item = form.getValues()["Justification"] as Components.IDropdownItem;
-
-                        // See if we are expecting a justification
-                        if (item.text == "Other") {
-                            // Set the falg
-                            results.isValid = results.value ? true : false;
-                        }
-
-                        // Return the results
-                        return results;
-                    }
-                } as Components.IFormControlPropsTextField,
-            ]
-        });
-
-        // Set the footer
-        Components.TooltipGroup({
-            el: Modal.FooterElement,
-            tooltips: [
-                {
-                    content: "Sets the default sensitivity label to the selected option.",
-                    btnProps: {
-                        text: "Update",
-                        type: Components.ButtonTypes.OutlinePrimary,
-                        onClick: () => {
-                            // Ensure the form is valid
-                            if (form.isValid()) {
-                                let values = form.getValues();
-                                let label: Components.IDropdownItem = values["SensitivityLabel"];
-
-                                // Update the justification
-                                let justification = values["Justification"].text;
-                                justification = justification == "Other" ? values["JustificationOther"] : justification;
-
-                                // Show a loading dialog
-                                LoadingDialog.setHeader("Setting Label");
-                                LoadingDialog.setBody("Updating the label for this file.");
-                                LoadingDialog.show();
-
-                                // Label the file
-                                this.labelFile(file, label.text, label.value, justification, []).then(responses => {
-                                    // See if it was successful
-                                    if (!responses[0].errorFl) {
-                                        // Call the event
-                                        onUpdate(label.text);
-                                    } else {
-                                        // Set the error
-                                        let ctrl = form.getControl("SensitivityLabel");
-                                        ctrl.updateValidation(ctrl.el, {
-                                            isValid: false,
-                                            invalidMessage: responses[0].message
-                                        });
-                                    }
-
-                                    // Hide the dialogs
-                                    LoadingDialog.hide();
-                                    Modal.hide();
-                                });
                             }
                         }
                     }

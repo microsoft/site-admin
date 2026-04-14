@@ -3,8 +3,11 @@ import { Components, Helper, SPTypes, Types, v2, Web } from "gd-sprest-bs";
 import { ExportCSV } from "../reports/exportCSV";
 import { IAppProps } from "../app";
 import { DataSource } from "../ds";
+import { ReportTypes } from "./reports";
 import { DLP } from "../reports/dlp";
+import { SearchEEEU } from "../reports/searchEEEU";
 import { SensitivityLabels } from "../reports/sensitivityLabels";
+import { UniquePermissions } from "../reports/uniquePermissions";
 
 interface IList {
     BaseTemplate: number;
@@ -166,21 +169,6 @@ export class ListsTab {
             ]
         });
 
-        // See if this is a library
-        if (isLibrary) {
-            tooltips.add({
-                content: "Click to run a DLP report.",
-                btnProps: {
-                    text: "DLP Report",
-                    type: Components.ButtonTypes.OutlinePrimary,
-                    onClick: () => {
-                        // Run the DLP report for this library
-                        DLP.analyzeLibrary(item.WebId, item.WebUrl, item.ListId, item.ListName);
-                    }
-                }
-            });
-        }
-
         // Add the options to make changes
         if (!this._appProps.auditOnly || !this._appProps.hideReports?.sensitivityLabels) {
             let tooltip: Components.ITooltip = null;
@@ -197,23 +185,6 @@ export class ListsTab {
                         onClick: () => {
                             // Show the form
                             this.setDefaultSensitivityLabel(item);
-                        }
-                    }
-                });
-
-                // Label the files in bulk
-                tooltips.add({
-                    content: "Click to set the default sensitivity label for any files that aren't currently labelled.",
-                    btnProps: {
-                        isDisabled: !DataSource.HasSensitivityLabels,
-                        text: "Label Files",
-                        type: Components.ButtonTypes.OutlinePrimary,
-                        onClick: () => {
-                            // Load the folders for this list
-                            DataSource.loadFolders(item.WebId, item.DriveId).then(folders => {
-                                // Show the senstivity label form
-                                SensitivityLabels.setDefaultSensitivityLabelForFiles(item.WebId, item.ListName, item.DriveId, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt);
-                            });
                         }
                     }
                 });
@@ -240,6 +211,19 @@ export class ListsTab {
                 }
             });
         }
+
+        // Add the reports tooltip
+        tooltips.add({
+            content: "Click to run an audit report on this list.",
+            btnProps: {
+                text: "View Reports",
+                type: Components.ButtonTypes.OutlinePrimary,
+                onClick: () => {
+                    // Show the reports form
+                    this.showReportsForm(isLibrary, item);
+                }
+            }
+        });
     }
 
     // Renders the tab
@@ -482,6 +466,126 @@ export class ListsTab {
         });
 
         // Show the modal
+        Modal.show();
+    }
+
+    // Generates the tooltip options for the reports
+    private showReportsForm(isLibrary: boolean, item: IList) {
+        // Set the available reports
+        let items: Components.IDropdownItem[] = [];
+
+        // DLP
+        if (typeof (this._appProps.hideReports.dlp) === "undefined" || this._appProps.hideReports.dlp != true) {
+            items.push({
+                text: "Data Loss Prevention",
+                data: "Finds files that has DLP applied to it.",
+                value: ReportTypes.DLP
+            });
+        }
+
+        // Search EEEU
+        if (typeof (this._appProps.hideReports.searchEEEU) === "undefined" || this._appProps.hideReports.searchEEEU != true) {
+            items.push({
+                text: "Search EEEU",
+                data: "Search for the 'Every' and 'Everyone exception external users' accounts.",
+                value: ReportTypes.SearchEEEU
+            });
+        }
+
+        // Sensitivity Labels
+        if (isLibrary && item.DriveId) {
+            if (typeof (this._appProps.hideReports.sensitivityLabels) === "undefined" || this._appProps.hideReports.sensitivityLabels != true) {
+                items.push({
+                    text: "Sensitivity Labels",
+                    data: "Click to view sensitivity label options.",
+                    value: ReportTypes.SensitivityLabels
+                });
+            }
+        }
+
+        // Unique Permissions
+        if (typeof (this._appProps.hideReports.uniquePermissions) === "undefined" || this._appProps.hideReports.uniquePermissions != true) {
+            items.push({
+                text: "Unique Permissions",
+                data: "Scans for items that have unique permissions.",
+                value: ReportTypes.UniquePermissions
+            });
+        }
+
+        // Clear the modal
+        Modal.clear();
+        Modal.setHeader("Select Report");
+
+        // Set the body
+        let form = Components.Form({
+            el: Modal.BodyElement,
+            controls: [
+                {
+                    name: "ReportType",
+                    label: "Select Report:",
+                    description: "Select a report to run against this list.",
+                    items,
+                    type: Components.FormControlTypes.Dropdown,
+                    required: true,
+                    errorMessage: "A report selection is required."
+                } as Components.IFormControlPropsDropdown
+            ]
+        });
+
+        // Set the footer
+        Components.TooltipGroup({
+            el: Modal.FooterElement,
+            tooltips: [
+                {
+                    content: "Click to run the selected report against the selected list.",
+                    btnProps: {
+                        text: "Run Report",
+                        onClick: () => {
+                            // Validate the form
+                            if (form.isValid()) {
+                                let selectedReport = form.getValues()["ReportType"].value;
+
+                                // Show the form for the selected report
+                                switch (selectedReport) {
+                                    case ReportTypes.DLP:
+                                        // Run the DLP report for this library
+                                        DLP.searchLibrary(item.WebId, item.WebUrl, item.ListId, item.ListName);
+                                        break;
+                                    case ReportTypes.SearchEEEU:
+                                        // Run the EEEU report for this library
+                                        SearchEEEU.searchList(item.WebUrl, item.ListName, this._appProps.auditOnly);
+                                        break;
+                                    case ReportTypes.SensitivityLabels:
+                                        // Load the folders for this list
+                                        DataSource.loadFolders(item.WebId, item.DriveId).then(folders => {
+                                            // Show the senstivity label form
+                                            SensitivityLabels.showLibraryForm(item.WebId, item.ListName, item.DriveId, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt);
+                                        });
+                                        break;
+                                    case ReportTypes.UniquePermissions:
+                                        // Run the unique permissions report for this library
+                                        UniquePermissions.searchList(item.WebUrl, item.ListName, this._appProps.auditOnly);
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    content: "Closes the dialog.",
+                    btnProps: {
+                        text: "Close",
+                        type: Components.ButtonTypes.OutlineSecondary,
+                        onClick: () => {
+                            // Close the modal
+                            Modal.hide();
+                        }
+                    }
+                }
+            ]
+        });
+
+        // Show the form
         Modal.show();
     }
 }

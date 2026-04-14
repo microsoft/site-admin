@@ -1,4 +1,4 @@
-import { Dashboard, Documents, LoadingDialog } from "dattatable";
+import { Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
 import { Components, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
 import { cardList } from "gd-sprest-bs/build/icons/svgs/cardList";
 import { DataSource } from "../ds";
@@ -168,14 +168,14 @@ export class UniquePermissions {
     static getFormFields(): Components.IFormControlProps[] { return []; }
 
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, auditOnly: boolean, onClose: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, onClose?: () => void) {
         // Render the summary
         this._dashboard = new Dashboard({
             el,
             navigation: {
                 title: "Unique Permissions",
                 showFilter: false,
-                items: [{
+                items: onClose ? [{
                     text: "New Search",
                     className: "btn-outline-light",
                     isButton: true,
@@ -186,7 +186,7 @@ export class UniquePermissions {
                         // Call the close event
                         onClose();
                     }
-                }],
+                }] : null,
                 itemsEnd: [{
                     text: "Export to CSV",
                     className: "btn-outline-light me-2",
@@ -401,6 +401,65 @@ export class UniquePermissions {
         }).then(() => {
             // Hide the sub-nav
             this._elSubNav.classList.add("d-none");
+        });
+    }
+
+    // Searches a list for unique permissions
+    static searchList(webUrl: string, listName: string, auditOnly: boolean) {
+        this._loadOneDrive = false;
+        this._stopFl = false;
+
+        // Clear the items
+        this._items = [];
+
+        // Clear the modal
+        Modal.clear();
+        Modal.setType(Components.ModalTypes.Full);
+        Modal.setHeader("Data Loss Prevention Report");
+        Modal.setCloseEvent(() => {
+            // Set the flag
+            this.stop();
+        });
+
+        // Render the footer
+        Components.ButtonGroup({
+            el: Modal.FooterElement,
+            buttons: [
+                {
+                    text: "Close",
+                    type: Components.ButtonTypes.OutlinePrimary,
+                    onClick: () => {
+                        // Set the flag
+                        this.stop();
+                        Modal.hide();
+                    }
+                }
+            ]
+        });
+
+        // Render the summary
+        this.renderSummary(Modal.BodyElement, auditOnly);
+
+        // Show the modal
+        Modal.show();
+
+        // Update the status
+        this._elSubNav.children[0].innerHTML = `Searching List: ${listName}`;
+        this._elSubNav.children[1].innerHTML = "Getting the info for the web...";
+
+        // Update the dialog
+        this._elSubNav.children[0].innerHTML = `Analyzing Library: ${listName}`;
+
+        // Get the list information
+        Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(listName).query({
+            Expand: ["DefaultDisplayFormUrl", "DefaultViewFormUrl", "RootFolder"],
+            Select: ["BaseTemplate", "Id", "Title", "HasUniqueRoleAssignments", "RootFolder/ServerRelativeUrl"]
+        }).execute(list => {
+            // Analyze the list
+            this.analyzeList(webUrl, list).then(() => {
+                // Hide the sub-nav
+                this._elSubNav.classList.add("d-none");
+            });
         });
     }
 
