@@ -713,6 +713,10 @@ export class DataSource {
     static get SensitivityLabels(): ISensitivityLabel[] { return this._sensitivityLabels; }
     private static _sensitivityLabelItems: Components.IDropdownItem[] = null;
     static get SensitivityLabelItems(): Components.IDropdownItem[] { return this._sensitivityLabelItems; }
+    private static _siteSensitivityLabels: ISensitivityLabel[] = null;
+    static get SiteSensitivityLabels(): ISensitivityLabel[] { return this._siteSensitivityLabels; }
+    private static _siteSensitivityLabelItems: Components.IDropdownItem[] = null;
+    static get SiteSensitivityLabelItems(): Components.IDropdownItem[] { return this._siteSensitivityLabelItems; }
     static getSensitivityLabel(labelId: string): string {
         // Find the item
         let item = this.SensitivityLabels.filter(a => { return a.id == labelId; })[0];
@@ -720,7 +724,7 @@ export class DataSource {
         // Return the value
         return item ? item.name : labelId;
     }
-    private static loadSensitivityLabels() {
+    private static loadSensitivityLabels(): PromiseLike<void> {
         // Return a promise
         return new Promise(resolve => {
             // Clear the labels
@@ -774,7 +778,7 @@ export class DataSource {
                     }
                 }
 
-                resolve(null);
+                resolve();
             }, () => {
                 // Load the group context
                 GroupSiteManager().getGroupCreationContext().execute(resp => {
@@ -797,9 +801,58 @@ export class DataSource {
                     }
 
                     // Resolve the request
-                    resolve(null);
-                }, resolve);
+                    resolve();
+                }, () => { resolve(); });
             });
+        });
+    }
+    private static loadSiteSensitivityLabels(): PromiseLike<void> {
+        // Return a promise
+        return new Promise((resolve) => {
+            // Clear the site labels
+            this._siteSensitivityLabels = [];
+            this._siteSensitivityLabelItems = [];
+
+            // Get the sensitivity labels for the site
+            GroupSiteManager().getGroupCreationContext().execute(
+                info => {
+                    // Parse the sensitivity labels
+                    info.DataClassificationOptionsNew.results.forEach(classification => {
+                        // Get the label
+                        let label = this.SensitivityLabels.filter(a => { return a.id == classification.Key; })[0];
+                        if (label) {
+                            // Add the label information
+                            this._siteSensitivityLabels.push(label);
+                            this._siteSensitivityLabelItems.push({
+                                data: label,
+                                text: label.name,
+                                value: label.id
+                            });
+                        } else {
+                            // Add the label information
+                            this._siteSensitivityLabels.push({
+                                desc: "",
+                                id: classification.Key,
+                                name: classification.Value,
+                                tooltip: ""
+                            });
+                            this._siteSensitivityLabelItems.push({
+                                data: classification,
+                                text: classification.Value,
+                                value: classification.Key
+                            });
+                        }
+                    });
+
+                    // Resolve the request
+                    resolve();
+                },
+                () => {
+                    // Error getting the info
+                    // Do nothing
+                    resolve();
+                }
+            )
         });
     }
 
@@ -1021,19 +1074,23 @@ export class DataSource {
                     // Load the sensitivity labels
                     this.loadSensitivityLabels()
                 ]).then(() => {
-                    // See if a url exists in the query string
-                    let url = this.getUrlFromQS();
-                    if (url) {
-                        // Update the loading dialog
-                        LoadingDialog.setHeader("Loading Site");
-                        LoadingDialog.setBody("Validating the site '" + url + "'");
+                    // Load the site sensitivity labels
+                    // This requires the load sensitivity labels method to be completed first
+                    this.loadSiteSensitivityLabels().then(() => {
+                        // See if a url exists in the query string
+                        let url = this.getUrlFromQS();
+                        if (url) {
+                            // Update the loading dialog
+                            LoadingDialog.setHeader("Loading Site");
+                            LoadingDialog.setBody("Validating the site '" + url + "'");
 
-                        // Validate the url and resolve the request
-                        this.validate(decodeURIComponent(url)).then(resolve, resolve);
-                    } else {
-                        // Resolve the request
-                        resolve();
-                    }
+                            // Validate the url and resolve the request
+                            this.validate(decodeURIComponent(url)).then(resolve, resolve);
+                        } else {
+                            // Resolve the request
+                            resolve();
+                        }
+                    });
                 }, reject);
             }, reject);
         });
