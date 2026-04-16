@@ -811,7 +811,12 @@ export class DataSource {
         return new Promise((resolve) => {
             // Clear the site labels
             this._siteSensitivityLabels = [];
-            this._siteSensitivityLabelItems = [];
+            this._siteSensitivityLabelItems = [
+                {
+                    text: "",
+                    value: null
+                }
+            ];
 
             // Get the sensitivity labels for the site
             GroupSiteManager().getGroupCreationContext().execute(
