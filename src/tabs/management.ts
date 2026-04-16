@@ -198,7 +198,7 @@ export class ManagementTab extends Tab<{
                     isDisabled: !DataSource.HasSensitivityLabels || this._props["SensitivityLabelId"].disabled,
                     type: Components.FormControlTypes.Dropdown,
                     value: this._currValues.SensitivityLabelId,
-                    items: DataSource.SensitivityLabelItems,
+                    items: DataSource.SiteSensitivityLabelItems,
                     onChange: item => {
                         // See if we are changing the value
                         if (this._currValues.SensitivityLabelId != item?.value) {

@@ -810,7 +810,7 @@ export class SensitivityLabels {
                     label: "Select Sensitivity Label:",
                     description: "This will set any file that isn't currently labelled.",
                     errorMessage: "A sensitivity label is required.",
-                    items: DataSource.SensitivityLabelItems,
+                    items: DataSource.SiteSensitivityLabelItems,
                     type: Components.FormControlTypes.Dropdown,
                     required: true,
                     value: defaultLabel,
@@ -820,6 +820,14 @@ export class SensitivityLabels {
                         return results;
                     }
                 } as Components.IFormControlPropsDropdown,
+                {
+                    name: "OverrideLabel",
+                    label: "Override Label?",
+                    description: "If a label already exists, it will attempt to override it.",
+                    isDisabled: disableSensitivityLabelOverride,
+                    type: Components.FormControlTypes.Switch,
+                    value: false
+                },
                 {
                     name: "ReplaceLabel",
                     label: "Replace Sensitivity Label:",
@@ -860,14 +868,6 @@ export class SensitivityLabels {
                     label: "File Types",
                     type: Components.FormControlTypes.TextField,
                     value: fileTypes
-                },
-                {
-                    name: "OverrideLabel",
-                    label: "Override Label?",
-                    description: "If a label already exists, it will attempt to override it.",
-                    isDisabled: disableSensitivityLabelOverride,
-                    type: Components.FormControlTypes.Switch,
-                    value: false
                 },
                 {
                     name: "Justification",
