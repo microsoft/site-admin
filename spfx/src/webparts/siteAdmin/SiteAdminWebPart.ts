@@ -66,6 +66,7 @@ export interface ISiteAdminWebPartProps {
   MaxStorageDescription: string;
   ReportsDocRententionYears: string;
   ReportsDLPFileExt: string;
+  ReportsDLPGroups: string;
   ReportsDocSearchFileExt: string;
   ReportsDocSearchKeywords: string;
   SensitivityLabelFileExt: string;
@@ -198,6 +199,7 @@ declare const SiteAdmin: {
     reportProps?: {
       docRententionYears?: string;
       dlpFileExt?: string;
+      dlpGroups?: string[];
       docSearchFileExt?: string;
       docSearchKeywords?: string;
       sensitivityLabelFileExt?: string;
@@ -328,6 +330,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       maxStorageSize,
       reportProps: {
         dlpFileExt: this.properties.ReportsDLPFileExt,
+        dlpGroups: (this.properties.ReportsDLPGroups || "").split(",").map(group => group.trim()),
         docRententionYears: this.properties.ReportsDocRententionYears,
         docSearchFileExt: this.properties.ReportsDocSearchFileExt,
         docSearchKeywords: this.properties.ReportsDocSearchKeywords,
@@ -650,7 +653,16 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                 PropertyPaneTextField("ReportsDLPFileExt", {
                   label: strings.ReportsDLPFileExt,
                   description: "The default file extensions to search.",
+                  multiline: true,
+                  rows: 6,
                   value: this.properties.ReportsDLPFileExt
+                }),
+                PropertyPaneTextField("ReportsDLPGroups", {
+                  label: strings.ReportsDLPGroups,
+                  description: "A CSV formatted string containing the group names to indicate a file being overshared. Do not include Everyone or EEEU, as they are the default groups to indicate oversharing.",
+                  multiline: true,
+                  rows: 6,
+                  value: this.properties.ReportsDLPGroups
                 }),
                 PropertyPaneDropdown("ReportsDocRententionYears", {
                   label: strings.ReportsDocRententionYears,
@@ -673,11 +685,15 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                 PropertyPaneTextField("ReportsDocSearchFileExt", {
                   label: strings.ReportsDocSearchFileExt,
                   description: "The default file extensions to search.",
+                  multiline: true,
+                  rows: 6,
                   value: this.properties.ReportsDocSearchFileExt
                 }),
                 PropertyPaneTextField("ReportsDocSearchKeywords", {
                   label: strings.ReportsDocSearchKeywords,
                   description: "The default keywords to search for.",
+                  multiline: true,
+                  rows: 6,
                   value: this.properties.ReportsDocSearchKeywords
                 }),
               ]

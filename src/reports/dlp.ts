@@ -18,6 +18,7 @@ interface IDLPItem {
     LastProcessedTime: string;
     ListId: string;
     ListTitle: string;
+    Overshared: string;
     Path: string;
     Permissions: Types.SP.RoleAssignmentOData[];
     WebUrl: string;
@@ -51,6 +52,7 @@ export class DLP {
     private static _elSubNav: HTMLElement = null;
     private static _items: IDLPItem[] = [];
     private static _loadOneDrive: boolean = false;
+    private static _oversharedGroups: string[] = [];
     private static _stopFl: boolean = false;
 
     // Gets the form fields to display
@@ -138,6 +140,7 @@ export class DLP {
                                                 LastProcessedTime: result.GetDlpPolicyTip.LastProcessedTime,
                                                 ListId: lib.Id,
                                                 ListTitle: lib.Title,
+                                                Overshared: this.isOvershared(result.RoleAssignments.results as any) ? "Yes" : "No",
                                                 Path: item["FileRef"],
                                                 Permissions: result.RoleAssignments.results as any,
                                                 WebId: webId,
@@ -171,6 +174,62 @@ export class DLP {
                 });
             }).then(resolve);
         });
+    }
+
+    // Returns the groups that are flagging the file as overshared
+    private static getOversharedGroups(roles: Types.SP.RoleAssignmentOData[]): string[] {
+        let groups = [];
+
+        // Check if any role assignment matches the overshared groups
+        for (let i = 0; i < roles.length; i++) {
+            let role = roles[i];
+
+            // See if this is the eeeu, everyone or the custom group
+            if (role.Member.Title == "Everyone except external users" || role.Member.Title == "Everyone" || this._oversharedGroups.indexOf(role.Member.Title) >= 0) {
+                // Append the group
+                groups.push(role.Member.Title);
+            }
+            // Else, go through the users
+            else {
+                let users: Types.SP.User[] = role.Member["Users"] ? role.Member["Users"].results : [];
+                users.forEach(user => {
+                    // See if this is the eeeu or everyone
+                    if (user.Title == "Everyone except external users" || user.Title == "Everyone" || this._oversharedGroups.indexOf(user.Title) >= 0) {
+                        // Append the group
+                        groups.push(role.Member.Title + " - " + user.Title);
+                    }
+                });
+            }
+        }
+
+        // Return the groups
+        return groups;
+    }
+
+    // Determines if a file is overshared
+    private static isOvershared(roles: Types.SP.RoleAssignmentOData[]): boolean {
+        let isOvershared = false;
+
+        // Check if any role assignment matches the overshared groups
+        for (let i = 0; i < roles.length; i++) {
+            let role = roles[i];
+
+            // See if this is the eeeu or everyone
+            if (role.Member.Title == "Everyone except external users" || role.Member.Title == "Everyone") {
+                // Set the flag
+                isOvershared = true;
+                break;
+            }
+            // Else, see if it's one of the custom groups
+            else if (this._oversharedGroups.indexOf(role.Member.Title) >= 0) {
+                // Set the flag
+                isOvershared = true;
+                break;
+            }
+        }
+
+        // Return the flag
+        return isOvershared;
     }
 
     // Renders the search summary
@@ -247,10 +306,34 @@ export class DLP {
                         title: "Condition"
                     },
                     {
-                        name: "LastProcessedTime",
-                        title: "Last Processed Time",
+                        name: "",
+                        title: "Overshared",
                         onRenderCell: (el, col, item: IDLPItem) => {
-                            el.innerHTML = item.LastProcessedTime ? moment(item.LastProcessedTime).format(Strings.TimeFormat) : "";
+                            let isOvershared = item.Overshared === "Yes" ? true : false;
+
+                            // Set the order info
+                            el.setAttribute("data-order", item.Overshared);
+
+                            // Make the badge display in the middle
+                            el.style.verticalAlign = "middle";
+
+                            // Render a badge
+                            let badge = Components.Badge({
+                                el,
+                                className: "me-2",
+                                content: isOvershared ? "Overshared" : item.Overshared,
+                                type: isOvershared ? Components.BadgeTypes.Danger : Components.BadgeTypes.Success,
+                                isPill: true
+                            });
+
+                            // See if this is overshared
+                            if (isOvershared) {
+                                // Render a tooltip
+                                Components.Tooltip({
+                                    target: badge.el,
+                                    content: `The file has been flagged as overshared because it's shared with the following groups:<br/>${this.getOversharedGroups(item.Permissions).join("<br/>")}`
+                                });
+                            }
                         }
                     },
                     {
@@ -387,9 +470,10 @@ export class DLP {
     }
 
     // Runs the report
-    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
+    static run(el: HTMLElement, auditOnly: boolean, oversharedGroups: string[], values: { [key: string]: string }, onClose: () => void) {
         let data: IWebItem[] = [];
         this._loadOneDrive = values["LoadOneDrive"] == "true";
+        this._oversharedGroups = oversharedGroups;
         this._stopFl = false;
 
         // Clear the items
@@ -464,7 +548,9 @@ export class DLP {
     }
 
     // Searches a library for DLP conditions
-    static searchLibrary(webId: string, webUrl: string, libId: string, libTitle: string) {
+    static searchLibrary(webId: string, webUrl: string, libId: string, libTitle: string, oversharedGroups: string[]) {
+        this._oversharedGroups = oversharedGroups;
+
         // Clear the items
         this._items = [];
 
@@ -540,6 +626,7 @@ export class DLP {
                                 LastProcessedTime: result.GetDlpPolicyTip.LastProcessedTime,
                                 ListId: libId,
                                 ListTitle: libTitle,
+                                Overshared: this.isOvershared(result.RoleAssignments.results as any) ? "Yes" : "No",
                                 Path: item["FileRef"],
                                 Permissions: result.RoleAssignments.results as any,
                                 WebId: webId,
