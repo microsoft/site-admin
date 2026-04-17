@@ -1,4 +1,4 @@
-import { Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
+import { CanvasForm, Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
 import { Components, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
 import { fileEarmark } from "gd-sprest-bs/build/icons/svgs/fileEarmark";
 import * as moment from "moment";
@@ -13,10 +13,13 @@ interface IDLPItem {
     FileExtension: string;
     FileName: string;
     GeneralText: string;
+    HasUniquePermissions: boolean;
+    Id: number;
     LastProcessedTime: string;
     ListId: string;
     ListTitle: string;
     Path: string;
+    Permissions: Types.SP.RoleAssignmentOData[];
     WebUrl: string;
     WebId: string;
 }
@@ -115,22 +118,28 @@ export class DLP {
                             // See if we are analyzing this file
                             if (analyzeFile) {
                                 // Create a batch request to get the dlp policy on this item
-                                list.Items(item.Id).GetDlpPolicyTip().batch(result => {
+                                list.Items(item.Id).query({
+                                    Expand: ["GetDlpPolicyTip", "RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings"],
+                                    Select: ["Id", "HasUniqueRoleAssignments"]
+                                }).batch(result => {
                                     // Ensure a policy exists
-                                    if (typeof (result["GetDlpPolicyTip"]) === "undefined") {
+                                    if (result.GetDlpPolicyTip?.MatchedConditionDescriptions) {
                                         // Parse the conditions
-                                        result.MatchedConditionDescriptions.results.forEach(condition => {
+                                        result.GetDlpPolicyTip.MatchedConditionDescriptions.results.forEach(condition => {
                                             let dataItem: IDLPItem = {
-                                                AppliedActionsText: result.AppliedActionsText,
+                                                AppliedActionsText: result.GetDlpPolicyTip.AppliedActionsText,
                                                 Author: item["Author"]?.Title,
                                                 ConditionDescription: condition,
                                                 FileExtension: item["File_x0020_Type"],
                                                 FileName: item["FileLeafRef"],
-                                                GeneralText: result.GeneralText,
-                                                LastProcessedTime: result.LastProcessedTime,
+                                                GeneralText: result.GetDlpPolicyTip.GeneralText,
+                                                HasUniquePermissions: result.HasUniqueRoleAssignments,
+                                                Id: item.Id,
+                                                LastProcessedTime: result.GetDlpPolicyTip.LastProcessedTime,
                                                 ListId: lib.Id,
                                                 ListTitle: lib.Title,
                                                 Path: item["FileRef"],
+                                                Permissions: result.RoleAssignments.results as any,
                                                 WebId: webId,
                                                 WebUrl: webUrl
                                             };
@@ -199,14 +208,14 @@ export class DLP {
                 onRendering: dtProps => {
                     dtProps.columnDefs = [
                         {
-                            "targets": 5,
+                            "targets": [4, 5],
                             "orderable": false,
                             "searchable": false
                         }
                     ];
 
-                    // Order by the 1st column by default; ascending
-                    dtProps.order = [[2, "asc"]];
+                    // Order by the 2nd column by default; ascending
+                    dtProps.order = [[1, "asc"]];
 
                     // Return the properties
                     return dtProps;
@@ -217,16 +226,17 @@ export class DLP {
                         title: "List"
                     },
                     {
-                        name: "Author",
-                        title: "Created By"
-                    },
-                    {
                         name: "Path",
                         title: "File",
                         onRenderCell: (el, col, item: IDLPItem) => {
+                            // Set the order info
+                            el.setAttribute("data-order", item.FileName);
+
                             // Show the file info
                             el.innerHTML = `
                                 <b>Name: </b>${item.FileName}
+                                <br/>
+                                <b>Created By: </b>${item.Author}
                                 <br/>
                                 <b>Path: </b>${item.Path}
                             `;
@@ -244,32 +254,109 @@ export class DLP {
                         }
                     },
                     {
+                        name: "",
+                        title: "Permissions",
+                        onRenderCell: (el, col, item: IDLPItem) => {
+                            let adGroups = 0;
+                            let m365Groups = 0;
+                            let siteGroups = 0;
+                            let users = 0;
+
+                            // Parse the permissions
+                            item.Permissions.forEach(role => {
+                                // See if this is a user
+                                switch (role.Member.PrincipalType) {
+                                    case SPTypes.PrincipalTypes.User:
+                                        users++;
+                                        break;
+                                    case SPTypes.PrincipalTypes.SharePointGroup:
+                                        siteGroups++;
+                                        break;
+                                    default:
+                                        let groupId = DataSource.getGroupId(role.Member.LoginName);
+                                        groupId ? m365Groups++ : adGroups++;
+                                        break;
+                                }
+                            });
+
+                            // Output the permission information
+                            el.innerHTML = `
+                                <b>Unique Permissions: </b>${item.HasUniquePermissions ? "Yes" : "No"}
+                                <br/>
+                                <b># of Users: </b>${users}
+                                <br/>
+                                <b># of Site Groups: </b>${siteGroups}
+                                <br/>
+                                <b># of AD Groups: </b>${adGroups}
+                                <br/>
+                                <b># of M365 Groups: </b>${m365Groups}
+                                <br/>
+                            `;
+                        }
+                    },
+                    {
                         className: "text-end",
                         name: "",
                         title: "",
                         onRenderCell: (el, col, row: IDLPItem) => {
                             let btnDelete: Components.IButton = null;
 
-                            // Render the buttons
-                            let tooltips = Components.TooltipGroup({
-                                el,
-                                tooltips: [
-                                    {
-                                        content: "View Document",
-                                        btnProps: {
-                                            className: "pe-2 py-1",
-                                            iconClassName: "mx-1",
-                                            iconType: fileEarmark,
-                                            iconSize: 24,
-                                            text: "View",
-                                            type: Components.ButtonTypes.OutlinePrimary,
-                                            onClick: () => {
-                                                // View the document
-                                                window.open(Documents.isWopi(`${row.FileName}`) ? row.WebUrl + "/_layouts/15/WopiFrame.aspx?sourcedoc=" + row.Path + "&action=view" : row.Path, "_blank");
+                            // Set the tooltips
+                            let tooltips: Components.ITooltipProps[] = [
+                                {
+                                    content: "Click to view the document.",
+                                    btnProps: {
+                                        className: "pe-2 py-1",
+                                        iconClassName: "mx-1",
+                                        iconType: fileEarmark,
+                                        iconSize: 24,
+                                        text: "View",
+                                        type: Components.ButtonTypes.OutlinePrimary,
+                                        onClick: () => {
+                                            // View the document
+                                            window.open(Documents.isWopi(`${row.FileName}`) ? row.WebUrl + "/_layouts/15/WopiFrame.aspx?sourcedoc=" + row.Path + "&action=view" : row.Path, "_blank");
+                                        }
+                                    }
+                                },
+                                {
+                                    content: "Click to view the permissions for this document.",
+                                    btnProps: {
+                                        className: "pe-2 py-1",
+                                        text: "View Permissions",
+                                        type: Components.ButtonTypes.OutlinePrimary,
+                                        onClick: () => {
+                                            // View the permissions for the document
+                                            this.viewPermissions(row);
+                                        }
+                                    }
+                                }
+                            ];
+
+                            // See if the file has broken inheritance
+                            if (row.HasUniquePermissions) {
+                                // Add the option to revert the permissions
+                                tooltips.push({
+                                    content: "Click to restore permissions to inherit.",
+                                    btnProps: {
+                                        assignTo: btn => { btnDelete = btn; },
+                                        className: "pe-2 py-1",
+                                        text: "Restore",
+                                        type: Components.ButtonTypes.OutlinePrimary,
+                                        onClick: () => {
+                                            // Confirm the deletion of the group
+                                            if (confirm("Are you sure you restore the permissions to inherit?")) {
+                                                // Revert the permissions
+                                                this.revertPermissions(row);
                                             }
                                         }
                                     }
-                                ]
+                                });
+                            }
+
+                            // Render the buttons
+                            Components.TooltipGroup({
+                                el,
+                                tooltips
                             });
                         }
                     }
@@ -282,6 +369,21 @@ export class DLP {
         this._elSubNav.classList.remove("d-none");
         this._elSubNav.classList.add("my-2");
         this._elSubNav.innerHTML = `<div class="h6"></div><div></div>`;
+    }
+
+    // Reverts the item permissions
+    private static revertPermissions(item: IDLPItem) {
+        // Show a loading dialog
+        LoadingDialog.setHeader("Restoring Permissions");
+        LoadingDialog.setBody("This window will close after the item permissions are restored...");
+        LoadingDialog.show();
+
+        // Restore the permissions
+        Web(item.WebUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
+            .Lists().getById(item.ListId).Items(item.Id).resetRoleInheritance().execute(() => {
+                // Close the loading dialog
+                LoadingDialog.hide();
+            });
     }
 
     // Runs the report
@@ -418,22 +520,28 @@ export class DLP {
             },
             onItem: item => {
                 // Create a batch request to get the dlp policy on this item
-                list.Items(item.Id).GetDlpPolicyTip().batch(result => {
+                list.Items(item.Id).query({
+                    Expand: ["GetDlpPolicyTip", "RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings"],
+                    Select: ["Id", "HasUniqueRoleAssignments"]
+                }).batch(result => {
                     // Ensure a policy exists
-                    if (typeof (result["GetDlpPolicyTip"]) === "undefined") {
+                    if (result.GetDlpPolicyTip?.MatchedConditionDescriptions) {
                         // Parse the conditions
-                        result.MatchedConditionDescriptions.results.forEach(condition => {
+                        result.GetDlpPolicyTip.MatchedConditionDescriptions.results.forEach(condition => {
                             let dataItem: IDLPItem = {
-                                AppliedActionsText: result.AppliedActionsText,
+                                AppliedActionsText: result.GetDlpPolicyTip.AppliedActionsText,
                                 Author: item["Author"]?.Title,
                                 ConditionDescription: condition,
                                 FileExtension: item["File_x0020_Type"],
                                 FileName: item["FileLeafRef"],
-                                GeneralText: result.GeneralText,
-                                LastProcessedTime: result.LastProcessedTime,
+                                GeneralText: result.GetDlpPolicyTip.GeneralText,
+                                HasUniquePermissions: result.HasUniqueRoleAssignments,
+                                Id: item.Id,
+                                LastProcessedTime: result.GetDlpPolicyTip.LastProcessedTime,
                                 ListId: libId,
                                 ListTitle: libTitle,
                                 Path: item["FileRef"],
+                                Permissions: result.RoleAssignments.results as any,
                                 WebId: webId,
                                 WebUrl: webUrl
                             };
@@ -468,4 +576,94 @@ export class DLP {
 
     // Stops the report
     static stop() { this._stopFl = true; }
+
+    // Views the permissions for the item
+    private static viewPermissions(item: IDLPItem) {
+        // Clear the canvas form
+        CanvasForm.clear();
+        CanvasForm.setHeader("View Permissions");
+        CanvasForm.setSize(Components.OffcanvasSize.Large2);
+        CanvasForm.setType(Components.OffcanvasTypes.End);
+
+        // Set the row data
+        let rows: {
+            GroupName?: string;
+            Member: string;
+            Permission: string;
+            Type: string;
+        }[] = [];
+
+        // Parse the permissions
+        item.Permissions.forEach(role => {
+            // Parse the role definitions
+            let roleDefinitions = [];
+            role.RoleDefinitionBindings.results.forEach(roleDef => {
+                roleDefinitions.push(`<span><b>${roleDef.Name}:</b> ${roleDef.Description}${roleDef.Hidden ? " (Hidden)" : ""}</span>`);
+            });
+
+            // See if this is a user
+            switch (role.Member.PrincipalType) {
+                case SPTypes.PrincipalTypes.User:
+                    rows.push({
+                        Member: role.Member.Title || role.Member.LoginName,
+                        Type: "User",
+                        Permission: roleDefinitions.join('<br/>')
+                    });
+                    break;
+                case SPTypes.PrincipalTypes.SharePointGroup:
+                    // Parse the members
+                    (role.Member["Users"] ? role.Member["Users"].results : []).forEach(user => {
+                        rows.push({
+                            Member: user.Email || user.LoginName,
+                            Type: "Site Group",
+                            GroupName: role.Member.Title,
+                            Permission: roleDefinitions.join('<br/>')
+                        });
+                    });
+                    break;
+                default:
+                    let groupId = DataSource.getGroupId(role.Member.LoginName);
+                    rows.push({
+                        Member: role.Member.Title,
+                        Type: groupId ? "M365 Group" : "AD Group",
+                        GroupName: role.Member.Title,
+                        Permission: roleDefinitions.join('<br/>')
+                    });
+                    break;
+            }
+        });
+
+        // Render the permissions
+        new Dashboard({
+            el: CanvasForm.BodyElement,
+            navigation: {
+                showFilter: false,
+                title: item.FileName
+            },
+            table: {
+                rows,
+                columns: [
+                    {
+                        name: "Member",
+                        title: "Member"
+                    },
+                    {
+                        name: "Type",
+                        title: "Type",
+                    },
+                    {
+                        name: "GroupName",
+                        title: "Group Name"
+                    },
+                    {
+                        name: "Permission",
+                        title: "Permission"
+                    }
+                ]
+            }
+        });
+
+        // Show the form
+        CanvasForm.show();
+    }
 }

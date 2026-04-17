@@ -8,9 +8,18 @@
     }
 }
 
+/** Show the canvas form over the modal */
+/** Set the height to be under the top bar */
+#core-canvas > .offcanvas {
+    height: 96vh;
+    margin-top: 50px;
+    z-index: 1100;
+}
+
 /** Ensure the modal is under the top bar */
 #core-modal {
     .modal:has(> .modal-fullscreen) {
+        height: 96vh;
         margin-top: 50px;
     }
 }

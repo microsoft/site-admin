@@ -508,6 +508,19 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   onText: "The option to run reports against the user's OneDrive will be hidden.",
                   offText: "The option to run reports against the user's OneDrive will be visible."
                 }),
+                PropertyPaneToggle("SiteAttestation", {
+                  label: "Site Attestation Feature",
+                  checked: this.properties.SiteAttestation,
+                  onText: "The admins will be able to record the date/time of attestation.",
+                  offText: "This feature will not be visible in the solution."
+                }),
+                PropertyPaneTextField("SiteAttestationText", {
+                  label: "Site Attestation Text",
+                  description: "The text displayed in the confirmation dialog.",
+                  multiline: true,
+                  rows: 6,
+                  value: this.properties.SiteAttestationText
+                }),
                 PropertyPaneDropdown("MaxBatchSize", {
                   label: strings.MaxBatchSize,
                   selectedKey: this.properties.MaxBatchSize,
@@ -538,19 +551,6 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                     { key: 9, text: "9" },
                     { key: 10, text: "10" }
                   ]
-                }),
-                PropertyPaneToggle("SiteAttestation", {
-                  label: "Site Attestation Feature",
-                  checked: this.properties.SiteAttestation,
-                  onText: "The admins will be able to record the date/time of attestation.",
-                  offText: "This feature will not be visible in the solution."
-                }),
-                PropertyPaneTextField("SiteAttestationText", {
-                  label: "Site Attestation Text",
-                  description: "The text displayed in the confirmation dialog.",
-                  multiline: true,
-                  rows: 6,
-                  value: this.properties.SiteAttestationText
                 })
               ]
             },
