@@ -1,7 +1,6 @@
 import { CanvasForm, Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
-import { Components, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
+import { Components, ContextInfo, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
 import { fileEarmark } from "gd-sprest-bs/build/icons/svgs/fileEarmark";
-import * as moment from "moment";
 import { DataSource } from "../ds";
 import Strings from "../strings";
 import { ExportCSV } from "./exportCSV";
@@ -23,6 +22,13 @@ interface IDLPItem {
     Permissions: Types.SP.RoleAssignmentOData[];
     WebUrl: string;
     WebId: string;
+}
+
+interface IDLPPermission {
+    GroupName?: string;
+    Member: string;
+    Permission: string;
+    Type: string;
 }
 
 interface IWebItem {
@@ -673,12 +679,7 @@ export class DLP {
         CanvasForm.setType(Components.OffcanvasTypes.End);
 
         // Set the row data
-        let rows: {
-            GroupName?: string;
-            Member: string;
-            Permission: string;
-            Type: string;
-        }[] = [];
+        let rows: IDLPPermission[] = [];
 
         // Parse the permissions
         item.Permissions.forEach(role => {
@@ -729,6 +730,15 @@ export class DLP {
             },
             table: {
                 rows,
+                onRendering(dtProps) {
+                    dtProps.columnDefs = [
+                        {
+                            "targets": [4],
+                            "orderable": false,
+                            "searchable": false
+                        }
+                    ];
+                },
                 columns: [
                     {
                         name: "Member",
@@ -745,6 +755,48 @@ export class DLP {
                     {
                         name: "Permission",
                         title: "Permission"
+                    },
+                    {
+                        name: "",
+                        title: "Actions",
+                        onRenderCell: (el, col, row: IDLPPermission) => {
+                            let tooltips: Components.ITooltipProps[] = [];
+
+                            // See if this is a site group
+                            if (row.Type === "Site Group") {
+                                tooltips.push({
+                                    content: "Click to view the site group.",
+                                    btnProps: {
+                                        text: "View Group",
+                                        type: Components.ButtonTypes.OutlinePrimary,
+                                        onClick: () => {
+                                            document.open(`${item.WebUrl}/${ContextInfo.layoutsUrl}/people.aspx?MembershipGroupId=${item.Id}`, "_blank");
+                                        }
+                                    }
+                                });
+                            }
+
+                            // See if this is an ad group or user
+                            if (row.Type === "AD Group" || row.Type === "User") {
+                                tooltips.push({
+                                    content: "Click to view the user.",
+                                    btnProps: {
+                                        text: row.Type === "AD Group" ? "View Group" : "View User",
+                                        type: Components.ButtonTypes.OutlinePrimary,
+                                        onClick: () => {
+                                            document.open(`${item.WebUrl}/${ContextInfo.layoutsUrl}/userdisp.aspx?ID=${item.Id}`, "_blank");
+                                        }
+                                    }
+                                });
+                            }
+
+                            // Render the actions
+                            Components.TooltipGroup({
+                                el,
+                                isVertical: true,
+                                tooltips
+                            });
+                        }
                     }
                 ]
             }
