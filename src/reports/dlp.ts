@@ -222,21 +222,138 @@ export class DLP {
             let role = roles[i];
 
             // See if this is the eeeu or everyone
-            if (role.Member.Title == "Everyone except external users" || role.Member.Title == "Everyone") {
+            if (role.Member.Title == "Everyone except external users" || role.Member.Title == "Everyone" || this._oversharedGroups.indexOf(role.Member.Title) >= 0) {
                 // Set the flag
                 isOvershared = true;
                 break;
             }
             // Else, see if it's one of the custom groups
-            else if (this._oversharedGroups.indexOf(role.Member.Title) >= 0) {
-                // Set the flag
-                isOvershared = true;
-                break;
+            else {
+                // Parse the users
+                let users: Types.SP.User[] = role.Member["Users"] ? role.Member["Users"].results : [];
+                for (let i = 0; i < users.length; i++) {
+                    let user = users[i];
+
+                    // See if this is the eeeu or everyone
+                    if (user.Title == "Everyone except external users" || user.Title == "Everyone" || this._oversharedGroups.indexOf(user.Title) >= 0) {
+                        // Set the flag
+                        isOvershared = true;
+                        break;
+                    }
+                }
+
+                // Break from the loop if the flag is set
+                if (isOvershared) { break; }
             }
         }
 
         // Return the flag
         return isOvershared;
+    }
+
+    // Removes the groups that are flagging the file as overshared
+    private static removeOversharedGroups(item: IDLPItem, onComplete: (permissions: Types.SP.RoleAssignmentOData[]) => void) {
+        // Show a canvas form
+        CanvasForm.clear();
+        CanvasForm.setHeader("Secure Document");
+        CanvasForm.setType(Components.OffcanvasTypes.End);
+        CanvasForm.setSize(Components.OffcanvasSize.Small2);
+
+        // Set the content
+        CanvasForm.setBody(`
+            <p>The file will break inheritance and remove the groups that are flagging this file as overshared. Click on 'Confirm' below to proceed with this action.</p>
+            <div class="d-flex justify-content-end"></div>
+        `);
+
+        Components.ButtonGroup({
+            el: CanvasForm.BodyElement.querySelector("div"),
+            className: "mt-3",
+            buttons: [
+                {
+                    text: "Confirm",
+                    type: Components.ButtonTypes.OutlinePrimary,
+                    onClick: () => {
+                        // Hide the canvas form
+                        CanvasForm.hide();
+
+                        // Show a loading dialog
+                        LoadingDialog.setHeader("Clearing Permissions");
+                        LoadingDialog.setBody("Breaking inheritance for this item...");
+                        LoadingDialog.show();
+
+                        // Set the list containing the item
+                        let list = Web(item.WebUrl, {
+                            disableCache: true,
+                            requestDigest: DataSource.SiteContext.FormDigestValue
+                        }).Lists().getById(item.ListId);
+
+                        // See if we need to break inheritance
+                        if (!item.HasUniquePermissions) {
+                            // Break role inheritance and copy the permissions
+                            list.Items(item.Id).breakRoleInheritance(true, false).execute(() => {
+                                // Update the dialog
+                                LoadingDialog.setBody("Getting the permissions for this item...");
+                            });
+                        }
+
+                        // Get the role assignments for this item
+                        list.Items(item.Id).RoleAssignments().query({ Expand: ["Member/Users"] }).execute(permissions => {
+                            let roles = list.Items(item.Id).RoleAssignments();
+
+                            // Update the dialog
+                            LoadingDialog.setBody("Removing the groups for this...");
+
+                            // Check if any role assignment matches the overshared groups
+                            for (let i = 0; i < permissions.results.length; i++) {
+                                let permission = permissions.results[i];
+
+                                // See if this is the eeeu, everyone or the custom group
+                                if (permission.Member.Title == "Everyone except external users" || permission.Member.Title == "Everyone" || this._oversharedGroups.indexOf(permission.Member.Title) >= 0) {
+                                    // Remove the role assignment
+                                    roles.removeRoleAssignment(permission.PrincipalId).execute(true);
+                                }
+                                // Else, go through the users
+                                else {
+                                    let users: Types.SP.User[] = permission.Member["Users"] ? permission.Member["Users"].results : [];
+                                    users.forEach(user => {
+                                        // See if this is the eeeu or everyone
+                                        if (user.Title == "Everyone except external users" || user.Title == "Everyone" || this._oversharedGroups.indexOf(user.Title) >= 0) {
+                                            // Remove the role assignment
+                                            roles.removeRoleAssignment(permission.PrincipalId).execute(true);
+                                        }
+                                    });
+                                }
+                            }
+
+                            // Wait for the requests to complete
+                            roles.done(() => {
+                                // Load the permissions again for this item
+                                list.Items(item.Id).RoleAssignments().query({
+                                    Expand: ["Member/Users", "RoleDefinitionBindings"]
+                                }).execute(permissions => {
+                                    // Call the complete event
+                                    onComplete(permissions.results);
+
+                                    // Hide the loading dialog
+                                    LoadingDialog.hide();
+                                });
+                            });
+                        }, true);
+                    }
+                },
+                {
+                    text: "Close",
+                    type: Components.ButtonTypes.OutlineSecondary,
+                    onClick: () => {
+                        // Hide the form
+                        CanvasForm.hide();
+                    }
+                }
+            ]
+        });
+
+        // Show the canvas form
+        CanvasForm.show();
     }
 
     // Renders the search summary
@@ -388,7 +505,7 @@ export class DLP {
                         className: "text-end",
                         name: "",
                         title: "",
-                        onRenderCell: (el, col, row: IDLPItem) => {
+                        onRenderCell: (el, col, row: IDLPItem, rowIdx) => {
                             let btnDelete: Components.IButton = null;
 
                             // Set the tooltips
@@ -421,6 +538,34 @@ export class DLP {
                                     }
                                 }
                             ];
+
+                            // See if the file is overshared
+                            if (row.Overshared === "Yes") {
+                                tooltips.push({
+                                    content: "Click to remove the groups that are flagging this file as overshared.",
+                                    btnProps: {
+                                        className: "pe-2 py-1",
+                                        text: "Secure Document",
+                                        type: Components.ButtonTypes.OutlinePrimary,
+                                        onClick: () => {
+                                            // Remove the overshared groups from the permissions
+                                            this.removeOversharedGroups(row, permissions => {
+                                                // Update the permissions for this item
+                                                row.Permissions = permissions;
+
+                                                // Update the overshared status
+                                                row.Overshared = this.isOvershared(permissions) ? "Yes" : "No";
+
+                                                // Set the flag if we are no longer oversharing
+                                                row.HasUniquePermissions = row.Overshared === "Yes" ? row.HasUniquePermissions : true;
+
+                                                // Update this row
+                                                this._dashboard.updateRow(rowIdx, row);
+                                            });
+                                        }
+                                    }
+                                });
+                            }
 
                             // See if the file has broken inheritance
                             if (row.HasUniquePermissions) {
