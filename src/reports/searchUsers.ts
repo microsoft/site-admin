@@ -1,6 +1,7 @@
 import { Dashboard, LoadingDialog } from "dattatable";
-import { Components, ContextInfo, DirectorySession, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
+import { Components, ContextInfo, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
 import { DataSource } from "../ds";
+import { M365Groups } from "../m365Groups";
 import { ExportCSV } from "./exportCSV";
 
 interface ISearchItem {
@@ -55,7 +56,7 @@ export class SearchUsers {
                     // See if this role is the user
                     if (role.Member.LoginName == userInfo.Name) {
                         // Add the user information
-                        let userItem = {
+                        let userItem: ISearchItem = {
                             WebUrl: web.Url,
                             WebTitle: web.Title,
                             Id: userInfo.Id,
@@ -80,7 +81,7 @@ export class SearchUsers {
                             // Parse the users
                             Helper.Executor(users.results, user => {
                                 // Get the group id
-                                let groupId = DataSource.getGroupId(user.LoginName);
+                                let groupId = M365Groups.getGroupId(user.LoginName);
                                 if (groupId) {
                                     // See if this is an owners group
                                     if (user.LoginName.endsWith("_o")) {
@@ -94,7 +95,7 @@ export class SearchUsers {
                         });
                     } else {
                         // Get the group id
-                        let groupId = DataSource.getGroupId(role.Member.LoginName);
+                        let groupId = M365Groups.getGroupId(role.Member.LoginName);
                         if (groupId) {
                             // See if this is an owners group
                             if (role.Member.LoginName.endsWith("_o")) {
@@ -111,99 +112,75 @@ export class SearchUsers {
                 });
             }).then(() => {
                 // Get the group ids
+                let counter = 0;
                 let groupIds = [];
                 for (let groupId in groups) { groupIds.push(groupId); }
 
-                // Parse the group ids
-                let ctrGroupIds = 0;
-                Helper.Executor(groupIds, groupId => {
+                // Get the group information
+                M365Groups.getGroupInfo(groupIds, (group, groupId) => {
                     // Update the dialog
-                    this._elSubNav.children[1].innerHTML = `Getting M365 group info: ${++ctrGroupIds} of ${groupIds.length}...`;
+                    this._elSubNav.children[1].innerHTML = `Getting M365 group info: ${++counter} of ${groupIds.length}...`;
 
-                    // Return a promise
-                    return new Promise(resolve => {
-                        let groupInfo = groupId.split('_');
-                        let groupName: string = null;
-                        let groupUrl: string = null;
-                        let isOwner = groupInfo.length > 1;
+                    // Do nothing if the group didn't load
+                    if (group == null) { return; }
 
-                        // Get the group information
-                        let ds = DirectorySession().group(groupInfo[0]);
-                        ds.query({
-                            Select: ["calendarUrl", "displayName", "id"]
-                        }).batch(group => {
-                            // Set the group name
-                            groupName = group.displayName;
-                            groupUrl = group.calendarUrl.replace("calendar/group", "groups") + "/members";
-                        });
+                    // Get the group information
+                    let groupInfo = groupId.split('_');
+                    let isOwner = groupInfo.length > 1;
+                    let role = groups[groupId];
+                    let users = groupInfo.length > 1 ? group.owners : group.members;
 
-                        // Get the owners/members for the group
-                        (isOwner ? ds.owners() : ds.members()).query({
-                            GetAllItems: true,
-                            Top: 5000,
-                            Select: ["principalName", "id", "displayName", "mail"]
-                        }).batch(users => {
-                            let role = groups[groupId];
+                    // Parse the users
+                    for (let i = 0; i < users?.results.length; i++) {
+                        let user = users.results[i];
 
-                            // Parse the users
-                            for (let i = 0; i < users?.results.length; i++) {
-                                let user = users.results[i];
-
-                                // See if we are searching by string
-                                if (typeof (search) === "string") {
-                                    // See this is the user
-                                    if (user.displayName.toLowerCase().indexOf(search.toString()) >= 0) {
-                                        // Add the user information
-                                        let userItem = {
-                                            WebUrl: web.Url,
-                                            WebTitle: web.Title,
-                                            Id: user.id,
-                                            LoginName: user.mail,
-                                            Name: user.displayName,
-                                            Email: user.mail,
-                                            Group: role.Member.Title,
-                                            GroupId: role.Member.Id,
-                                            GroupInfo: `${groupName} M365 Group ${isOwner ? "owner" : "member"}`,
-                                            IsM365Group: true,
-                                            M365GroupUrl: groupUrl,
-                                            Role: role.RoleDefinitionBindings.results[0].Name,
-                                            RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
-                                        };
-                                        this._items.push(userItem);
-                                        this._dashboard.Datatable.addRow(userItem);
-                                    }
-                                }
-                                // Else, compare the email
-                                else if (user.mail == userInfo.EMail) {
-                                    // Add the user information
-                                    let userItem = {
-                                        WebUrl: web.Url,
-                                        WebTitle: web.Title,
-                                        Id: user.id,
-                                        LoginName: user.mail,
-                                        Name: user.displayName,
-                                        Email: user.mail,
-                                        Group: role.Member.Title,
-                                        GroupId: role.Member.Id,
-                                        GroupInfo: `${groupName} M365 Group ${isOwner ? "owner" : "member"}`,
-                                        IsM365Group: true,
-                                        M365GroupUrl: groupUrl,
-                                        Role: role.RoleDefinitionBindings.results[0].Name,
-                                        RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
-                                    };
-                                    this._items.push(userItem);
-                                    this._dashboard.Datatable.addRow(userItem);
-                                }
+                        // See if we are searching by string
+                        if (typeof (search) === "string") {
+                            // See this is the user
+                            if (user.displayName.toLowerCase().indexOf(search.toString()) >= 0) {
+                                // Add the user information
+                                let userItem = {
+                                    WebUrl: web.Url,
+                                    WebTitle: web.Title,
+                                    Id: user.id,
+                                    LoginName: user.mail,
+                                    Name: user.displayName,
+                                    Email: user.mail,
+                                    Group: role.Member.Title,
+                                    GroupId: role.Member.Id,
+                                    GroupInfo: `${group.displayName} M365 Group ${isOwner ? "owner" : "member"}`,
+                                    IsM365Group: true,
+                                    M365GroupUrl: M365Groups.getGroupUrl(group),
+                                    Role: role.RoleDefinitionBindings.results[0].Name,
+                                    RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
+                                };
+                                this._items.push(userItem);
+                                this._dashboard.Datatable.addRow(userItem);
                             }
-                        });
-
-                        // Execute the request
-                        ds.execute(() => {
-                            // Try the next group
-                            resolve(null);
-                        });
-                    });
-                }).then(resolve);
+                        }
+                        // Else, compare the email
+                        else if (user.mail == userInfo.EMail) {
+                            // Add the user information
+                            let userItem = {
+                                WebUrl: web.Url,
+                                WebTitle: web.Title,
+                                Id: user.id,
+                                LoginName: user.mail,
+                                Name: user.displayName,
+                                Email: user.mail,
+                                Group: role.Member.Title,
+                                GroupId: role.Member.Id,
+                                GroupInfo: `${group.displayName} M365 Group ${isOwner ? "owner" : "member"}`,
+                                IsM365Group: true,
+                                M365GroupUrl: M365Groups.getGroupUrl(group),
+                                Role: role.RoleDefinitionBindings.results[0].Name,
+                                RoleInfo: role.RoleDefinitionBindings.results[0].Description || ""
+                            };
+                            this._items.push(userItem);
+                            this._dashboard.Datatable.addRow(userItem);
+                        }
+                    }
+                }).then(() => { resolve(); });
             });
         });
     }

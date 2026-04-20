@@ -2,6 +2,7 @@ import { CanvasForm, Dashboard, Documents, LoadingDialog, Modal } from "dattatab
 import { Components, ContextInfo, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
 import { fileEarmark } from "gd-sprest-bs/build/icons/svgs/fileEarmark";
 import { DataSource } from "../ds";
+import { M365Groups } from "../m365Groups";
 import Strings from "../strings";
 import { ExportCSV } from "./exportCSV";
 
@@ -362,7 +363,7 @@ export class DLP {
                                         siteGroups++;
                                         break;
                                     default:
-                                        let groupId = DataSource.getGroupId(role.Member.LoginName);
+                                        let groupId = M365Groups.getGroupId(role.Member.LoginName);
                                         groupId ? m365Groups++ : adGroups++;
                                         break;
                                 }
@@ -710,7 +711,7 @@ export class DLP {
                     });
                     break;
                 default:
-                    let groupId = DataSource.getGroupId(role.Member.LoginName);
+                    let groupId = M365Groups.getGroupId(role.Member.LoginName);
                     rows.push({
                         Member: role.Member.Title,
                         Type: groupId ? "M365 Group" : "AD Group",
@@ -770,7 +771,7 @@ export class DLP {
                                         text: "View Group",
                                         type: Components.ButtonTypes.OutlinePrimary,
                                         onClick: () => {
-                                            document.open(`${item.WebUrl}/${ContextInfo.layoutsUrl}/people.aspx?MembershipGroupId=${item.Id}`, "_blank");
+                                            window.open(`${item.WebUrl}/${ContextInfo.layoutsUrl}/people.aspx?MembershipGroupId=${item.Id}`, "_blank");
                                         }
                                     }
                                 });
@@ -784,7 +785,7 @@ export class DLP {
                                         text: row.Type === "AD Group" ? "View Group" : "View User",
                                         type: Components.ButtonTypes.OutlinePrimary,
                                         onClick: () => {
-                                            document.open(`${item.WebUrl}/${ContextInfo.layoutsUrl}/userdisp.aspx?ID=${item.Id}`, "_blank");
+                                            window.open(`${item.WebUrl}/${ContextInfo.layoutsUrl}/userdisp.aspx?ID=${item.Id}`, "_blank");
                                         }
                                     }
                                 });

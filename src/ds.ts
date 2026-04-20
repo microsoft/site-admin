@@ -3,6 +3,7 @@ import {
     Components, ContextInfo, DirectorySession, GroupSiteManager, Helper,
     Search, SensitivityLabels, Site, SPTypes, Types, Web, v2
 } from "gd-sprest-bs";
+import { M365Groups } from "./m365Groups";
 import { Security } from "./security";
 import Strings from "./strings";
 
@@ -147,6 +148,7 @@ export class DataSource {
                 Expand: ["Users"]
             }).execute(ownersGroup => {
                 let groupIds = [];
+                let groupIdMapper = {};
 
                 // Parse the group users
                 for (let i = 0; i < ownersGroup.Users.results.length; i++) {
@@ -164,54 +166,49 @@ export class DataSource {
                     // Else, see if this is a M365 group
                     else if (item.PrincipalType == SPTypes.PrincipalTypes.SecurityGroup) {
                         // Add the group id
-                        groupIds.push(this.getGroupId(item.LoginName));
+                        let groupId = M365Groups.getGroupId(item.LoginName);
+                        if (groupId) {
+                            groupIds.push(groupId);
+                            groupIdMapper[groupId] = item.LoginName;
+                        }
                     }
                 }
 
-                // Create the request for getting the M365 group information in a batch request
-                let ds = DirectorySession();
-
-                // Parse the group ids to see if the user is a site admin
+                // Load the group information
                 let isSiteAdmin = false;
-                groupIds.forEach(groupId => {
-                    // See if the user is an member/owner of this group
-                    ds.group(groupId).query({
-                        Expand: ["members", "owners"],
-                        Select: [
-                            "id",
-                            "members/principalName", "members/id", "members/displayName", "members/mail",
-                            "owners/principalName", "owners/id", "owners/displayName", "owners/mail"
-                        ]
-                    }).batch(group => {
-                        // See if we already set the flag
-                        if (isSiteAdmin) { return; }
+                M365Groups.getGroupInfo(groupIds, (group, groupId) => {
+                    // Return if we already set the flag
+                    if (isSiteAdmin) { return; }
 
-                        // See if the user is a member
-                        if (group.members) {
-                            for (let i = 0; i < group.members.results.length; i++) {
-                                if (group.members.results[i].mail == ContextInfo.userEmail) {
-                                    // Set the flag
-                                    isSiteAdmin = true;
-                                    return;
-                                }
+                    // See if this is targeting the owner's group
+                    if (groupIdMapper[groupId].endsWith("_o")) {
+                        // Parse the owners
+                        let owners = group?.owners.results || [];
+                        for (let i = 0; i < owners.length; i++) {
+                            let owner = owners[i];
+
+                            // See if this is the user
+                            if (owner.mail == ContextInfo.userEmail) {
+                                // Set the flag
+                                isSiteAdmin = true;
+                                return;
                             }
                         }
+                    } else {
+                        // Parse the members
+                        let members = group?.members.results || [];
+                        for (let i = 0; i < members.length; i++) {
+                            let member = members[i];
 
-                        // See if the user is a owner
-                        if (group.owners) {
-                            for (let i = 0; i < group.owners.results.length; i++) {
-                                if (group.owners.results[i].mail == ContextInfo.userEmail) {
-                                    // Set the flag
-                                    isSiteAdmin = true;
-                                    return;
-                                }
+                            // See if this is the user
+                            if (member.mail == ContextInfo.userEmail) {
+                                // Set the flag
+                                isSiteAdmin = true;
+                                return;
                             }
                         }
-                    });
-                });
-
-                // Execute the request
-                ds.execute(() => {
+                    }
+                }).then(groups => {
                     // See if the user is an admin
                     if (isSiteAdmin) {
                         // Resolve the request
@@ -275,7 +272,7 @@ export class DataSource {
                         // Else, see if this is a M365 group
                         else if (item.PrincipalType == SPTypes.PrincipalTypes.SecurityGroup) {
                             // Add the group id
-                            groupIds.push(this.getGroupId(item.LoginName));
+                            groupIds.push(M365Groups.getGroupId(item.LoginName));
                         }
                     }
 
@@ -286,50 +283,36 @@ export class DataSource {
                         return;
                     }
 
-                    // Create the request for getting the M365 group information in a batch request
-                    let ds = DirectorySession();
-
-                    // Parse the group ids to see if the user is a site admin
+                    // Get the group information
                     let isSiteAdmin = false;
-                    groupIds.forEach(groupId => {
-                        // See if the user is an member/owner of this group
-                        ds.group(groupId).query({
-                            Expand: ["members", "owners"],
-                            Select: [
-                                "id",
-                                "members/principalName", "members/id", "members/displayName", "members/mail",
-                                "owners/principalName", "owners/id", "owners/displayName", "owners/mail"
-                            ]
-                        }).batch(group => {
-                            // See if we already set the flag
-                            if (isSiteAdmin) { return; }
+                    M365Groups.getGroupInfo(groupIds, (group, groupId) => {
+                        // See if we already set the flag
+                        if (isSiteAdmin) { return; }
 
-                            // See if the user is a member
-                            if (group.members) {
-                                for (let i = 0; i < group.members.results.length; i++) {
-                                    if (group.members.results[i].mail == ContextInfo.userEmail) {
-                                        // Set the flag
-                                        isSiteAdmin = true;
-                                        return;
-                                    }
+                        // Return if the group didn't load
+                        if (group == null) { return; }
+
+                        // See if we are targeting the owner's group
+                        if (groupId.split('_').length > 0) {
+                            let owners = group.owners?.results || [];
+                            for (let i = 0; i < owners.length; i++) {
+                                if (owners[i].mail == ContextInfo.userEmail) {
+                                    // Set the flag
+                                    isSiteAdmin = true;
+                                    break;
                                 }
                             }
-
-                            // See if the user is a owner
-                            if (group.owners) {
-                                for (let i = 0; i < group.owners.results.length; i++) {
-                                    if (group.owners.results[i].mail == ContextInfo.userEmail) {
-                                        // Set the flag
-                                        isSiteAdmin = true;
-                                        return;
-                                    }
+                        } else {
+                            let members = group.members?.results || [];
+                            for (let i = 0; i < members.length; i++) {
+                                if (members[i].mail == ContextInfo.userEmail) {
+                                    // Set the flag
+                                    isSiteAdmin = true;
+                                    break;
                                 }
                             }
-                        });
-                    });
-
-                    // Execute the request
-                    ds.execute(() => {
+                        }
+                    }).then(() => {
                         // Resolve the request
                         resolve(isSiteAdmin);
                     });
@@ -429,17 +412,6 @@ export class DataSource {
                 resolve(drive?.id);
             }, reject);
         });
-    }
-
-    // Returns the group id from the login name
-    static getGroupId(loginName: string): string {
-        // Get the group id from the login name
-        let userInfo = loginName.split('|');
-        let groupInfo = userInfo[userInfo.length - 1];
-        let groupId = groupInfo.split('_')[0];
-
-        // Ensure it's a guid and return null if it's not
-        return /^[{]?[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}[}]?$/.test(groupId) ? groupId : null;
     }
 
     // List

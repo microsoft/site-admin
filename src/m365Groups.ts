@@ -55,27 +55,30 @@ export class M365Groups {
                     return;
                 }
 
-                // Load the group information
-                this.loadGroupById(groupId).then(group => {
-                    // Save the group information
-                    result.groups[groupId] = group;
+                // Return a promise
+                return new Promise(resolve => {
+                    // Load the group information
+                    this.loadGroupById(groupId).then(group => {
+                        // Save the group information
+                        result.groups[groupId] = group;
 
-                    // Call the event
-                    onGroupLoaded ? onGroupLoaded(group, groupId) : null;
+                        // Call the event
+                        onGroupLoaded ? onGroupLoaded(group, groupId) : null;
 
-                    // Try the next group
-                    resolve(null);
-                }, () => {
-                    // Add the error
-                    result.error[groupId] = true;
+                        // Try the next group
+                        resolve(null);
+                    }, () => {
+                        // Add the error
+                        result.error[groupId] = true;
 
-                    // Call the event
-                    onGroupLoaded ? onGroupLoaded(null, groupId) : null;
+                        // Call the event
+                        onGroupLoaded ? onGroupLoaded(null, groupId) : null;
 
-                    // Try the next group
-                    resolve(null);
+                        // Try the next group
+                        resolve(null);
+                    });
                 });
-            });
+            }).then(() => { resolve(result); });
         });
     }
 
@@ -90,41 +93,44 @@ export class M365Groups {
             }).execute(group => {
                 // Save the group information
                 this._groups[group.id] = group;
-
-                // Get the group members
-                ds.members().query({
-                    GetAllItems: true,
-                    Top: 5000,
-                    Select: ["principalName", "id", "displayName", "mail"]
-                }).execute(members => {
-                    // Add the group information to the mapper
-                    this._groups[groupId].members = members as any;
-                }, () => {
-                    // Try the next group
-                    resolve(null);
-                });
-
-                // Get the group owners
-                ds.owners().query({
-                    GetAllItems: true,
-                    Top: 5000,
-                    Select: ["principalName", "id", "displayName", "mail"]
-                }).execute(owners => {
-                    // Add the group information to the mapper
-                    this._groups[groupId].owners = owners as any;
-
-                    // Try the next group
-                    resolve(null);
-                }, () => {
-                    // Try the next group
-                    resolve(null);
-                }, true);
             }, () => {
                 // Error loading this group
                 this._errorGroupIds[groupId] = true;
 
                 // Reject the request
                 reject();
+            });
+
+            // Get the group members
+            ds.members().query({
+                GetAllItems: true,
+                Top: 5000,
+                Select: ["principalName", "id", "displayName", "mail"]
+            }).execute(members => {
+                // Add the group information to the mapper
+                this._groups[groupId].members = members as any;
+            }, () => {
+                // Try the next group
+                resolve(null);
+            }, true);
+
+            // Get the group owners
+            ds.owners().query({
+                GetAllItems: true,
+                Top: 5000,
+                Select: ["principalName", "id", "displayName", "mail"]
+            }).execute(owners => {
+                // Add the group information to the mapper
+                this._groups[groupId].owners = owners as any;
+            }, () => {
+                // Try the next group
+                resolve(null);
+            }, true);
+
+            // Wait for the requests to complete
+            ds.done(() => {
+                // Try the next group
+                resolve(this._groups[groupId]);
             });
         });
     }
