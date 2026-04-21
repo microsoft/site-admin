@@ -261,7 +261,7 @@ export class DLP {
 
         // Set the content
         CanvasForm.setBody(`
-            <p>The file will break inheritance and remove the groups that are flagging this file as overshared. Click on 'Confirm' below to proceed with this action.</p>
+            <p>This action will create unique permissions for the file and remove the large audience group(s) that are flagging the file as overshared. If access to the file is currently granted through a SharePoint group—such as the Visitors group—that group will be removed from the file's permissions. In these cases, it is recommended to review the file's permissions afterward to determine whether any users removed through the Visitors group need to be restored.</p>
             <div class="d-flex justify-content-end"></div>
         `);
 
@@ -550,17 +550,22 @@ export class DLP {
                                         onClick: () => {
                                             // Remove the overshared groups from the permissions
                                             this.removeOversharedGroups(row, permissions => {
-                                                // Update the permissions for this item
-                                                row.Permissions = permissions;
+                                                // Parse the items
+                                                this._items.forEach(item => {
+                                                    if (item.Id == row.Id) {
+                                                        // Update the permissions
+                                                        item.Permissions = permissions;
 
-                                                // Update the overshared status
-                                                row.Overshared = this.isOvershared(permissions) ? "Yes" : "No";
+                                                        // Update the flag
+                                                        item.Overshared = this.isOvershared(permissions) ? "Yes" : "No";
 
-                                                // Set the flag if we are no longer oversharing
-                                                row.HasUniquePermissions = row.Overshared === "Yes" ? row.HasUniquePermissions : true;
+                                                        // Set the flag if we are no longer oversharing
+                                                        item.HasUniquePermissions = item.Overshared === "Yes" ? item.HasUniquePermissions : true;
+                                                    }
+                                                });
 
-                                                // Update this row
-                                                this._dashboard.updateRow(rowIdx, row);
+                                                // Update the dashboard
+                                                this._dashboard.refresh(this._items);
                                             });
                                         }
                                     }
