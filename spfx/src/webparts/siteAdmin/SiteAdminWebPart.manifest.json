@@ -99,6 +99,7 @@
         "SitePropTemplateLabel": "Site Template:",
         "SitePropTitleDescription": "",
         "SitePropTitleLabel": "Title:",
+        "ThrottleWaitTime": 0,
         "WebPropCommentsOnSitePagesDisabled": false,
         "WebPropCommentsOnSitePagesDisabledDescription": "If true, it will hide the comments on the site pages.",
         "WebPropCommentsOnSitePagesDisabledLabel": "Comments On Site Pages Disabled:",
