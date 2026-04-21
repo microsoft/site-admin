@@ -59,6 +59,7 @@ export interface IAppProps {
     siteAttestation?: boolean;
     siteAttestationText?: string;
     siteProps: { [key: string]: IProp; }
+    throttleWaitTime?: number;
     title?: string;
     webProps: { [key: string]: IProp; }
 }

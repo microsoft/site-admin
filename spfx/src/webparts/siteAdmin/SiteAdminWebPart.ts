@@ -127,6 +127,7 @@ export interface ISiteAdminWebPartProps {
   SitePropTemplateLabel: string;
   SitePropTitleDescription: string;
   SitePropTitleLabel: string;
+  ThrottleWaitTime: number;
   WebPropCommentsOnSitePagesDisabled: boolean;
   WebPropCommentsOnSitePagesDisabledDescription: string;
   WebPropCommentsOnSitePagesDisabledLabel: string;
@@ -220,6 +221,7 @@ declare const SiteAdmin: {
         label: string;
       }
     }
+    throttleWaitTime?: number;
     webProps: {
       [key: string]: {
         description: string;
@@ -348,6 +350,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       siteAttestation: this.properties.SiteAttestation,
       siteAttestationText: this.properties.SiteAttestationText,
       siteProps,
+      throttleWaitTime: this.properties.ThrottleWaitTime,
       title: this.properties.AppTitle,
       webProps
     });
@@ -553,6 +556,22 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                     { key: 8, text: "8" },
                     { key: 9, text: "9" },
                     { key: 10, text: "10" }
+                  ]
+                }),
+                PropertyPaneDropdown("ThrottleWaitTime", {
+                  label: strings.ThrottleWaitTime,
+                  selectedKey: this.properties.ThrottleWaitTime,
+                  options: [
+                    { key: 0, text: "0ms" },
+                    { key: 10, text: "10ms" },
+                    { key: 25, text: "25ms" },
+                    { key: 50, text: "50ms" },
+                    { key: 75, text: "75ms" },
+                    { key: 100, text: "100ms" },
+                    { key: 250, text: "250ms" },
+                    { key: 500, text: "500ms" },
+                    { key: 750, text: "750ms" },
+                    { key: 1000, text: "1000ms" }
                   ]
                 })
               ]

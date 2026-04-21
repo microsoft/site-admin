@@ -32,6 +32,7 @@ define([], function () {
     "SitePropStorageUsed": "Storage Used",
     "SitePropTemplate": "Site Template",
     "SitePropTitle": "Site Title",
+    "ThrottleWaitTime": "Time to wait between large batch requests.",
     "WebPropCommentsOnSitePagesDisabled": "Comments on Site Pages",
     "WebPropExcludeFromOfflineClient": "Exclude From Offline Client",
     "WebPropNoCrawl": "Exclude From Search",

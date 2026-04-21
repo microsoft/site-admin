@@ -31,6 +31,7 @@ declare interface ISiteAdminWebPartStrings {
   SitePropStorageUsed: string;
   SitePropTemplate: string;
   SitePropTitle: string;
+  ThrottleWaitTime: string;
   WebPropCommentsOnSitePagesDisabled: string;
   WebPropExcludeFromOfflineClient: string;
   WebPropNoCrawl: string;
