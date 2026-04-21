@@ -1,6 +1,7 @@
 import { Dashboard, LoadingDialog, Modal } from "dattatable";
-import { Components, ContextInfo, DirectorySession, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
+import { Components, ContextInfo, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
 import { DataSource } from "../ds";
+import { IM365Result, M365Groups } from "../m365Groups";
 import { ExportCSV } from "./exportCSV";
 
 interface IPermissionItem {
@@ -36,8 +37,7 @@ export class Permissions {
     private static _dashboard: Dashboard = null;
     private static _elDashboard: HTMLElement = null;
     private static _elSubNav: HTMLElement = null;
-    private static _groupIds: { [key: string]: Types.SP.Directory.GroupOData } = null;
-    private static _groupIdErrors: string[] = null;
+    private static _groups: IM365Result = null;
     private static _items: IPermissionItem[] = null;
     private static _loadOneDrive: boolean = false;
     private static _roleMapper: { [key: string]: Types.SP.User } = null;
@@ -47,62 +47,16 @@ export class Permissions {
     private static analyzeGroupIds(webUrl: string, groupIds: string[]): PromiseLike<void> {
         // Return a promise
         return new Promise(resolve => {
-            // Try to get the groups
             let counter = 0;
-            Helper.Executor(groupIds, groupId => {
+
+            // Load the group information
+            M365Groups.getGroupInfo(groupIds, group => {
                 // Update the dialog
                 this._elSubNav.children[1].innerHTML = `Trying to get M365 Group information: ${++counter} of ${groupIds.length}`;
+            }).then((groups) => {
+                // Save the groups
+                this._groups = groups;
 
-                // Return a promise
-                return new Promise(resolve => {
-                    // Skip this, if we have already queried for this group
-                    if (this._groupIds[groupId] || this._groupIdErrors.indexOf(groupId) >= 0) { resolve(null); return; }
-
-                    // Get the group information
-                    let ds = DirectorySession().group(groupId);
-                    ds.query({
-                        Select: ["calendarUrl", "displayName", "id", "isPublic", "mail"]
-                    }).execute(group => {
-                        // Save the group information
-                        this._groupIds[groupId] = group;
-
-                        // Get the group members
-                        ds.members().query({
-                            GetAllItems: true,
-                            Top: 5000,
-                            Select: ["principalName", "id", "displayName", "mail"]
-                        }).execute(members => {
-                            // Add the group information to the mapper
-                            this._groupIds[groupId].members = members as any;
-                        }, () => {
-                            // Try the next group
-                            resolve(null);
-                        });
-
-                        // Get the group owners
-                        ds.owners().query({
-                            GetAllItems: true,
-                            Top: 5000,
-                            Select: ["principalName", "id", "displayName", "mail"]
-                        }).execute(owners => {
-                            // Add the group information to the mapper
-                            this._groupIds[groupId].owners = owners as any;
-
-                            // Try the next group
-                            resolve(null);
-                        }, () => {
-                            // Try the next group
-                            resolve(null);
-                        }, true);
-                    }, () => {
-                        // Append the error
-                        this._groupIdErrors.push(groupId);
-
-                        // Try the next group
-                        resolve(null);
-                    });
-                });
-            }).then(() => {
                 // Update the dialog
                 this._elSubNav.children[1].innerHTML = `Updating the role assignments with the M365 Group information`;
 
@@ -132,8 +86,8 @@ export class Permissions {
                         // See if this is a group
                         if (member.PrincipalType == SPTypes.PrincipalTypes.SecurityGroup) {
                             // Get the group id
-                            let groupId = DataSource.getGroupId(member.LoginName);
-                            let group = this._groupIds[groupId];
+                            let groupId = M365Groups.getGroupId(member.LoginName);
+                            let group = groups.groups[groupId];
                             if (group) {
                                 // See if this is a reference to the owner's group
                                 if (member.LoginName.endsWith("_o")) {
@@ -276,7 +230,7 @@ export class Permissions {
                     };
                 } else {
                     // See if this is a M365 group
-                    let groupId = DataSource.getGroupId(role.Member.LoginName);
+                    let groupId = M365Groups.getGroupId(role.Member.LoginName);
 
                     // Add the role information
                     item = {
@@ -373,7 +327,7 @@ export class Permissions {
             // See if this is a M365 Group
             if (user.PrincipalType == SPTypes.PrincipalTypes.SecurityGroup) {
                 // Get the group id
-                let groupId = DataSource.getGroupId(user.LoginName);
+                let groupId = M365Groups.getGroupId(user.LoginName);
                 if (groupId) {
                     // Add the group id
                     item.GroupIds.push(groupId);
@@ -399,8 +353,7 @@ export class Permissions {
 
         // Parse the errors
         let rows = [];
-        for (let i = 0; i < this._groupIdErrors.length; i++) {
-            let groupId = this._groupIdErrors[i];
+        for (let groupId of Object.keys(this._groups.error)) {
             let mapper = this._roleMapper[groupId];
 
             // Add the row
@@ -566,7 +519,7 @@ export class Permissions {
                                     }
 
                                     // Exclude M365 groups
-                                    return DataSource.getGroupId(value.LoginName) ? false : true;
+                                    return M365Groups.getGroupId(value.LoginName) ? false : true;
                                 });
 
                                 // Set the value
@@ -702,8 +655,7 @@ export class Permissions {
         LoadingDialog.show();
 
         // Clear the items
-        this._groupIds = {};
-        this._groupIdErrors = [];
+        this._groups = null;
         this._items = [];
         this._roleMapper = {};
 
@@ -760,7 +712,7 @@ export class Permissions {
             this._elSubNav.classList.add("d-none");
 
             // See if no errors exist
-            if (this._groupIdErrors.length == 0) {
+            if (Object.keys(this._groups.error).length == 0) {
                 // Get the error button
                 let elNav = this._elDashboard.querySelector("#navigation .navbar-nav");
 

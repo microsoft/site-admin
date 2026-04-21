@@ -66,6 +66,7 @@ export interface ISiteAdminWebPartProps {
   MaxStorageDescription: string;
   ReportsDocRententionYears: string;
   ReportsDLPFileExt: string;
+  ReportsDLPGroups: string;
   ReportsDocSearchFileExt: string;
   ReportsDocSearchKeywords: string;
   SensitivityLabelFileExt: string;
@@ -198,6 +199,7 @@ declare const SiteAdmin: {
     reportProps?: {
       docRententionYears?: string;
       dlpFileExt?: string;
+      dlpGroups?: string[];
       docSearchFileExt?: string;
       docSearchKeywords?: string;
       sensitivityLabelFileExt?: string;
@@ -328,6 +330,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       maxStorageSize,
       reportProps: {
         dlpFileExt: this.properties.ReportsDLPFileExt,
+        dlpGroups: (this.properties.ReportsDLPGroups || "").split(",").map(group => group.trim()),
         docRententionYears: this.properties.ReportsDocRententionYears,
         docSearchFileExt: this.properties.ReportsDocSearchFileExt,
         docSearchKeywords: this.properties.ReportsDocSearchKeywords,
@@ -508,6 +511,19 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   onText: "The option to run reports against the user's OneDrive will be hidden.",
                   offText: "The option to run reports against the user's OneDrive will be visible."
                 }),
+                PropertyPaneToggle("SiteAttestation", {
+                  label: "Site Attestation Feature",
+                  checked: this.properties.SiteAttestation,
+                  onText: "The admins will be able to record the date/time of attestation.",
+                  offText: "This feature will not be visible in the solution."
+                }),
+                PropertyPaneTextField("SiteAttestationText", {
+                  label: "Site Attestation Text",
+                  description: "The text displayed in the confirmation dialog.",
+                  multiline: true,
+                  rows: 6,
+                  value: this.properties.SiteAttestationText
+                }),
                 PropertyPaneDropdown("MaxBatchSize", {
                   label: strings.MaxBatchSize,
                   selectedKey: this.properties.MaxBatchSize,
@@ -538,19 +554,6 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                     { key: 9, text: "9" },
                     { key: 10, text: "10" }
                   ]
-                }),
-                PropertyPaneToggle("SiteAttestation", {
-                  label: "Site Attestation Feature",
-                  checked: this.properties.SiteAttestation,
-                  onText: "The admins will be able to record the date/time of attestation.",
-                  offText: "This feature will not be visible in the solution."
-                }),
-                PropertyPaneTextField("SiteAttestationText", {
-                  label: "Site Attestation Text",
-                  description: "The text displayed in the confirmation dialog.",
-                  multiline: true,
-                  rows: 6,
-                  value: this.properties.SiteAttestationText
                 })
               ]
             },
@@ -650,7 +653,16 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                 PropertyPaneTextField("ReportsDLPFileExt", {
                   label: strings.ReportsDLPFileExt,
                   description: "The default file extensions to search.",
+                  multiline: true,
+                  rows: 6,
                   value: this.properties.ReportsDLPFileExt
+                }),
+                PropertyPaneTextField("ReportsDLPGroups", {
+                  label: strings.ReportsDLPGroups,
+                  description: "A CSV formatted string containing the group names to indicate a file being overshared. Do not include Everyone or EEEU, as they are the default groups to indicate oversharing.",
+                  multiline: true,
+                  rows: 6,
+                  value: this.properties.ReportsDLPGroups
                 }),
                 PropertyPaneDropdown("ReportsDocRententionYears", {
                   label: strings.ReportsDocRententionYears,
@@ -673,11 +685,15 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                 PropertyPaneTextField("ReportsDocSearchFileExt", {
                   label: strings.ReportsDocSearchFileExt,
                   description: "The default file extensions to search.",
+                  multiline: true,
+                  rows: 6,
                   value: this.properties.ReportsDocSearchFileExt
                 }),
                 PropertyPaneTextField("ReportsDocSearchKeywords", {
                   label: strings.ReportsDocSearchKeywords,
                   description: "The default keywords to search for.",
+                  multiline: true,
+                  rows: 6,
                   value: this.properties.ReportsDocSearchKeywords
                 }),
               ]

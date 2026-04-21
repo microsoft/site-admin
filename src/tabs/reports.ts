@@ -7,6 +7,7 @@ import { ISearchProps } from "./searchProp";
 // Report Properties
 export interface IReportProps {
     dlpFileExt?: string;
+    dlpGroups?: string[];
     docRententionYears?: string;
     docSearchFileExt?: string;
     docSearchKeywords?: string;
@@ -277,7 +278,7 @@ export class ReportsTab {
                 // Run the report
                 switch (this._selectedReport) {
                     case ReportTypes.DLP:
-                        Reports.DLP.run(this._el, this._auditOnly, formValues, () => {
+                        Reports.DLP.run(this._el, this._auditOnly, this._appProps.reportProps.dlpGroups, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });

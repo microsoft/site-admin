@@ -810,7 +810,7 @@ export class SensitivityLabels {
                     label: "Select Sensitivity Label:",
                     description: "This will set any file that isn't currently labelled.",
                     errorMessage: "A sensitivity label is required.",
-                    items: DataSource.SiteSensitivityLabelItems,
+                    items: DataSource.SensitivityLabelItems,
                     type: Components.FormControlTypes.Dropdown,
                     required: true,
                     value: defaultLabel,
