@@ -9,7 +9,7 @@ import { ExportCSV } from "./exportCSV";
 interface IDLPItem {
     AppliedActionsText: string;
     Author: string;
-    ConditionDescription: string;
+    Conditions: string[];
     FileExtension: string;
     FileName: string;
     GeneralText: string;
@@ -46,7 +46,7 @@ const CSVFields = [
     "FileExtension",
     "GeneralText",
     "AppliedActionsText",
-    "ConditionDescription",
+    "Conditions",
     "LastProcessedTime",
     "Author",
     "Path",
@@ -133,31 +133,28 @@ export class DLP {
                                 }).batch(result => {
                                     // Ensure a policy exists
                                     if (result.GetDlpPolicyTip?.MatchedConditionDescriptions) {
-                                        // Parse the conditions
-                                        result.GetDlpPolicyTip.MatchedConditionDescriptions.results.forEach(condition => {
-                                            let dataItem: IDLPItem = {
-                                                AppliedActionsText: result.GetDlpPolicyTip.AppliedActionsText,
-                                                Author: item["Author"]?.Title,
-                                                ConditionDescription: condition,
-                                                FileExtension: item["File_x0020_Type"],
-                                                FileName: item["FileLeafRef"],
-                                                GeneralText: result.GetDlpPolicyTip.GeneralText,
-                                                HasUniquePermissions: result.HasUniqueRoleAssignments,
-                                                Id: item.Id,
-                                                LastProcessedTime: result.GetDlpPolicyTip.LastProcessedTime,
-                                                ListId: lib.Id,
-                                                ListTitle: lib.Title,
-                                                Overshared: this.isOvershared(result.RoleAssignments.results as any) ? "Yes" : "No",
-                                                Path: item["FileRef"],
-                                                Permissions: result.RoleAssignments.results as any,
-                                                WebId: webId,
-                                                WebUrl: webUrl
-                                            };
+                                        let dataItem: IDLPItem = {
+                                            AppliedActionsText: result.GetDlpPolicyTip.AppliedActionsText,
+                                            Author: item["Author"]?.Title,
+                                            Conditions: result.GetDlpPolicyTip.MatchedConditionDescriptions.results,
+                                            FileExtension: item["File_x0020_Type"],
+                                            FileName: item["FileLeafRef"],
+                                            GeneralText: result.GetDlpPolicyTip.GeneralText,
+                                            HasUniquePermissions: result.HasUniqueRoleAssignments,
+                                            Id: item.Id,
+                                            LastProcessedTime: result.GetDlpPolicyTip.LastProcessedTime,
+                                            ListId: lib.Id,
+                                            ListTitle: lib.Title,
+                                            Overshared: this.isOvershared(result.RoleAssignments.results as any) ? "Yes" : "No",
+                                            Path: item["FileRef"],
+                                            Permissions: result.RoleAssignments.results as any,
+                                            WebId: webId,
+                                            WebUrl: webUrl
+                                        };
 
-                                            // Append the data
-                                            this._items.push(dataItem);
-                                            this._dashboard.Datatable.addRow(dataItem);
-                                        });
+                                        // Append the data
+                                        this._items.push(dataItem);
+                                        this._dashboard.Datatable.addRow(dataItem);
                                     }
 
                                     // Increment the counter and update the dialog
@@ -391,6 +388,10 @@ export class DLP {
                 onRendering: dtProps => {
                     dtProps.columnDefs = [
                         {
+                            "targets": [2],
+                            "orderable": false
+                        },
+                        {
                             "targets": [4, 5],
                             "orderable": false,
                             "searchable": false
@@ -426,8 +427,21 @@ export class DLP {
                         }
                     },
                     {
-                        name: "ConditionDescription",
-                        title: "Condition"
+                        name: "",
+                        title: "Condition(s)",
+                        onRenderCell: (el, col, item: IDLPItem) => {
+                            // Render the conditions
+                            let elList = document.createElement("ul");
+                            item.Conditions.forEach(condition => {
+                                // Create the item
+                                let elItem = document.createElement("li");
+                                elItem.innerText = condition;
+                                elList.appendChild(elItem);
+                            });
+
+                            // Append the list to the cell
+                            el.appendChild(elList);
+                        }
                     },
                     {
                         name: "",
@@ -771,31 +785,29 @@ export class DLP {
                 }).batch(result => {
                     // Ensure a policy exists
                     if (result.GetDlpPolicyTip?.MatchedConditionDescriptions) {
-                        // Parse the conditions
-                        result.GetDlpPolicyTip.MatchedConditionDescriptions.results.forEach(condition => {
-                            let dataItem: IDLPItem = {
-                                AppliedActionsText: result.GetDlpPolicyTip.AppliedActionsText,
-                                Author: item["Author"]?.Title,
-                                ConditionDescription: condition,
-                                FileExtension: item["File_x0020_Type"],
-                                FileName: item["FileLeafRef"],
-                                GeneralText: result.GetDlpPolicyTip.GeneralText,
-                                HasUniquePermissions: result.HasUniqueRoleAssignments,
-                                Id: item.Id,
-                                LastProcessedTime: result.GetDlpPolicyTip.LastProcessedTime,
-                                ListId: libId,
-                                ListTitle: libTitle,
-                                Overshared: this.isOvershared(result.RoleAssignments.results as any) ? "Yes" : "No",
-                                Path: item["FileRef"],
-                                Permissions: result.RoleAssignments.results as any,
-                                WebId: webId,
-                                WebUrl: webUrl
-                            };
+                        // Create the item
+                        let dataItem: IDLPItem = {
+                            AppliedActionsText: result.GetDlpPolicyTip.AppliedActionsText,
+                            Author: item["Author"]?.Title,
+                            Conditions: result.GetDlpPolicyTip.MatchedConditionDescriptions.results,
+                            FileExtension: item["File_x0020_Type"],
+                            FileName: item["FileLeafRef"],
+                            GeneralText: result.GetDlpPolicyTip.GeneralText,
+                            HasUniquePermissions: result.HasUniqueRoleAssignments,
+                            Id: item.Id,
+                            LastProcessedTime: result.GetDlpPolicyTip.LastProcessedTime,
+                            ListId: libId,
+                            ListTitle: libTitle,
+                            Overshared: this.isOvershared(result.RoleAssignments.results as any) ? "Yes" : "No",
+                            Path: item["FileRef"],
+                            Permissions: result.RoleAssignments.results as any,
+                            WebId: webId,
+                            WebUrl: webUrl
+                        };
 
-                            // Append the data
-                            this._items.push(dataItem);
-                            this._dashboard.Datatable.addRow(dataItem);
-                        });
+                        // Append the data
+                        this._items.push(dataItem);
+                        this._dashboard.Datatable.addRow(dataItem);
                     }
 
                     // Increment the counter and update the dialog
