@@ -299,7 +299,7 @@ export class DLP {
     private static removeOversharedGroups(item: IDLPItem, onComplete: () => void) {
         // Show a canvas form
         CanvasForm.clear();
-        CanvasForm.setHeader("Secure Document");
+        CanvasForm.setHeader("Secure File");
         CanvasForm.setType(Components.OffcanvasTypes.End);
         CanvasForm.setSize(Components.OffcanvasSize.Small2);
 
