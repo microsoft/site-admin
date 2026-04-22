@@ -460,7 +460,7 @@ export class DLP {
                                 el,
                                 className: "me-2",
                                 content: isOvershared ? "Overshared" : item.Overshared,
-                                type: isOvershared ? Components.BadgeTypes.Danger : Components.BadgeTypes.Success,
+                                type: isOvershared ? Components.BadgeTypes.Danger : Components.BadgeTypes.Secondary,
                                 isPill: true
                             });
 
