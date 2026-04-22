@@ -1,6 +1,5 @@
 import { CanvasForm, Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
 import { Components, ContextInfo, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
-import { fileEarmark } from "gd-sprest-bs/build/icons/svgs/fileEarmark";
 import { DataSource } from "../ds";
 import { M365Groups } from "../m365Groups";
 import Strings from "../strings";
@@ -9,7 +8,7 @@ import { ExportCSV } from "./exportCSV";
 interface IDLPItem {
     AppliedActionsText: string;
     Author: string;
-    ConditionDescription: string;
+    Conditions: string[];
     FileExtension: string;
     FileName: string;
     GeneralText: string;
@@ -46,7 +45,7 @@ const CSVFields = [
     "FileExtension",
     "GeneralText",
     "AppliedActionsText",
-    "ConditionDescription",
+    "Conditions",
     "LastProcessedTime",
     "Author",
     "Path",
@@ -133,31 +132,28 @@ export class DLP {
                                 }).batch(result => {
                                     // Ensure a policy exists
                                     if (result.GetDlpPolicyTip?.MatchedConditionDescriptions) {
-                                        // Parse the conditions
-                                        result.GetDlpPolicyTip.MatchedConditionDescriptions.results.forEach(condition => {
-                                            let dataItem: IDLPItem = {
-                                                AppliedActionsText: result.GetDlpPolicyTip.AppliedActionsText,
-                                                Author: item["Author"]?.Title,
-                                                ConditionDescription: condition,
-                                                FileExtension: item["File_x0020_Type"],
-                                                FileName: item["FileLeafRef"],
-                                                GeneralText: result.GetDlpPolicyTip.GeneralText,
-                                                HasUniquePermissions: result.HasUniqueRoleAssignments,
-                                                Id: item.Id,
-                                                LastProcessedTime: result.GetDlpPolicyTip.LastProcessedTime,
-                                                ListId: lib.Id,
-                                                ListTitle: lib.Title,
-                                                Overshared: this.isOvershared(result.RoleAssignments.results as any) ? "Yes" : "No",
-                                                Path: item["FileRef"],
-                                                Permissions: result.RoleAssignments.results as any,
-                                                WebId: webId,
-                                                WebUrl: webUrl
-                                            };
+                                        let dataItem: IDLPItem = {
+                                            AppliedActionsText: result.GetDlpPolicyTip.AppliedActionsText,
+                                            Author: item["Author"]?.Title,
+                                            Conditions: result.GetDlpPolicyTip.MatchedConditionDescriptions.results,
+                                            FileExtension: item["File_x0020_Type"],
+                                            FileName: item["FileLeafRef"],
+                                            GeneralText: result.GetDlpPolicyTip.GeneralText,
+                                            HasUniquePermissions: result.HasUniqueRoleAssignments,
+                                            Id: item.Id,
+                                            LastProcessedTime: result.GetDlpPolicyTip.LastProcessedTime,
+                                            ListId: lib.Id,
+                                            ListTitle: lib.Title,
+                                            Overshared: this.isOvershared(result.RoleAssignments.results as any) ? "Yes" : "No",
+                                            Path: item["FileRef"],
+                                            Permissions: result.RoleAssignments.results as any,
+                                            WebId: webId,
+                                            WebUrl: webUrl
+                                        };
 
-                                            // Append the data
-                                            this._items.push(dataItem);
-                                            this._dashboard.Datatable.addRow(dataItem);
-                                        });
+                                        // Append the data
+                                        this._items.push(dataItem);
+                                        this._dashboard.Datatable.addRow(dataItem);
                                     }
 
                                     // Increment the counter and update the dialog
@@ -203,7 +199,7 @@ export class DLP {
                     // See if this is the eeeu or everyone
                     if (user.Title == "Everyone except external users" || user.Title == "Everyone" || this._oversharedGroups.indexOf(user.Title) >= 0) {
                         // Append the group
-                        groups.push(role.Member.Title + " - " + user.Title);
+                        groups.push("<b>" + role.Member.Title + "</b> - " + user.Title);
                     }
                 });
             }
@@ -251,8 +247,56 @@ export class DLP {
         return isOvershared;
     }
 
+    // Refreshes the item
+    private static refreshItem(dlpItem: IDLPItem): PromiseLike<IDLPItem> {
+        // Return a promise
+        return new Promise(resolve => {
+            let web = this._loadOneDrive ? Web.getOneDrive() : Web(dlpItem.WebUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+
+            // Get the list item
+            web.Lists(dlpItem.ListTitle).Items(dlpItem.Id).query({
+                Expand: ["GetDlpPolicyTip", "RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings"],
+                Select: ["Id", "HasUniqueRoleAssignments"]
+            }).execute((item) => {
+                // Update the item
+                dlpItem.HasUniquePermissions = item.HasUniqueRoleAssignments;
+                dlpItem.Overshared = this.isOvershared(item.RoleAssignments.results as any) ? "Yes" : "No";
+                dlpItem.Permissions = item.RoleAssignments.results as any;
+
+                // Ensure a policy exists
+                if (item.GetDlpPolicyTip?.MatchedConditionDescriptions) {
+                    // Update the item
+                    dlpItem.AppliedActionsText = item.GetDlpPolicyTip.AppliedActionsText;
+                    dlpItem.Conditions = item.GetDlpPolicyTip.MatchedConditionDescriptions.results;
+                    dlpItem.GeneralText = item.GetDlpPolicyTip.GeneralText;
+                    dlpItem.LastProcessedTime = item.GetDlpPolicyTip.LastProcessedTime;
+                } else {
+                    // Update the item
+                    dlpItem.AppliedActionsText = "";
+                    dlpItem.Conditions = [];
+                    dlpItem.GeneralText = "";
+                    dlpItem.LastProcessedTime = "";
+                }
+
+                // Find the item
+                for (let i = 0; i < this._items.length; i++) {
+                    let item = this._items[i];
+
+                    // See if this is the item
+                    if (item.Id == dlpItem.Id && item.ListId == dlpItem.ListId) {
+                        // Update the item
+                        this._items[i] = dlpItem;
+                    }
+                }
+
+                // Resolve the request
+                resolve(dlpItem);
+            });
+        });
+    }
+
     // Removes the groups that are flagging the file as overshared
-    private static removeOversharedGroups(item: IDLPItem, onComplete: (permissions: Types.SP.RoleAssignmentOData[]) => void) {
+    private static removeOversharedGroups(item: IDLPItem, onComplete: () => void) {
         // Show a canvas form
         CanvasForm.clear();
         CanvasForm.setHeader("Secure Document");
@@ -261,10 +305,24 @@ export class DLP {
 
         // Set the content
         CanvasForm.setBody(`
-            <p>This action will create unique permissions for the file and remove the large audience group(s) that are flagging the file as overshared. If access to the file is currently granted through a SharePoint group—such as the Visitors group—that group will be removed from the file's permissions. In these cases, it is recommended to review the file's permissions afterward to determine whether any users removed through the Visitors group need to be restored.</p>
+            <p>This action will create unique permissions for the file and remove explicit permissions to groups that are flagging this file as overshared.</p>
+            <p>If access to the file is currently granted through a SharePoint group, then that group will be removed from the file's permissions. For example, if the "Visitors Group" contains the "All DoD Guests" group; then the "Visitors Group" will be removed from the file's permissions.</p>
+            <p>It is recommended to review the file's permissions after securing it to ensure it is properly permissioned to the people who require access.</p>
+            <p>The following groups will be removed from the file's permissions:</p>
+            <ul></ul>
             <div class="d-flex justify-content-end"></div>
         `);
 
+        // Render the groups that are flagging this file as overshared
+        let ul = CanvasForm.BodyElement.querySelector("ul");
+        this.getOversharedGroups(item.Permissions).forEach(group => {
+            // Add the group
+            let li = document.createElement("li");
+            li.innerHTML = group;
+            ul.appendChild(li);
+        });
+
+        // Render the footer
         Components.ButtonGroup({
             el: CanvasForm.BodyElement.querySelector("div"),
             className: "mt-3",
@@ -327,16 +385,11 @@ export class DLP {
 
                             // Wait for the requests to complete
                             roles.done(() => {
-                                // Load the permissions again for this item
-                                list.Items(item.Id).RoleAssignments().query({
-                                    Expand: ["Member/Users", "RoleDefinitionBindings"]
-                                }).execute(permissions => {
-                                    // Call the complete event
-                                    onComplete(permissions.results);
+                                // Call the complete event
+                                onComplete();
 
-                                    // Hide the loading dialog
-                                    LoadingDialog.hide();
-                                });
+                                // Hide the loading dialog
+                                LoadingDialog.hide();
                             });
                         }, true);
                     }
@@ -391,6 +444,10 @@ export class DLP {
                 onRendering: dtProps => {
                     dtProps.columnDefs = [
                         {
+                            "targets": [2],
+                            "orderable": false
+                        },
+                        {
                             "targets": [4, 5],
                             "orderable": false,
                             "searchable": false
@@ -426,8 +483,21 @@ export class DLP {
                         }
                     },
                     {
-                        name: "ConditionDescription",
-                        title: "Condition"
+                        name: "",
+                        title: "Condition(s)",
+                        onRenderCell: (el, col, item: IDLPItem) => {
+                            // Render the conditions
+                            let elList = document.createElement("ul");
+                            item.Conditions.forEach(condition => {
+                                // Create the item
+                                let elItem = document.createElement("li");
+                                elItem.innerText = condition;
+                                elList.appendChild(elItem);
+                            });
+
+                            // Append the list to the cell
+                            el.appendChild(elList);
+                        }
                     },
                     {
                         name: "",
@@ -446,7 +516,7 @@ export class DLP {
                                 el,
                                 className: "me-2",
                                 content: isOvershared ? "Overshared" : item.Overshared,
-                                type: isOvershared ? Components.BadgeTypes.Danger : Components.BadgeTypes.Success,
+                                type: isOvershared ? Components.BadgeTypes.Danger : Components.BadgeTypes.Secondary,
                                 isPill: true
                             });
 
@@ -504,7 +574,7 @@ export class DLP {
                     {
                         className: "text-end",
                         name: "",
-                        title: "",
+                        title: "Actions",
                         onRenderCell: (el, col, row: IDLPItem, rowIdx) => {
                             let btnDelete: Components.IButton = null;
 
@@ -514,10 +584,7 @@ export class DLP {
                                     content: "Click to view the document.",
                                     btnProps: {
                                         className: "pe-2 py-1",
-                                        iconClassName: "mx-1",
-                                        iconType: fileEarmark,
-                                        iconSize: 24,
-                                        text: "View",
+                                        text: "View File",
                                         type: Components.ButtonTypes.OutlinePrimary,
                                         onClick: () => {
                                             // View the document
@@ -545,27 +612,16 @@ export class DLP {
                                     content: "Click to remove the groups that are flagging this file as overshared.",
                                     btnProps: {
                                         className: "pe-2 py-1",
-                                        text: "Secure Document",
+                                        text: "Secure File",
                                         type: Components.ButtonTypes.OutlinePrimary,
                                         onClick: () => {
                                             // Remove the overshared groups from the permissions
-                                            this.removeOversharedGroups(row, permissions => {
-                                                // Parse the items
-                                                this._items.forEach(item => {
-                                                    if (item.Id == row.Id) {
-                                                        // Update the permissions
-                                                        item.Permissions = permissions;
-
-                                                        // Update the flag
-                                                        item.Overshared = this.isOvershared(permissions) ? "Yes" : "No";
-
-                                                        // Set the flag if we are no longer oversharing
-                                                        item.HasUniquePermissions = item.Overshared === "Yes" ? item.HasUniquePermissions : true;
-                                                    }
+                                            this.removeOversharedGroups(row, () => {
+                                                // Refresh the item
+                                                this.refreshItem(row).then(updatedItem => {
+                                                    // Update this row
+                                                    this._dashboard.updateRow(rowIdx, updatedItem);
                                                 });
-
-                                                // Update the dashboard
-                                                this._dashboard.refresh(this._items);
                                             });
                                         }
                                     }
@@ -580,14 +636,17 @@ export class DLP {
                                     btnProps: {
                                         assignTo: btn => { btnDelete = btn; },
                                         className: "pe-2 py-1",
-                                        text: "Restore",
+                                        text: "Restore Permissions",
                                         type: Components.ButtonTypes.OutlinePrimary,
                                         onClick: () => {
-                                            // Confirm the deletion of the group
-                                            if (confirm("Are you sure you restore the permissions to inherit?")) {
-                                                // Revert the permissions
-                                                this.revertPermissions(row);
-                                            }
+                                            // Revert the permissions
+                                            this.revertPermissions(row, () => {
+                                                // Refresh the item
+                                                this.refreshItem(row).then(updatedItem => {
+                                                    // Update this row
+                                                    this._dashboard.updateRow(rowIdx, updatedItem);
+                                                });
+                                            });
                                         }
                                     }
                                 });
@@ -596,7 +655,9 @@ export class DLP {
                             // Render the buttons
                             Components.TooltipGroup({
                                 el,
-                                tooltips
+                                tooltips,
+                                isSmall: true,
+                                isVertical: true
                             });
                         }
                     }
@@ -612,18 +673,58 @@ export class DLP {
     }
 
     // Reverts the item permissions
-    private static revertPermissions(item: IDLPItem) {
-        // Show a loading dialog
-        LoadingDialog.setHeader("Restoring Permissions");
-        LoadingDialog.setBody("This window will close after the item permissions are restored...");
-        LoadingDialog.show();
+    private static revertPermissions(item: IDLPItem, onComplete: () => void) {
+        // Show a canvas form
+        CanvasForm.clear();
+        CanvasForm.setHeader("Secure Document");
+        CanvasForm.setType(Components.OffcanvasTypes.End);
+        CanvasForm.setSize(Components.OffcanvasSize.Small2);
 
-        // Restore the permissions
-        Web(item.WebUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
-            .Lists().getById(item.ListId).Items(item.Id).resetRoleInheritance().execute(() => {
-                // Close the loading dialog
-                LoadingDialog.hide();
-            });
+        // Set the content
+        CanvasForm.setBody(`
+            <p>Are you sure you want to revert the permissions to inherit from its parent? Click on 'Confirm' to complete the request.</p>
+            <div class="d-flex justify-content-end"></div>
+        `);
+
+        // Render the footer
+        Components.ButtonGroup({
+            el: CanvasForm.BodyElement.querySelector("div"),
+            className: "mt-3",
+            buttons: [
+                {
+                    text: "Confirm",
+                    type: Components.ButtonTypes.OutlinePrimary,
+                    onClick: () => {
+                        // Show a loading dialog
+                        LoadingDialog.setHeader("Restoring Permissions");
+                        LoadingDialog.setBody("This window will close after the item permissions are restored...");
+                        LoadingDialog.show();
+
+                        // Restore the permissions
+                        Web(item.WebUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
+                            .Lists().getById(item.ListId).Items(item.Id).resetRoleInheritance().execute(() => {
+                                // Hide the dialogs
+                                LoadingDialog.hide();
+                                CanvasForm.hide();
+
+                                // Call the event
+                                onComplete();
+                            });
+                    }
+                },
+                {
+                    text: "Close",
+                    type: Components.ButtonTypes.OutlineSecondary,
+                    onClick: () => {
+                        // Hide the form
+                        CanvasForm.hide();
+                    }
+                }
+            ]
+        });
+
+        // Show the canvas form
+        CanvasForm.show();
     }
 
     // Runs the report
@@ -769,31 +870,29 @@ export class DLP {
                 }).batch(result => {
                     // Ensure a policy exists
                     if (result.GetDlpPolicyTip?.MatchedConditionDescriptions) {
-                        // Parse the conditions
-                        result.GetDlpPolicyTip.MatchedConditionDescriptions.results.forEach(condition => {
-                            let dataItem: IDLPItem = {
-                                AppliedActionsText: result.GetDlpPolicyTip.AppliedActionsText,
-                                Author: item["Author"]?.Title,
-                                ConditionDescription: condition,
-                                FileExtension: item["File_x0020_Type"],
-                                FileName: item["FileLeafRef"],
-                                GeneralText: result.GetDlpPolicyTip.GeneralText,
-                                HasUniquePermissions: result.HasUniqueRoleAssignments,
-                                Id: item.Id,
-                                LastProcessedTime: result.GetDlpPolicyTip.LastProcessedTime,
-                                ListId: libId,
-                                ListTitle: libTitle,
-                                Overshared: this.isOvershared(result.RoleAssignments.results as any) ? "Yes" : "No",
-                                Path: item["FileRef"],
-                                Permissions: result.RoleAssignments.results as any,
-                                WebId: webId,
-                                WebUrl: webUrl
-                            };
+                        // Create the item
+                        let dataItem: IDLPItem = {
+                            AppliedActionsText: result.GetDlpPolicyTip.AppliedActionsText,
+                            Author: item["Author"]?.Title,
+                            Conditions: result.GetDlpPolicyTip.MatchedConditionDescriptions.results,
+                            FileExtension: item["File_x0020_Type"],
+                            FileName: item["FileLeafRef"],
+                            GeneralText: result.GetDlpPolicyTip.GeneralText,
+                            HasUniquePermissions: result.HasUniqueRoleAssignments,
+                            Id: item.Id,
+                            LastProcessedTime: result.GetDlpPolicyTip.LastProcessedTime,
+                            ListId: libId,
+                            ListTitle: libTitle,
+                            Overshared: this.isOvershared(result.RoleAssignments.results as any) ? "Yes" : "No",
+                            Path: item["FileRef"],
+                            Permissions: result.RoleAssignments.results as any,
+                            WebId: webId,
+                            WebUrl: webUrl
+                        };
 
-                            // Append the data
-                            this._items.push(dataItem);
-                            this._dashboard.Datatable.addRow(dataItem);
-                        });
+                        // Append the data
+                        this._items.push(dataItem);
+                        this._dashboard.Datatable.addRow(dataItem);
                     }
 
                     // Increment the counter and update the dialog
