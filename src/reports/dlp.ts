@@ -596,7 +596,9 @@ export class DLP {
                             // Render the buttons
                             Components.TooltipGroup({
                                 el,
-                                tooltips
+                                tooltips,
+                                isSmall: true,
+                                isVertical: true
                             });
                         }
                     }
