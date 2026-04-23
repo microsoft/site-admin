@@ -676,7 +676,7 @@ export class DLP {
     private static revertPermissions(item: IDLPItem, onComplete: () => void) {
         // Show a canvas form
         CanvasForm.clear();
-        CanvasForm.setHeader("Secure Document");
+        CanvasForm.setHeader("Secure File");
         CanvasForm.setType(Components.OffcanvasTypes.End);
         CanvasForm.setSize(Components.OffcanvasSize.Small2);
 
@@ -1012,8 +1012,8 @@ export class DLP {
                         onRenderCell: (el, col, row: IDLPPermission) => {
                             let tooltips: Components.ITooltipProps[] = [];
 
-                            // See if this is a site group
-                            if (row.Type === "Site Group") {
+                            // See if this is a site group and not the limited access group
+                            if (row.Type === "Site Group" && row.GroupName.indexOf("Limited Access System Group") < 0) {
                                 tooltips.push({
                                     content: "Click to view the site group.",
                                     btnProps: {
