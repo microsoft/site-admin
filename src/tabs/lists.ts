@@ -549,7 +549,7 @@ export class ListsTab {
                                 switch (selectedReport) {
                                     case ReportTypes.DLP:
                                         // Run the DLP report for this library
-                                        DLP.searchLibrary(item.WebId, item.WebUrl, item.ListId, item.ListName, this._appProps.reportProps.dlpGroups);
+                                        DLP.searchLibrary(item.WebId, item.WebUrl, item.ListId, item.ListName, this._appProps.auditOnly, this._appProps.reportProps.dlpGroups);
                                         break;
                                     case ReportTypes.SearchEEEU:
                                         // Run the EEEU report for this library
