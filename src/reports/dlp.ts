@@ -1013,14 +1013,21 @@ export class DLP {
                             let tooltips: Components.ITooltipProps[] = [];
 
                             // See if this is a site group and not the limited access group
-                            if (row.Type === "Site Group" && row.GroupName.indexOf("Limited Access System Group") < 0) {
+                            if (row.Type === "Site Group") {
+                                // Set the url
+                                let url = `${item.WebUrl}/${ContextInfo.layoutsUrl}/people.aspx?MembershipGroupId=${item.Id}`;
+                                if (row.GroupName.indexOf("Limited Access System Group") === 0) {
+                                    // Update the url to the limited access group
+                                    url = `${item.WebUrl}/${ContextInfo.layoutsUrl}/user.aspx?List=${item.ListId}&obj=${item.ListId},${item.Id},LISTITEM&showLimitedAccessUsers=true`;
+                                }
+
                                 tooltips.push({
                                     content: "Click to view the site group.",
                                     btnProps: {
                                         text: "View Group",
                                         type: Components.ButtonTypes.OutlinePrimary,
                                         onClick: () => {
-                                            window.open(`${item.WebUrl}/${ContextInfo.layoutsUrl}/people.aspx?MembershipGroupId=${item.Id}`, "_blank");
+                                            window.open(url, "_blank");
                                         }
                                     }
                                 });
