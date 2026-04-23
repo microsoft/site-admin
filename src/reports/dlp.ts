@@ -577,8 +577,6 @@ export class DLP {
                         name: "",
                         title: "Actions",
                         onRenderCell: (el, col, row: IDLPItem, rowIdx) => {
-                            let btnDelete: Components.IButton = null;
-
                             // Set the tooltips
                             let tooltips: Components.ITooltipProps[] = [
                                 {
@@ -608,7 +606,7 @@ export class DLP {
                             ];
 
                             // See if the file is overshared
-                            if (row.Overshared === "Yes") {
+                            if (!auditOnly && row.Overshared === "Yes") {
                                 tooltips.push({
                                     content: "Click to remove the groups that are flagging this file as overshared.",
                                     btnProps: {
@@ -630,12 +628,11 @@ export class DLP {
                             }
 
                             // See if the file has broken inheritance
-                            if (row.HasUniquePermissions) {
+                            if (!auditOnly && row.HasUniquePermissions) {
                                 // Add the option to revert the permissions
                                 tooltips.push({
                                     content: "Click to restore permissions to inherit.",
                                     btnProps: {
-                                        assignTo: btn => { btnDelete = btn; },
                                         className: "pe-2 py-1",
                                         text: "Restore Permissions",
                                         type: Components.ButtonTypes.OutlinePrimary,
@@ -807,7 +804,7 @@ export class DLP {
     }
 
     // Searches a library for DLP conditions
-    static searchLibrary(webId: string, webUrl: string, libId: string, libTitle: string, oversharedGroups: string[]) {
+    static searchLibrary(webId: string, webUrl: string, libId: string, libTitle: string, auditOnly: boolean, oversharedGroups: string[]) {
         this._oversharedGroups = oversharedGroups;
 
         // Clear the items
@@ -839,7 +836,7 @@ export class DLP {
         });
 
         // Show the results
-        this.renderSummary(Modal.BodyElement, false, false);
+        this.renderSummary(Modal.BodyElement, auditOnly, false);
 
         // Show the modal
         Modal.show();
