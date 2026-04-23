@@ -442,6 +442,7 @@ export class DLP {
             table: {
                 rows: this._items,
                 onRendering: dtProps => {
+                    // Set the column defs
                     dtProps.columnDefs = [
                         {
                             "targets": [2],
@@ -981,6 +982,7 @@ export class DLP {
             table: {
                 rows,
                 onRendering(dtProps) {
+                    // Set the column defs
                     dtProps.columnDefs = [
                         {
                             "targets": [4],
@@ -988,6 +990,9 @@ export class DLP {
                             "searchable": false
                         }
                     ];
+
+                    // Return the properties
+                    return dtProps;
                 },
                 columns: [
                     {
