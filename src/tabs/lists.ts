@@ -212,6 +212,25 @@ export class ListsTab {
             });
         }
 
+        // See if this is a drive
+        if (isLibrary && item.DriveId) {
+            // Add the bulk label option
+            tooltips.add({
+                content: "Click to bulk label files in this library.",
+                btnProps: {
+                    text: "Bulk Label",
+                    type: Components.ButtonTypes.OutlinePrimary,
+                    onClick: () => {
+                        // Load the folders for this list
+                        DataSource.loadFolders(item.WebId, item.DriveId).then(folders => {
+                            // Show the senstivity label form
+                            SensitivityLabels.showLibraryForm(item.WebId, item.ListName, item.DriveId, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt);
+                        });
+                    }
+                }
+            });
+        }
+
         // Add the reports tooltip
         tooltips.add({
             content: "Click to run an audit report on this list.",
