@@ -221,10 +221,18 @@ export class ListsTab {
                     text: "Bulk Label",
                     type: Components.ButtonTypes.OutlinePrimary,
                     onClick: () => {
+                        // Show a loading dialog
+                        LoadingDialog.setHeader("Loading Folders");
+                        LoadingDialog.setBody("Loading the root folders of this library...");
+                        LoadingDialog.show();
+
                         // Load the folders for this list
                         DataSource.loadFolders(item.WebId, item.DriveId).then(folders => {
                             // Show the senstivity label form
                             SensitivityLabels.showLibraryForm(item.WebId, item.ListName, item.DriveId, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt);
+
+                            // Hide the dialog
+                            LoadingDialog.hide();
                         });
                     }
                 }
