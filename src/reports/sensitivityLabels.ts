@@ -1,4 +1,4 @@
-import { Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
+import { CanvasForm, Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
 import { Components, Helper, SPTypes, Types, Web, v2 } from "gd-sprest-bs";
 import { fileEarmarkText } from "gd-sprest-bs/build/icons/svgs/fileEarmarkText";
 import { DataSource } from "../ds";
@@ -612,10 +612,19 @@ export class SensitivityLabels {
 
             // Return a promise
             return new Promise(resolve => {
+                // Set the default filter
+                let filter = `Hidden eq false and BaseTemplate eq ${SPTypes.ListTemplateType.DocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.MySiteDocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.PageLibrary}`;
+
+                // See if a list was specified
+                if (values["TargetList"]) {
+                    // Set the filter
+                    filter = `Title eq '${values["TargetList"]}'`;
+                }
+
                 // Get the libraries for this site
                 let web = this._loadOneDrive ? Web.getOneDrive() : Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue });
                 web.Lists().query({
-                    Filter: `Hidden eq false and BaseTemplate eq ${SPTypes.ListTemplateType.DocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.MySiteDocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.PageLibrary}`,
+                    Filter: filter,
                     Expand: ["RootFolder"],
                     GetAllItems: true,
                     Select: ["Id", "Title", "RootFolder/ServerRelativeUrl"],
@@ -649,6 +658,43 @@ export class SensitivityLabels {
             // Hide the sub-nav
             this._elSubNav.classList.add("d-none");
         });
+    }
+
+    // Shows the report form for a library
+    static runReportForLibrary(auditOnly: boolean, values: { [key: string]: string }) {
+        // Clear a canvas form
+        CanvasForm.clear();
+        CanvasForm.setHeader("Sensitivity Files");
+        CanvasForm.setSize(Components.OffcanvasSize.Large1);
+        CanvasForm.setType(Components.OffcanvasTypes.End);
+
+        // Set the content
+        CanvasForm.setBody(`
+            <div></div>
+            <div class="d-flex justify-content-end"></div>
+        `);
+
+        // Run the report
+        this.run(CanvasForm.BodyElement.querySelector("div"), auditOnly, values, () => { });
+
+        // Render the footer
+        Components.ButtonGroup({
+            el: CanvasForm.BodyElement.querySelector("div"),
+            className: "mt-3",
+            buttons: [
+                {
+                    text: "Close",
+                    type: Components.ButtonTypes.OutlineSecondary,
+                    onClick: () => {
+                        // Hide the form
+                        CanvasForm.hide();
+                    }
+                }
+            ]
+        });
+
+        // Show the form
+        CanvasForm.show();
     }
 
     // Shows the form to label a file

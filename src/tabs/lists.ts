@@ -535,20 +535,51 @@ export class ListsTab {
         Modal.clear();
         Modal.setHeader("Select Report");
 
-        // Set the body
-        let form = Components.Form({
-            el: Modal.BodyElement,
-            controls: [
+        // Returns the default control for the form
+        let getDefaultControl = (selectedReport?: string) => {
+            return [
                 {
                     name: "ReportType",
                     label: "Select Report:",
                     description: "Select a report to run against this list.",
                     items,
+                    value: selectedReport,
                     type: Components.FormControlTypes.Dropdown,
                     required: true,
-                    errorMessage: "A report selection is required."
+                    errorMessage: "A report selection is required.",
+                    onChange: (item) => {
+                        // Ensure an item is selected
+                        if (item && item.value) {
+                            // Clear the body
+                            while (Modal.BodyElement.firstChild) { Modal.BodyElement.removeChild(Modal.BodyElement.firstChild); }
+
+                            // Append the controls
+                            switch (item.value) {
+                                case ReportTypes.SensitivityLabels:
+                                    // Set the form
+                                    form = Components.Form({
+                                        el: Modal.BodyElement,
+                                        controls: getDefaultControl(ReportTypes.SensitivityLabels).concat(SensitivityLabels.getFormFields())
+                                    });
+                                    break;
+                                default:
+                                    // Set the form
+                                    form = Components.Form({
+                                        el: Modal.BodyElement,
+                                        controls: getDefaultControl(item.value)
+                                    });
+                                    break;
+                            }
+                        }
+                    }
                 } as Components.IFormControlPropsDropdown
-            ]
+            ];
+        }
+
+        // Set the body
+        let form = Components.Form({
+            el: Modal.BodyElement,
+            controls: getDefaultControl()
         });
 
         // Set the footer
@@ -563,6 +594,7 @@ export class ListsTab {
                             // Validate the form
                             if (form.isValid()) {
                                 let selectedReport = form.getValues()["ReportType"].value;
+                                let values = form.getValues();
 
                                 // Show the form for the selected report
                                 switch (selectedReport) {
@@ -575,11 +607,12 @@ export class ListsTab {
                                         SearchEEEU.searchList(item.WebUrl, item.ListName, this._appProps.auditOnly);
                                         break;
                                     case ReportTypes.SensitivityLabels:
-                                        // Load the folders for this list
-                                        DataSource.loadFolders(item.WebId, item.DriveId).then(folders => {
-                                            // Show the senstivity label form
-                                            SensitivityLabels.showLibraryForm(item.WebId, item.ListName, item.DriveId, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt);
-                                        });
+                                        // Set the target web and list
+                                        values["TargetWeb"] = { text: item.WebUrl, value: item.WebId };
+                                        values["TargetList"] = item.ListName;
+
+                                        // Run the report
+                                        SensitivityLabels.runReportForLibrary(this._appProps.auditOnly, values);
                                         break;
                                     case ReportTypes.UniquePermissions:
                                         // Run the unique permissions report for this library
