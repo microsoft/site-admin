@@ -842,10 +842,39 @@ export class SensitivityLabels {
         Modal.clear();
         Modal.setHeader("Set Sensitivity Label");
 
+        // Render tabs
+        let nav = Components.Nav({
+            el: Modal.BodyElement,
+            isTabs: true,
+            isPills: true,
+            onClick: (newTab) => {
+                // See which tab was selected
+                if (newTab.tabName == "Bulk Label") {
+                    // Show/Hide controls
+                    form.getControl("SensitivityLabel").setDescription("This will apply the selected label to the file if it currently is not labelled.")
+                    form.getControl("OverrideLabel").show();
+                    form.getControl("ReplaceLabel").hide();
+                } else {
+                    // Show/Hide controls
+                    form.getControl("OverrideLabel").hide();
+                    form.getControl("ReplaceLabel").show();
+                }
+            },
+            items: [
+                {
+                    title: "Bulk Label",
+                    isActive: true
+                },
+                {
+                    title: "Replace Label"
+                }
+            ]
+        });
+
         // Set the form
         let form = Components.Form({
             el: Modal.BodyElement,
-            groupClassName: "mb-3",
+            groupClassName: "my-3",
             onRendered: () => {
                 // Set the folders to trigger the change events for the sub-folders
                 form.getControl("ListFolder").dropdown.setItems([defaultItem].concat(folders));
@@ -854,8 +883,8 @@ export class SensitivityLabels {
                 {
                     name: "SensitivityLabel",
                     label: "Select Sensitivity Label:",
-                    description: "This will set any file that isn't currently labelled.",
-                    errorMessage: "A sensitivity label is required.",
+                    description: "This will apply the selected label to the file if it currently is not labelled.",
+                    errorMessage: "A selection is required.",
                     items: DataSource.SensitivityLabelItems,
                     type: Components.FormControlTypes.Dropdown,
                     required: true,
@@ -869,7 +898,7 @@ export class SensitivityLabels {
                 {
                     name: "OverrideLabel",
                     label: "Override Label?",
-                    description: "If a label already exists, it will attempt to override it.",
+                    description: "Enable this option to override the current label.",
                     isDisabled: disableSensitivityLabelOverride,
                     type: Components.FormControlTypes.Switch,
                     value: false
@@ -1135,6 +1164,9 @@ export class SensitivityLabels {
                         text: "Update",
                         type: Components.ButtonTypes.OutlinePrimary,
                         onClick: () => {
+                            // Log
+                            console.log("Active Tab: " + nav.activeTab.tabName);
+
                             // Ensure the form is valid
                             if (form.isValid()) {
                                 let values = form.getValues();
@@ -1156,8 +1188,14 @@ export class SensitivityLabels {
                                 let justification = values["Justification"].text;
                                 justification = justification == "Other" ? values["JustificationOther"] : justification;
 
-                                // Label the files
-                                this.labelFilesInFolder(webId, listName, driveId, targetFolder?.id, fileExtensions, label, replaceLabel?.value ? replaceLabel : null, overrideLabelFl, justification);
+                                // Label the files, based on the selection
+                                if (nav.activeTab.tabName == "Bulk Label") {
+                                    // Label the files
+                                    this.labelFilesInFolder(webId, listName, driveId, targetFolder?.id, fileExtensions, label, null, overrideLabelFl, justification);
+                                } else {
+                                    // Label the files
+                                    this.labelFilesInFolder(webId, listName, driveId, targetFolder?.id, fileExtensions, label, replaceLabel, true, justification);
+                                }
                             }
                         }
                     }
