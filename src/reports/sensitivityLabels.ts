@@ -662,24 +662,17 @@ export class SensitivityLabels {
 
     // Shows the report form for a library
     static runReportForLibrary(auditOnly: boolean, values: { [key: string]: string }) {
-        // Clear a canvas form
-        CanvasForm.clear();
-        CanvasForm.setHeader("Sensitivity Files");
-        CanvasForm.setSize(Components.OffcanvasSize.Large1);
-        CanvasForm.setType(Components.OffcanvasTypes.End);
-
-        // Set the content
-        CanvasForm.setBody(`
-            <div></div>
-            <div class="d-flex justify-content-end"></div>
-        `);
+        // Clear a modal form
+        Modal.clear();
+        Modal.setHeader("Sensitivity Files");
+        Modal.setType(Components.ModalTypes.Full);
 
         // Run the report
-        this.run(CanvasForm.BodyElement.querySelector("div"), auditOnly, values, () => { });
+        this.run(Modal.BodyElement, auditOnly, values, () => { });
 
         // Render the footer
         Components.ButtonGroup({
-            el: CanvasForm.BodyElement.querySelector("div"),
+            el: Modal.FooterElement,
             className: "mt-3",
             buttons: [
                 {
@@ -687,14 +680,43 @@ export class SensitivityLabels {
                     type: Components.ButtonTypes.OutlineSecondary,
                     onClick: () => {
                         // Hide the form
-                        CanvasForm.hide();
+                        Modal.hide();
                     }
                 }
             ]
         });
 
         // Show the form
-        CanvasForm.show();
+        Modal.show();
+    }
+
+    // Sets the default label for a library
+    private static setDefaultLabel(webUrl: string, listName: string, labelId: string): PromiseLike<boolean> {
+        // Return a promise
+        return new Promise(resolve => {
+            // Show a loading dialog
+            LoadingDialog.setHeader("Updating List");
+            LoadingDialog.setBody("This dialog will close after the list is updated...");
+            LoadingDialog.show();
+
+            // Restore the permissions
+            Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
+                .Lists(listName).update({
+                    DefaultSensitivityLabelForLibrary: labelId
+                }).execute(() => {
+                    // Resolve the request
+                    resolve(true);
+
+                    // Hide the dialog
+                    LoadingDialog.hide();
+                }, () => {
+                    // Resolve the request
+                    resolve(false);
+
+                    // Hide the dialog
+                    LoadingDialog.hide();
+                });
+        });
     }
 
     // Shows the form to label a file
@@ -835,12 +857,81 @@ export class SensitivityLabels {
     }
 
     // Shows the form for a library
-    static showLibraryForm(webId: string, listName: string, driveId: string, defaultLabel: string, folders: Components.IDropdownItem[], disableSensitivityLabelOverride: boolean, fileTypes: string) {
+    static showLibraryForm(webId: string, webUrl: string, listName: string, driveId: string, defaultLabel: string, folders: Components.IDropdownItem[], disableSensitivityLabelOverride: boolean, fileTypes: string, onDefaultLabelSet: (labelId: string) => void) {
         let defaultItem: Components.IDropdownItem = { text: "All Folders", value: "" };
 
         // Set the modal header
         Modal.clear();
-        Modal.setHeader("Set Sensitivity Label");
+        Modal.setHeader("Sensitivity Labels");
+
+        // Updates the controls based on the selected tab
+        let updateControls = (tabName: string) => {
+            // Clear the validation on the form
+            form.clearValidation();
+
+            // See which tab was selected
+            switch (tabName) {
+                case "Bulk Label":
+                    // Show/Hide controls
+                    form.getControl("FileTypes").show();
+                    form.getControl("Justification").show();
+                    form.getControl("ListFolder").show();
+                    form.getControl("OverrideLabel").show();
+                    form.getControl("ReplaceLabel").hide();
+                    form.getControl("SensitivityLabel").setDescription("This will apply the selected label to the file if it currently is not labelled.");
+                    break;
+                case "Default Label":
+                    form.getControl("FileTypes").hide();
+                    form.getControl("Justification").hide();
+                    form.getControl("JustificationOther").hide();
+                    form.getControl("ListFolder").hide();
+                    form.getControl("ListSubFolder1").hide();
+                    form.getControl("ListSubFolder2").hide();
+                    form.getControl("ListSubFolder3").hide();
+                    form.getControl("ListSubFolder4").hide();
+                    form.getControl("ListSubFolder5").hide();
+                    form.getControl("OverrideLabel").hide();
+                    form.getControl("ReplaceLabel").hide();
+                    form.getControl("SensitivityLabel").setDescription("Select a label to be the default sensitivity label for this library.");
+                    break;
+                case "Replace Label":
+                    // Show/Hide controls
+                    form.getControl("FileTypes").show();
+                    form.getControl("Justification").show();
+                    form.getControl("ListFolder").show();
+                    form.getControl("OverrideLabel").hide();
+                    form.getControl("ReplaceLabel").show();
+                    form.getControl("SensitivityLabel").setDescription("Select a label to search for and replace with the selection below.");
+                    break;
+            }
+
+            // See if it's not the default label
+            if (tabName != "Default Label") {
+                let values = form.getValues();
+
+                // See if we are showing the other justification control
+                if ((values["Justification"] as Components.IDropdownItem)?.text == "Other") {
+                    form.getControl("JustificationOther").show();
+                }
+
+                // See if we are showing the sub-folder controls
+                if ((values["ListFolder"] as Components.IDropdownItem)?.value) {
+                    form.getControl("ListSubFolder1").show();
+                }
+                if ((values["ListSubFolder1"] as Components.IDropdownItem)?.value) {
+                    form.getControl("ListSubFolder2").show();
+                }
+                if ((values["ListSubFolder2"] as Components.IDropdownItem)?.value) {
+                    form.getControl("ListSubFolder3").show();
+                }
+                if ((values["ListSubFolder3"] as Components.IDropdownItem)?.value) {
+                    form.getControl("ListSubFolder4").show();
+                }
+                if ((values["ListSubFolder4"] as Components.IDropdownItem)?.value) {
+                    form.getControl("ListSubFolder5").show();
+                }
+            }
+        }
 
         // Render tabs
         let nav = Components.Nav({
@@ -848,22 +939,16 @@ export class SensitivityLabels {
             isTabs: true,
             isPills: true,
             onClick: (newTab) => {
-                // See which tab was selected
-                if (newTab.tabName == "Bulk Label") {
-                    // Show/Hide controls
-                    form.getControl("SensitivityLabel").setDescription("This will apply the selected label to the file if it currently is not labelled.")
-                    form.getControl("OverrideLabel").show();
-                    form.getControl("ReplaceLabel").hide();
-                } else {
-                    // Show/Hide controls
-                    form.getControl("OverrideLabel").hide();
-                    form.getControl("ReplaceLabel").show();
-                }
+                // Update the controls
+                updateControls(newTab.tabName);
             },
             items: [
                 {
-                    title: "Bulk Label",
+                    title: "Default Label",
                     isActive: true
+                },
+                {
+                    title: "Bulk Label"
                 },
                 {
                     title: "Replace Label"
@@ -878,6 +963,9 @@ export class SensitivityLabels {
             onRendered: () => {
                 // Set the folders to trigger the change events for the sub-folders
                 form.getControl("ListFolder").dropdown.setItems([defaultItem].concat(folders));
+
+                // Update the controls
+                updateControls(nav.activeTab.tabName);
             },
             controls: [
                 {
@@ -887,11 +975,18 @@ export class SensitivityLabels {
                     errorMessage: "A selection is required.",
                     items: DataSource.SensitivityLabelItems,
                     type: Components.FormControlTypes.Dropdown,
-                    required: true,
                     value: defaultLabel,
                     onValidate: (ctrl, results) => {
-                        // Ensure a selection exists
-                        results.isValid = results.value && results.value.text ? true : false;
+                        // See if we require a selection
+                        if (nav.activeTab.tabName == "Default Label") {
+                            // Allow a null option to clear the setting
+                            results.isValid = true;
+                        } else {
+                            // Ensure a selection exists
+                            results.isValid = results.value && results.value.text ? true : false;
+                        }
+
+                        // Return the results
                         return results;
                     }
                 } as Components.IFormControlPropsDropdown,
@@ -910,27 +1005,23 @@ export class SensitivityLabels {
                     items: DataSource.SensitivityLabelItems,
                     type: Components.FormControlTypes.Dropdown,
                     value: defaultLabel,
-                    onChange: (item) => {
-                        // See if an item was selected
-                        if (item && item.value) {
-                            // Hide the override label option
-                            form.getControl("OverrideLabel").hide();
-                        } else {
-                            // Show the override label option
-                            form.getControl("OverrideLabel").show();
-                        }
-                    },
                     onValidate: (ctrl, results) => {
-                        let item = results.value as Components.IDropdownItem;;
+                        // See if we require a selection
+                        if (nav.activeTab.tabName == "Default Label") {
+                            // Ignore this control option
+                            results.isValid = true;
+                        } else {
+                            let item = results.value as Components.IDropdownItem;;
 
-                        // See if a value exists
-                        if (item?.value) {
-                            // Get the source value
-                            let sourceItem = form.getControl("SensitivityLabel").getValue() as Components.IDropdownItem;
-                            if (sourceItem?.value == item.value) {
-                                // Set the validation
-                                results.isValid = false;
-                                results.invalidMessage = "The replace label cannot be the same as the sensitivity label.";
+                            // See if a value exists
+                            if (item?.value) {
+                                // Get the source value
+                                let sourceItem = form.getControl("SensitivityLabel").getValue() as Components.IDropdownItem;
+                                if (sourceItem?.value == item.value) {
+                                    // Set the validation
+                                    results.isValid = false;
+                                    results.invalidMessage = "The replace label cannot be the same as the sensitivity label.";
+                                }
                             }
                         }
 
@@ -949,7 +1040,7 @@ export class SensitivityLabels {
                     label: "Justification:",
                     description: "Your organization requires justification to change this label.",
                     type: Components.FormControlTypes.Dropdown,
-                    required: true,
+                    errorMessage: "A justification is required.",
                     items: [
                         { text: "Previous label no longer applies" },
                         { text: "Previous label was incorrect" },
@@ -966,6 +1057,19 @@ export class SensitivityLabels {
                             // Hide it
                             ctrlTextbox.hide();
                         }
+                    },
+                    onValidate: (ctrl, results) => {
+                        // See if we require a selection
+                        if (nav.activeTab.tabName == "Default Label") {
+                            // Ignore this control option
+                            results.isValid = true;
+                        } else {
+                            // Ensure a value exists
+                            results.isValid = results.value && results.value.text ? true : false;
+                        }
+
+                        // Return the results
+                        return results;
                     }
                 } as Components.IFormControlPropsDropdown,
                 {
@@ -976,12 +1080,18 @@ export class SensitivityLabels {
                     type: Components.FormControlTypes.TextField,
                     errorMessage: "A justification is required.",
                     onValidate: (ctrl, results) => {
-                        let item = form.getValues()["Justification"] as Components.IDropdownItem;
+                        // See if we require a selection
+                        if (nav.activeTab.tabName == "Default Label") {
+                            // Ignore this control option
+                            results.isValid = true;
+                        } else {
+                            let item = form.getValues()["Justification"] as Components.IDropdownItem;
 
-                        // See if we are expecting a justification
-                        if (item.text == "Other") {
-                            // Set the falg
-                            results.isValid = results.value ? true : false;
+                            // See if we are expecting a justification
+                            if (item.text == "Other") {
+                                // Set the flag
+                                results.isValid = results.value?.trim() ? true : false;
+                            }
                         }
 
                         // Return the results
@@ -1188,13 +1298,26 @@ export class SensitivityLabels {
                                 let justification = values["Justification"].text;
                                 justification = justification == "Other" ? values["JustificationOther"] : justification;
 
-                                // Label the files, based on the selection
-                                if (nav.activeTab.tabName == "Bulk Label") {
-                                    // Label the files
-                                    this.labelFilesInFolder(webId, listName, driveId, targetFolder?.id, fileExtensions, label, null, overrideLabelFl, justification);
-                                } else {
-                                    // Label the files
-                                    this.labelFilesInFolder(webId, listName, driveId, targetFolder?.id, fileExtensions, label, replaceLabel, true, justification);
+                                // Call the appropriate function based on the selection
+                                switch (nav.activeTab.tabName) {
+                                    case "Default Label":
+                                        // Set the default label
+                                        this.setDefaultLabel(webUrl, listName, label.value).then(successFl => {
+                                            // See if it was successful
+                                            if (successFl) {
+                                                // Call the event to update the list
+                                                onDefaultLabelSet(label.value);
+                                            }
+                                        });
+                                        break;
+                                    case "Bulk Label":
+                                        // Label the files
+                                        this.labelFilesInFolder(webId, listName, driveId, targetFolder?.id, fileExtensions, label, null, overrideLabelFl, justification);
+                                        break;
+                                    case "Replace Label":
+                                        // Label the files
+                                        this.labelFilesInFolder(webId, listName, driveId, targetFolder?.id, fileExtensions, label, replaceLabel, true, justification);
+                                        break;
                                 }
                             }
                         }
