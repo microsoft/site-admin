@@ -721,13 +721,21 @@ export class SensitivityLabels {
 
     // Shows the form to label a file
     private static showLabelFileForm(file: Types.Microsoft.Graph.driveItem, onUpdate: (label: string) => void) {
-        // Set the modal header
-        Modal.clear();
-        Modal.setHeader("Set Sensitivity Label");
+        // Set the canvas
+        CanvasForm.clear();
+        CanvasForm.setHeader("Set Sensitivity Label");
+        CanvasForm.setSize(Components.OffcanvasSize.Medium2);
+        CanvasForm.setType(Components.OffcanvasTypes.End);
+
+        // Set the content
+        CanvasForm.setBody(`
+            <div></div>
+            <div class="d-flex justify-content-end"></div>
+        `);
 
         // Set the form
         let form = Components.Form({
-            el: Modal.BodyElement,
+            el: CanvasForm.BodyElement.querySelector("div"),
             groupClassName: "mb-3",
             controls: [
                 {
@@ -793,7 +801,7 @@ export class SensitivityLabels {
 
         // Set the footer
         Components.TooltipGroup({
-            el: Modal.FooterElement,
+            el: CanvasForm.BodyElement.querySelector("div.d-flex"),
             tooltips: [
                 {
                     content: "Sets the default sensitivity label to the selected option.",
@@ -852,8 +860,8 @@ export class SensitivityLabels {
             ]
         });
 
-        // Show the modal
-        Modal.show();
+        // Show the form
+        CanvasForm.show();
     }
 
     // Shows the form for a library
