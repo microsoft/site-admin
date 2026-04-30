@@ -173,23 +173,6 @@ export class ListsTab {
         if (!this._appProps.auditOnly || !this._appProps.hideReports?.sensitivityLabels) {
             let tooltip: Components.ITooltip = null;
 
-            // Ensure this is a library and has a drive
-            if (isLibrary && item.DriveId) {
-                // Set the default label
-                tooltips.add({
-                    content: "Click to set the default sensitivity label.",
-                    btnProps: {
-                        isDisabled: !DataSource.HasSensitivityLabels,
-                        text: "Default Label",
-                        type: Components.ButtonTypes.OutlinePrimary,
-                        onClick: () => {
-                            // Show the form
-                            this.setDefaultSensitivityLabel(item);
-                        }
-                    }
-                });
-            }
-
             // Update the list to be in or out of the search index
             tooltips.add({
                 assignTo: obj => { tooltip = obj; },
@@ -212,11 +195,42 @@ export class ListsTab {
             });
         }
 
+        // See if this is a drive
+        if (isLibrary && item.DriveId) {
+            // Add the bulk label option
+            tooltips.add({
+                content: "Click to see sensitivity label options for this library.",
+                btnProps: {
+                    text: "Sensitivity Labels",
+                    type: Components.ButtonTypes.OutlinePrimary,
+                    onClick: () => {
+                        // Show a loading dialog
+                        LoadingDialog.setHeader("Loading Folders");
+                        LoadingDialog.setBody("Loading the root folders of this library...");
+                        LoadingDialog.show();
+
+                        // Load the folders for this list
+                        DataSource.loadFolders(item.WebId, item.DriveId).then(folders => {
+                            // Show the senstivity label form
+                            SensitivityLabels.showLibraryForm(item.WebId, item.WebUrl, item.ListName, item.DriveId, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt, labelId => {
+                                // Update the default sensitivity label for this library
+                                item.DefaultSensitivityLabel = DataSource.getSensitivityLabel(labelId);
+                                this._dt.updateCell(rowIdx, 2, item);
+                            });
+
+                            // Hide the dialog
+                            LoadingDialog.hide();
+                        });
+                    }
+                }
+            });
+        }
+
         // Add the reports tooltip
         tooltips.add({
             content: "Click to run an audit report on this list.",
             btnProps: {
-                text: "View Reports",
+                text: "Reporting",
                 type: Components.ButtonTypes.OutlinePrimary,
                 onClick: () => {
                     // Show the reports form
@@ -320,90 +334,6 @@ export class ListsTab {
         this._elSubNav.classList.remove("d-none");
         this._elSubNav.classList.add("my-2");
         this._elSubNav.innerHTML = `<div class="h6">Loading the webs...</div>`;
-    }
-
-    // Reverts the item permissions
-    private setDefaultSensitivityLabel(item: IList) {
-        // Set the modal header
-        Modal.clear();
-        Modal.setHeader("Set Default Sensitivity Label");
-
-        // Set the form
-        let form = Components.Form({
-            el: Modal.BodyElement,
-            controls: [
-                {
-                    name: "SensitivityLabel",
-                    label: "Select Sensitivity Label:",
-                    description: "This will set the default sensitivity label for this library.",
-                    items: DataSource.SensitivityLabelItems,
-                    type: Components.FormControlTypes.Dropdown,
-                    required: true,
-                    value: item.DefaultSensitivityLabel
-                } as Components.IFormControlPropsDropdown
-            ]
-        });
-
-        // Set the footmer
-        Components.TooltipGroup({
-            el: Modal.FooterElement,
-            tooltips: [
-                {
-                    content: "Sets the default sensitivity label to the selected option.",
-                    btnProps: {
-                        text: "Update",
-                        type: Components.ButtonTypes.OutlinePrimary,
-                        onClick: () => {
-                            // Ensure the form is valid
-                            if (form.isValid()) {
-                                let labelId = form.getValues()["SensitivityLabel"].value;
-
-                                // Show a loading dialog
-                                LoadingDialog.setHeader("Updating List");
-                                LoadingDialog.setBody("This dialog will close after the list is updated...");
-                                LoadingDialog.show();
-
-                                // Set the logic to run after the update completes
-                                let onComplete = () => {
-                                    // Hide the dialogs
-                                    LoadingDialog.hide();
-                                    Modal.hide();
-                                }
-
-                                // Restore the permissions
-                                Web(item.WebUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
-                                    .Lists().getById(item.ListId).update({
-                                        DefaultSensitivityLabelForLibrary: labelId
-                                    }).execute(() => {
-                                        // Update the item
-                                        item.DefaultSensitivityLabel = labelId;
-
-                                        // Update the data table
-                                        // TODO
-
-                                        // Run the complete logic
-                                        onComplete();
-                                    }, onComplete);
-                            }
-                        }
-                    }
-                },
-                {
-                    content: "Closes the dialog.",
-                    btnProps: {
-                        text: "Close",
-                        type: Components.ButtonTypes.OutlineSecondary,
-                        onClick: () => {
-                            // Close the modal
-                            Modal.hide();
-                        }
-                    }
-                }
-            ]
-        });
-
-        // Show the modal
-        Modal.show();
     }
 
     // Adds/Removes the list content from the search index
@@ -516,20 +446,51 @@ export class ListsTab {
         Modal.clear();
         Modal.setHeader("Select Report");
 
-        // Set the body
-        let form = Components.Form({
-            el: Modal.BodyElement,
-            controls: [
+        // Returns the default control for the form
+        let getDefaultControl = (selectedReport?: string) => {
+            return [
                 {
                     name: "ReportType",
                     label: "Select Report:",
                     description: "Select a report to run against this list.",
                     items,
+                    value: selectedReport,
                     type: Components.FormControlTypes.Dropdown,
                     required: true,
-                    errorMessage: "A report selection is required."
+                    errorMessage: "A report selection is required.",
+                    onChange: (item) => {
+                        // Ensure an item is selected
+                        if (item && item.value) {
+                            // Clear the body
+                            while (Modal.BodyElement.firstChild) { Modal.BodyElement.removeChild(Modal.BodyElement.firstChild); }
+
+                            // Append the controls
+                            switch (item.value) {
+                                case ReportTypes.SensitivityLabels:
+                                    // Set the form
+                                    form = Components.Form({
+                                        el: Modal.BodyElement,
+                                        controls: getDefaultControl(ReportTypes.SensitivityLabels).concat(SensitivityLabels.getFormFields())
+                                    });
+                                    break;
+                                default:
+                                    // Set the form
+                                    form = Components.Form({
+                                        el: Modal.BodyElement,
+                                        controls: getDefaultControl(item.value)
+                                    });
+                                    break;
+                            }
+                        }
+                    }
                 } as Components.IFormControlPropsDropdown
-            ]
+            ];
+        }
+
+        // Set the body
+        let form = Components.Form({
+            el: Modal.BodyElement,
+            controls: getDefaultControl()
         });
 
         // Set the footer
@@ -544,6 +505,7 @@ export class ListsTab {
                             // Validate the form
                             if (form.isValid()) {
                                 let selectedReport = form.getValues()["ReportType"].value;
+                                let values = form.getValues();
 
                                 // Show the form for the selected report
                                 switch (selectedReport) {
@@ -556,11 +518,12 @@ export class ListsTab {
                                         SearchEEEU.searchList(item.WebUrl, item.ListName, this._appProps.auditOnly);
                                         break;
                                     case ReportTypes.SensitivityLabels:
-                                        // Load the folders for this list
-                                        DataSource.loadFolders(item.WebId, item.DriveId).then(folders => {
-                                            // Show the senstivity label form
-                                            SensitivityLabels.showLibraryForm(item.WebId, item.ListName, item.DriveId, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt);
-                                        });
+                                        // Set the target web and list
+                                        values["TargetWeb"] = { text: item.WebUrl, value: item.WebId };
+                                        values["TargetList"] = item.ListName;
+
+                                        // Run the report
+                                        SensitivityLabels.runReportForLibrary(this._appProps.auditOnly, values);
                                         break;
                                     case ReportTypes.UniquePermissions:
                                         // Run the unique permissions report for this library
