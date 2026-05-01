@@ -88,7 +88,7 @@ export class BulkLabel {
     }
 
     // Labels files for a specified folder
-    private static labelFilesInFolder(webId: string, listName: string, driveId: string, folderId: string, fileExtensions: string[], label: Components.IDropdownItem, replaceLabel: Components.IDropdownItem, overrideLabelFl: boolean, justification: string) {
+    private static labelFilesInFolder(webId: string, webUrl: string, listName: string, driveId: string, folderId: string, fileExtensions: string[], label: Components.IDropdownItem, replaceLabel: Components.IDropdownItem, overrideLabelFl: boolean, justification: string) {
         let responses: ISetSensitivityLabelResponse[] = [];
 
         // Show the responses
@@ -243,7 +243,7 @@ export class BulkLabel {
         };
 
         // Load the files for this drive
-        DataSource.loadFiles(webId, driveId, folderId, file => {
+        DataSource.loadFiles(webId, webUrl, driveId, folderId, false, file => {
             // Add the file to process
             filesToProcess.push(file);
 
@@ -749,11 +749,11 @@ export class BulkLabel {
                                         break;
                                     case "Bulk Label":
                                         // Label the files
-                                        this.labelFilesInFolder(webId, listName, driveId, targetFolder?.id, fileExtensions, label, null, overrideLabelFl, justification);
+                                        this.labelFilesInFolder(webId, webUrl, listName, driveId, targetFolder?.id, fileExtensions, label, null, overrideLabelFl, justification);
                                         break;
                                     case "Replace Label":
                                         // Label the files
-                                        this.labelFilesInFolder(webId, listName, driveId, targetFolder?.id, fileExtensions, label, replaceLabel, true, justification);
+                                        this.labelFilesInFolder(webId, webUrl, listName, driveId, targetFolder?.id, fileExtensions, label, replaceLabel, true, justification);
                                         break;
                                 }
                             }

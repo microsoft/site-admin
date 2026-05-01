@@ -482,7 +482,7 @@ export class DataSource {
     }
 
     // Loads the files for a drive
-    static loadFiles(webId: string, driveId: string, folderId: string, onFile?: (file: Types.Microsoft.Graph.driveItem) => boolean | void): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
+    static loadFiles(webId: string, webUrl: string, driveId: string, folderId: string, permissions?: boolean, onFile?: (file: Types.Microsoft.Graph.driveItem) => boolean | void): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
         let files = [];
         let isOneDrive = webId == DataSource.OneDriveWeb?.Id;
         let stopFl = false;
@@ -503,8 +503,12 @@ export class DataSource {
                 let folders = driveFolder.children();
                 folders.query({
                     GetAllItems: true,
-                    Select: ["createdBy", "driveId", "file", "folder", "id", "name", "parentReference", "sensitivityLabel", "webUrl"],
-                    Top: 5000
+                    Top: 5000,
+                    Expand: ["listItem"],
+                    Select: [
+                        "createdBy", "driveId", "file", "folder", "id", "name",
+                        "parentReference", "sensitivityLabel", "webUrl", "listItem/id"
+                    ]
                 }).execute(resp => {
                     // Parse the items
                     Helper.Executor(resp["d"].value, (driveItem: Types.Microsoft.Graph.driveItem) => {
@@ -513,17 +517,47 @@ export class DataSource {
                         // See if this is a file
                         if (driveItem.file) {
                             // Process the file
-                            let returnVal = onFile ? onFile(driveItem) : null;
-                            if (returnVal) {
-                                // Set the flag
-                                stopFl = true;
+                            let processFile = () => {
+                                let returnVal = onFile ? onFile(driveItem) : null;
+                                if (returnVal) {
+                                    // Set the flag
+                                    stopFl = true;
 
-                                // Stop the requests
-                                folders.stop();
+                                    // Stop the requests
+                                    folders.stop();
+                                }
                             }
 
-                            // Append the file
-                            files.push(driveItem);
+                            // See if we are loading permisssions
+                            if (permissions) {
+                                // Return a promise
+                                return new Promise(resolve => {
+                                    // Load the permissions
+                                    Web(webUrl, { requestDigest: this.SiteContext.FormDigestValue })
+                                        .Lists(driveItem.parentReference.name).Items(driveItem.listItem["id"]).query({
+                                            Expand: ["RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings"],
+                                            Select: ["Id", "HasUniqueRoleAssignments"]
+                                        }).execute(result => {
+                                            // Set the permissions
+                                            driveItem.listItem = result as any;
+
+                                            // Process the file
+                                            processFile();
+
+                                            // Append the file
+                                            files.push(driveItem);
+
+                                            // Process the next file
+                                            resolve(null);
+                                        }, resolve);
+                                });
+                            } else {
+                                // Process the file
+                                processFile();
+
+                                // Append the file
+                                files.push(driveItem);
+                            }
                         }
                         // Else, it's a folder
                         else if (driveItem.folder) {

@@ -10,9 +10,12 @@ export interface ISensitivityLabelItem {
     File: Types.Microsoft.Graph.driveItem;
     FileExtension: string;
     FileName: string;
+    HasUniquePermissions: boolean;
+    ItemId: number;
     ListId: string;
     ListTitle: string;
     Path: string;
+    Permissions: Types.SP.RoleAssignmentOData[];
     SensitivityLabel: string;
     SensitivityLabelId: string;
     WebUrl: string;
@@ -112,7 +115,7 @@ export class SensitivityLabels {
 
                     // Get the files for this library
                     let filesProcessed = 0;
-                    DataSource.loadFiles(webId, drive.id, null, (file: Types.Microsoft.Graph.driveItem) => {
+                    DataSource.loadFiles(webId, webUrl, drive.id, null, true, (file: Types.Microsoft.Graph.driveItem) => {
                         let hasLabel = file.sensitivityLabel && file.sensitivityLabel.displayName ? true : false;
 
                         // Update the dialog
@@ -130,14 +133,17 @@ export class SensitivityLabels {
                             let folderPath = file.parentReference.path.split('root:')[1];
 
                             // Append the data
-                            let fileItem = {
+                            let fileItem: ISensitivityLabelItem = {
                                 Author: file.createdBy.user["email"] || file.createdBy.user["displayName"],
                                 File: file,
                                 FileExtension: fileInfo[fileInfo.length - 1],
                                 FileName: file.name,
+                                HasUniquePermissions: file.listItem["HasUniquePermissions"],
+                                ItemId: file.listItem["Id"],
                                 ListId: lib.Id,
                                 ListTitle: lib.Title,
                                 Path: `${lib.RootFolder.ServerRelativeUrl}${folderPath}/${file.name}`,
+                                Permissions: file.listItem["RoleAssignments"].results,
                                 SensitivityLabel: file.sensitivityLabel.displayName,
                                 SensitivityLabelId: file.sensitivityLabel.id,
                                 WebId: webId,
@@ -208,14 +214,14 @@ export class SensitivityLabels {
                 onRendering: dtProps => {
                     dtProps.columnDefs = [
                         {
-                            "targets": 4,
+                            "targets": 5,
                             "orderable": false,
                             "searchable": false
                         }
                     ];
 
                     // Order by the 1st column by default; ascending
-                    dtProps.order = [[3, "asc"]];
+                    dtProps.order = [[4, "asc"]];
 
                     // Return the properties
                     return dtProps;
@@ -244,6 +250,49 @@ export class SensitivityLabels {
                     {
                         name: "SensitivityLabel",
                         title: "Sensitivity Label"
+                    },
+                    {
+                        name: "",
+                        title: "Permissions",
+                        onRenderCell: (el, col, item: ISensitivityLabelItem) => {
+                            let adGroups = 0;
+                            let m365Groups = 0;
+                            let siteGroups = 0;
+                            let users = 0;
+
+                            // Parse the permissions
+                            item.Permissions.forEach(role => {
+                                // See if this is a user
+                                switch (role.Member.PrincipalType) {
+                                    case SPTypes.PrincipalTypes.User:
+                                        users++;
+                                        break;
+                                    case SPTypes.PrincipalTypes.SharePointGroup:
+                                        siteGroups++;
+                                        break;
+                                    default:
+                                        /*
+                                        let groupId = M365Groups.getGroupId(role.Member.LoginName);
+                                        groupId ? m365Groups++ : adGroups++;
+                                        */
+                                        break;
+                                }
+                            });
+
+                            // Output the permission information
+                            el.innerHTML = `
+                                                    <b>Unique Permissions: </b>${item.HasUniquePermissions ? "Yes" : "No"}
+                                                    <br/>
+                                                    <b># of Users: </b>${users}
+                                                    <br/>
+                                                    <b># of Site Groups: </b>${siteGroups}
+                                                    <br/>
+                                                    <b># of AD Groups: </b>${adGroups}
+                                                    <br/>
+                                                    <b># of M365 Groups: </b>${m365Groups}
+                                                    <br/>
+                                                `;
+                        }
                     },
                     {
                         className: "text-end",
