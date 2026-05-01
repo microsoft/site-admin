@@ -672,7 +672,7 @@ export class DLP {
 
     // Reverts the item permissions
     private static revertPermissions(item: IDLPItem, onComplete: () => void) {
-        // Show a canvas form
+        // Clear a canvas form
         CanvasForm.clear();
         CanvasForm.setHeader("Secure File");
         CanvasForm.setType(Components.OffcanvasTypes.End);

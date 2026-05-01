@@ -31,35 +31,6 @@ $siteAttestationUserProp = "AttestationUser";
 ############################################### Global Vars ###############################################
 
 ############################################### Functions ###############################################
-function GetAllADMembers {
-    [CmdletBinding()]
-    [OutputType([string[]])]
-    param (
-        [Parameter(Mandatory = $true)]
-        [string]$GroupName
-    )
-
-    $memberEmails = @();
-    $groupMembers = Get-PnPAzureADGroupMember -Identity $GroupName;
-    if ($groupMembers) {
-        $groupMembers | ForEach-Object {
-            if ($_.UserType -eq 'Member') {
-                $memberEmails += $_.Email;
-            }
-            else {
-                # nested security group
-                $memberEmails += GetAllADMembers -GroupName $_.DisplayName;
-            }
-        }
-    }
-    else {
-        Write-Host "Could not find group $GroupName in M365 or AD";
-    }
-
-    # Return the member emails
-    Write-Output $memberEmails;
-}
-
 function IsSiteCollectionAdmin {
     [CmdletBinding()]
     [OutputType([bool])]
@@ -69,38 +40,46 @@ function IsSiteCollectionAdmin {
         $UserEmail
     )
 
-    $SiteAdminstrators = @();
-    Get-PnPSiteCollectionAdmin -PipelineVariable Admin | ForEach-Object {
-        if ($_.PrincipalType -eq 'SecurityGroup') {
+    # Flag to return
+    $IsSiteAdmin = $false;
+
+    # Log
+    Write-Host "Validating user $UserEmail is a site admin...";
+
+    # Get the site admins
+    $SiteAdminstrators = Get-PnPSiteCollectionAdmin;
+    foreach($Admin in $SiteAdminstrators) {
+        # Check if this is the user
+        if($Admin.LoginName -eq $UserEmail -or $Admin.Email -eq $UserEmail) {
+            # Set the flag
+            $IsSiteAdmin = $true;
+            break;
+        }
+
+        # See if this is a group
+        if ($Admin.PrincipalType -eq 'SecurityGroup') {
             #Get Members of the Group
-            $group = Get-PnPMicrosoft365Group -IncludeOwners | Where-Object { $_.Mail -eq $Admin.Email }
-            if ($group) {
-                $group.Owners | Select-Object Email | ForEach-Object {
-                    $SiteAdminstrators += $_.Email;
-                }
-                # Also include members of M365 group unless it is specifically the group owners (designated with _o)
-                if (!$Admin.LoginName.EndsWith('_o')) {
-                    $Members = Get-PnPMicrosoft365GroupMember -Identity $Group.Id -ErrorAction SilentlyContinue;
-                    $Members | ForEach-Object {
-                        $SiteAdminstrators += $_.Email;
+            $groupMembers = Get-PnPAzureADGroupMember -Identity $Admin.Title -ErrorAction SilentlyContinue;
+            if($groupMembers) {
+                foreach($member in $groupMembers) {
+                    # Check if the user is a member
+                    if($member.UserPrincipalName -eq $UserEmail -or $member.Mail -eq $UserEmail) {
+                        $IsSiteAdmin = $true;
+                        break;
                     }
                 }
             }
-            else {
-                # Not a M365 group. Try to get the group from AD
-                $SiteAdminstrators += GetAllADMembers -GroupName $Admin.Title;
-            }
-        }
-        else {
-            $SiteAdminstrators += $Admin.Email;
+
+            # Break from the loop if the flag is set
+            if($IsSiteAdmin) { break; }
         }
     }
 
-    # Sort and remove duplicates
-    $SiteAdminstrators = $SiteAdminstrators | Sort-Object -Unique;
+    # Log
+    Write-Host "The user $($IsSiteAdmin ? "is" : "is not") a site collection admin";
 
-    # Return true/false if the user email is in the site admin array
-    $SiteAdminstrators -contains $UserEmail;
+    # Return the flag
+    return $IsSiteAdmin;
 }
 ############################################### Functions ###############################################
 
@@ -145,6 +124,9 @@ if ($azureEnv) {
 else {
     Connect-PnPOnline -Url $appUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert;
 }
+
+# Log
+Write-Host "Connected to site: $appUrl"
 ############################################### SP Connection ###############################################
 
 ############################################### Main App ###############################################
@@ -170,6 +152,7 @@ if ($item -ne $null) {
         Write-Host "Processing site $siteUrl";
         Write-Host "Request Type: $requestType";
         Write-Host "Request Value: $value";
+        Write-Host "Connecting to target site: $siteUrl";
 
         # See if we have set the azure environment
         if ($azureEnv) {
@@ -181,11 +164,11 @@ if ($item -ne $null) {
             Connect-PnPOnline -Url $siteUrl -Tenant $tenant -ClientId $clientId -Thumbprint $cert;
         }
 
+        # Log
+        Write-Host "Connected to target site: $siteUrl";
+        
         # Check to make sure the user requesting the change is an admin
         if (-not(IsSiteCollectionAdmin -UserEmail $item["Author"].EMail)) {
-            # Log
-            Write-Host "The user is not a site collection admin";
-
             # Set the output
             $output = "The user is not a site collection admin.";
 
