@@ -586,5 +586,9 @@ export class SensitivityLabels {
     }
 
     // Stops the report
-    static stop() { this._stopFl = true; }
+    static stop() {
+        // Set the stop flags
+        this._stopFl = true;
+        BulkLabel.stop();
+    }
 }

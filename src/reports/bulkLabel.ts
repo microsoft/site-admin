@@ -866,4 +866,10 @@ export class BulkLabel {
         // Show the modal
         Modal.show();
     }
+
+    // Stops the report
+    static stop() {
+        // Set the stop flag
+        this._stopFl = true;
+    }
 }
