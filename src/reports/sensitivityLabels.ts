@@ -250,7 +250,7 @@ export class SensitivityLabels {
                 onRendering: dtProps => {
                     dtProps.columnDefs = [
                         {
-                            "targets": [4, 5, 6],
+                            "targets": [5, 6],
                             "orderable": false,
                             "searchable": false
                         }
@@ -285,7 +285,11 @@ export class SensitivityLabels {
                     },
                     {
                         name: "SensitivityLabel",
-                        title: "Sensitivity Label"
+                        title: "Sensitivity Label",
+                        onRenderCell: (el) => {
+                            // Make the text display in the middle
+                            el.style.verticalAlign = "middle";
+                        }
                     },
                     {
                         name: "",
@@ -432,7 +436,8 @@ export class SensitivityLabels {
                                             // Show the form to label the file
                                             this.showLabelFileForm(row.File, label => {
                                                 // Update the row cell
-                                                this._dashboard.updateCell(rowIdx, 3, label);
+                                                row.SensitivityLabel = label;
+                                                this._dashboard.updateCell(rowIdx, 3, row);
                                             });
                                         }
                                     }
@@ -692,9 +697,9 @@ export class SensitivityLabels {
                                 LoadingDialog.show();
 
                                 // Label the file
-                                BulkLabel.labelFile(file, label.text, label.value, justification, []).then(responses => {
+                                BulkLabel.labelFile(file, label.text, label.value, justification, []).then(response => {
                                     // See if it was successful
-                                    if (!responses[0].errorFl) {
+                                    if (!response.errorFl) {
                                         // Call the event
                                         onUpdate(label.text);
                                     } else {
@@ -702,13 +707,13 @@ export class SensitivityLabels {
                                         let ctrl = form.getControl("SensitivityLabel");
                                         ctrl.updateValidation(ctrl.el, {
                                             isValid: false,
-                                            invalidMessage: responses[0].message
+                                            invalidMessage: response.message
                                         });
                                     }
 
                                     // Hide the dialogs
                                     LoadingDialog.hide();
-                                    Modal.hide();
+                                    CanvasForm.hide();
                                 });
                             }
                         }
@@ -720,8 +725,8 @@ export class SensitivityLabels {
                         text: "Close",
                         type: Components.ButtonTypes.OutlineSecondary,
                         onClick: () => {
-                            // Close the modal
-                            Modal.hide();
+                            // Close the form
+                            CanvasForm.hide();
                         }
                     }
                 }

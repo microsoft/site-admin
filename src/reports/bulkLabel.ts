@@ -27,7 +27,7 @@ export class BulkLabel {
     private static _stopFl: boolean = false;
 
     // Labels a file
-    static labelFile(file: Types.Microsoft.Graph.driveItem, label: string, labelId: string, justification: string, responses: ISetSensitivityLabelResponse[]): PromiseLike<ISetSensitivityLabelResponse[]> {
+    static labelFile(file: Types.Microsoft.Graph.driveItem, label: string, labelId: string, justification: string, responses: ISetSensitivityLabelResponse[]): PromiseLike<ISetSensitivityLabelResponse> {
         // Update the sensitivity label for this file
         return new Promise(resolve => {
             // Update the sensitivity label
@@ -55,11 +55,9 @@ export class BulkLabel {
                         message: `The file was successfully labelled: ${label}.`,
                         url: file.webUrl
                     };
-                    responses.push(response);
-                    this._dashboard.Datatable.addRow(response);
 
                     // Resolve the request
-                    resolve(responses);
+                    resolve(response);
                 },
 
                 // Error
@@ -77,11 +75,9 @@ export class BulkLabel {
                         message: `There was an error tagging this file: ${error}`,
                         url: file.webUrl
                     };
-                    responses.push(response);
-                    this._dashboard.Datatable.addRow(response);
 
                     // Resolve the request
-                    resolve(responses);
+                    resolve(response);
                 }
             );
         });
@@ -217,7 +213,11 @@ export class BulkLabel {
             // Labels the file
             let labelFile = () => {
                 // Label the file
-                this.labelFile(file, fileLabel.text, fileLabel.value, justification, responses).then(() => {
+                this.labelFile(file, fileLabel.text, fileLabel.value, justification, responses).then((response) => {
+                    // Add the response
+                    responses.push(response);
+                    this._dashboard.Datatable.addRow(response);
+
                     // Update the dialog
                     this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] File Labelled: ${file.name}`;
 
