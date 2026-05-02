@@ -1,6 +1,7 @@
 import { CanvasForm, Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
 import { Components, Helper, SPTypes, Types, Web, v2 } from "gd-sprest-bs";
 import { DataSource } from "../ds";
+import { M365Groups } from "../m365Groups";
 import { BulkLabel } from "./bulkLabel";
 import { ExportCSV } from "./exportCSV";
 import { ViewPermissions } from "./viewPermissions";
@@ -337,10 +338,8 @@ export class SensitivityLabels {
                                         siteGroups++;
                                         break;
                                     default:
-                                        /*
                                         let groupId = M365Groups.getGroupId(role.Member.LoginName);
                                         groupId ? m365Groups++ : adGroups++;
-                                        */
                                         break;
                                 }
                             });
