@@ -249,14 +249,14 @@ export class SensitivityLabels {
                 onRendering: dtProps => {
                     dtProps.columnDefs = [
                         {
-                            "targets": 5,
+                            "targets": [4, 5, 6],
                             "orderable": false,
                             "searchable": false
                         }
                     ];
 
-                    // Order by the 1st column by default; ascending
-                    dtProps.order = [[4, "asc"]];
+                    // Order by sensitivity label
+                    dtProps.order = [[3, "asc"]];
 
                     // Return the properties
                     return dtProps;
@@ -285,6 +285,37 @@ export class SensitivityLabels {
                     {
                         name: "SensitivityLabel",
                         title: "Sensitivity Label"
+                    },
+                    {
+                        name: "",
+                        title: "Overshared",
+                        onRenderCell: (el, col, item: ISensitivityLabelItem) => {
+                            let isOvershared = item.Overshared === "Yes" ? true : false;
+
+                            // Set the order info
+                            el.setAttribute("data-order", item.Overshared);
+
+                            // Make the badge display in the middle
+                            el.style.verticalAlign = "middle";
+
+                            // Render a badge
+                            let badge = Components.Badge({
+                                el,
+                                className: "me-2",
+                                content: isOvershared ? "Overshared" : item.Overshared,
+                                type: isOvershared ? Components.BadgeTypes.Danger : Components.BadgeTypes.Secondary,
+                                isPill: true
+                            });
+
+                            // See if this is overshared
+                            if (isOvershared) {
+                                // Render a tooltip
+                                Components.Tooltip({
+                                    target: badge.el,
+                                    content: `The file has been flagged as overshared because it's shared with the following groups:<br/>${ViewPermissions.getOversharedGroups(item.Permissions).join("<br/>")}`
+                                });
+                            }
+                        }
                     },
                     {
                         name: "",
@@ -341,9 +372,10 @@ export class SensitivityLabels {
                                 isVertical: true,
                                 tooltips: [
                                     {
-                                        content: "View Document",
+                                        content: "Click to view the document.",
                                         btnProps: {
-                                            text: "View",
+                                            className: "pe-2 py-1",
+                                            text: "View File",
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
                                                 // View the document
