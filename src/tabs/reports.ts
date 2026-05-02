@@ -2,6 +2,7 @@ import { Components } from "gd-sprest-bs";
 import { DataSource } from "../ds";
 import { IAppProps } from "../app";
 import * as Reports from "../reports";
+import { ViewPermissions } from "../reports/viewPermissions";
 import { ISearchProps } from "./searchProp";
 
 // Report Properties
@@ -52,6 +53,9 @@ export class ReportsTab {
         this._loadOneDrive = loadOneDrive;
         this._reportProps = appProps.reportProps;
         this._searchProps = appProps.searchProps;
+
+        // Set the overshared groups
+        ViewPermissions.OversharedGroups = appProps.reportProps.dlpGroups || [];
 
         // Determine if this is in audit mode
         this._auditOnly = !DataSource.IsAdmin || (appProps.auditOnly ? true : false);
@@ -278,7 +282,7 @@ export class ReportsTab {
                 // Run the report
                 switch (this._selectedReport) {
                     case ReportTypes.DLP:
-                        Reports.DLP.run(this._el, this._auditOnly, this._appProps.reportProps.dlpGroups, formValues, () => {
+                        Reports.DLP.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });

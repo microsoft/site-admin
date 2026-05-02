@@ -1,9 +1,9 @@
 import { CanvasForm, Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
 import { Components, Helper, SPTypes, Types, Web, v2 } from "gd-sprest-bs";
-import { fileEarmarkText } from "gd-sprest-bs/build/icons/svgs/fileEarmarkText";
 import { DataSource } from "../ds";
 import { BulkLabel } from "./bulkLabel";
 import { ExportCSV } from "./exportCSV";
+import { ViewPermissions } from "./viewPermissions";
 
 export interface ISensitivityLabelItem {
     Author: string;
@@ -14,6 +14,7 @@ export interface ISensitivityLabelItem {
     ItemId: number;
     ListId: string;
     ListTitle: string;
+    Overshared: string;
     Path: string;
     Permissions: Types.SP.RoleAssignmentOData[];
     SensitivityLabel: string;
@@ -142,6 +143,7 @@ export class SensitivityLabels {
                                 ItemId: file.listItem["Id"],
                                 ListId: lib.Id,
                                 ListTitle: lib.Title,
+                                Overshared: ViewPermissions.isOvershared(file.listItem["RoleAssignments"].results) ? "Yes" : "No",
                                 Path: `${lib.RootFolder.ServerRelativeUrl}${folderPath}/${file.name}`,
                                 Permissions: file.listItem["RoleAssignments"].results,
                                 SensitivityLabel: file.sensitivityLabel.displayName,
@@ -176,6 +178,39 @@ export class SensitivityLabels {
                     });
                 });
             }).then(resolve);
+        });
+    }
+
+    // Refreshes the item
+    private static refreshItem(dlpItem: ISensitivityLabelItem): PromiseLike<ISensitivityLabelItem> {
+        // Return a promise
+        return new Promise(resolve => {
+            let web = this._loadOneDrive ? Web.getOneDrive() : Web(dlpItem.WebUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+
+            // Get the list item
+            web.Lists(dlpItem.ListTitle).Items(dlpItem.ItemId).query({
+                Expand: ["RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings"],
+                Select: ["Id", "HasUniqueRoleAssignments"]
+            }).execute((item) => {
+                // Update the item
+                dlpItem.HasUniquePermissions = item.HasUniqueRoleAssignments;
+                dlpItem.Overshared = ViewPermissions.isOvershared(item.RoleAssignments.results as any) ? "Yes" : "No";
+                dlpItem.Permissions = item.RoleAssignments.results as any;
+
+                // Find the item
+                for (let i = 0; i < this._items.length; i++) {
+                    let item = this._items[i];
+
+                    // See if this is the item
+                    if (item.ItemId == dlpItem.ItemId && item.ListId == dlpItem.ListId) {
+                        // Update the item
+                        this._items[i] = dlpItem;
+                    }
+                }
+
+                // Resolve the request
+                resolve(dlpItem);
+            });
         });
     }
 
@@ -281,17 +316,17 @@ export class SensitivityLabels {
 
                             // Output the permission information
                             el.innerHTML = `
-                                                    <b>Unique Permissions: </b>${item.HasUniquePermissions ? "Yes" : "No"}
-                                                    <br/>
-                                                    <b># of Users: </b>${users}
-                                                    <br/>
-                                                    <b># of Site Groups: </b>${siteGroups}
-                                                    <br/>
-                                                    <b># of AD Groups: </b>${adGroups}
-                                                    <br/>
-                                                    <b># of M365 Groups: </b>${m365Groups}
-                                                    <br/>
-                                                `;
+                                <b>Unique Permissions: </b>${item.HasUniquePermissions ? "Yes" : "No"}
+                                <br/>
+                                <b># of Users: </b>${users}
+                                <br/>
+                                <b># of Site Groups: </b>${siteGroups}
+                                <br/>
+                                <b># of AD Groups: </b>${adGroups}
+                                <br/>
+                                <b># of M365 Groups: </b>${m365Groups}
+                                <br/>
+                            `;
                         }
                     },
                     {
@@ -302,14 +337,12 @@ export class SensitivityLabels {
                             // Render the buttons
                             let tooltips = Components.TooltipGroup({
                                 el,
+                                isSmall: true,
+                                isVertical: true,
                                 tooltips: [
                                     {
                                         content: "View Document",
                                         btnProps: {
-                                            className: "pe-2 py-1",
-                                            iconClassName: "mx-1",
-                                            iconType: fileEarmarkText,
-                                            iconSize: 24,
                                             text: "View",
                                             type: Components.ButtonTypes.OutlinePrimary,
                                             onClick: () => {
@@ -317,9 +350,43 @@ export class SensitivityLabels {
                                                 window.open(Documents.isWopi(`${row.FileName}`) ? row.WebUrl + "/_layouts/15/WopiFrame.aspx?sourcedoc=" + row.Path + "&action=view" : row.Path, "_blank");
                                             }
                                         }
+                                    },
+                                    {
+                                        content: "Click to view the permissions for this document.",
+                                        btnProps: {
+                                            className: "pe-2 py-1",
+                                            text: "View Permissions",
+                                            type: Components.ButtonTypes.OutlinePrimary,
+                                            onClick: () => {
+                                                // View the permissions for the document
+                                                ViewPermissions.show(row);
+                                            }
+                                        }
                                     }
                                 ]
                             });
+
+                            // See if the file is overshared
+                            if (!auditOnly && row.Overshared === "Yes") {
+                                tooltips.add({
+                                    content: "Click to remove the groups that are flagging this file as overshared.",
+                                    btnProps: {
+                                        className: "pe-2 py-1",
+                                        text: "Secure File",
+                                        type: Components.ButtonTypes.OutlinePrimary,
+                                        onClick: () => {
+                                            // Remove the overshared groups from the permissions
+                                            ViewPermissions.removeOversharedGroups(row, () => {
+                                                // Refresh the item
+                                                this.refreshItem(row).then(updatedItem => {
+                                                    // Update this row
+                                                    this._dashboard.updateRow(rowIdx, updatedItem);
+                                                });
+                                            });
+                                        }
+                                    }
+                                });
+                            }
 
                             // Ensure we can make updates
                             if (!auditOnly) {
