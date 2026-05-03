@@ -702,6 +702,9 @@ export class SensitivityLabels {
                                     if (!response.errorFl) {
                                         // Call the event
                                         onUpdate(label.text);
+
+                                        // Hide the dialog
+                                        CanvasForm.hide();
                                     } else {
                                         // Set the error
                                         let ctrl = form.getControl("SensitivityLabel");
@@ -711,9 +714,8 @@ export class SensitivityLabels {
                                         });
                                     }
 
-                                    // Hide the dialogs
+                                    // Hide the dialog
                                     LoadingDialog.hide();
-                                    CanvasForm.hide();
                                 });
                             }
                         }
