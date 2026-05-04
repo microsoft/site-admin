@@ -4,6 +4,7 @@ import { ExportCSV } from "../reports/exportCSV";
 import { IAppProps } from "../app";
 import { DataSource } from "../ds";
 import { ReportTypes } from "./reports";
+import { BulkLabel } from "../reports/bulkLabel";
 import { DLP } from "../reports/dlp";
 import { SearchEEEU } from "../reports/searchEEEU";
 import { SensitivityLabels } from "../reports/sensitivityLabels";
@@ -212,7 +213,7 @@ export class ListsTab {
                         // Load the folders for this list
                         DataSource.loadFolders(item.WebId, item.DriveId).then(folders => {
                             // Show the senstivity label form
-                            SensitivityLabels.showLibraryForm(item.WebId, item.WebUrl, item.ListName, item.DriveId, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt, labelId => {
+                            BulkLabel.showLibraryForm(item.WebId, item.WebUrl, item.ListName, item.DriveId, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt, labelId => {
                                 // Update the default sensitivity label for this library
                                 item.DefaultSensitivityLabel = DataSource.getSensitivityLabel(labelId);
                                 this._dt.updateCell(rowIdx, 2, item);
@@ -511,7 +512,7 @@ export class ListsTab {
                                 switch (selectedReport) {
                                     case ReportTypes.DLP:
                                         // Run the DLP report for this library
-                                        DLP.searchLibrary(item.WebId, item.WebUrl, item.ListId, item.ListName, this._appProps.auditOnly, this._appProps.reportProps.dlpGroups);
+                                        DLP.searchLibrary(item.WebId, item.WebUrl, item.ListId, item.ListName, this._appProps.auditOnly);
                                         break;
                                     case ReportTypes.SearchEEEU:
                                         // Run the EEEU report for this library
