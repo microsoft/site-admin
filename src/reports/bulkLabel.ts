@@ -164,7 +164,7 @@ export class BulkLabel {
                     this._dashboard.Datatable.addRow(response);
 
                     // Update the dialog
-                    this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] ${response.message}`;
+                    this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] Skipping File: ${response.fileName}`;
 
                     // Check the next file
                     return;
@@ -189,7 +189,7 @@ export class BulkLabel {
                     this._dashboard.Datatable.addRow(response);
 
                     // Update the dialog
-                    this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] ${response.message}`;
+                    this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] File Already Labelled: ${response.fileName}`;
 
                     // Check the next file
                     return;
@@ -212,6 +212,9 @@ export class BulkLabel {
                 };
                 responses.push(response);
                 this._dashboard.Datatable.addRow(response);
+
+                // Update the dialog
+                this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] File Already Labelled: ${response.fileName}`;
 
                 // Check the next file
                 return;
@@ -730,9 +733,6 @@ export class BulkLabel {
                         text: "Update",
                         type: Components.ButtonTypes.OutlinePrimary,
                         onClick: () => {
-                            // Log
-                            console.log("Active Tab: " + nav.activeTab.tabName);
-
                             // Ensure the form is valid
                             if (form.isValid()) {
                                 let values = form.getValues();
