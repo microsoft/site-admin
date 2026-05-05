@@ -24,6 +24,7 @@ const Strings = {
     MaxRequests: 1,
     ProjectName: "Site Admin",
     ProjectDescription: "Application for adminitrators to make requests for changes on their site collections.",
+    RateLimitThreshold: 50,
     SourceUrl: ContextInfo.webServerRelativeUrl,
     TimeFormat: "YYYY-MMM-DD HH:mm:ss",
     Version: "0.9.7"

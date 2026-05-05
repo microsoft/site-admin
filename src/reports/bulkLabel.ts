@@ -105,11 +105,14 @@ export class BulkLabel {
         // Subscribe to the rate info event and set the time to sleep before completing the request
         let sleepTime = 0;
         ContextInfo.onRateLimitDetected(rateInfo => {
-            // Set the sleep time
-            sleepTime = rateInfo.reset * 1000;
+            // See if we have dropped below a threshold
+            if (rateInfo.remaining < Strings.RateLimitThreshold) {
+                // Set the sleep time
+                sleepTime = rateInfo.reset * 1000;
 
-            // Wait for the specified time and reset the value
-            setTimeout(() => { sleepTime = 0; }, sleepTime);
+                // Wait for the specified time and reset the value
+                setTimeout(() => { sleepTime = 0; }, sleepTime);
+            }
         });
 
         // Create a worker process
