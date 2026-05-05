@@ -815,7 +815,7 @@ export class BulkLabel {
         this._dashboard = new Dashboard({
             el: Modal.BodyElement,
             navigation: {
-                title: "Senstivity Labels",
+                title: "Sensitivity Labels",
                 showFilter: false
             },
             table: {
@@ -867,7 +867,7 @@ export class BulkLabel {
                         type: Components.ButtonTypes.OutlinePrimary,
                         onClick: () => {
                             // Export the CSV
-                            new ExportCSV("senstivity_labels.csv", CSVSensitivityLabelResponseFields, this._items);
+                            new ExportCSV("sensitivity_labels.csv", CSVSensitivityLabelResponseFields, this._items);
                         }
                     }
                 },

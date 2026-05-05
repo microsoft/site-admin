@@ -198,33 +198,36 @@ export class ListsTab {
 
         // See if this is a drive
         if (isLibrary && item.DriveId) {
-            // Add the bulk label option
-            tooltips.add({
-                content: "Click to see sensitivity label options for this library.",
-                btnProps: {
-                    text: "Sensitivity Labels",
-                    type: Components.ButtonTypes.OutlinePrimary,
-                    onClick: () => {
-                        // Show a loading dialog
-                        LoadingDialog.setHeader("Loading Folders");
-                        LoadingDialog.setBody("Loading the root folders of this library...");
-                        LoadingDialog.show();
+            // See if we are displaying this option
+            if (typeof (this._appProps.hideReports.sensitivityLabels) === "undefined" || this._appProps.hideReports.sensitivityLabels != true) {
+                // Add the bulk label option
+                tooltips.add({
+                    content: "Click to see sensitivity label options for this library.",
+                    btnProps: {
+                        text: "Sensitivity Labels",
+                        type: Components.ButtonTypes.OutlinePrimary,
+                        onClick: () => {
+                            // Show a loading dialog
+                            LoadingDialog.setHeader("Loading Folders");
+                            LoadingDialog.setBody("Loading the root folders of this library...");
+                            LoadingDialog.show();
 
-                        // Load the folders for this list
-                        DataSource.loadFolders(item.WebId, item.DriveId).then(folders => {
-                            // Show the senstivity label form
-                            BulkLabel.showLibraryForm(item.WebId, item.WebUrl, item.ListName, item.DriveId, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt, labelId => {
-                                // Update the default sensitivity label for this library
-                                item.DefaultSensitivityLabel = DataSource.getSensitivityLabel(labelId);
-                                this._dt.updateCell(rowIdx, 2, item);
+                            // Load the folders for this list
+                            DataSource.loadFolders(item.WebId, item.DriveId).then(folders => {
+                                // Show the sensitivity label form
+                                BulkLabel.showLibraryForm(item.WebId, item.WebUrl, item.ListName, item.DriveId, item.DefaultSensitivityLabel, folders, this._appProps.disableSensitivityLabelOverride, this._appProps.reportProps.sensitivityLabelFileExt, labelId => {
+                                    // Update the default sensitivity label for this library
+                                    item.DefaultSensitivityLabel = DataSource.getSensitivityLabel(labelId);
+                                    this._dt.updateCell(rowIdx, 2, item);
+                                });
+
+                                // Hide the dialog
+                                LoadingDialog.hide();
                             });
-
-                            // Hide the dialog
-                            LoadingDialog.hide();
-                        });
+                        }
                     }
-                }
-            });
+                });
+            }
         }
 
         // Add the reports tooltip
@@ -425,6 +428,7 @@ export class ListsTab {
 
         // Sensitivity Labels
         if (isLibrary && item.DriveId) {
+            // See if we are displaying this option
             if (typeof (this._appProps.hideReports.sensitivityLabels) === "undefined" || this._appProps.hideReports.sensitivityLabels != true) {
                 items.push({
                     text: "Sensitivity Labels",
