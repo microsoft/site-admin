@@ -608,7 +608,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
               groupName: "Sensitivity Labels",
               groupFields: [
                 PropertyPaneToggle("DisableSensitivityLabelOverride", {
-                  label: "Disable Sensivitity Label Override:",
+                  label: "Disable Sensitivity Label Override:",
                   checked: this.properties.DisableSensitivityLabelOverride,
                   onText: "The admins will only be allowed to apply sensitivity labels to files that haven't been labeled.",
                   offText: "The admins will be allowed to attempt to override sensitivity labels."
@@ -816,7 +816,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   offText: "The search users report will be visible."
                 }),
                 PropertyPaneToggle("HideReportSensitivityLabels", {
-                  label: "Sensivitity Labels Override:",
+                  label: "Sensitivity Labels:",
                   checked: this.properties.HideReportSensitivityLabels,
                   onText: "The sensitivity labels report will be hidden.",
                   offText: "The sensitivity labels report will be visible."
