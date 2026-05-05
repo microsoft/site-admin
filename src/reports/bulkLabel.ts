@@ -110,8 +110,17 @@ export class BulkLabel {
                 // Set the sleep time
                 sleepTime = rateInfo.reset * 1000;
 
+                // Show a loading dialog
+                LoadingDialog.setHeader("Throttling Detected");
+                LoadingDialog.setBody(`Throttling has been detected. Pausing requests for ${rateInfo.reset} seconds before sending next request...`);
+                LoadingDialog.show();
+
                 // Wait for the specified time and reset the value
-                setTimeout(() => { sleepTime = 0; }, sleepTime);
+                setTimeout(() => {
+                    // Clear the sleep time and hide the dialog
+                    sleepTime = 0;
+                    LoadingDialog.hide();
+                }, sleepTime);
             }
         });
 
@@ -245,14 +254,8 @@ export class BulkLabel {
                 }, sleepTime);
             }
 
-            // See if we are sending multiple requests
-            if (Strings.MaxRequests > 1) {
-                // Set a timeout to avoid throttling
-                setTimeout(labelFile, 250 * processingCounter);
-            } else {
-                // Label the file
-                labelFile();
-            }
+            // Label the file
+            labelFile();
         }, 100);
 
         // Set the completed event
