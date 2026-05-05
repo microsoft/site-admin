@@ -1,5 +1,5 @@
 import { Dashboard, LoadingDialog, Modal } from "dattatable";
-import { Components, Helper, Types, Web, v2 } from "gd-sprest-bs";
+import { Components, ContextInfo, Helper, Types, Web, v2 } from "gd-sprest-bs";
 import { DataSource } from "../ds";
 import Strings from "../strings";
 import { ExportCSV } from "./exportCSV";
@@ -101,6 +101,16 @@ export class BulkLabel {
         let filesToProcess: Types.Microsoft.Graph.driveItem[] = [];
         let processingCounter = 0;
         let processedCounter = 0;
+
+        // Subscribe to the rate info event and set the time to sleep before completing the request
+        let sleepTime = 0;
+        ContextInfo.onRateLimitDetected(rateInfo => {
+            // Set the sleep time
+            sleepTime = rateInfo.reset * 1000;
+
+            // Wait for the specified time and reset the value
+            setTimeout(() => { sleepTime = 0; }, sleepTime);
+        });
 
         // Create a worker process
         let worker = Helper.WebWorker(() => {
@@ -212,18 +222,21 @@ export class BulkLabel {
 
             // Labels the file
             let labelFile = () => {
-                // Label the file
-                this.labelFile(file, fileLabel.text, fileLabel.value, justification, responses).then((response) => {
-                    // Add the response
-                    responses.push(response);
-                    this._dashboard.Datatable.addRow(response);
+                // Wait for the specified sleep time to avoid throttling
+                setTimeout(() => {
+                    // Label the file
+                    this.labelFile(file, fileLabel.text, fileLabel.value, justification, responses).then((response) => {
+                        // Add the response
+                        responses.push(response);
+                        this._dashboard.Datatable.addRow(response);
 
-                    // Update the dialog
-                    this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] File Labelled: ${file.name}`;
+                        // Update the dialog
+                        this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] File Labelled: ${file.name}`;
 
-                    // Decrement the # of files being processed
-                    processingCounter--;
-                });
+                        // Decrement the # of files being processed
+                        processingCounter--;
+                    });
+                }, sleepTime);
             }
 
             // See if we are sending multiple requests
@@ -240,6 +253,9 @@ export class BulkLabel {
         let onCompleted = () => {
             // Clear the sub-nav
             this._elSubNav.classList.add("d-none");
+
+            // Clear the callback events
+            ContextInfo.clearRateLimitCallbacks();
         };
 
         // Load the files for this drive
