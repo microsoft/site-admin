@@ -671,7 +671,6 @@ export class DataSource {
             // Default the settings
             props.query = props.query || {};
             props.query.GetAllItems = true;
-            props.query.GetAllItemsWaitTime = Strings.ThrottleWaitTime;
             props.query.Top = props.query.Top || 5000;
 
             // Get the list
