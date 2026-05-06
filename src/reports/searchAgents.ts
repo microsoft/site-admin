@@ -273,8 +273,8 @@ export class SearchAgents {
         });
     }
 
-    // Searches a list for EEEU
-    static searchList(webUrl: string, listName: string, auditOnly: boolean) {
+    // Searches a library for agents
+    static searchLibrary(webUrl: string, listName: string, auditOnly: boolean) {
         this._loadOneDrive = false;
         this._stopFl = false;
 
@@ -284,7 +284,7 @@ export class SearchAgents {
         // Clear the modal
         Modal.clear();
         Modal.setType(Components.ModalTypes.Full);
-        Modal.setHeader("Data Loss Prevention Report");
+        Modal.setHeader("Search Agents Report");
         Modal.setCloseEvent(() => {
             // Set the flag
             this.stop();
@@ -313,7 +313,7 @@ export class SearchAgents {
         Modal.show();
 
         // Update the status
-        this._elSubNav.children[0].innerHTML = `Searching List: ${listName}`;
+        this._elSubNav.children[0].innerHTML = `Searching Library: ${listName}`;
         this._elSubNav.children[1].innerHTML = "Getting the info for the web...";
 
         // Get the permissions
