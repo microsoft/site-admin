@@ -47,6 +47,7 @@ export interface ISiteAdminWebPartProps {
   HideManagementTab: boolean;
   HideSearchTab: boolean;
   HideWebsTab: boolean;
+  HideReportAgents: boolean;
   HideReportDLP: boolean;
   HideReportDocRetention: boolean;
   HideReportExternalShares: boolean;
@@ -166,6 +167,7 @@ declare const SiteAdmin: {
     hideLoadAdminOwnerBtn: boolean;
     hideLoadOneDriveBtn: boolean;
     hideReports: {
+      agents: boolean;
       dlp: boolean;
       docRetention: boolean;
       externalShares: boolean;
@@ -300,6 +302,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       hideLoadAdminOwnerBtn: this.properties.HideLoadAdminOwnerBtn ? true : false,
       hideLoadOneDriveBtn: this.properties.HideLoadOneDriveBtn ? true : false,
       hideReports: {
+        agents: this.properties.HideReportAgents ? true : false,
         dlp: this.properties.HideReportDLP ? true : false,
         docRetention: this.properties.HideReportDocRetention ? true : false,
         externalShares: this.properties.HideReportExternalShares ? true : false,
@@ -755,6 +758,12 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
             {
               groupName: "Show/Hide Reports",
               groupFields: [
+                PropertyPaneToggle("HideReportAgents", {
+                  label: "Find Agents:",
+                  checked: this.properties.HideReportAgents,
+                  onText: "The report to find agents will be hidden.",
+                  offText: "The report to find agents will be visible."
+                }),
                 PropertyPaneToggle("HideReportDLP", {
                   label: "Data Loss Prevention (DLP):",
                   checked: this.properties.HideReportDLP,
