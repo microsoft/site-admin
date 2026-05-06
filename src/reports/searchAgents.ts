@@ -30,6 +30,11 @@ export class SearchAgents {
     private static analyzeLibrary(web: Types.SP.WebOData, lib: Types.SP.ListOData): PromiseLike<void> {
         // Return a promise
         return new Promise(resolve => {
+            let ctrFiles = 0;
+
+            // Set the status
+            this._elSubNav.children[1].innerHTML = `Loading Files`;
+
             // Get the items for this library
             DataSource.loadItems({
                 webUrl: web.Url,
@@ -39,6 +44,9 @@ export class SearchAgents {
                     Select: ["Id", "FileLeafRef", "FileRef", "File_x0020_Type"],
                 },
                 onItem: (item => {
+                    // Set the status
+                    this._elSubNav.children[1].innerHTML = `Files Loaded: ${++ctrFiles} of ${lib.ItemCount}`;
+
                     // See if this is an agent
                     if (item["File_x0020_Type"] == "agent") {
                         // Add this item
@@ -70,7 +78,7 @@ export class SearchAgents {
             site.Lists().query({
                 Filter: `BaseTemplate eq ${SPTypes.ListTemplateType.DocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.MySiteDocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.PageLibrary}`,
                 Expand: ["RootFolder"],
-                Select: ["Id", "Title", "BaseTemplate", "RootFolder/ServerRelativeUrl"]
+                Select: ["Id", "Title", "BaseTemplate", "ItemCount", "RootFolder/ServerRelativeUrl"]
             }).execute(resp => {
                 let ctrList = 0;
                 let siteText = this._elSubNav.children[0].innerHTML;
