@@ -418,6 +418,18 @@ export class ListsTab {
             });
         }
 
+        // Search Agents
+        if (typeof (this._appProps.hideReports.searchAgents) === "undefined" || this._appProps.hideReports.searchAgents != true) {
+            // Ensure it's a library
+            if (isLibrary) {
+                items.push({
+                    text: "Search Agents",
+                    data: "Search the library for agents.",
+                    value: ReportTypes.SearchAgents
+                });
+            }
+        }
+
         // Search EEEU
         if (typeof (this._appProps.hideReports.searchEEEU) === "undefined" || this._appProps.hideReports.searchEEEU != true) {
             items.push({

@@ -26,13 +26,13 @@ export interface IAppProps {
     hideLoadAdminOwnerBtn?: boolean;
     hideLoadOneDriveBtn?: boolean;
     hideReports: {
-        agents?: boolean;
         dlp?: boolean;
         docRetention?: boolean;
         externalShares?: boolean;
         externalUsers?: boolean;
         permissions?: boolean;
         retention?: boolean;
+        searchAgents?: boolean;
         searchDocs?: boolean;
         searchEEEU?: boolean;
         searchProp?: boolean;

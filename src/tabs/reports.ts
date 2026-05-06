@@ -115,7 +115,7 @@ export class ReportsTab {
                 value: ReportTypes.Permissions
             });
         }
-        if (typeof (this._appProps.hideReports.agents) === "undefined" || this._appProps.hideReports.agents != true) {
+        if (typeof (this._appProps.hideReports.searchAgents) === "undefined" || this._appProps.hideReports.searchAgents != true) {
             items.push({
                 text: "Search Agents",
                 data: "Searches all libraries for agent files in the site.",
