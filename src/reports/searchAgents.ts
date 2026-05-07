@@ -157,11 +157,11 @@ export class SearchAgents {
                 columns: [
                     {
                         name: "FileName",
-                        title: "Object Type"
+                        title: "File Name"
                     },
                     {
                         name: "ListName",
-                        title: "Group Name"
+                        title: "List Name"
                     },
                     {
                         className: "text-end",
@@ -169,38 +169,35 @@ export class SearchAgents {
                         title: "",
                         onRenderCell: (el, col, row: IAgentItem) => {
                             // Render the tooltips
-                            let tooltips = Components.TooltipGroup({ el });
-
-                            // See if this is a file
-                            if (row.FileUrl) {
-                                // Add a button to the file
-                                tooltips.add({
-                                    content: "Click to view the file.",
-                                    btnProps: {
-                                        className: "pe-2 py-1",
-                                        text: "View File",
-                                        type: Components.ButtonTypes.OutlinePrimary,
-                                        onClick: () => {
-                                            // View the file
-                                            window.open(Documents.isWopi(row.FileName) ? row.WebUrl + "/_layouts/15/WopiFrame.aspx?sourcedoc=" + row.FileUrl + "&action=view" : row.FileUrl, "_blank");
+                            Components.TooltipGroup({
+                                el,
+                                tooltips: [
+                                    {
+                                        content: "Click to view the file.",
+                                        btnProps: {
+                                            className: "pe-2 py-1",
+                                            text: "View File",
+                                            type: Components.ButtonTypes.OutlinePrimary,
+                                            onClick: () => {
+                                                // View the file
+                                                window.open(Documents.isWopi(row.FileName) ? row.WebUrl + "/_layouts/15/WopiFrame.aspx?sourcedoc=" + row.FileUrl + "&action=view" : row.FileUrl, "_blank");
+                                            }
+                                        }
+                                    },
+                                    {
+                                        content: "Click to view the item unique permissions.",
+                                        btnProps: {
+                                            className: "pe-2 py-1",
+                                            //iconType: GetIcon(24, 24, "PeopleTeam", "mx-1"),
+                                            text: "View Library",
+                                            type: Components.ButtonTypes.OutlinePrimary,
+                                            onClick: () => {
+                                                // View the library
+                                                window.open(row.FileUrl);
+                                            }
                                         }
                                     }
-                                });
-                            }
-
-                            // Add the view button
-                            tooltips.add({
-                                content: "Click to view the item unique permissions.",
-                                btnProps: {
-                                    className: "pe-2 py-1",
-                                    //iconType: GetIcon(24, 24, "PeopleTeam", "mx-1"),
-                                    text: "View Library",
-                                    type: Components.ButtonTypes.OutlinePrimary,
-                                    onClick: () => {
-                                        // View the library
-                                        window.open(row.FileUrl);
-                                    }
-                                }
+                                ]
                             });
                         }
                     }
