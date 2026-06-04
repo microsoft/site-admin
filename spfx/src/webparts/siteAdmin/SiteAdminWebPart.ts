@@ -53,6 +53,7 @@ export interface ISiteAdminWebPartProps {
   HideReportExternalUsers: boolean;
   HideReportPermissions: boolean;
   HideReportRetention: boolean;
+  HideReportSearchAgents: boolean;
   HideReportSearchDocs: boolean;
   HideReportSearchEEEU: boolean;
   HideReportSearchProp: boolean;
@@ -172,6 +173,7 @@ declare const SiteAdmin: {
       externalUsers: boolean;
       permissions: boolean;
       retention: boolean;
+      searchAgents: boolean;
       searchDocs: boolean;
       searchEEEU: boolean;
       searchProp: boolean;
@@ -306,6 +308,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         externalUsers: this.properties.HideReportExternalUsers ? true : false,
         permissions: this.properties.HideReportPermissions ? true : false,
         retention: this.properties.HideReportRetention ? true : false,
+        searchAgents: this.properties.HideReportSearchAgents ? true : false,
         searchDocs: this.properties.HideReportSearchDocs ? true : false,
         searchEEEU: this.properties.HideReportSearchEEEU ? true : false,
         searchProp: this.properties.HideReportSearchProp ? true : false,
@@ -790,6 +793,12 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   checked: this.properties.HideReportRetention,
                   onText: "The retention report will be hidden.",
                   offText: "The retention report will be visible."
+                }),
+                PropertyPaneToggle("HideReportSearchAgents", {
+                  label: "Search Agents:",
+                  checked: this.properties.HideReportSearchAgents,
+                  onText: "The search agents report will be hidden.",
+                  offText: "The search agents report will be visible."
                 }),
                 PropertyPaneToggle("HideReportSearchDocs", {
                   label: "Document Search:",

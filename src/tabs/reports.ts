@@ -22,6 +22,7 @@ export enum ReportTypes {
     ExternalShares = "ExternalShares",
     ExternalUsers = "ExternalUsers",
     Permissions = "Permissions",
+    SearchAgents = "SearchAgents",
     SearchDocs = "SearchDocs",
     SearchEEEU = "SearchEEEU",
     SearchProp = "SearchProp",
@@ -114,6 +115,13 @@ export class ReportsTab {
                 value: ReportTypes.Permissions
             });
         }
+        if (typeof (this._appProps.hideReports.searchAgents) === "undefined" || this._appProps.hideReports.searchAgents != true) {
+            items.push({
+                text: "Search Agents",
+                data: "Searches all libraries for agent files in the site.",
+                value: ReportTypes.SearchAgents
+            });
+        }
         if (typeof (this._appProps.hideReports.searchDocs) === "undefined" || this._appProps.hideReports.searchDocs != true) {
             items.push({
                 text: "Search Documents",
@@ -204,6 +212,7 @@ export class ReportsTab {
                 case ReportTypes.DLP:
                 case ReportTypes.ExternalUsers:
                 case ReportTypes.Permissions:
+                case ReportTypes.SearchAgents:
                 case ReportTypes.SearchEEEU:
                 case ReportTypes.SearchUsers:
                 case ReportTypes.SensitivityLabels:
@@ -236,6 +245,9 @@ export class ReportsTab {
                 break;
             case ReportTypes.Permissions:
                 this._form.appendControls(Reports.Permissions.getFormFields());
+                break;
+            case ReportTypes.SearchAgents:
+                this._form.appendControls(Reports.SearchAgents.getFormFields());
                 break;
             case ReportTypes.SearchDocs:
                 this._form.appendControls(Reports.SearchDocs.getFormFields(this._reportProps?.docSearchFileExt, this._reportProps?.docSearchKeywords));
@@ -307,6 +319,12 @@ export class ReportsTab {
                         break;
                     case ReportTypes.Permissions:
                         Reports.Permissions.run(this._el, this._auditOnly, formValues, () => {
+                            // Render this component
+                            this.render(this._selectedReport);
+                        });
+                        break;
+                    case ReportTypes.SearchAgents:
+                        Reports.SearchAgents.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
                         });

@@ -32,6 +32,7 @@ export interface IAppProps {
         externalUsers?: boolean;
         permissions?: boolean;
         retention?: boolean;
+        searchAgents?: boolean;
         searchDocs?: boolean;
         searchEEEU?: boolean;
         searchProp?: boolean;

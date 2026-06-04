@@ -3,6 +3,7 @@ export * from "./docRetention";
 export * from "./externalShares";
 export * from "./externalUsers";
 export * from "./permissions";
+export * from "./searchAgents";
 export * from "./searchDocs";
 export * from "./searchEEEU";
 export * from "./searchProp";

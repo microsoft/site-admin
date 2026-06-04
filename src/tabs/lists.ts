@@ -6,6 +6,7 @@ import { DataSource } from "../ds";
 import { ReportTypes } from "./reports";
 import { BulkLabel } from "../reports/bulkLabel";
 import { DLP } from "../reports/dlp";
+import { SearchAgents } from "../reports/searchAgents";
 import { SearchEEEU } from "../reports/searchEEEU";
 import { SensitivityLabels } from "../reports/sensitivityLabels";
 import { UniquePermissions } from "../reports/uniquePermissions";
@@ -417,6 +418,18 @@ export class ListsTab {
             });
         }
 
+        // Search Agents
+        if (typeof (this._appProps.hideReports.searchAgents) === "undefined" || this._appProps.hideReports.searchAgents != true) {
+            // Ensure it's a library
+            if (isLibrary) {
+                items.push({
+                    text: "Search Agents",
+                    data: "Search the library for agents.",
+                    value: ReportTypes.SearchAgents
+                });
+            }
+        }
+
         // Search EEEU
         if (typeof (this._appProps.hideReports.searchEEEU) === "undefined" || this._appProps.hideReports.searchEEEU != true) {
             items.push({
@@ -518,8 +531,12 @@ export class ListsTab {
                                         // Run the DLP report for this library
                                         DLP.searchLibrary(item.WebId, item.WebUrl, item.ListId, item.ListName, this._appProps.auditOnly);
                                         break;
+                                    case ReportTypes.SearchAgents:
+                                        // Run the Agents report for this library
+                                        SearchAgents.searchLibrary(item.WebUrl, item.ListName, this._appProps.auditOnly);
+                                        break;
                                     case ReportTypes.SearchEEEU:
-                                        // Run the EEEU report for this library
+                                        // Run the EEEU report for this list
                                         SearchEEEU.searchList(item.WebUrl, item.ListName, this._appProps.auditOnly);
                                         break;
                                     case ReportTypes.SensitivityLabels:
@@ -531,7 +548,7 @@ export class ListsTab {
                                         SensitivityLabels.runReportForLibrary(this._appProps.auditOnly, values);
                                         break;
                                     case ReportTypes.UniquePermissions:
-                                        // Run the unique permissions report for this library
+                                        // Run the unique permissions report for this list
                                         UniquePermissions.searchList(item.WebUrl, item.ListName, this._appProps.auditOnly);
                                         break;
                                 }
