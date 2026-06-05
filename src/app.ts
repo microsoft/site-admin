@@ -247,14 +247,21 @@ export class App {
                                     }
                                 },
                                 onControlRendered: ctrl => {
-                                    // Load the sub-webs
-                                    DataSource.getAllWebs(DataSource.Site.Url).then(() => {
+                                    // See if we are loading a sub-web
+                                    if (DataSource.WebOnly) {
                                         // Update the tabs
                                         tabs.onWebsLoaded(DataSource.SiteItems);
+                                        tabs.refreshWebTab(DataSource.Web.ServerRelativeUrl);
+                                    } else {
+                                        // Load the sub-webs
+                                        DataSource.getAllWebs(DataSource.Site.Url).then(() => {
+                                            // Update the tabs
+                                            tabs.onWebsLoaded(DataSource.SiteItems);
 
-                                        // Update the control
-                                        ctrl.dropdown.setItems(DataSource.SiteItems);
-                                    });
+                                            // Update the control
+                                            ctrl.dropdown.setItems(DataSource.SiteItems);
+                                        });
+                                    }
                                 }
                             } as Components.IFormControlPropsDropdown
                         }

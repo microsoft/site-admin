@@ -101,7 +101,7 @@ export class ReportsTab {
                 value: ReportTypes.ExternalShares
             });
         }
-        if (typeof (this._appProps.hideReports.externalUsers) === "undefined" || this._appProps.hideReports.externalUsers != true) {
+        if (!DataSource.WebOnly || typeof (this._appProps.hideReports.externalUsers) === "undefined" || this._appProps.hideReports.externalUsers != true) {
             items.push({
                 text: "External Users",
                 data: "Scans the user information list for 'external' user accounts.",
@@ -161,7 +161,7 @@ export class ReportsTab {
                 value: ReportTypes.SensitivityLabels
             });
         }
-        if (typeof (this._appProps.hideReports.sharingLinks) === "undefined" || this._appProps.hideReports.sharingLinks != true) {
+        if (!DataSource.WebOnly || typeof (this._appProps.hideReports.sharingLinks) === "undefined" || this._appProps.hideReports.sharingLinks != true) {
             items.push({
                 text: "Sharing Links",
                 data: "Scans for any 'Sharing Link' groups.",
@@ -290,6 +290,15 @@ export class ReportsTab {
                 // Set the form values
                 let formValues = this._form.getValues();
                 formValues["LoadOneDrive"] = this._loadOneDrive ? "true" : "false";
+
+                // See if we are targeting a sub-web
+                if (DataSource.WebOnly) {
+                    formValues["TargetWeb"] = {
+                        data: DataSource.Web,
+                        text: DataSource.Web.ServerRelativeUrl,
+                        value: DataSource.Web.Id
+                    };
+                }
 
                 // Run the report
                 switch (this._selectedReport) {
