@@ -80,7 +80,7 @@ export class ExternalUsers {
     private static analyzeUsers(rootWeb: Types.SP.WebOData, externalUsers: IUserInfo[]): PromiseLike<void> {
         // Return a promise
         return new Promise(resolve => {
-            let web = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+            let web = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.WebOnly ? DataSource.Web.Url : DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
 
             // Update the loading dialog
             LoadingDialog.setBody(`Creating the batch job to get the user information...`);
@@ -139,7 +139,7 @@ export class ExternalUsers {
         LoadingDialog.show();
 
         // Remove the user from the group
-        Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
+        Web(DataSource.WebOnly ? DataSource.Web.Url : DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
             .SiteGroups(group).Users().removeById(userId).execute(
                 // Success
                 () => {
@@ -163,7 +163,7 @@ export class ExternalUsers {
         LoadingDialog.show();
 
         // Remove the user from the group
-        Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
+        Web(DataSource.WebOnly ? DataSource.Web.Url : DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
             .SiteUsers().removeById(userId).execute(
                 // Success
                 () => {
@@ -403,7 +403,7 @@ export class ExternalUsers {
         this._items = [];
 
         // Load the group information
-        let web = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.SiteContext.SiteFullUrl, {
+        let web = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.WebOnly ? DataSource.Web.Url : DataSource.SiteContext.SiteFullUrl, {
             requestDigest: DataSource.SiteContext.FormDigestValue
         });
         web.query({

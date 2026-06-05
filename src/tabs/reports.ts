@@ -101,7 +101,7 @@ export class ReportsTab {
                 value: ReportTypes.ExternalShares
             });
         }
-        if (!DataSource.WebOnly || typeof (this._appProps.hideReports.externalUsers) === "undefined" || this._appProps.hideReports.externalUsers != true) {
+        if (typeof (this._appProps.hideReports.externalUsers) === "undefined" || this._appProps.hideReports.externalUsers != true) {
             items.push({
                 text: "External Users",
                 data: "Scans the user information list for 'external' user accounts.",
@@ -161,7 +161,7 @@ export class ReportsTab {
                 value: ReportTypes.SensitivityLabels
             });
         }
-        if (!DataSource.WebOnly || typeof (this._appProps.hideReports.sharingLinks) === "undefined" || this._appProps.hideReports.sharingLinks != true) {
+        if (typeof (this._appProps.hideReports.sharingLinks) === "undefined" || this._appProps.hideReports.sharingLinks != true) {
             items.push({
                 text: "Sharing Links",
                 data: "Scans for any 'Sharing Link' groups.",
