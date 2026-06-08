@@ -252,6 +252,9 @@ export class App {
                                         // Update the tabs
                                         tabs.onWebsLoaded(DataSource.SiteItems);
                                         tabs.refreshWebTab(DataSource.Web.ServerRelativeUrl);
+
+                                        // Update the control
+                                        ctrl.dropdown.setItems([{ text: DataSource.Web.ServerRelativeUrl, value: DataSource.Web.Id }]);
                                     } else {
                                         // Load the sub-webs
                                         DataSource.getAllWebs(DataSource.Site.Url).then(() => {
