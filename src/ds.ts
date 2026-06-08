@@ -1221,13 +1221,15 @@ export class DataSource {
                                                 // Load the site information
                                                 this.loadSiteInfo().then(resolve, reject);
                                             }, reject);
-                                        } else {
+                                        }
+                                        // Else, see if the urls do not match
+                                        else if (context.GetContextWebInformation.WebFullUrl.toLowerCase() != this.SiteContext.SiteFullUrl.toLowerCase()) {
                                             // See if this is a sub-web
-                                            this.checkOwner(webUrl).then(isOwner => {
+                                            this.checkOwner(context.GetContextWebInformation.WebFullUrl).then(isOwner => {
                                                 // See if they are an owner of the web
                                                 if (isOwner) {
                                                     // Load the web information
-                                                    this.loadWebInfo(webUrl).then(() => {
+                                                    this.loadWebInfo(context.GetContextWebInformation.WebFullUrl).then(() => {
                                                         // Set the flag
                                                         this._webOnly = true;
 
@@ -1239,6 +1241,9 @@ export class DataSource {
                                                     reject("Site exists, but you are not the administrator. Please have the site administrator submit the request.");
                                                 }
                                             });
+                                        } else {
+                                            // Reject the request
+                                            reject("Site exists, but you are not the administrator. Please have the site administrator submit the request.");
                                         }
                                     });
                                 }
