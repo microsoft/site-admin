@@ -291,6 +291,15 @@ export class ReportsTab {
                 let formValues = this._form.getValues();
                 formValues["LoadOneDrive"] = this._loadOneDrive ? "true" : "false";
 
+                // See if we are targeting a sub-web
+                if (DataSource.WebOnly) {
+                    formValues["TargetWeb"] = {
+                        data: DataSource.Web,
+                        text: DataSource.Web.ServerRelativeUrl,
+                        value: DataSource.Web.Id
+                    };
+                }
+
                 // Run the report
                 switch (this._selectedReport) {
                     case ReportTypes.DLP:

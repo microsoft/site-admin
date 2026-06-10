@@ -913,8 +913,8 @@ export class DataSource {
     private static loadSiteInfo(): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve, reject) => {
-            // Load the web
-            Site(this.SiteContext.SiteFullUrl, { requestDigest: this.SiteContext.FormDigestValue }).query({
+            // Load the site
+            Site(this.WebOnly ? this.Web.Url : this.SiteContext.SiteFullUrl, { requestDigest: this.SiteContext.FormDigestValue }).query({
                 Expand: ["Features", "RootWeb/AllProperties", "RootWeb/EffectiveBasePermissions", "Usage"],
                 Select: [
                     "CommentsOnSitePagesDisabled",
@@ -952,18 +952,24 @@ export class DataSource {
                     value: this._site.RootWeb.Id
                 }];
 
-                // Load the client side assets
-                this.loadClientSideAssets().then(() => {
-                    // Sort the items
-                    this._siteItems = this._siteItems.sort((a, b) => {
-                        if (a.text < b.text) { return -1; }
-                        if (a.text > b.text) { return 1; }
-                        return 0;
-                    });
-
+                // See if we are only loading a web
+                if (this.WebOnly) {
                     // Resolve the request
                     resolve();
-                }, reject);
+                } else {
+                    // Load the client side assets
+                    this.loadClientSideAssets().then(() => {
+                        // Sort the items
+                        this._siteItems = this._siteItems.sort((a, b) => {
+                            if (a.text < b.text) { return -1; }
+                            if (a.text > b.text) { return 1; }
+                            return 0;
+                        });
+
+                        // Resolve the request
+                        resolve();
+                    }, reject);
+                }
             }, reject);
         });
     }
@@ -987,6 +993,7 @@ export class DataSource {
                     "NoCrawl",
                     "SearchScope",
                     "SensitivityLabelId",
+                    "ServerRelativeUrl",
                     "Title",
                     "Url",
                     "WebTemplate"
@@ -1163,12 +1170,15 @@ export class DataSource {
 
     // Validates that the user is an SCA of the site
     private static _isAdmin: boolean = false;
+    private static _webOnly: boolean = false;
     static get IsAdmin(): boolean { return this._isAdmin; }
+    static get WebOnly(): boolean { return this._webOnly; }
     static validate(webUrl: string): PromiseLike<void> {
         // Return a promise
         return new Promise((resolve, reject) => {
             // Set the flag
             this._isAdmin = false;
+            this._webOnly = false;
 
             // Get the web context
             ContextInfo.getWeb(webUrl).execute(
@@ -1202,7 +1212,7 @@ export class DataSource {
                                         this.loadSiteInfo().then(resolve, reject);
                                     }, reject);
                                 } else {
-                                    // Check to see if this is an owner
+                                    // Check to see if this is an owner of the root web
                                     this.checkOwner(this.SiteContext.SiteFullUrl).then(isOwner => {
                                         // See if they are an owner
                                         if (isOwner) {
@@ -1211,6 +1221,26 @@ export class DataSource {
                                                 // Load the site information
                                                 this.loadSiteInfo().then(resolve, reject);
                                             }, reject);
+                                        }
+                                        // Else, see if the urls do not match
+                                        else if (context.GetContextWebInformation.WebFullUrl.toLowerCase() != this.SiteContext.SiteFullUrl.toLowerCase()) {
+                                            // See if this is a sub-web
+                                            this.checkOwner(context.GetContextWebInformation.WebFullUrl).then(isOwner => {
+                                                // See if they are an owner of the web
+                                                if (isOwner) {
+                                                    // Load the web information
+                                                    this.loadWebInfo(context.GetContextWebInformation.WebFullUrl).then(() => {
+                                                        // Set the flag
+                                                        this._webOnly = true;
+
+                                                        // Load the site information
+                                                        this.loadSiteInfo().then(resolve, reject);
+                                                    }, reject);
+                                                } else {
+                                                    // Reject the request
+                                                    reject("Site exists, but you are not the administrator. Please have the site administrator submit the request.");
+                                                }
+                                            });
                                         } else {
                                             // Reject the request
                                             reject("Site exists, but you are not the administrator. Please have the site administrator submit the request.");

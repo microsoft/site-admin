@@ -103,7 +103,7 @@ export class Tabs {
                 }
             });
         }
-        if (!loadOneDrive && !appProps.hideTabs.lists) {
+        if (DataSource.WebOnly || (!loadOneDrive && !appProps.hideTabs.lists)) {
             items.push({
                 tabName: "Lists/Libraries",
                 onRender: (el) => {
@@ -112,7 +112,7 @@ export class Tabs {
                 }
             });
         }
-        if (loadOneDrive || !appProps.hideTabs.auditTools) {
+        if (loadOneDrive || !appProps.hideTabs.auditTools || DataSource.WebOnly) {
             items.push({
                 isActive: loadOneDrive,
                 tabName: "Audit Tools",

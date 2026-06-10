@@ -41,7 +41,7 @@ export class SharingLinks {
         return new Promise(resolve => {
             // Find the document by its id
             Search.postQuery<{ FileExtension: string; Path: string; SPWebUrl: string; Title: string }>({
-                url: this._loadOneDrive ? ContextInfo.siteAbsoluteUrl : DataSource.SiteContext.SiteFullUrl,
+                url: this._loadOneDrive ? ContextInfo.siteAbsoluteUrl : (DataSource.WebOnly ? DataSource.Web.Url : DataSource.SiteContext.SiteFullUrl),
                 query: {
                     Querytext: "UniqueID: " + docInfo.docId,
                     SelectProperties: {
@@ -86,7 +86,7 @@ export class SharingLinks {
         // Return a promise
         return new Promise(resolve => {
             let docInfo: { docId: string, group: Types.SP.Group, roleName: string, userInfo: IUserInfo }[] = [];
-            let web = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+            let web = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.WebOnly ? DataSource.Web.Url : DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
 
             // Update the loading dialog
             LoadingDialog.setBody(`Creating the batch job to get the group information...`);
@@ -162,7 +162,7 @@ export class SharingLinks {
         LoadingDialog.show();
 
         // Remove the user from the group
-        Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
+        Web(DataSource.WebOnly ? DataSource.Web.Url : DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue })
             .SiteGroups().removeById(groupId).execute(
                 // Success
                 () => {
@@ -387,7 +387,7 @@ export class SharingLinks {
         let users: IUserInfo[] = [];
 
         // Load the group information
-        let web = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+        let web = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.WebOnly ? DataSource.Web.Url : DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
         web.query({
             Expand: [
                 "ParentWeb", "RoleAssignments", "RoleAssignments/Groups", "RoleAssignments/Member",
