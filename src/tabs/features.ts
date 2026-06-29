@@ -161,7 +161,7 @@ export class FeaturesTab extends Tab<{
                             };
                         } else {
                             // Remove the value
-                            delete this._requestItems.DisableCompanyWideSharingLinks;
+                            delete this._requestItems.RestrictContentDiscovery;
                         }
                     }
                 } as Components.IFormControlPropsSwitch,
@@ -178,7 +178,7 @@ export class FeaturesTab extends Tab<{
                         // See if we are changing the value
                         if (this._currValues.NoCrawl != value) {
                             // Set the value
-                            this._requestItems.DisableCompanyWideSharingLinks = {
+                            this._requestItems.NoCrawl = {
                                 key: RequestTypes.NoCrawl,
                                 message: `The request to ${value ? "hide" : "show"} content from search will be processed within 5 minutes.`,
                                 value
