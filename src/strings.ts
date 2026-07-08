@@ -9,6 +9,9 @@ export const setContext = (context, maxBatchSize: number, maxRequests: number) =
     // Update the source url
     Strings.MaxBatchSize = typeof (maxBatchSize) === "number" ? maxBatchSize : Strings.MaxBatchSize;
     Strings.MaxRequests = typeof (maxRequests) === "number" ? maxRequests : Strings.MaxRequests;
+
+    // Set the source url
+    Strings.SourceUrl = ContextInfo.webServerRelativeUrl;
 }
 
 /**
