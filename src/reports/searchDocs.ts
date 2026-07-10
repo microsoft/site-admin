@@ -26,8 +26,15 @@ const CSVFields = [
     "ListId", "Path", "SPSiteUrl", "SPWebUrl", "Title", "WebId"
 ]
 
+// The valid file extensions for regex patterns
+const FileExtensions = ["docx", "xlsx", "pptx", "pdf", "txt", "csv"];
+
 export class SearchDocs {
     private static _loadOneDrive: boolean = false;
+
+    // Analyzes the libraries of a site
+    private static analyzeLibraries(url: string, regExPattern: RegExp) {
+    }
 
     // Deletes a document
     private static deleteDocument(item: ISearchItem) {
@@ -58,7 +65,34 @@ export class SearchDocs {
 
     // Gets the form fields to display
     static getFormFields(fileExt: string = "", keywords: string = ""): Components.IFormControlProps[] {
+        let ctrlRegEx: Components.IFormControl;
+        let ctrlSearchTerms: Components.IFormControl;
+        let ctrlSearchType: Components.IFormControl;
         return [
+            {
+                label: "Search Type",
+                name: "SearchType",
+                className: "mb-3",
+                type: Components.FormControlTypes.Dropdown,
+                required: true,
+                items: [
+                    { text: "Keyword", value: "Keyword", isSelected: true },
+                    { text: "RegEx Pattern", value: "RegExPattern" }
+                ],
+                onControlRendered: ctrl => { ctrlSearchType = ctrl; },
+                onChange: (item) => {
+                    // See which one is selected
+                    if (item.value == "Keyword") {
+                        // Show/Hide the controls
+                        ctrlRegEx.hide();
+                        ctrlSearchTerms.show();
+                    } else {
+                        // Show/Hide the controls
+                        ctrlRegEx.show();
+                        ctrlSearchTerms.hide();
+                    }
+                }
+            } as Components.IFormControlPropsDropdown,
             {
                 label: "Search Terms",
                 name: "SearchTerms",
@@ -67,14 +101,69 @@ export class SearchDocs {
                 type: Components.FormControlTypes.TextField,
                 required: true,
                 value: keywords,
-                errorMessage: "You must enter at least 1 search term."
+                errorMessage: "You must enter at least 1 search term.",
+                onControlRendered: ctrl => { ctrlSearchTerms = ctrl; }
+            },
+            {
+                label: "RegEx Pattern",
+                name: "RegExPattern",
+                className: "mb-3 d-none",
+                description: "Enter the regular expression pattern to search for.",
+                type: Components.FormControlTypes.TextField,
+                required: true,
+                value: keywords,
+                errorMessage: "You must enter at least 1 search term.",
+                onControlRendered: ctrl => { ctrlRegEx = ctrl; },
+                onValidate: (ctrl, results) => {
+                    // Ensure a pattern exists
+                    if ((results.value || "").trim().length == 0) {
+                        // Invalidate the extensions
+                        results.isValid = false;
+                        results.invalidMessage = "A regex pattern is required.";
+                    } else {
+                        // Validate the regex pattern
+                        try {
+                            // Create a new regex
+                            new RegExp(results.value);
+                        } catch (ex) {
+                            // Invalidate the regex pattern
+                            results.isValid = false;
+                            results.invalidMessage = "The regex pattern is not valid.";
+                        }
+                    }
+
+                    // Return the results
+                    return results;
+                }
             },
             {
                 label: "File Types",
                 name: "FileTypes",
                 className: "mb-3",
                 type: Components.FormControlTypes.TextField,
-                value: fileExt
+                value: fileExt,
+                onValidate: (ctrl, results) => {
+                    // See if a regex pattern was entered
+                    if (ctrlSearchType.getValue().value == "RegExPattern" && results.value) {
+                        // Validate the extension
+                        let exts: string[] = results.value.split(' ');
+                        for (let i = 0; i < exts.length; i++) {
+                            let ext = exts[i].trim().toLowerCase();
+                            if (ext) {
+                                // See if it's a valid extension
+                                if (FileExtensions.indexOf(ext) < 0) {
+                                    // Invalidate the extensions
+                                    results.isValid = false;
+                                    results.invalidMessage = "The file extension '" + ext +
+                                        "' is not valid. Valid extensions are: " + FileExtensions.join(", ") + ".";
+                                }
+                            }
+                        }
+                    }
+
+                    // Return the results
+                    return results;
+                }
             }
         ];
     }
@@ -274,7 +363,9 @@ export class SearchDocs {
 
         // Get the form values
         let fileExt = values["FileTypes"] ? values["FileTypes"].split(' ') : null;
+        let regExPattern = values["RegExPattern"] ? new RegExp(values["RegExPattern"]) : null;
         let searchTerms = (values["SearchTerms"] || "").split(' ');
+        let searchType = (values["SearchType"] || "");
 
         // Set the query
         let query: Types.Microsoft.Office.Server.Search.REST.SearchRequest = {
@@ -296,21 +387,30 @@ export class SearchDocs {
             };
         }
 
-        // Search for the content
-        Search.postQuery({
-            getAllItems: true,
-            url: this._loadOneDrive ? ContextInfo.siteAbsoluteUrl : DataSource.SiteContext.SiteFullUrl,
-            targetInfo: { requestDigest: this._loadOneDrive ? ContextInfo.formDigestValue : DataSource.SiteContext.FormDigestValue },
-            query
-        }).then(search => {
-            // Clear the element
-            while (el.firstChild) { el.removeChild(el.firstChild); }
+        // Set the url
+        let url = this._loadOneDrive ? ContextInfo.siteAbsoluteUrl : DataSource.SiteContext.SiteFullUrl;
 
-            // Render the summary
-            this.renderSummary(el, auditOnly, search.results, onClose);
+        // See if we are doing a keyword search
+        if (searchType == "Keyword") {
+            // Search for the content
+            Search.postQuery({
+                getAllItems: true,
+                url,
+                targetInfo: { requestDigest: this._loadOneDrive ? ContextInfo.formDigestValue : DataSource.SiteContext.FormDigestValue },
+                query
+            }).then(search => {
+                // Clear the element
+                while (el.firstChild) { el.removeChild(el.firstChild); }
 
-            // Hide the loading dialog
-            LoadingDialog.hide();
-        });
+                // Render the summary
+                this.renderSummary(el, auditOnly, search.results, onClose);
+
+                // Hide the loading dialog
+                LoadingDialog.hide();
+            });
+        } else {
+            // Search the libraries
+            this.analyzeLibraries(url, regExPattern)
+        }
     }
 }

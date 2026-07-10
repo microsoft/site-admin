@@ -1,4 +1,4 @@
-import { ContextInfo, SPTypes } from "gd-sprest-bs";
+import { ContextInfo } from "gd-sprest-bs";
 
 // Sets the context information
 // This is for SPFx or Teams solutions
