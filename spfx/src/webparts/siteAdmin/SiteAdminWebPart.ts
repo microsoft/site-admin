@@ -70,6 +70,7 @@ export interface ISiteAdminWebPartProps {
   ReportsDLPGroups: string;
   ReportsDocSearchFileExt: string;
   ReportsDocSearchKeywords: string;
+  ReportsDocSearchRegexPatterns: string;
   SensitivityLabelFileExt: string;
   SiteAttestation: boolean;
   SiteAttestationText: string;
@@ -204,6 +205,7 @@ declare const SiteAdmin: {
       dlpGroups?: string[];
       docSearchFileExt?: string;
       docSearchKeywords?: string;
+      docSearchRegexPatterns?: string;
       sensitivityLabelFileExt?: string;
     }
     searchProps?: {
@@ -337,6 +339,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         docRententionYears: this.properties.ReportsDocRententionYears,
         docSearchFileExt: this.properties.ReportsDocSearchFileExt,
         docSearchKeywords: this.properties.ReportsDocSearchKeywords,
+        docSearchRegexPatterns: this.properties.ReportsDocSearchRegexPatterns,
         sensitivityLabelFileExt: this.properties.SensitivityLabelFileExt
       },
       searchProps: {
@@ -698,6 +701,13 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   multiline: true,
                   rows: 6,
                   value: this.properties.ReportsDocSearchKeywords
+                }),
+                PropertyPaneTextField("ReportsDocSearchKeywords", {
+                  label: strings.ReportsDocSearchRegexPatterns,
+                  description: "The default regex expressions to search for.",
+                  multiline: true,
+                  rows: 6,
+                  value: this.properties.ReportsDocSearchRegexPatterns
                 }),
               ]
             },
