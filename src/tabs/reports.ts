@@ -12,6 +12,7 @@ export interface IReportProps {
     docRententionYears?: string;
     docSearchFileExt?: string;
     docSearchKeywords?: string;
+    docSearchRegexPatterns?: string;
     sensitivityLabelFileExt?: string;
 }
 
@@ -250,7 +251,7 @@ export class ReportsTab {
                 this._form.appendControls(Reports.SearchAgents.getFormFields());
                 break;
             case ReportTypes.SearchDocs:
-                this._form.appendControls(Reports.SearchDocs.getFormFields(this._reportProps?.docSearchFileExt, this._reportProps?.docSearchKeywords));
+                this._form.appendControls(Reports.SearchDocs.getFormFields(this._reportProps?.docSearchFileExt, this._reportProps?.docSearchKeywords, this._reportProps?.docSearchRegexPatterns));
                 break;
             case ReportTypes.SearchEEEU:
                 this._form.appendControls(Reports.SearchEEEU.getFormFields());
