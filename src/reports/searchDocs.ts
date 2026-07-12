@@ -1,4 +1,4 @@
-import { Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
+import { CanvasForm, Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
 import { Components, ContextInfo, Helper, Search, SPTypes, Types, Web, v2 } from "gd-sprest-bs";
 import { Workbook } from "exceljs";
 import { extractRawText } from "mammoth";
@@ -19,7 +19,7 @@ interface ISearchItem {
     LastModifiedTime: string;
     ListId: string;
     Path: string;
-    RegexPattern?: string;
+    RegexPatterns?: string;
     SensitivityLabel?: string;
     SensitivityLabelId?: string;
     SPSiteUrl: string;
@@ -30,7 +30,7 @@ interface ISearchItem {
 }
 
 const CSVFields = [
-    "Author", "FileExtension", "HitHighlightedSummary", "RegexPattern", "LastModifiedTime",
+    "Author", "FileExtension", "HitHighlightedSummary", "RegexPatterns", "LastModifiedTime",
     "SensitivityLabel", "SensitivityLabelId", "ListId", "Path", "SPSiteUrl", "SPWebUrl", "Title", "WebId"
 ]
 
@@ -121,7 +121,7 @@ export class SearchDocs {
                             LastModifiedTime: item.fileSystemInfo.lastModifiedDateTime,
                             ListId: item.parentReference.driveId,
                             Path: driveUrl + item.parentReference.path.split("/root:").pop(),
-                            RegexPattern: patterns.join(", "),
+                            RegexPatterns: patterns.join(", "),
                             SensitivityLabel: item.sensitivityLabel?.displayName,
                             SensitivityLabelId: item.sensitivityLabel?.id,
                             SPSiteUrl: item.parentReference.path,
@@ -168,7 +168,7 @@ export class SearchDocs {
     }
 
     // Analyzes the libraries of a site
-    private static analyzeLibraries(webId: string, webUrl: string, drives: Types.Microsoft.Graph.drive[], fileExt: string[], regexPatterns: RegExp[]) {
+    private static analyzeLibraries(webId: string, webUrl: string, libraries: Types.SP.ListOData[], drives: Types.Microsoft.Graph.drive[], fileExt: string[], regexPatterns: RegExp[]) {
         // Return a promise
         return new Promise(resolve => {
             // Set the completed event
@@ -202,17 +202,21 @@ export class SearchDocs {
 
                 // Do nothing if we are done
                 if (filesToProcess.length == 0) {
-                    // Stop the process
-                    worker.stop();
+                    // See if we have completed processing the files
+                    if (processingCounter == 0) {
+                        // Stop the process
+                        worker.stop();
 
-                    // Call the event
-                    onCompleted ? onCompleted() : null;
+                        // Call the event
+                        onCompleted ? onCompleted() : null;
+                    }
 
                     // Do nothing
                     return;
                 }
 
                 // Increment the # of files being processed
+                fileCounter++;
                 processingCounter++;
 
                 // Analyze the file
@@ -226,17 +230,25 @@ export class SearchDocs {
                 });
             }, 100);
 
+            // Parse the file extensions to target
+            let filters = [];
+            (fileExt || FileExtensions).forEach(ext => {
+                filters.push(`substringof('.${ext}', FileLeafRef)`);
+            });
+
             // Parse the libraries
-            Helper.Executor(drives, drive => {
+            Helper.Executor(libraries, lib => {
                 // Set the status
-                this._elSubNav.children[0].innerHTML = `Analyzing Library: '${drive.name}'`;
+                this._elSubNav.children[0].innerHTML = `Analyzing Library: '${lib.Title}'`;
                 this._elSubNav.children[1].innerHTML = `Loading the files for this library...`;
 
-                // Parse the file extensions to target
-                let filters = [];
-                (fileExt || FileExtensions).forEach(ext => {
-                    filters.push(`substringof('.${ext}', FileLeafRef)`);
+                // Get the drive for this library
+                let drive = drives.find(drive => {
+                    return drive.name == lib.Title || drive.webUrl.endsWith(lib.RootFolder.ServerRelativeUrl);
                 });
+
+                // Ensure a drive exists, otherwise check the next library
+                if (drive == null) { return; }
 
                 // Load the files for this drive
                 return DataSource.loadFiles(webId, webUrl, drive.id, drive.name, null, null, item => {
@@ -290,9 +302,17 @@ export class SearchDocs {
     }
 
     // Gets the form fields to display
-    static getFormFields(fileExt: string = "", keywords: string = "", regexPatterns: string = ""): Components.IFormControlProps[] {
+    static getFormFields(fileExt: string = "", keywords: string = "", regexPatterns: string = "", regexOnly: boolean = false): Components.IFormControlProps[] {
         let ctrlRegex: Components.IFormControl;
         let ctrlSearchTerms: Components.IFormControl;
+
+        // Set the items
+        let items: Components.IDropdownItem[] = regexOnly ? [{ text: "Regex Pattern", value: "RegexPatterns" }] : [
+            { text: "Keyword", value: "Keyword" },
+            { text: "Regex Pattern", value: "RegexPatterns", isSelected: true }
+        ]
+
+        // Return the properties
         return [
             {
                 label: "Search Type",
@@ -300,10 +320,7 @@ export class SearchDocs {
                 className: "mb-3",
                 type: Components.FormControlTypes.Dropdown,
                 required: true,
-                items: [
-                    { text: "Keyword", value: "Keyword", isSelected: true },
-                    { text: "Regex Pattern", value: "RegexPattern" }
-                ],
+                items,
                 onChange: (item) => {
                     // See which one is selected
                     if (item.value == "Keyword") {
@@ -320,7 +337,7 @@ export class SearchDocs {
             {
                 label: "Search Terms",
                 name: "SearchTerms",
-                className: "mb-3",
+                className: "mb-3 d-none",
                 description: "Enter the search terms using quotes for phrases [Ex: movie \"social media\" show]",
                 type: Components.FormControlTypes.TextField,
                 required: true,
@@ -329,9 +346,9 @@ export class SearchDocs {
                 onControlRendered: ctrl => { ctrlSearchTerms = ctrl; }
             },
             {
-                label: "Regex Pattern",
-                name: "RegexPattern",
-                className: "mb-3 d-none",
+                label: "Regex Patterns",
+                name: "RegexPatterns",
+                className: "mb-3",
                 description: "Enter the regular expression pattern to search for.",
                 type: Components.FormControlTypes.TextField,
                 required: true,
@@ -371,17 +388,24 @@ export class SearchDocs {
     }
 
     // Renders the errors
-    private static renderErrors() {
-        // Clear the modal
-        Modal.clear();
-        Modal.setType(Components.ModalTypes.Large);
+    private static renderErrors(searchType: "Search" | "Regex" | "Library") {
+        let isLibrary = searchType === "Library";
+        if (isLibrary) {
+            // Clear the canvas
+            CanvasForm.clear();
+            CanvasForm.setSize(Components.OffcanvasSize.Medium2);
+        } else {
+            // Clear the modal
+            Modal.clear();
+            Modal.setType(Components.ModalTypes.Large);
+        }
 
         // Set the header
-        Modal.setHeader("Permission Errors");
+        (isLibrary ? CanvasForm : Modal).setHeader("Document Errors");
 
         // Render a dashboard
         new Dashboard({
-            el: Modal.BodyElement,
+            el: isLibrary ? CanvasForm.BodyElement : Modal.BodyElement,
             navigation: {
                 title: "M365 Group Errors",
                 showFilter: false,
@@ -416,6 +440,7 @@ export class SearchDocs {
                     },
                     {
                         name: "",
+                        title: "Error",
                         onRenderCell: (el) => {
                             el.innerHTML = "Unable to extract content from the file.";
                         }
@@ -426,20 +451,22 @@ export class SearchDocs {
 
         // Render the footer
         Components.Button({
-            el: Modal.FooterElement,
+            el: isLibrary ? CanvasForm.BodyElement : Modal.FooterElement,
             text: "Close",
             type: Components.ButtonTypes.OutlinePrimary,
             onClick: () => {
-                Modal.hide();
+                isLibrary ? CanvasForm.hide() : Modal.hide();
             }
         });
 
-        // Show the modal
-        Modal.show();
+        // Show the errors
+        isLibrary ? CanvasForm.show() : Modal.show();
     }
 
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, auditOnly: boolean, isSearch: boolean, onClose: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, searchType: "Search" | "Regex" | "Library", onClose: () => void) {
+        let isSearch = searchType === "Search" ? true : false;
+
         // Render the summary
         this._dashboard = new Dashboard({
             el,
@@ -474,7 +501,7 @@ export class SearchDocs {
                     isButton: true,
                     onClick: () => {
                         // Display the errors
-                        this.renderErrors();
+                        this.renderErrors(searchType);
                     }
                 }],
                 itemsEnd: [{
@@ -552,7 +579,7 @@ export class SearchDocs {
                                     });
                                 }
                             } else {
-                                span.innerHTML = item.RegexPattern;
+                                span.innerHTML = item.RegexPatterns;
                             }
 
                             // Append the span
@@ -689,7 +716,7 @@ export class SearchDocs {
 
         // Set the regex patterns
         let regexPatterns = [];
-        (values["RegexPattern"]?.split(' ') || []).forEach(pattern => {
+        (values["RegexPatterns"]?.split(' ') || []).forEach(pattern => {
             regexPatterns.push(new RegExp(pattern));
         });
 
@@ -732,7 +759,7 @@ export class SearchDocs {
                 this._items = search.results;
 
                 // Render the summary
-                this.renderSummary(el, auditOnly, true, onClose);
+                this.renderSummary(el, auditOnly, "Search", onClose);
 
                 // Hide the sub-nav
                 this._elSubNav.classList.add("d-none");
@@ -745,7 +772,7 @@ export class SearchDocs {
             while (el.firstChild) { el.removeChild(el.firstChild); }
 
             // Render the summary
-            this.renderSummary(el, auditOnly, false, onClose);
+            this.renderSummary(el, auditOnly, values["TargetList"] ? "Library" : "Regex", onClose);
 
             // Determine the webs to target
             let siteItems: Components.IDropdownItem[] = null;
@@ -776,16 +803,32 @@ export class SearchDocs {
                         filter = `Title eq '${values["TargetList"]}'`;
                     }
 
-                    // Get the drives for this web
-                    v2.drives({
-                        siteId: this._loadOneDrive ? DataSource.OneDriveSite.Id : DataSource.Site.Id,
-                        webId: this._loadOneDrive ? DataSource.OneDriveWeb.Id : DataSource.Web.Id
-                    }).execute(drives => {
+                    // Get the libraries for this site
+                    let web = this._loadOneDrive ? Web.getOneDrive() : Web(siteItem.text, { requestDigest: DataSource.SiteContext.FormDigestValue });
+                    web.Lists().query({
+                        Filter: filter,
+                        Expand: ["RootFolder"],
+                        GetAllItems: true,
+                        Select: ["Id", "Title", "RootFolder/ServerRelativeUrl"],
+                        Top: 5000
+                    }).execute(libs => {
                         // Update the dialog
                         this._elSubNav.children[1].innerHTML = "Loading the files for the libraries...";
 
-                        // Analyze the libraries
-                        return this.analyzeLibraries(siteItem.value, siteItem.text, drives.results, fileExt, regexPatterns);
+                        // Get the drives for this web
+                        v2.drives({
+                            siteId: this._loadOneDrive ? DataSource.OneDriveSite.Id : DataSource.Site.Id,
+                            webId: this._loadOneDrive ? DataSource.OneDriveWeb.Id : DataSource.Web.Id
+                        }).execute(drives => {
+                            // Update the dialog
+                            this._elSubNav.children[1].innerHTML = "Loading the files for the libraries...";
+
+                            // Analyze the libraries
+                            this.analyzeLibraries(siteItem.value, siteItem.text, libs.results, drives.results, fileExt, regexPatterns).then(() => {
+                                // Analyze the next site
+                                resolve(null);
+                            });
+                        });
                     });
                 });
             }).then(() => {
@@ -806,4 +849,37 @@ export class SearchDocs {
             LoadingDialog.hide();
         }
     }
+
+    // Searches a library for agents
+    static searchLibrary(auditOnly: boolean, values: { [key: string]: string }) {
+        // Clear a modal form
+        Modal.clear();
+        Modal.setHeader("Search Documents");
+        Modal.setType(Components.ModalTypes.Full);
+
+        // Run the report
+        this.run(Modal.BodyElement, auditOnly, values, () => { });
+
+        // Render the footer
+        Components.ButtonGroup({
+            el: Modal.FooterElement,
+            className: "mt-3",
+            buttons: [
+                {
+                    text: "Close",
+                    type: Components.ButtonTypes.OutlineSecondary,
+                    onClick: () => {
+                        // Hide the form
+                        Modal.hide();
+                    }
+                }
+            ]
+        });
+
+        // Show the form
+        Modal.show();
+    }
+
+    // Stops the report
+    static stop() { this._stopFl = true; }
 }

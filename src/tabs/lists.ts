@@ -7,6 +7,7 @@ import { ReportTypes } from "./reports";
 import { BulkLabel } from "../reports/bulkLabel";
 import { DLP } from "../reports/dlp";
 import { SearchAgents } from "../reports/searchAgents";
+import { SearchDocs } from "../reports/searchDocs";
 import { SearchEEEU } from "../reports/searchEEEU";
 import { SensitivityLabels } from "../reports/sensitivityLabels";
 import { UniquePermissions } from "../reports/uniquePermissions";
@@ -430,6 +431,15 @@ export class ListsTab {
             }
         }
 
+        // Search Documents
+        if (typeof (this._appProps.hideReports.searchDocs) === "undefined" || this._appProps.hideReports.searchDocs != true) {
+            items.push({
+                text: "Search Documents",
+                data: "Search for documents using regex patterns.",
+                value: ReportTypes.SearchDocs
+            });
+        }
+
         // Search EEEU
         if (typeof (this._appProps.hideReports.searchEEEU) === "undefined" || this._appProps.hideReports.searchEEEU != true) {
             items.push({
@@ -484,6 +494,13 @@ export class ListsTab {
 
                             // Append the controls
                             switch (item.value) {
+                                case ReportTypes.SearchDocs:
+                                    // Set the form
+                                    form = Components.Form({
+                                        el: Modal.BodyElement,
+                                        controls: getDefaultControl(ReportTypes.SearchDocs).concat(SearchDocs.getFormFields(this._appProps.reportProps?.docSearchFileExt, this._appProps.reportProps?.docSearchKeywords, this._appProps.reportProps?.docSearchRegexPatterns, true))
+                                    });
+                                    break;
                                 case ReportTypes.SensitivityLabels:
                                     // Set the form
                                     form = Components.Form({
@@ -534,6 +551,15 @@ export class ListsTab {
                                     case ReportTypes.SearchAgents:
                                         // Run the Agents report for this library
                                         SearchAgents.searchLibrary(item.WebUrl, item.ListName, this._appProps.auditOnly);
+                                        break;
+                                    case ReportTypes.SearchDocs:
+                                        // Set the target web and list
+                                        values["TargetWeb"] = { text: item.WebUrl, value: item.WebId };
+                                        values["TargetList"] = item.ListName;
+
+                                        // Run the search documents report
+                                        // Run the report
+                                        SearchDocs.searchLibrary(this._appProps.auditOnly, values);
                                         break;
                                     case ReportTypes.SearchEEEU:
                                         // Run the EEEU report for this list
