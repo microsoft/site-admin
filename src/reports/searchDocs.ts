@@ -1,39 +1,244 @@
 import { Dashboard, Documents, LoadingDialog } from "dattatable";
-import { Components, ContextInfo, Search, Types, Web } from "gd-sprest-bs";
-import { fileEarmarkText } from "gd-sprest-bs/build/icons/svgs/fileEarmarkText";
-import { fileEarmarkArrowDown } from "gd-sprest-bs/build/icons/svgs/fileEarmarkArrowDown";
-import { trash } from "gd-sprest-bs/build/icons/svgs/trash";
+import { Components, ContextInfo, Helper, Search, SPTypes, Types, Web, v2 } from "gd-sprest-bs";
+import { Workbook } from "exceljs";
+import { extractRawText } from "mammoth";
 import * as moment from "moment";
+import { PDFParse } from "pdf-parse";
 import { DataSource } from "../ds";
-import { ExportCSV } from "./exportCSV";
 import Strings from "../strings";
+import { ExportCSV } from "./exportCSV";
+import { SensitivityLabels } from "./sensitivityLabels";
 
 interface ISearchItem {
+    _driveItem?: Types.Microsoft.Graph.driveItem;
     Author: string;
     FileExtension: string;
-    HitHighlightedSummary: string;
+    FileUrl: string;
+    HitHighlightedSummary?: string;
     LastModifiedTime: string;
     ListId: string;
     Path: string;
+    RegexPattern?: string;
+    SensitivityLabel?: string;
+    SensitivityLabelId?: string;
     SPSiteUrl: string;
     SPWebUrl: string;
     Title: string;
+    ViewUrl: string;
     WebId: string;
 }
 
 const CSVFields = [
-    "Author", "FileExtension", "HitHighlightedSummary", "LastModifiedTime",
-    "ListId", "Path", "SPSiteUrl", "SPWebUrl", "Title", "WebId"
+    "Author", "FileExtension", "HitHighlightedSummary", "RegexPattern", "LastModifiedTime",
+    "SensitivityLabel", "SensitivityLabelId", "ListId", "Path", "SPSiteUrl", "SPWebUrl", "Title", "WebId"
 ]
 
 // The valid file extensions for regex patterns
-const FileExtensions = ["docx", "xlsx", "pptx", "pdf", "txt", "csv"];
+const FileExtensions = ["csv", "docx", "pptx", "pdf", "txt", "xlsx"];
 
 export class SearchDocs {
+    private static _dashboard: Dashboard = null;
+    private static _elSubNav: HTMLElement = null;
+    private static _items: ISearchItem[] = [];
     private static _loadOneDrive: boolean = false;
+    private static _stopFl: boolean = false;
+
+    // Analyzes the file
+    private static analyzeFile(item: Types.Microsoft.Graph.driveItem, driveUrl: string, webUrl: string, webId: string, regexPatterns: RegExp[]) {
+        // Return a promise
+        return new Promise(resolve => {
+            // Update the dialog
+            this._elSubNav.children[1].innerHTML = `Processing File: ${item.name}`;
+
+            // Convert the buffer to string
+            let getContent = (buffer: ArrayBuffer): PromiseLike<string> => {
+                return new Promise((resolve, reject) => {
+                    switch (item.file["fileExtension"].substring(1)) {
+                        case "docx":
+                            // Get the content
+                            extractRawText({ arrayBuffer: new Uint8Array(buffer) as any }).then(result => {
+                                resolve(result.value);
+                            }).catch(reject);
+                            break;
+                        case "pdf":
+                            // Get the content
+                            let pdf = new PDFParse({ data: buffer });
+                            pdf.getText().then(content => { resolve(content.text); }).catch(reject);
+                            break;
+                        case "xlsx":
+                            (new Workbook()).xlsx.load(buffer).then(workbook => {
+                                let content = [];
+                                // Parse the sheets
+                                workbook.eachSheet(sheet => {
+                                    // Parse each row
+                                    sheet.eachRow(row => {
+                                        // Append the content
+                                        content.push(row.values.toString());
+                                    });
+                                });
+                                resolve(content.join("\n"));
+                            }).catch(reject);
+                            break;
+                        default:
+                            // Convert the buffer to a string
+                            let decoder = new TextDecoder("utf-8");
+                            resolve(decoder.decode(buffer));
+                            break;
+                    }
+                });
+            }
+
+            // Get the content of the file
+            v2.drive({
+                driveId: item.parentReference.driveId,
+                siteId: item.parentReference.siteId,
+                webId
+            }).items(item.id)["content"]().execute(buffer => {
+                // Get the content
+                getContent(buffer).then(content => {
+                    let patterns = [];
+
+                    // See if the regex pattern exists in the content
+                    regexPatterns.forEach(regexPatterns => {
+                        // Test the pattern
+                        if (regexPatterns.test(content)) {
+                            // Add the pattern
+                            patterns.push(regexPatterns.source);
+                        }
+                    });
+
+                    // See if patterns were found
+                    if (patterns.length > 0) {
+                        // Add the item
+                        let itemInfo: ISearchItem = {
+                            _driveItem: item,
+                            Author: item.createdBy.user["email"],
+                            FileExtension: item.file["fileExtension"].substring(1),
+                            FileUrl: item.parentReference.path.split("/root:").pop() + "/" + item.name,
+                            LastModifiedTime: item.fileSystemInfo.lastModifiedDateTime,
+                            ListId: item.parentReference.driveId,
+                            Path: driveUrl + item.parentReference.path.split("/root:").pop(),
+                            RegexPattern: patterns.join(", "),
+                            SensitivityLabel: item.sensitivityLabel?.displayName,
+                            SensitivityLabelId: item.sensitivityLabel?.id,
+                            SPSiteUrl: item.parentReference.path,
+                            SPWebUrl: webUrl,
+                            Title: item.name,
+                            ViewUrl: item.webUrl,
+                            WebId: webId,
+                        }
+
+                        // Add it to the dashboard
+                        this._items.push(itemInfo);
+                        this._dashboard.Datatable.addRow(itemInfo);
+                    }
+
+                    // Resolve the request
+                    resolve(null);
+                }, () => {
+                    // Add an error
+                    // TODO
+
+                    // Resolve the request
+                    resolve(null);
+                });
+            });
+        });
+    }
 
     // Analyzes the libraries of a site
-    private static analyzeLibraries(url: string, regExPattern: RegExp) {
+    private static analyzeLibraries(webId: string, webUrl: string, drives: Types.Microsoft.Graph.drive[], fileExt: string[], regexPatterns: RegExp[]) {
+        // Return a promise
+        return new Promise(resolve => {
+            // Set the completed event
+            let onCompleted = () => {
+                // Clear the sub-nav
+                this._elSubNav.classList.add("d-none");
+
+                // Clear the callback events
+                ContextInfo.clearRateLimitCallbacks();
+
+                // Resolve the request
+                resolve(null);
+            };
+
+            // File counters for processing
+            let fileCounter = 0;
+            let filesToProcess: Types.Microsoft.Graph.driveItem[] = [];
+            let processingCounter = 0;
+            let processedCounter = 0;
+
+            // Create a worker process
+            let worker = Helper.WebWorker(() => {
+                // See if we are stopping this process
+                if (this._stopFl) {
+                    // Stop the process
+                    worker.stop();
+                }
+
+                // Do nothing if we are processing the max files at once
+                if (processingCounter >= Strings.MaxRequests) { return; }
+
+                // Do nothing if we are done
+                if (filesToProcess.length == 0) {
+                    // Stop the process
+                    worker.stop();
+
+                    // Call the event
+                    onCompleted ? onCompleted() : null;
+
+                    // Do nothing
+                    return;
+                }
+
+                // Increment the # of files being processed
+                processingCounter++;
+
+                // Analyze the file
+                let file = filesToProcess.splice(0, 1).pop();
+                this.analyzeFile(file, file.parentReference["driveUrl"], webUrl, webId, regexPatterns).then(() => {
+                    // Update the dialog
+                    this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] File Labelled: ${file.name}`;
+
+                    // Decrement the # of files being processed
+                    processingCounter--;
+                });
+            }, 100);
+
+            // Parse the libraries
+            Helper.Executor(drives, drive => {
+                // Set the status
+                this._elSubNav.children[0].innerHTML = `Analyzing Library: '${drive.name}'`;
+                this._elSubNav.children[1].innerHTML = `Loading the files for this library...`;
+
+                // Parse the file extensions to target
+                let filters = [];
+                (fileExt || FileExtensions).forEach(ext => {
+                    filters.push(`substringof('.${ext}', FileLeafRef)`);
+                });
+
+                // Load the files for this drive
+                DataSource.loadFiles(webId, webUrl, drive.id, drive.name, null, null, item => {
+                    // Ensure the file extension is valid
+                    if ((fileExt || FileExtensions).indexOf(item.file["fileExtension"].substring(1)) < 0) { return; }
+
+                    // Add the drive reference
+                    item.parentReference["driveUrl"] = drive.webUrl;
+
+                    // Add the file to process
+                    filesToProcess.push(item);
+
+                    // Ensure the process is running
+                    worker.start();
+                });
+            }).then(() => {
+                // Update the dialog
+                this._elSubNav.children[0].innerHTML = `All Files Loaded. Waiting for the processing to complete.`;
+
+                // Ensure the process is running
+                worker.start();
+            });
+        });
     }
 
     // Deletes a document
@@ -64,8 +269,8 @@ export class SearchDocs {
     }
 
     // Gets the form fields to display
-    static getFormFields(fileExt: string = "", keywords: string = ""): Components.IFormControlProps[] {
-        let ctrlRegEx: Components.IFormControl;
+    static getFormFields(fileExt: string = "", keywords: string = "", regexPatterns: string = ""): Components.IFormControlProps[] {
+        let ctrlRegex: Components.IFormControl;
         let ctrlSearchTerms: Components.IFormControl;
         let ctrlSearchType: Components.IFormControl;
         return [
@@ -77,18 +282,18 @@ export class SearchDocs {
                 required: true,
                 items: [
                     { text: "Keyword", value: "Keyword", isSelected: true },
-                    { text: "RegEx Pattern", value: "RegExPattern" }
+                    { text: "Regex Pattern", value: "RegexPattern" }
                 ],
                 onControlRendered: ctrl => { ctrlSearchType = ctrl; },
                 onChange: (item) => {
                     // See which one is selected
                     if (item.value == "Keyword") {
                         // Show/Hide the controls
-                        ctrlRegEx.hide();
+                        ctrlRegex.hide();
                         ctrlSearchTerms.show();
                     } else {
                         // Show/Hide the controls
-                        ctrlRegEx.show();
+                        ctrlRegex.show();
                         ctrlSearchTerms.hide();
                     }
                 }
@@ -105,15 +310,15 @@ export class SearchDocs {
                 onControlRendered: ctrl => { ctrlSearchTerms = ctrl; }
             },
             {
-                label: "RegEx Pattern",
-                name: "RegExPattern",
+                label: "Regex Pattern",
+                name: "RegexPattern",
                 className: "mb-3 d-none",
                 description: "Enter the regular expression pattern to search for.",
                 type: Components.FormControlTypes.TextField,
                 required: true,
-                value: keywords,
+                value: regexPatterns,
                 errorMessage: "You must enter at least 1 search term.",
-                onControlRendered: ctrl => { ctrlRegEx = ctrl; },
+                onControlRendered: ctrl => { ctrlRegex = ctrl; },
                 onValidate: (ctrl, results) => {
                     // Ensure a pattern exists
                     if ((results.value || "").trim().length == 0) {
@@ -141,37 +346,15 @@ export class SearchDocs {
                 name: "FileTypes",
                 className: "mb-3",
                 type: Components.FormControlTypes.TextField,
-                value: fileExt,
-                onValidate: (ctrl, results) => {
-                    // See if a regex pattern was entered
-                    if (ctrlSearchType.getValue().value == "RegExPattern" && results.value) {
-                        // Validate the extension
-                        let exts: string[] = results.value.split(' ');
-                        for (let i = 0; i < exts.length; i++) {
-                            let ext = exts[i].trim().toLowerCase();
-                            if (ext) {
-                                // See if it's a valid extension
-                                if (FileExtensions.indexOf(ext) < 0) {
-                                    // Invalidate the extensions
-                                    results.isValid = false;
-                                    results.invalidMessage = "The file extension '" + ext +
-                                        "' is not valid. Valid extensions are: " + FileExtensions.join(", ") + ".";
-                                }
-                            }
-                        }
-                    }
-
-                    // Return the results
-                    return results;
-                }
+                value: fileExt
             }
         ];
     }
 
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, auditOnly: boolean, items: ISearchItem[], onClose: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, isSearch: boolean, onClose: () => void) {
         // Render the summary
-        new Dashboard({
+        this._dashboard = new Dashboard({
             el,
             navigation: {
                 title: "Search Documents",
@@ -184,6 +367,20 @@ export class SearchDocs {
                         // Call the close event
                         onClose();
                     }
+                }, {
+                    text: "Bulk Label",
+                    className: isSearch ? "d-none" : "btn-outline-light ms-2",
+                    isButton: true,
+                    onClick: () => {
+                        // Get the drive items
+                        let driveItems = [];
+                        this._items.forEach(item => { driveItems.push(item._driveItem); });
+
+                        // Show the label form
+                        SensitivityLabels.showLabelFilesForm(driveItems, responses => {
+                            // Update the items
+                        });
+                    }
                 }],
                 itemsEnd: [{
                     text: "Export to CSV",
@@ -191,16 +388,16 @@ export class SearchDocs {
                     isButton: true,
                     onClick: () => {
                         // Export the CSV
-                        new ExportCSV("searchDocs.csv", CSVFields, items);
+                        new ExportCSV("searchDocs.csv", CSVFields, this._items);
                     }
                 }]
             },
             table: {
-                rows: items,
+                rows: this._items,
                 onRendering: dtProps => {
                     dtProps.columnDefs = [
                         {
-                            "targets": 5,
+                            "targets": 3,
                             "orderable": false,
                             "searchable": false
                         }
@@ -214,63 +411,54 @@ export class SearchDocs {
                 },
                 columns: [
                     {
-                        name: "Path",
-                        title: "Document Url"
-                    },
-                    {
-                        name: "Title",
+                        name: "",
                         title: "File Name",
                         onRenderCell: (el, col, item: ISearchItem) => {
-                            el.innerHTML = item.Title + "." + item.FileExtension;
+                            el.innerHTML = `
+                                <small class="text-muted">File Name: </small>${item.Title + (isSearch ? "." + item.FileExtension : "")}
+                                <br/>
+                                <small class="text-muted">Path: </small>${item.FileUrl || item.Path}
+                            `;
                         }
                     },
                     {
-                        name: "Author",
-                        title: "Author(s)",
+                        name: "",
+                        title: isSearch ? "Last Modified" : "Sensitivity Label",
                         onRenderCell: (el, col, item: ISearchItem) => {
-                            // Clear the cell
-                            el.innerHTML = "";
-
-                            // Validate Author exists & split by ;
-                            let authors = (item.Author && item.Author.split(";")) || [item.Author];
-
-                            // Parse the Authors
-                            authors.forEach(author => {
-                                // Append the Author
-                                el.innerHTML += (author + "<br/>");
-                            });
+                            if (isSearch) {
+                                // Set the last modified time
+                                el.innerHTML = item.LastModifiedTime ? moment(item.LastModifiedTime).format(Strings.TimeFormat) : "";
+                            } else {
+                                // Set the sensitivity label
+                                el.innerHTML = item.SensitivityLabel || "";
+                            }
                         }
                     },
                     {
-                        name: "LastModifiedTime",
-                        title: "Modified",
-                        onRenderCell: (el, col, item: ISearchItem) => {
-                            el.innerHTML = item.LastModifiedTime ? moment(item.LastModifiedTime).format(Strings.TimeFormat) : "";
-                        }
-                    },
-                    {
-                        name: "HitHighlightedSummary",
-                        title: "Search Result",
+                        name: "",
+                        title: isSearch ? "Highlighted Summary" : "Pattern Matches",
                         onRenderCell: (el, col, item: ISearchItem) => {
                             // Declare a span element
                             let span = document.createElement("span");
 
-                            // Return the plain text if less than 50 chars
-                            if (el.innerHTML.length < 50) {
-                                span.innerHTML = item.HitHighlightedSummary;
+                            // See if we were searching by keyword
+                            if (isSearch) {
+                                // Return the plain text if less than 50 chars
+                                if (el.innerHTML.length < 50) {
+                                    span.innerHTML = item.HitHighlightedSummary;
+                                } else {
+                                    // Truncate to the last white space character in the text after 50 chars and add an ellipsis
+                                    span.innerHTML = item.HitHighlightedSummary.substring(0, 50).replace(/\s([^\s]*)$/, '') + '&#8230';
+
+                                    // Add a tooltip containing the text
+                                    Components.Tooltip({
+                                        content: "<small>" + item.HitHighlightedSummary + "</small>",
+                                        target: span
+                                    });
+                                }
                             } else {
-                                // Truncate to the last white space character in the text after 50 chars and add an ellipsis
-                                span.innerHTML = item.HitHighlightedSummary.substring(0, 50).replace(/\s([^\s]*)$/, '') + '&#8230';
-
-                                // Add a tooltip containing the text
-                                Components.Tooltip({
-                                    content: "<small>" + item.HitHighlightedSummary + "</small>",
-                                    target: span
-                                });
+                                span.innerHTML = item.RegexPattern;
                             }
-
-                            // Clear the element
-                            el.innerHTML = "";
 
                             // Append the span
                             el.appendChild(span);
@@ -280,58 +468,88 @@ export class SearchDocs {
                         className: "text-end",
                         name: "",
                         title: "",
-                        onRenderCell: (el, col, item: ISearchItem) => {
+                        onRenderCell: (el, col, item: ISearchItem, rowIdx) => {
                             let btnDelete: Components.IButton = null;
 
                             // Render the buttons
-                            let tooltips = Components.TooltipGroup({
-                                el,
-                                tooltips: [
-                                    {
-                                        content: "Click to view the document.",
-                                        btnProps: {
-                                            className: "pe-2 py-1",
-                                            iconClassName: "mx-1",
-                                            iconType: fileEarmarkText,
-                                            iconSize: 24,
-                                            text: "View",
-                                            type: Components.ButtonTypes.OutlinePrimary,
-                                            onClick: () => {
-                                                // View the file
-                                                window.open(Documents.isWopi(`${item.Title}.${item.FileExtension}`) ? item.SPWebUrl + "/_layouts/15/WopiFrame.aspx?sourcedoc=" + item.Path + "&action=view" : item.Path, "_blank");
-                                            }
-                                        }
-                                    },
-                                    {
-                                        content: "Click to download the document.",
-                                        btnProps: {
-                                            className: "pe-2 py-1",
-                                            iconClassName: "mx-1",
-                                            iconType: fileEarmarkArrowDown,
-                                            iconSize: 24,
-                                            text: "Download",
-                                            type: Components.ButtonTypes.OutlinePrimary,
-                                            onClick: () => {
-                                                // Download the document
-                                                window.open(`${item.SPWebUrl}/_layouts/15/download.aspx?SourceUrl=${item.Path}`, "_blank");
-                                            }
+                            let tooltips = Components.TooltipGroup({ el });
+
+                            // See if this is from search
+                            if (isSearch) {
+                                // Add a view button
+                                tooltips.add({
+                                    content: "Click to view the document.",
+                                    btnProps: {
+                                        className: "pe-2 py-1",
+                                        text: "View File",
+                                        type: Components.ButtonTypes.OutlinePrimary,
+                                        isSmall: true,
+                                        onClick: () => {
+                                            // View the file
+                                            window.open(Documents.isWopi(`${item.Title}.${item.FileExtension}`) ? item.SPWebUrl + "/_layouts/15/WopiFrame.aspx?sourcedoc=" + item.Path + "&action=view" : item.Path, "_blank");
                                         }
                                     }
-                                ]
+                                });
+                            } else {
+                                // Add a view button                                
+                                tooltips.add({
+                                    content: "Click to view the document.",
+                                    btnProps: {
+                                        className: "pe-2 py-1",
+                                        text: "View File",
+                                        type: Components.ButtonTypes.OutlinePrimary,
+                                        isSmall: true,
+                                        onClick: () => {
+                                            // View the file
+                                            window.open(item.ViewUrl, "_blank");
+                                        }
+                                    }
+                                });
+                            }
+
+                            // Add a download button
+                            tooltips.add({
+                                content: "Click to download the document.",
+                                btnProps: {
+                                    className: "pe-2 py-1",
+                                    text: "Download",
+                                    type: Components.ButtonTypes.OutlinePrimary,
+                                    isSmall: true,
+                                    onClick: () => {
+                                        // Download the document
+                                        window.open(`${item.SPWebUrl}/_layouts/15/download.aspx?SourceUrl=${item.Path}`, "_blank");
+                                    }
+                                }
                             });
 
                             // Add the option to delete
                             if (!auditOnly) {
+                                // Add a sensitivity label button
+                                tooltips.add({
+                                    content: "Click to set the sensitivity label on the file.",
+                                    btnProps: {
+                                        className: "pe-2 py-1",
+                                        text: "Set Label",
+                                        isSmall: true,
+                                        onClick: () => {
+                                            SensitivityLabels.showLabelFileForm(item._driveItem, label => {
+                                                // Update the row cell
+                                                item.SensitivityLabel = label;
+                                                this._dashboard.updateCell(rowIdx, 1, item);
+                                            });
+                                        }
+                                    }
+                                });
+
+                                // Add a delete button
                                 tooltips.add({
                                     content: "Click to delete the document.",
                                     btnProps: {
                                         assignTo: btn => { btnDelete = btn; },
                                         className: "pe-2 py-1",
-                                        iconClassName: "mx-1",
-                                        iconType: trash,
-                                        iconSize: 24,
                                         text: "Delete",
                                         type: Components.ButtonTypes.OutlineDanger,
+                                        isSmall: true,
                                         onClick: () => {
                                             // Confirm the deletion of the group
                                             if (confirm("Are you sure you want to delete this document?")) {
@@ -350,10 +568,17 @@ export class SearchDocs {
                 ]
             }
         });
+
+        // Set the sub-nav element
+        this._elSubNav = el.querySelector("#sub-navigation");
+        this._elSubNav.classList.remove("d-none");
+        this._elSubNav.classList.add("my-2");
+        this._elSubNav.innerHTML = `<div class="h6"></div><div></div>`;
     }
 
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
+        this._items = [];
         this._loadOneDrive = values["LoadOneDrive"] == "true";
 
         // Show a loading dialog
@@ -363,9 +588,14 @@ export class SearchDocs {
 
         // Get the form values
         let fileExt = values["FileTypes"] ? values["FileTypes"].split(' ') : null;
-        let regExPattern = values["RegExPattern"] ? new RegExp(values["RegExPattern"]) : null;
         let searchTerms = (values["SearchTerms"] || "").split(' ');
         let searchType = (values["SearchType"] || "");
+
+        // Set the regex patterns
+        let regexPatterns = [];
+        (values["RegexPattern"]?.split(' ') || []).forEach(pattern => {
+            regexPatterns.push(new RegExp(pattern));
+        });
 
         // Set the query
         let query: Types.Microsoft.Office.Server.Search.REST.SearchRequest = {
@@ -402,15 +632,78 @@ export class SearchDocs {
                 // Clear the element
                 while (el.firstChild) { el.removeChild(el.firstChild); }
 
+                // Set the items
+                this._items = search.results;
+
                 // Render the summary
-                this.renderSummary(el, auditOnly, search.results, onClose);
+                this.renderSummary(el, auditOnly, true, onClose);
+
+                // Hide the sub-nav
+                this._elSubNav.classList.add("d-none");
 
                 // Hide the loading dialog
                 LoadingDialog.hide();
             });
         } else {
-            // Search the libraries
-            this.analyzeLibraries(url, regExPattern)
+            // Show a loading dialog
+            LoadingDialog.setHeader("Searching Site");
+            LoadingDialog.setBody("Loading the libraries...");
+            LoadingDialog.show();
+
+            // Clear the element
+            while (el.firstChild) { el.removeChild(el.firstChild); }
+
+            // Render the summary
+            this.renderSummary(el, auditOnly, false, onClose);
+
+            // Hide the loading dialog
+            LoadingDialog.hide();
+
+            // Determine the webs to target
+            let siteItems: Components.IDropdownItem[] = null;
+            if (this._loadOneDrive) {
+                siteItems = [{ text: DataSource.OneDriveWeb.Url, value: DataSource.OneDriveWeb.Id }] as any;
+            } else {
+                siteItems = values["TargetWeb"] && values["TargetWeb"]["value"] ? [values["TargetWeb"]] as any : DataSource.SiteItems;
+            }
+
+            // Parse the webs
+            let counter = 0;
+            Helper.Executor(siteItems, siteItem => {
+                // See if we are stopping this process
+                if (this._stopFl) { return; }
+
+                // Update the status
+                this._elSubNav.children[0].innerHTML = `Searching Site ${++counter} of ${siteItems.length}`;
+                this._elSubNav.children[1].innerHTML = "Getting the libraries for this web...";
+
+                // Return a promise
+                return new Promise(resolve => {
+                    // Set the default filter
+                    let filter = `Hidden eq false and BaseTemplate eq ${SPTypes.ListTemplateType.DocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.MySiteDocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.PageLibrary}`;
+
+                    // See if a list was specified
+                    if (values["TargetList"]) {
+                        // Set the filter
+                        filter = `Title eq '${values["TargetList"]}'`;
+                    }
+
+                    // Get the drives for this web
+                    v2.drives({
+                        siteId: this._loadOneDrive ? DataSource.OneDriveSite.Id : DataSource.Site.Id,
+                        webId: this._loadOneDrive ? DataSource.OneDriveWeb.Id : DataSource.Web.Id
+                    }).execute(drives => {
+                        // Update the dialog
+                        this._elSubNav.children[1].innerHTML = "Loading the files for the libraries...";
+
+                        // Analyze the libraries
+                        return this.analyzeLibraries(siteItem.value, siteItem.text, drives.results, fileExt, regexPatterns);
+                    });
+                });
+            }).then(() => {
+                // Hide the sub-nav
+                this._elSubNav.classList.add("d-none");
+            });
         }
     }
 }

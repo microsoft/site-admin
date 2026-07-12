@@ -482,7 +482,7 @@ export class DataSource {
     }
 
     // Loads the files for a drive
-    static loadFiles(webId: string, webUrl: string, driveId: string, folderId: string, permissions?: boolean, onFile?: (file: Types.Microsoft.Graph.driveItem) => boolean | void): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
+    static loadFiles(webId: string, webUrl: string, driveId: string, listName: string, folderId: string, permissions?: boolean, onFile?: (file: Types.Microsoft.Graph.driveItem) => boolean | void): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
         let files = [];
         let isOneDrive = webId == DataSource.OneDriveWeb?.Id;
         let stopFl = false;
@@ -506,7 +506,7 @@ export class DataSource {
                     Top: 5000,
                     Expand: ["listItem"],
                     Select: [
-                        "createdBy", "driveId", "file", "folder", "id", "name",
+                        "createdBy", "driveId", "file", "fileSystemInfo", "folder", "id", "name",
                         "parentReference", "sensitivityLabel", "webUrl", "listItem/id"
                     ]
                 }).execute(resp => {
@@ -534,7 +534,7 @@ export class DataSource {
                                 return new Promise(resolve => {
                                     // Load the permissions
                                     Web(webUrl, { requestDigest: this.SiteContext.FormDigestValue })
-                                        .Lists(driveItem.parentReference.name).Items(driveItem.listItem["id"]).query({
+                                        .Lists(listName).Items(driveItem.listItem["id"]).query({
                                             Expand: ["RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings"],
                                             Select: ["Id", "HasUniqueRoleAssignments"]
                                         }).execute(result => {
