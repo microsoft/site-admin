@@ -749,16 +749,69 @@ export class SensitivityLabels {
 
         // Set the content
         CanvasForm.setBody(`
-            <div>Files to Label: <b>${driveItems.length}</b></div>
             <div></div>
             <div class="d-flex justify-content-end"></div>
         `);
 
         // Set the form
         let form = Components.Form({
-            el: CanvasForm.BodyElement.querySelectorAll("div")[1],
+            el: CanvasForm.BodyElement.querySelector("div"),
             groupClassName: "mb-3",
             controls: [
+                {
+                    name: "",
+                    label: "Files to Label:",
+                    description: driveItems.length + " files will be labelled with the selected sensitivity label.",
+                    onControlRendered: ctrl => {
+                        // Show a view link
+                        Components.Button({
+                            el: ctrl.el,
+                            isSmall: true,
+                            type: Components.ButtonTypes.OutlinePrimary,
+                            text: "View Files",
+                            onClick: () => {
+                                // Show the files to label
+                                Modal.clear();
+                                Modal.setHeader("Files to Label");
+
+                                // Set the close event
+                                Modal.setCloseEvent(() => {
+                                    // Show the canvas form
+                                    CanvasForm.show();
+                                });
+
+                                // Render the dashboard
+                                new Dashboard({
+                                    el: Modal.BodyElement,
+                                    hideNavigation: true,
+                                    table: {
+                                        rows: driveItems,
+                                        columns: [
+                                            {
+                                                name: "name",
+                                                title: "Filename"
+                                            },
+                                            {
+                                                name: "",
+                                                title: "Path",
+                                                onRenderCell: (el, col, item: Types.Microsoft.Graph.driveItem) => {
+                                                    // Render the path
+                                                    el.innerHTML = item.parentReference.path.split("/root:").pop();
+                                                }
+                                            }
+                                        ]
+                                    }
+                                });
+
+                                // Hide the canvas form
+                                CanvasForm.hide();
+
+                                // Show the modal
+                                Modal.show();
+                            }
+                        })
+                    }
+                },
                 {
                     name: "SensitivityLabel",
                     label: "Select Sensitivity Label:",

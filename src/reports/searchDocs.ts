@@ -1,4 +1,4 @@
-import { Dashboard, Documents, LoadingDialog } from "dattatable";
+import { Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
 import { Components, ContextInfo, Helper, Search, SPTypes, Types, Web, v2 } from "gd-sprest-bs";
 import { Workbook } from "exceljs";
 import { extractRawText } from "mammoth";
@@ -12,6 +12,7 @@ import { SensitivityLabels } from "./sensitivityLabels";
 interface ISearchItem {
     _driveItem?: Types.Microsoft.Graph.driveItem;
     Author: string;
+    ErrorExtractingContent?: boolean;
     FileExtension: string;
     FileUrl: string;
     HitHighlightedSummary?: string;
@@ -40,6 +41,7 @@ export class SearchDocs {
     private static _dashboard: Dashboard = null;
     private static _elSubNav: HTMLElement = null;
     private static _items: ISearchItem[] = [];
+    private static _itemErrors: ISearchItem[] = [];
     private static _loadOneDrive: boolean = false;
     private static _stopFl: boolean = false;
 
@@ -113,6 +115,7 @@ export class SearchDocs {
                         let itemInfo: ISearchItem = {
                             _driveItem: item,
                             Author: item.createdBy.user["email"],
+                            ErrorExtractingContent: false,
                             FileExtension: item.file["fileExtension"].substring(1),
                             FileUrl: item.parentReference.path.split("/root:").pop() + "/" + item.name,
                             LastModifiedTime: item.fileSystemInfo.lastModifiedDateTime,
@@ -136,8 +139,26 @@ export class SearchDocs {
                     // Resolve the request
                     resolve(null);
                 }, () => {
-                    // Add an error
-                    // TODO
+                    let itemInfo: ISearchItem = {
+                        _driveItem: item,
+                        Author: item.createdBy.user["email"],
+                        ErrorExtractingContent: true,
+                        FileExtension: item.file["fileExtension"].substring(1),
+                        FileUrl: item.parentReference.path.split("/root:").pop() + "/" + item.name,
+                        LastModifiedTime: item.fileSystemInfo.lastModifiedDateTime,
+                        ListId: item.parentReference.driveId,
+                        Path: driveUrl + item.parentReference.path.split("/root:").pop(),
+                        SensitivityLabel: item.sensitivityLabel?.displayName,
+                        SensitivityLabelId: item.sensitivityLabel?.id,
+                        SPSiteUrl: item.parentReference.path,
+                        SPWebUrl: webUrl,
+                        Title: item.name,
+                        ViewUrl: item.webUrl,
+                        WebId: webId,
+                    }
+
+                    // Add it to the dashboard
+                    this._itemErrors.push(itemInfo);
 
                     // Resolve the request
                     resolve(null);
@@ -218,7 +239,7 @@ export class SearchDocs {
                 });
 
                 // Load the files for this drive
-                DataSource.loadFiles(webId, webUrl, drive.id, drive.name, null, null, item => {
+                return DataSource.loadFiles(webId, webUrl, drive.id, drive.name, null, null, item => {
                     // Ensure the file extension is valid
                     if ((fileExt || FileExtensions).indexOf(item.file["fileExtension"].substring(1)) < 0) { return; }
 
@@ -272,7 +293,6 @@ export class SearchDocs {
     static getFormFields(fileExt: string = "", keywords: string = "", regexPatterns: string = ""): Components.IFormControlProps[] {
         let ctrlRegex: Components.IFormControl;
         let ctrlSearchTerms: Components.IFormControl;
-        let ctrlSearchType: Components.IFormControl;
         return [
             {
                 label: "Search Type",
@@ -284,7 +304,6 @@ export class SearchDocs {
                     { text: "Keyword", value: "Keyword", isSelected: true },
                     { text: "Regex Pattern", value: "RegexPattern" }
                 ],
-                onControlRendered: ctrl => { ctrlSearchType = ctrl; },
                 onChange: (item) => {
                     // See which one is selected
                     if (item.value == "Keyword") {
@@ -351,6 +370,74 @@ export class SearchDocs {
         ];
     }
 
+    // Renders the errors
+    private static renderErrors() {
+        // Clear the modal
+        Modal.clear();
+        Modal.setType(Components.ModalTypes.Large);
+
+        // Set the header
+        Modal.setHeader("Permission Errors");
+
+        // Render a dashboard
+        new Dashboard({
+            el: Modal.BodyElement,
+            navigation: {
+                title: "M365 Group Errors",
+                showFilter: false,
+                showSearch: false,
+                itemsEnd: [{
+                    text: "Export to CSV",
+                    className: "btn-outline-light me-2",
+                    isButton: true,
+                    onClick: () => {
+                        // Export the CSV
+                        new ExportCSV("searchDocs.csv", CSVFields, this._itemErrors);
+                    }
+                }]
+            },
+            table: {
+                rows: this._itemErrors,
+                columns: [
+                    {
+                        name: "Title",
+                        title: "Filename",
+                        onRenderCell: (el, col, item: ISearchItem) => {
+                            el.innerHTML = `
+                                <small class="text-muted">File Name: </small>${item.Title}
+                                <br/>
+                                <small class="text-muted">Path: </small>${item.FileUrl || item.Path}
+                            `;
+                        }
+                    },
+                    {
+                        name: "SensitivityLabel",
+                        title: "Sensitivity Label"
+                    },
+                    {
+                        name: "",
+                        onRenderCell: (el) => {
+                            el.innerHTML = "Unable to extract content from the file.";
+                        }
+                    }
+                ]
+            }
+        });
+
+        // Render the footer
+        Components.Button({
+            el: Modal.FooterElement,
+            text: "Close",
+            type: Components.ButtonTypes.OutlinePrimary,
+            onClick: () => {
+                Modal.hide();
+            }
+        });
+
+        // Show the modal
+        Modal.show();
+    }
+
     // Renders the search summary
     private static renderSummary(el: HTMLElement, auditOnly: boolean, isSearch: boolean, onClose: () => void) {
         // Render the summary
@@ -380,6 +467,14 @@ export class SearchDocs {
                         SensitivityLabels.showLabelFilesForm(driveItems, responses => {
                             // Update the items
                         });
+                    }
+                }, {
+                    text: "Errors",
+                    className: "btn-outline-light ms-2",
+                    isButton: true,
+                    onClick: () => {
+                        // Display the errors
+                        this.renderErrors();
                     }
                 }],
                 itemsEnd: [{
@@ -579,6 +674,7 @@ export class SearchDocs {
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
         this._items = [];
+        this._itemErrors = [];
         this._loadOneDrive = values["LoadOneDrive"] == "true";
 
         // Show a loading dialog
@@ -645,19 +741,11 @@ export class SearchDocs {
                 LoadingDialog.hide();
             });
         } else {
-            // Show a loading dialog
-            LoadingDialog.setHeader("Searching Site");
-            LoadingDialog.setBody("Loading the libraries...");
-            LoadingDialog.show();
-
             // Clear the element
             while (el.firstChild) { el.removeChild(el.firstChild); }
 
             // Render the summary
             this.renderSummary(el, auditOnly, false, onClose);
-
-            // Hide the loading dialog
-            LoadingDialog.hide();
 
             // Determine the webs to target
             let siteItems: Components.IDropdownItem[] = null;
@@ -703,7 +791,19 @@ export class SearchDocs {
             }).then(() => {
                 // Hide the sub-nav
                 this._elSubNav.classList.add("d-none");
+
+                // See if no errors exist
+                if (this._itemErrors.length == 0) {
+                    // Get the error button
+                    let elNav = el.querySelector("#navigation .navbar-nav");
+
+                    // Remove the last button
+                    elNav.querySelector("li:last-child").remove();
+                }
             });
+
+            // Hide the loading dialog
+            LoadingDialog.hide();
         }
     }
 }
