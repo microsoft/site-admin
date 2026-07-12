@@ -183,6 +183,28 @@ export class SearchDocs {
                 resolve(null);
             };
 
+            // Subscribe to the rate info event and set the time to sleep before completing the request
+            let sleepTime = 0;
+            ContextInfo.onRateLimitDetected(rateInfo => {
+                // See if we have dropped below a threshold
+                if (rateInfo.remaining < Strings.RateLimitThreshold) {
+                    // Set the sleep time
+                    sleepTime = rateInfo.reset * 1000;
+
+                    // Show a loading dialog
+                    LoadingDialog.setHeader("Throttling Detected");
+                    LoadingDialog.setBody(`Throttling has been detected. Pausing requests for ${rateInfo.reset} seconds before sending next request...`);
+                    LoadingDialog.show();
+
+                    // Wait for the specified time and reset the value
+                    setTimeout(() => {
+                        // Clear the sleep time and hide the dialog
+                        sleepTime = 0;
+                        LoadingDialog.hide();
+                    }, sleepTime);
+                }
+            });
+
             // File counters for processing
             let fileCounter = 0;
             let filesToProcess: Types.Microsoft.Graph.driveItem[] = [];
@@ -219,15 +241,25 @@ export class SearchDocs {
                 fileCounter++;
                 processingCounter++;
 
-                // Analyze the file
-                let file = filesToProcess.splice(0, 1).pop();
-                this.analyzeFile(file, file.parentReference["driveUrl"], webUrl, webId, regexPatterns).then(() => {
-                    // Update the dialog
-                    this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] File Labelled: ${file.name}`;
+                // Processes the file
+                let processFile = () => {
+                    // Wait for the specified sleep time to avoid throttling
+                    setTimeout(() => {
+                        // Analyze the file
+                        let file = filesToProcess.splice(0, 1).pop();
+                        this.analyzeFile(file, file.parentReference["driveUrl"], webUrl, webId, regexPatterns).then(() => {
+                            // Update the dialog
+                            this._elSubNav.children[0].innerHTML = libStatus + ` - Processed ${++processedCounter} of ${fileCounter}`;
+                            this._elSubNav.children[1].innerHTML = `File Labelled: ${file.name}`;
 
-                    // Decrement the # of files being processed
-                    processingCounter--;
-                });
+                            // Decrement the # of files being processed
+                            processingCounter--;
+                        });
+                    }, sleepTime);
+                }
+
+                // Process the file
+                processFile();
             }, 100);
 
             // Parse the file extensions to target
@@ -237,9 +269,11 @@ export class SearchDocs {
             });
 
             // Parse the libraries
+            let libStatus;
             Helper.Executor(libraries, lib => {
                 // Set the status
-                this._elSubNav.children[0].innerHTML = `Analyzing Library: '${lib.Title}'`;
+                libStatus = `Analyzing Library: ${lib.Title}`
+                this._elSubNav.children[0].innerHTML = libStatus;
                 this._elSubNav.children[1].innerHTML = `Loading the files for this library...`;
 
                 // Get the drive for this library
@@ -584,6 +618,15 @@ export class SearchDocs {
 
                             // Append the span
                             el.appendChild(span);
+                        }
+                    },
+                    {
+                        className: isSearch ? "d-none" : "",
+                        name: "",
+                        title: "Permissions",
+                        onRenderCell: (el, col, item: ISearchItem) => {
+                            // TODO
+                            // Add permissions information and secure file option
                         }
                     },
                     {
