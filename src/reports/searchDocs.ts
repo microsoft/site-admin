@@ -14,6 +14,7 @@ import { ViewPermissions } from "./viewPermissions";
 export interface ISearchItem {
     _driveItem?: Types.Microsoft.Graph.driveItem;
     Author: string;
+    DriveId: string;
     ErrorExtractingContent?: boolean;
     ErrorMessage?: string;
     FileExtension: string;
@@ -53,7 +54,7 @@ export class SearchDocs {
     private static _stopFl: boolean = false;
 
     // Analyzes the file
-    private static analyzeFile(item: Types.Microsoft.Graph.driveItem, driveUrl: string, webUrl: string, webId: string, regexPatterns: RegExp[]) {
+    private static analyzeFile(item: Types.Microsoft.Graph.driveItem, driveUrl: string, listId: string, webUrl: string, webId: string, regexPatterns: RegExp[]) {
         // Return a promise
         return new Promise(resolve => {
             // Update the dialog
@@ -122,16 +123,17 @@ export class SearchDocs {
                         let itemInfo: ISearchItem = {
                             _driveItem: item,
                             Author: item.createdBy.user["email"],
+                            DriveId: item.parentReference.driveId,
                             ErrorExtractingContent: false,
                             FileExtension: item.file["fileExtension"].substring(1),
                             FileUrl: item.parentReference.path.split("/root:").pop() + "/" + item.name,
-                            HasUniquePermissions: item.listItem["HasUniquePermissions"],
-                            ItemId: item.listItem["Id"],
+                            HasUniquePermissions: item?.listItem["HasUniquePermissions"],
+                            ItemId: item?.listItem["Id"],
                             LastModifiedTime: item.fileSystemInfo.lastModifiedDateTime,
-                            ListId: item.parentReference.driveId,
-                            Overshared: ViewPermissions.isOvershared(item.listItem["RoleAssignments"].results) ? "Yes" : "No",
+                            ListId: listId,
+                            Overshared: item.listItem ? (ViewPermissions.isOvershared(item.listItem["RoleAssignments"].results) ? "Yes" : "No") : "",
                             Path: driveUrl + item.parentReference.path.split("/root:").pop(),
-                            Permissions: item.listItem["RoleAssignments"].results,
+                            Permissions: item?.listItem["RoleAssignments"].results,
                             RegexPatterns: patterns.join(", "),
                             SensitivityLabel: item.sensitivityLabel?.displayName,
                             SensitivityLabelId: item.sensitivityLabel?.id,
@@ -153,17 +155,18 @@ export class SearchDocs {
                     let itemInfo: ISearchItem = {
                         _driveItem: item,
                         Author: item.createdBy.user["email"],
+                        DriveId: item.parentReference.driveId,
                         ErrorExtractingContent: true,
                         ErrorMessage: "Error converting the file content.",
                         FileExtension: item.file["fileExtension"].substring(1),
                         FileUrl: item.parentReference.path.split("/root:").pop() + "/" + item.name,
-                        HasUniquePermissions: item.listItem["HasUniquePermissions"],
-                        ItemId: item.listItem["Id"],
+                        HasUniquePermissions: item?.listItem["HasUniquePermissions"],
+                        ItemId: item?.listItem["Id"],
                         LastModifiedTime: item.fileSystemInfo.lastModifiedDateTime,
-                        ListId: item.parentReference.driveId,
-                        Overshared: ViewPermissions.isOvershared(item.listItem["RoleAssignments"].results) ? "Yes" : "No",
+                        ListId: listId,
+                        Overshared: item.listItem ? (ViewPermissions.isOvershared(item.listItem["RoleAssignments"].results) ? "Yes" : "No") : "",
                         Path: driveUrl + item.parentReference.path.split("/root:").pop(),
-                        Permissions: item.listItem["RoleAssignments"].results,
+                        Permissions: item?.listItem["RoleAssignments"].results,
                         SensitivityLabel: item.sensitivityLabel?.displayName,
                         SensitivityLabelId: item.sensitivityLabel?.id,
                         SPSiteUrl: item.parentReference.path,
@@ -183,17 +186,18 @@ export class SearchDocs {
                 let itemInfo: ISearchItem = {
                     _driveItem: item,
                     Author: item.createdBy.user["email"],
+                    DriveId: item.parentReference.driveId,
                     ErrorExtractingContent: true,
                     ErrorMessage: "Error downloading the file content.",
                     FileExtension: item.file["fileExtension"].substring(1),
                     FileUrl: item.parentReference.path.split("/root:").pop() + "/" + item.name,
-                    HasUniquePermissions: item.listItem["HasUniquePermissions"],
-                    ItemId: item.listItem["Id"],
+                    HasUniquePermissions: item?.listItem["HasUniquePermissions"],
+                    ItemId: item?.listItem["Id"],
                     LastModifiedTime: item.fileSystemInfo.lastModifiedDateTime,
-                    ListId: item.parentReference.driveId,
-                    Overshared: ViewPermissions.isOvershared(item.listItem["RoleAssignments"].results) ? "Yes" : "No",
+                    ListId: listId,
+                    Overshared: item.listItem ? (ViewPermissions.isOvershared(item.listItem["RoleAssignments"].results) ? "Yes" : "No") : "",
                     Path: driveUrl + item.parentReference.path.split("/root:").pop(),
-                    Permissions: item.listItem["RoleAssignments"].results,
+                    Permissions: item?.listItem["RoleAssignments"].results,
                     SensitivityLabel: item.sensitivityLabel?.displayName,
                     SensitivityLabelId: item.sensitivityLabel?.id,
                     SPSiteUrl: item.parentReference.path,
@@ -212,15 +216,23 @@ export class SearchDocs {
         });
     }
 
-    // Analyzes the libraries of a site
-    private static analyzeLibraries(webId: string, webUrl: string, libraries: Types.SP.ListOData[], drives: Types.Microsoft.Graph.drive[], folderId: string, fileExt: string[], regexPatterns: RegExp[]) {
+    // Analyzes the library
+    private static analyzeLibrary(webId: string, webUrl: string, library: Types.SP.ListOData, drives: Types.Microsoft.Graph.drive[], folderId: string, fileExt: string[], regexPatterns: RegExp[]) {
         // Return a promise
         return new Promise(resolve => {
+            // Get the drive for this library
+            let drive = drives.find(drive => {
+                return drive.name == library.Title || drive.webUrl.endsWith(library.RootFolder.ServerRelativeUrl);
+            });
+
+            // Ensure a drive exists, otherwise check the next library
+            if (drive == null) {
+                resolve(null);
+                return;
+            }
+
             // Set the completed event
             let onCompleted = () => {
-                // Clear the sub-nav
-                this._elSubNav.classList.add("d-none");
-
                 // Clear the callback events
                 ContextInfo.clearRateLimitCallbacks();
 
@@ -267,10 +279,10 @@ export class SearchDocs {
                 // Do nothing if we are processing the max files at once
                 if (processingCounter >= Strings.MaxRequests) { return; }
 
-                // Do nothing if we are done
+                // See if the queue is empty
                 if (filesToProcess.length == 0) {
                     // See if we have completed processing the files
-                    if (processingCounter == 0) {
+                    if (processingCounter == 0 && (this._stopFl || allFilesLoaded)) {
                         // Stop the process
                         worker.stop();
 
@@ -293,9 +305,9 @@ export class SearchDocs {
                     // Wait for the specified sleep time to avoid throttling
                     setTimeout(() => {
                         // Analyze the file
-                        this.analyzeFile(file, file.parentReference["driveUrl"], webUrl, webId, regexPatterns).then(() => {
+                        this.analyzeFile(file, file.parentReference["driveUrl"], library.Id, webUrl, webId, regexPatterns).then(() => {
                             // Update the dialog
-                            this._elSubNav.children[0].innerHTML = libStatus + ` - Processed ${++processedCounter} of ${filesLoaded}`;
+                            this._elSubNav.children[0].innerHTML = `Analyzing Library: ${library.Title} - Processed ${++processedCounter} of ${filesLoaded}`;
                             this._elSubNav.children[1].innerHTML = `[${processingCounter} Processing] File Labelled: ${file.name}`;
 
                             // Decrement the # of files being processed
@@ -314,40 +326,28 @@ export class SearchDocs {
                 filters.push(`substringof('.${ext}', FileLeafRef)`);
             });
 
-            // Parse the libraries
-            let libStatus;
-            Helper.Executor(libraries, lib => {
-                // Set the status
-                libStatus = `Analyzing Library: ${lib.Title}`
-                this._elSubNav.children[0].innerHTML = libStatus;
-                this._elSubNav.children[1].innerHTML = `Loading the files for this library...`;
+            // Set the status
+            this._elSubNav.children[0].innerHTML = `Analyzing Library: ${library.Title}`;
+            this._elSubNav.children[1].innerHTML = `Loading the files for this library...`;
 
-                // Get the drive for this library
-                let drive = drives.find(drive => {
-                    return drive.name == lib.Title || drive.webUrl.endsWith(lib.RootFolder.ServerRelativeUrl);
-                });
+            // Load the files for this drive
+            let allFilesLoaded = false;
+            return DataSource.loadFiles(webId, webUrl, drive.id, drive.name, folderId, true, item => {
+                // Ensure the file extension is valid
+                if ((fileExt || FileExtensions).indexOf(item.file["fileExtension"].substring(1)) < 0) { return; }
 
-                // Ensure a drive exists, otherwise check the next library
-                if (drive == null) { return; }
+                // Add the drive reference
+                item.parentReference["driveUrl"] = drive.webUrl;
 
-                // Load the files for this drive
-                return DataSource.loadFiles(webId, webUrl, drive.id, drive.name, folderId, true, item => {
-                    // Ensure the file extension is valid
-                    if ((fileExt || FileExtensions).indexOf(item.file["fileExtension"].substring(1)) < 0) { return; }
+                // Add the file to process
+                filesToProcess.push(item);
+                filesLoaded++;
 
-                    // Add the drive reference
-                    item.parentReference["driveUrl"] = drive.webUrl;
-
-                    // Add the file to process
-                    filesToProcess.push(item);
-                    filesLoaded++;
-
-                    // Ensure the process is running
-                    worker.start();
-                });
-            }).then(() => {
                 // Ensure the process is running
                 worker.start();
+            }).then(() => {
+                // Set the flag
+                allFilesLoaded = true;
             });
         });
     }
@@ -743,6 +743,9 @@ export class SearchDocs {
                             let siteGroups = 0;
                             let users = 0;
 
+                            // Ensure permissions exist
+                            if (item.Permissions == null) { return; }
+
                             // Parse the permissions
                             item.Permissions.forEach(role => {
                                 // See if this is a user
@@ -852,8 +855,9 @@ export class SearchDocs {
                                     }
                                 });
 
-                                // See if the file is overshared
-                                if (item.Overshared === "Yes") {
+                                // Ensure permissions exist
+                                if (item.Permissions) {
+                                    // Add the view permissions button
                                     tooltips.add({
                                         content: "Click to view the permissions for this document.",
                                         btnProps: {
@@ -1051,11 +1055,14 @@ export class SearchDocs {
                             // Update the dialog
                             this._elSubNav.children[1].innerHTML = "Loading the files for the libraries...";
 
-                            // Analyze the libraries
-                            this.analyzeLibraries(siteItem.value, siteItem.text, libs.results, drives.results, targetFolder, fileExt, regexPatterns).then(() => {
-                                // Analyze the next site
-                                resolve(null);
-                            });
+                            // Process the libraries
+                            Helper.Executor(libs.results, lib => {
+                                // Return a promise
+                                return new Promise(resolveLib => {
+                                    // Analyze the library
+                                    this.analyzeLibrary(siteItem.value, siteItem.text, lib, drives.results, targetFolder, fileExt, regexPatterns).then(resolveLib);
+                                });
+                            }).then(resolve);
                         });
                     });
                 });
