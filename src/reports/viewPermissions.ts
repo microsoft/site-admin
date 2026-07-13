@@ -3,6 +3,7 @@ import { Components, ContextInfo, SPTypes, Types, Web } from "gd-sprest-bs";
 import { DataSource } from "../ds";
 import { M365Groups } from "../m365Groups";
 import { IDLPItem } from "./dlp";
+import { ISearchItem } from "./searchDocs";
 import { ISensitivityLabelItem } from "./sensitivityLabels";
 
 interface IPermission {
@@ -89,7 +90,7 @@ export class ViewPermissions {
     }
 
     // Removes the groups that are flagging the file as overshared
-    static removeOversharedGroups(item: IDLPItem | ISensitivityLabelItem, onComplete: () => void) {
+    static removeOversharedGroups(item: IDLPItem | ISearchItem | ISensitivityLabelItem, onComplete: () => void) {
         // Show a canvas form
         CanvasForm.clear();
         CanvasForm.setHeader("Secure File");
@@ -133,7 +134,7 @@ export class ViewPermissions {
                         LoadingDialog.show();
 
                         // Set the list containing the item
-                        let list = Web(item.WebUrl, {
+                        let list = Web(item["WebUrl"] || item["SPWebUrl"], {
                             disableCache: true,
                             requestDigest: DataSource.SiteContext.FormDigestValue
                         }).Lists().getById(item.ListId);
@@ -141,15 +142,15 @@ export class ViewPermissions {
                         // See if we need to break inheritance
                         if (!item.HasUniquePermissions) {
                             // Break role inheritance and copy the permissions
-                            list.Items(item.ItemId).breakRoleInheritance(true, false).execute(() => {
+                            list.Items(item["ItemId"]).breakRoleInheritance(true, false).execute(() => {
                                 // Update the dialog
                                 LoadingDialog.setBody("Getting the permissions for this item...");
                             });
                         }
 
                         // Get the role assignments for this item
-                        list.Items(item.ItemId).RoleAssignments().query({ Expand: ["Member/Users"] }).execute(permissions => {
-                            let roles = list.Items(item.ItemId).RoleAssignments();
+                        list.Items(item["ItemId"]).RoleAssignments().query({ Expand: ["Member/Users"] }).execute(permissions => {
+                            let roles = list.Items(item["ItemId"]).RoleAssignments();
 
                             // Update the dialog
                             LoadingDialog.setBody("Removing the groups for this...");
@@ -203,7 +204,7 @@ export class ViewPermissions {
     }
 
     // Views the permissions for the item
-    static show(item: IDLPItem | ISensitivityLabelItem) {
+    static show(item: IDLPItem | ISearchItem | ISensitivityLabelItem) {
         // Clear the canvas form
         CanvasForm.clear();
         CanvasForm.setHeader("View Permissions");
@@ -258,7 +259,7 @@ export class ViewPermissions {
             el: CanvasForm.BodyElement,
             navigation: {
                 showFilter: false,
-                title: item.FileName
+                title: item["FileName"] || item["Title"]
             },
             table: {
                 rows,
@@ -301,10 +302,10 @@ export class ViewPermissions {
                             // See if this is a site group and not the limited access group
                             if (row.Type === "Site Group") {
                                 // Set the url
-                                let url = `${item.WebUrl}/${ContextInfo.layoutsUrl}/people.aspx?MembershipGroupId=${item.ItemId}`;
+                                let url = `${item["WebUrl"] || item["SPWebUrl"]}/${ContextInfo.layoutsUrl}/people.aspx?MembershipGroupId=${item["ItemId"]}`;
                                 if (row.GroupName.indexOf("Limited Access System Group") === 0) {
                                     // Update the url to the limited access group
-                                    url = `${item.WebUrl}/${ContextInfo.layoutsUrl}/user.aspx?List=${item.ListId}&obj=${item.ListId},${item.ItemId},LISTITEM&showLimitedAccessUsers=true`;
+                                    url = `${item["WebUrl"] || item["SPWebUrl"]}/${ContextInfo.layoutsUrl}/user.aspx?List=${item.ListId}&obj=${item.ListId},${item["ItemId"]},LISTITEM&showLimitedAccessUsers=true`;
                                 }
 
                                 tooltips.push({
@@ -327,7 +328,7 @@ export class ViewPermissions {
                                         text: row.Type === "AD Group" ? "View Group" : "View User",
                                         type: Components.ButtonTypes.OutlinePrimary,
                                         onClick: () => {
-                                            window.open(`${item.WebUrl}/${ContextInfo.layoutsUrl}/userdisp.aspx?ID=${item.ItemId}`, "_blank");
+                                            window.open(`${item["WebUrl"] || item["SPWebUrl"]}/${ContextInfo.layoutsUrl}/userdisp.aspx?ID=${item["ItemId"]}`, "_blank");
                                         }
                                     }
                                 });

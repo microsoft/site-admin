@@ -7,19 +7,25 @@ import { PDFParse } from "pdf-parse";
 import { DataSource } from "../ds";
 import Strings from "../strings";
 import { ExportCSV } from "./exportCSV";
+import { M365Groups } from "../m365Groups";
 import { SensitivityLabels } from "./sensitivityLabels";
+import { ViewPermissions } from "./viewPermissions";
 
-interface ISearchItem {
+export interface ISearchItem {
     _driveItem?: Types.Microsoft.Graph.driveItem;
     Author: string;
     ErrorExtractingContent?: boolean;
     ErrorMessage?: string;
     FileExtension: string;
     FileUrl: string;
+    HasUniquePermissions: boolean;
     HitHighlightedSummary?: string;
+    ItemId: number;
     LastModifiedTime: string;
     ListId: string;
+    Overshared: string;
     Path: string;
+    Permissions: Types.SP.RoleAssignmentOData[];
     RegexPatterns?: string;
     SensitivityLabel?: string;
     SensitivityLabelId?: string;
@@ -119,9 +125,13 @@ export class SearchDocs {
                             ErrorExtractingContent: false,
                             FileExtension: item.file["fileExtension"].substring(1),
                             FileUrl: item.parentReference.path.split("/root:").pop() + "/" + item.name,
+                            HasUniquePermissions: item.listItem["HasUniquePermissions"],
+                            ItemId: item.listItem["Id"],
                             LastModifiedTime: item.fileSystemInfo.lastModifiedDateTime,
                             ListId: item.parentReference.driveId,
+                            Overshared: ViewPermissions.isOvershared(item.listItem["RoleAssignments"].results) ? "Yes" : "No",
                             Path: driveUrl + item.parentReference.path.split("/root:").pop(),
+                            Permissions: item.listItem["RoleAssignments"].results,
                             RegexPatterns: patterns.join(", "),
                             SensitivityLabel: item.sensitivityLabel?.displayName,
                             SensitivityLabelId: item.sensitivityLabel?.id,
@@ -147,9 +157,13 @@ export class SearchDocs {
                         ErrorMessage: "Error converting the file content.",
                         FileExtension: item.file["fileExtension"].substring(1),
                         FileUrl: item.parentReference.path.split("/root:").pop() + "/" + item.name,
+                        HasUniquePermissions: item.listItem["HasUniquePermissions"],
+                        ItemId: item.listItem["Id"],
                         LastModifiedTime: item.fileSystemInfo.lastModifiedDateTime,
                         ListId: item.parentReference.driveId,
+                        Overshared: ViewPermissions.isOvershared(item.listItem["RoleAssignments"].results) ? "Yes" : "No",
                         Path: driveUrl + item.parentReference.path.split("/root:").pop(),
+                        Permissions: item.listItem["RoleAssignments"].results,
                         SensitivityLabel: item.sensitivityLabel?.displayName,
                         SensitivityLabelId: item.sensitivityLabel?.id,
                         SPSiteUrl: item.parentReference.path,
@@ -173,9 +187,13 @@ export class SearchDocs {
                     ErrorMessage: "Error downloading the file content.",
                     FileExtension: item.file["fileExtension"].substring(1),
                     FileUrl: item.parentReference.path.split("/root:").pop() + "/" + item.name,
+                    HasUniquePermissions: item.listItem["HasUniquePermissions"],
+                    ItemId: item.listItem["Id"],
                     LastModifiedTime: item.fileSystemInfo.lastModifiedDateTime,
                     ListId: item.parentReference.driveId,
+                    Overshared: ViewPermissions.isOvershared(item.listItem["RoleAssignments"].results) ? "Yes" : "No",
                     Path: driveUrl + item.parentReference.path.split("/root:").pop(),
+                    Permissions: item.listItem["RoleAssignments"].results,
                     SensitivityLabel: item.sensitivityLabel?.displayName,
                     SensitivityLabelId: item.sensitivityLabel?.id,
                     SPSiteUrl: item.parentReference.path,
@@ -195,7 +213,7 @@ export class SearchDocs {
     }
 
     // Analyzes the libraries of a site
-    private static analyzeLibraries(webId: string, webUrl: string, libraries: Types.SP.ListOData[], drives: Types.Microsoft.Graph.drive[], fileExt: string[], regexPatterns: RegExp[]) {
+    private static analyzeLibraries(webId: string, webUrl: string, libraries: Types.SP.ListOData[], drives: Types.Microsoft.Graph.drive[], folderId: string, fileExt: string[], regexPatterns: RegExp[]) {
         // Return a promise
         return new Promise(resolve => {
             // Set the completed event
@@ -269,11 +287,12 @@ export class SearchDocs {
 
                 // Processes the file
                 let processFile = () => {
+                    // Get the file
+                    let file = filesToProcess.splice(0, 1).pop();
+
                     // Wait for the specified sleep time to avoid throttling
-                    sleepTime == 0 ? null : console.log(`[Throttle Detected] Sleeping for ${sleepTime}`);
                     setTimeout(() => {
                         // Analyze the file
-                        let file = filesToProcess.splice(0, 1).pop();
                         this.analyzeFile(file, file.parentReference["driveUrl"], webUrl, webId, regexPatterns).then(() => {
                             // Update the dialog
                             this._elSubNav.children[0].innerHTML = libStatus + ` - Processed ${++processedCounter} of ${filesLoaded}`;
@@ -312,7 +331,7 @@ export class SearchDocs {
                 if (drive == null) { return; }
 
                 // Load the files for this drive
-                return DataSource.loadFiles(webId, webUrl, drive.id, drive.name, null, null, item => {
+                return DataSource.loadFiles(webId, webUrl, drive.id, drive.name, folderId, true, item => {
                     // Ensure the file extension is valid
                     if ((fileExt || FileExtensions).indexOf(item.file["fileExtension"].substring(1)) < 0) { return; }
 
@@ -446,6 +465,39 @@ export class SearchDocs {
         ];
     }
 
+    // Refreshes the item
+    private static refreshItem(searchItem: ISearchItem): PromiseLike<ISearchItem> {
+        // Return a promise
+        return new Promise(resolve => {
+            let web = this._loadOneDrive ? Web.getOneDrive() : Web(searchItem.SPWebUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+
+            // Get the list item
+            web.Lists(searchItem["ListTitle"]).Items(searchItem["ItemId"]).query({
+                Expand: ["RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings"],
+                Select: ["Id", "HasUniqueRoleAssignments"]
+            }).execute((item) => {
+                // Update the item
+                searchItem.HasUniquePermissions = item.HasUniqueRoleAssignments;
+                searchItem.Overshared = ViewPermissions.isOvershared(item.RoleAssignments.results as any) ? "Yes" : "No";
+                searchItem.Permissions = item.RoleAssignments.results as any;
+
+                // Find the item
+                for (let i = 0; i < this._items.length; i++) {
+                    // See if this is the item
+                    let item = this._items[i];
+                    if (item["listItem"]["ItemId"] == searchItem["ItemId"] && item.ListId == searchItem.ListId) {
+                        // Update the item
+                        this._items[i] = searchItem;
+                        break;
+                    }
+                }
+
+                // Resolve the request
+                resolve(searchItem);
+            });
+        });
+    }
+
     // Renders the errors
     private static renderErrors(searchType: "Search" | "Regex" | "Library") {
         let isLibrary = searchType === "Library";
@@ -531,7 +583,7 @@ export class SearchDocs {
                 showFilter: false,
                 items: [{
                     text: "New Search",
-                    className: "btn-outline-light",
+                    className: "btn-outline-light" + (searchType === "Library" ? " d-none" : ""),
                     isButton: true,
                     onClick: () => {
                         // Call the close event
@@ -575,7 +627,7 @@ export class SearchDocs {
                 onRendering: dtProps => {
                     dtProps.columnDefs = [
                         {
-                            "targets": 4,
+                            "targets": 5,
                             "orderable": false,
                             "searchable": false
                         }
@@ -585,7 +637,7 @@ export class SearchDocs {
                     if (isSearch) {
                         // Hide the Permissions column
                         dtProps.columnDefs.push({
-                            "targets": 3,
+                            "targets": [3, 4],
                             "visible": false
                         });
                     }
@@ -653,10 +705,74 @@ export class SearchDocs {
                     },
                     {
                         name: "",
+                        title: "Overshared",
+                        onRenderCell: (el, col, item: ISearchItem) => {
+                            let isOvershared = item.Overshared === "Yes" ? true : false;
+
+                            // Set the order info
+                            el.setAttribute("data-order", item.Overshared);
+
+                            // Make the badge display in the middle
+                            el.style.verticalAlign = "middle";
+
+                            // Render a badge
+                            let badge = Components.Badge({
+                                el,
+                                className: "me-2",
+                                content: isOvershared ? "Overshared" : item.Overshared,
+                                type: isOvershared ? Components.BadgeTypes.Danger : Components.BadgeTypes.Secondary,
+                                isPill: true
+                            });
+
+                            // See if this is overshared
+                            if (isOvershared) {
+                                // Render a tooltip
+                                Components.Tooltip({
+                                    target: badge.el,
+                                    content: `The file has been flagged as overshared because it's shared with the following groups:<br/>${ViewPermissions.getOversharedGroups(item.Permissions).join("<br/>")}`
+                                });
+                            }
+                        }
+                    },
+                    {
+                        name: "",
                         title: "Permissions",
                         onRenderCell: (el, col, item: ISearchItem) => {
-                            // TODO
-                            // Add permissions information and secure file option
+                            let adGroups = 0;
+                            let m365Groups = 0;
+                            let siteGroups = 0;
+                            let users = 0;
+
+                            // Parse the permissions
+                            item.Permissions.forEach(role => {
+                                // See if this is a user
+                                switch (role.Member.PrincipalType) {
+                                    case SPTypes.PrincipalTypes.User:
+                                        users++;
+                                        break;
+                                    case SPTypes.PrincipalTypes.SharePointGroup:
+                                        siteGroups++;
+                                        break;
+                                    default:
+                                        let groupId = M365Groups.getGroupId(role.Member.LoginName);
+                                        groupId ? m365Groups++ : adGroups++;
+                                        break;
+                                }
+                            });
+
+                            // Output the permission information
+                            el.innerHTML = `
+                                <b>Unique Permissions: </b>${item.HasUniquePermissions ? "Yes" : "No"}
+                                <br/>
+                                <b># of Users: </b>${users}
+                                <br/>
+                                <b># of Site Groups: </b>${siteGroups}
+                                <br/>
+                                <b># of AD Groups: </b>${adGroups}
+                                <br/>
+                                <b># of M365 Groups: </b>${m365Groups}
+                                <br/>
+                            `;
                         }
                     },
                     {
@@ -736,6 +852,44 @@ export class SearchDocs {
                                     }
                                 });
 
+                                // See if the file is overshared
+                                if (item.Overshared === "Yes") {
+                                    tooltips.add({
+                                        content: "Click to view the permissions for this document.",
+                                        btnProps: {
+                                            className: "pe-2 py-1",
+                                            text: "View Permissions",
+                                            type: Components.ButtonTypes.OutlinePrimary,
+                                            onClick: () => {
+                                                // View the permissions for the document
+                                                ViewPermissions.show(item);
+                                            }
+                                        }
+                                    });
+                                }
+
+                                // See if the file is overshared
+                                if (item.Overshared === "Yes") {
+                                    tooltips.add({
+                                        content: "Click to remove the groups that are flagging this file as overshared.",
+                                        btnProps: {
+                                            className: "pe-2 py-1",
+                                            text: "Secure File",
+                                            type: Components.ButtonTypes.OutlinePrimary,
+                                            onClick: () => {
+                                                // Remove the overshared groups from the permissions
+                                                ViewPermissions.removeOversharedGroups(item, () => {
+                                                    // Refresh the item
+                                                    this.refreshItem(item).then(updatedItem => {
+                                                        // Update this row
+                                                        this._dashboard.updateRow(rowIdx, updatedItem);
+                                                    });
+                                                });
+                                            }
+                                        }
+                                    });
+                                }
+
                                 // Add a delete button
                                 tooltips.add({
                                     content: "Click to delete the document.",
@@ -786,6 +940,7 @@ export class SearchDocs {
         let fileExt = values["FileTypes"] ? values["FileTypes"].split(' ') : null;
         let searchTerms = (values["SearchTerms"] || "").split(' ');
         let searchType = (values["SearchType"] || "");
+        let targetFolder = values["TargetFolder"];
 
         // Set the regex patterns
         let regexPatterns = [];
@@ -897,7 +1052,7 @@ export class SearchDocs {
                             this._elSubNav.children[1].innerHTML = "Loading the files for the libraries...";
 
                             // Analyze the libraries
-                            this.analyzeLibraries(siteItem.value, siteItem.text, libs.results, drives.results, fileExt, regexPatterns).then(() => {
+                            this.analyzeLibraries(siteItem.value, siteItem.text, libs.results, drives.results, targetFolder, fileExt, regexPatterns).then(() => {
                                 // Analyze the next site
                                 resolve(null);
                             });
