@@ -575,11 +575,20 @@ export class SearchDocs {
                 onRendering: dtProps => {
                     dtProps.columnDefs = [
                         {
-                            "targets": 3,
+                            "targets": 4,
                             "orderable": false,
                             "searchable": false
                         }
                     ];
+
+                    // See if this is search
+                    if (isSearch) {
+                        // Hide the Permissions column
+                        dtProps.columnDefs.push({
+                            "targets": 3,
+                            "visible": false
+                        });
+                    }
 
                     // Order by the 1st column by default; ascending
                     dtProps.order = [[0, "asc"]];
@@ -643,7 +652,6 @@ export class SearchDocs {
                         }
                     },
                     {
-                        className: isSearch ? "d-none" : "",
                         name: "",
                         title: "Permissions",
                         onRenderCell: (el, col, item: ISearchItem) => {
