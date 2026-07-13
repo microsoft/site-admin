@@ -487,6 +487,28 @@ export class DataSource {
         let isOneDrive = webId == DataSource.OneDriveWeb?.Id;
         let stopFl = false;
 
+        // Subscribe to the rate info event and set the time to sleep before completing the request
+        let sleepTime = 0;
+        ContextInfo.onRateLimitDetected(rateInfo => {
+            // See if we have dropped below a threshold
+            if (rateInfo.remaining < Strings.RateLimitThreshold) {
+                // Set the sleep time
+                sleepTime = rateInfo.reset * 1000;
+
+                // Show a loading dialog
+                LoadingDialog.setHeader("Throttling Detected");
+                LoadingDialog.setBody(`Throttling has been detected. Pausing requests for ${rateInfo.reset} seconds before sending next request...`);
+                LoadingDialog.show();
+
+                // Wait for the specified time and reset the value
+                setTimeout(() => {
+                    // Clear the sleep time and hide the dialog
+                    sleepTime = 0;
+                    LoadingDialog.hide();
+                }, sleepTime);
+            }
+        });
+
         // Loads the files for a drive
         let getFiles = (driveId: string, folderId: string) => {
             let driveFolder = v2.sites({
@@ -561,8 +583,13 @@ export class DataSource {
                         }
                         // Else, it's a folder
                         else if (driveItem.folder) {
-                            // Get the items for this folder
-                            return getFiles(driveId, driveItem.id);
+                            return new Promise(resolve => {
+                                // Wait for the sleep time before getting the files
+                                setTimeout(() => {
+                                    // Get the items for this folder
+                                    getFiles(driveId, driveItem.id).then(resolve);
+                                }, sleepTime);
+                            });
                         }
                     }).then(() => {
                         // Resolve the request
