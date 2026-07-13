@@ -13,6 +13,7 @@ interface ISearchItem {
     _driveItem?: Types.Microsoft.Graph.driveItem;
     Author: string;
     ErrorExtractingContent?: boolean;
+    ErrorMessage?: string;
     FileExtension: string;
     FileUrl: string;
     HitHighlightedSummary?: string;
@@ -143,6 +144,7 @@ export class SearchDocs {
                         _driveItem: item,
                         Author: item.createdBy.user["email"],
                         ErrorExtractingContent: true,
+                        ErrorMessage: "Error converting the file content.",
                         FileExtension: item.file["fileExtension"].substring(1),
                         FileUrl: item.parentReference.path.split("/root:").pop() + "/" + item.name,
                         LastModifiedTime: item.fileSystemInfo.lastModifiedDateTime,
@@ -163,6 +165,31 @@ export class SearchDocs {
                     // Resolve the request
                     resolve(null);
                 });
+            }, (ex) => {
+                let itemInfo: ISearchItem = {
+                    _driveItem: item,
+                    Author: item.createdBy.user["email"],
+                    ErrorExtractingContent: true,
+                    ErrorMessage: "Error downloading the file content.",
+                    FileExtension: item.file["fileExtension"].substring(1),
+                    FileUrl: item.parentReference.path.split("/root:").pop() + "/" + item.name,
+                    LastModifiedTime: item.fileSystemInfo.lastModifiedDateTime,
+                    ListId: item.parentReference.driveId,
+                    Path: driveUrl + item.parentReference.path.split("/root:").pop(),
+                    SensitivityLabel: item.sensitivityLabel?.displayName,
+                    SensitivityLabelId: item.sensitivityLabel?.id,
+                    SPSiteUrl: item.parentReference.path,
+                    SPWebUrl: webUrl,
+                    Title: item.name,
+                    ViewUrl: item.webUrl,
+                    WebId: webId,
+                }
+
+                // Add it to the dashboard
+                this._itemErrors.push(itemInfo);
+
+                // Resolve the request
+                resolve(null);
             });
         });
     }
@@ -206,7 +233,7 @@ export class SearchDocs {
             });
 
             // File counters for processing
-            let fileCounter = 0;
+            let filesLoaded = 0;
             let filesToProcess: Types.Microsoft.Graph.driveItem[] = [];
             let processingCounter = 0;
             let processedCounter = 0;
@@ -238,19 +265,19 @@ export class SearchDocs {
                 }
 
                 // Increment the # of files being processed
-                fileCounter++;
                 processingCounter++;
 
                 // Processes the file
                 let processFile = () => {
                     // Wait for the specified sleep time to avoid throttling
+                    sleepTime == 0 ? null : console.log(`[Throttle Detected] Sleeping for ${sleepTime}`);
                     setTimeout(() => {
                         // Analyze the file
                         let file = filesToProcess.splice(0, 1).pop();
                         this.analyzeFile(file, file.parentReference["driveUrl"], webUrl, webId, regexPatterns).then(() => {
                             // Update the dialog
-                            this._elSubNav.children[0].innerHTML = libStatus + ` - Processed ${++processedCounter} of ${fileCounter}`;
-                            this._elSubNav.children[1].innerHTML = `File Labelled: ${file.name}`;
+                            this._elSubNav.children[0].innerHTML = libStatus + ` - Processed ${++processedCounter} of ${filesLoaded}`;
+                            this._elSubNav.children[1].innerHTML = `[${processingCounter} Processing] File Labelled: ${file.name}`;
 
                             // Decrement the # of files being processed
                             processingCounter--;
@@ -294,14 +321,12 @@ export class SearchDocs {
 
                     // Add the file to process
                     filesToProcess.push(item);
+                    filesLoaded++;
 
                     // Ensure the process is running
                     worker.start();
                 });
             }).then(() => {
-                // Update the dialog
-                this._elSubNav.children[0].innerHTML = `All Files Loaded. Waiting for the processing to complete.`;
-
                 // Ensure the process is running
                 worker.start();
             });
@@ -473,11 +498,8 @@ export class SearchDocs {
                         title: "Sensitivity Label"
                     },
                     {
-                        name: "",
-                        title: "Error",
-                        onRenderCell: (el) => {
-                            el.innerHTML = "Unable to extract content from the file.";
-                        }
+                        name: "ErrorMessage",
+                        title: "Error Message"
                     }
                 ]
             }
