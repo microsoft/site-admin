@@ -46,6 +46,186 @@ export class ListsTab {
     // List Template Types
     private static _listTemplates: { [key: number]: string } = {};
 
+    // Static method to generate sub-folders for a form
+    static generateSubFolders(webId: string, driveId: string, folders: Components.IDropdownItem[]) {
+        let ctrlListSubFolder1: Components.IFormControl;
+        let ctrlListSubFolder2: Components.IFormControl;
+        let ctrlListSubFolder3: Components.IFormControl;
+        let ctrlListSubFolder4: Components.IFormControl;
+        let ctrlListSubFolder5: Components.IFormControl;
+        let defaultItem: Components.IDropdownItem = { text: "All Folders", value: "" };
+
+        // Return the form fields
+        return [
+            {
+                name: "ListFolder",
+                label: "Select a Folder:",
+                description: "Targets a specific folder to tag, otherwise will apply to all files in the library.",
+                type: Components.FormControlTypes.Dropdown,
+                items: [defaultItem].concat(folders),
+                onChange: (item) => {
+                    // Clear the sub-folder
+                    ctrlListSubFolder1.dropdown.setItems([defaultItem]);
+
+                    // See if a folder is selected
+                    if (item && item.value) {
+                        // Show the folder
+                        ctrlListSubFolder1.show();
+
+                        // Set the dropdown items
+                        ctrlListSubFolder1.dropdown.setItems([defaultItem]);
+
+                        // Load the folders
+                        DataSource.loadFolders(webId, driveId, item.value).then(items => {
+                            // Set the dropdown items
+                            ctrlListSubFolder1.dropdown.setItems([defaultItem].concat(items));
+                        });
+                    } else {
+                        ctrlListSubFolder1.hide();
+                    }
+                }
+            } as Components.IFormControlPropsDropdown,
+            {
+                name: "ListSubFolder1",
+                label: "Select a Sub-Folder:",
+                description: "Targets a specific folder to tag, otherwise will apply to all files in this folder.",
+                type: Components.FormControlTypes.Dropdown,
+                className: "d-none",
+                onControlRendered: ctrl => { ctrlListSubFolder1 = ctrl; },
+                onChange: (item) => {
+                    // Clear the sub-folder
+                    ctrlListSubFolder2.dropdown.setItems([]);
+
+                    // See if a folder is selected
+                    if (item && item.value) {
+                        // Show the folder
+                        ctrlListSubFolder2.show();
+
+                        // Set the dropdown items
+                        ctrlListSubFolder2.dropdown.setItems([defaultItem]);
+
+                        // Load the folders
+                        DataSource.loadFolders(webId, driveId, item.value).then(items => {
+                            // Set the dropdown items
+                            ctrlListSubFolder2.dropdown.setItems([defaultItem].concat(items));
+                        });
+                    } else {
+                        // Hide the folder
+                        ctrlListSubFolder2.hide();
+                    }
+                }
+            } as Components.IFormControlPropsDropdown,
+            {
+                name: "ListSubFolder2",
+                label: "Select a Sub-Folder:",
+                description: "Targets a specific folder to tag, otherwise will apply to all files in this folder.",
+                type: Components.FormControlTypes.Dropdown,
+                className: "d-none",
+                onControlRendered: ctrl => { ctrlListSubFolder2 = ctrl; },
+                onChange: (item) => {
+                    // Clear the sub-folder
+                    ctrlListSubFolder3.dropdown.setItems([]);
+
+                    // See if a folder is selected
+                    if (item && item.value) {
+                        // Show the folder
+                        ctrlListSubFolder3.show();
+
+                        // Set the dropdown items
+                        ctrlListSubFolder3.dropdown.setItems([defaultItem]);
+
+                        // Load the folders
+                        DataSource.loadFolders(webId, driveId, item.value).then(items => {
+                            // Set the dropdown items
+                            ctrlListSubFolder3.dropdown.setItems([defaultItem].concat(items));
+                        });
+                    } else {
+                        // Hide the folder
+                        ctrlListSubFolder3.hide();
+                    }
+                }
+            } as Components.IFormControlPropsDropdown,
+            {
+                name: "ListSubFolder3",
+                label: "Select a Sub-Folder:",
+                description: "Targets a specific folder to tag, otherwise will apply to all files in this folder.",
+                type: Components.FormControlTypes.Dropdown,
+                className: "d-none",
+                onControlRendered: ctrl => { ctrlListSubFolder3 = ctrl; },
+                onChange: (item) => {
+                    // Clear the sub-folder
+                    ctrlListSubFolder4.dropdown.setItems([]);
+
+                    // See if a folder is selected
+                    if (item && item.value) {
+                        // Show the folder
+                        ctrlListSubFolder4.show();
+
+                        // Set the dropdown items
+                        ctrlListSubFolder4.dropdown.setItems([defaultItem]);
+
+                        // Load the folders
+                        DataSource.loadFolders(webId, driveId, item.value).then(items => {
+                            // Set the dropdown items
+                            ctrlListSubFolder4.dropdown.setItems([defaultItem].concat(items));
+                        });
+                    } else {
+                        // Hide the folder
+                        ctrlListSubFolder4.hide();
+                    }
+                }
+            } as Components.IFormControlPropsDropdown,
+            {
+                name: "ListSubFolder4",
+                label: "Select a Sub-Folder:",
+                description: "Targets a specific folder to tag, otherwise will apply to all files in this folder.",
+                type: Components.FormControlTypes.Dropdown,
+                className: "d-none",
+                onControlRendered: ctrl => { ctrlListSubFolder4 = ctrl; },
+                onChange: (item) => {
+                    // Clear the sub-folder
+                    ctrlListSubFolder5.dropdown.setItems([]);
+
+                    // See if a folder is selected
+                    if (item && item.value) {
+                        // Show the folder
+                        ctrlListSubFolder5.show();
+
+                        // Set the dropdown items
+                        ctrlListSubFolder5.dropdown.setItems([defaultItem]);
+
+                        // Load the folders
+                        DataSource.loadFolders(webId, driveId, item.value).then(items => {
+                            // Set the dropdown items
+                            ctrlListSubFolder5.dropdown.setItems([defaultItem].concat(items));
+                        });
+                    } else {
+                        // Hide the folder
+                        ctrlListSubFolder5.hide();
+                    }
+                }
+            } as Components.IFormControlPropsDropdown,
+            {
+                name: "ListSubFolder5",
+                label: "Select a Sub-Folder:",
+                description: "Targets a specific folder to tag, otherwise will apply to all files in this folder.",
+                type: Components.FormControlTypes.Dropdown,
+                className: "d-none",
+                onControlRendered: ctrl => { ctrlListSubFolder5 = ctrl; },
+                onChange: (item) => {
+                    // See if items exist
+                    if (item) {
+                        // Show the folder
+                        ctrlListSubFolder5.show();
+                    } else {
+                        // Hide the folder
+                        ctrlListSubFolder5.hide();
+                    }
+                }
+            } as Components.IFormControlPropsDropdown
+        ];
+    }
+
     // Constructor
     constructor(el: HTMLElement, appProps: IAppProps) {
         this._el = el;
@@ -239,8 +419,10 @@ export class ListsTab {
                 text: "Reporting",
                 type: Components.ButtonTypes.OutlinePrimary,
                 onClick: () => {
-                    // Show the reports form
-                    this.showReportsForm(isLibrary, item);
+                    DataSource.loadFolders(item.WebId, item.DriveId).then(folders => {
+                        // Show the reports form
+                        this.showReportsForm(item.WebId, item.DriveId, isLibrary, item, folders);
+                    });
                 }
             }
         });
@@ -406,7 +588,7 @@ export class ListsTab {
     }
 
     // Generates the tooltip options for the reports
-    private showReportsForm(isLibrary: boolean, item: IList) {
+    private showReportsForm(webId: string, driveId: string, isLibrary: boolean, item: IList, folders: Components.IDropdownItem[]) {
         // Set the available reports
         let items: Components.IDropdownItem[] = [];
 
@@ -498,7 +680,7 @@ export class ListsTab {
                                     // Set the form
                                     form = Components.Form({
                                         el: Modal.BodyElement,
-                                        controls: getDefaultControl(ReportTypes.SearchDocs).concat(SearchDocs.getFormFields(this._appProps.reportProps?.docSearchFileExt, this._appProps.reportProps?.docSearchKeywords, this._appProps.reportProps?.docSearchRegexPatterns, true))
+                                        controls: getDefaultControl(ReportTypes.SearchDocs).concat(SearchDocs.getFormFields(this._appProps.reportProps?.docSearchFileExt, this._appProps.reportProps?.docSearchKeywords, this._appProps.reportProps?.docSearchRegexPatterns, true), ListsTab.generateSubFolders(webId, driveId, folders))
                                     });
                                     break;
                                 case ReportTypes.SensitivityLabels:
@@ -556,6 +738,15 @@ export class ListsTab {
                                         // Set the target web and list
                                         values["TargetWeb"] = { text: item.WebUrl, value: item.WebId };
                                         values["TargetList"] = item.ListName;
+
+                                        // Set the target folder
+                                        let folder = (values["ListFolder"] as Components.IDropdownItem).data;
+                                        let subFolder1 = (values["ListSubFolder1"] as Components.IDropdownItem)?.data;
+                                        let subFolder2 = (values["ListSubFolder2"] as Components.IDropdownItem)?.data;
+                                        let subFolder3 = (values["ListSubFolder3"] as Components.IDropdownItem)?.data;
+                                        let subFolder4 = (values["ListSubFolder4"] as Components.IDropdownItem)?.data;
+                                        let subFolder5 = (values["ListSubFolder5"] as Components.IDropdownItem)?.data;
+                                        values["TargetFolder"] = (subFolder5 || subFolder4 || subFolder3 || subFolder2 || subFolder1 || folder)?.id;
 
                                         // Run the search documents report
                                         // Run the report
