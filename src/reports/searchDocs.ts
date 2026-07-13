@@ -1,6 +1,7 @@
 import { CanvasForm, Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
 import { Components, ContextInfo, Helper, Search, SPTypes, Types, Web, v2 } from "gd-sprest-bs";
 import { Workbook } from "exceljs";
+import { loadAsync } from "jszip";
 import { extractRawText } from "mammoth";
 import * as moment from "moment";
 import { PDFParse } from "pdf-parse";
@@ -74,6 +75,50 @@ export class SearchDocs {
                             // Get the content
                             let pdf = new PDFParse({ data: buffer });
                             pdf.getText().then(content => { resolve(content.text); }).catch(reject);
+                            break;
+                        case "pptx":
+                            // Load the file
+                            loadAsync(buffer).then(zip => {
+                                let allText: string[] = [];
+
+                                // Get the slides
+                                let slides = Object.keys(zip.files)
+                                    .filter(file => /^ppt\/slides\/slide\d+\.xml$/i.test(file))
+                                    .sort((a, b) => {
+                                        let numA = parseInt(a.match(/\d+/)?.[0] ?? "0", 10);
+                                        let numB = parseInt(b.match(/\d+/)?.[0] ?? "0", 10);
+                                        return numA - numB;
+                                    });
+
+                                // Parse the slides
+                                Helper.Executor(slides, slide => {
+                                    // Return a promise
+                                    return new Promise(resolve => {
+                                        // Get the text
+                                        zip.file(slide)?.async("text").then(xml => {
+                                            // Ensure xml exist
+                                            if (!xml) { return; }
+
+                                            // Extract the text
+                                            const matches = xml.match(/<a:t[^>]*>.*?<\/a:t>/g) || [];
+                                            allText.push(matches
+                                                .map(m =>
+                                                    m
+                                                        .replace(/<a:t[^>]*>/, "")
+                                                        .replace(/<\/a:t>/, "")
+                                                )
+                                                .join(" ")
+                                            );
+
+                                            // Check the next slide
+                                            resolve(null);
+                                        }).catch(resolve);
+                                    });
+                                }).then(() => {
+                                    // Resolve the text
+                                    resolve(allText.join("\n"));
+                                });
+                            }).catch(reject);
                             break;
                         case "xlsx":
                             (new Workbook()).xlsx.load(buffer).then(workbook => {
