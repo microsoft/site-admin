@@ -419,10 +419,16 @@ export class ListsTab {
                 text: "Reporting",
                 type: Components.ButtonTypes.OutlinePrimary,
                 onClick: () => {
-                    DataSource.loadFolders(item.WebId, item.DriveId).then(folders => {
+                    // Ensure the drive id exists
+                    if (item.DriveId) {
+                        DataSource.loadFolders(item.WebId, item.DriveId).then(folders => {
+                            // Show the reports form
+                            this.showReportsForm(item.WebId, item.DriveId, isLibrary, item, folders);
+                        });
+                    } else {
                         // Show the reports form
-                        this.showReportsForm(item.WebId, item.DriveId, isLibrary, item, folders);
-                    });
+                        this.showReportsForm(item.WebId, item.DriveId, isLibrary, item);
+                    }
                 }
             }
         });
@@ -588,7 +594,7 @@ export class ListsTab {
     }
 
     // Generates the tooltip options for the reports
-    private showReportsForm(webId: string, driveId: string, isLibrary: boolean, item: IList, folders: Components.IDropdownItem[]) {
+    private showReportsForm(webId: string, driveId: string, isLibrary: boolean, item: IList, folders: Components.IDropdownItem[] = []) {
         // Set the available reports
         let items: Components.IDropdownItem[] = [];
 
@@ -614,12 +620,14 @@ export class ListsTab {
         }
 
         // Search Documents
-        if (typeof (this._appProps.hideReports.searchDocs) === "undefined" || this._appProps.hideReports.searchDocs != true) {
-            items.push({
-                text: "Search Documents",
-                data: "Search for documents using regex patterns.",
-                value: ReportTypes.SearchDocs
-            });
+        if (isLibrary && item.DriveId) {
+            if (typeof (this._appProps.hideReports.searchDocs) === "undefined" || this._appProps.hideReports.searchDocs != true) {
+                items.push({
+                    text: "Search Documents",
+                    data: "Search for documents using regex patterns.",
+                    value: ReportTypes.SearchDocs
+                });
+            }
         }
 
         // Search EEEU
