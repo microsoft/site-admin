@@ -176,9 +176,9 @@ export class SearchDocs {
                             ItemId: item?.listItem["Id"],
                             LastModifiedTime: item.fileSystemInfo.lastModifiedDateTime,
                             ListId: listId,
-                            Overshared: item.listItem ? (ViewPermissions.isOvershared(item.listItem["RoleAssignments"].results) ? "Yes" : "No") : "",
+                            Overshared: item.listItem["RoleAssignments"] ? (ViewPermissions.isOvershared(item.listItem["RoleAssignments"].results) ? "Yes" : "No") : "",
                             Path: driveUrl + item.parentReference.path.split("/root:").pop(),
-                            Permissions: item?.listItem["RoleAssignments"].results,
+                            Permissions: item?.listItem["RoleAssignments"]?.results,
                             RegexPatterns: patterns.join(", "),
                             SensitivityLabel: item.sensitivityLabel?.displayName,
                             SensitivityLabelId: item.sensitivityLabel?.id,
@@ -209,9 +209,9 @@ export class SearchDocs {
                         ItemId: item?.listItem["Id"],
                         LastModifiedTime: item.fileSystemInfo.lastModifiedDateTime,
                         ListId: listId,
-                        Overshared: item.listItem ? (ViewPermissions.isOvershared(item.listItem["RoleAssignments"].results) ? "Yes" : "No") : "",
+                        Overshared: item.listItem["RoleAssignments"] ? (ViewPermissions.isOvershared(item.listItem["RoleAssignments"].results) ? "Yes" : "No") : "",
                         Path: driveUrl + item.parentReference.path.split("/root:").pop(),
-                        Permissions: item?.listItem["RoleAssignments"].results,
+                        Permissions: item?.listItem["RoleAssignments"]?.results,
                         SensitivityLabel: item.sensitivityLabel?.displayName,
                         SensitivityLabelId: item.sensitivityLabel?.id,
                         SPSiteUrl: item.parentReference.path,
@@ -240,9 +240,9 @@ export class SearchDocs {
                     ItemId: item?.listItem["Id"],
                     LastModifiedTime: item.fileSystemInfo.lastModifiedDateTime,
                     ListId: listId,
-                    Overshared: item.listItem ? (ViewPermissions.isOvershared(item.listItem["RoleAssignments"].results) ? "Yes" : "No") : "",
+                    Overshared: item.listItem["RoleAssignments"] ? (ViewPermissions.isOvershared(item.listItem["RoleAssignments"].results) ? "Yes" : "No") : "",
                     Path: driveUrl + item.parentReference.path.split("/root:").pop(),
-                    Permissions: item?.listItem["RoleAssignments"].results,
+                    Permissions: item?.listItem["RoleAssignments"]?.results,
                     SensitivityLabel: item.sensitivityLabel?.displayName,
                     SensitivityLabelId: item.sensitivityLabel?.id,
                     SPSiteUrl: item.parentReference.path,
@@ -262,7 +262,7 @@ export class SearchDocs {
     }
 
     // Analyzes the library
-    private static analyzeLibrary(webId: string, webUrl: string, library: Types.SP.ListOData, drives: Types.Microsoft.Graph.drive[], folderId: string, fileExt: string[], regexPatterns: RegExp[]) {
+    private static analyzeLibrary(webId: string, webUrl: string, library: Types.SP.ListOData, drives: Types.Microsoft.Graph.drive[], folderId: string, loadPermissions: boolean, fileExt: string[], regexPatterns: RegExp[]) {
         // Return a promise
         return new Promise(resolve => {
             // Get the drive for this library
@@ -377,7 +377,7 @@ export class SearchDocs {
 
             // Load the files for this drive
             let allFilesLoaded = false;
-            return DataSource.loadFiles(webId, webUrl, drive.id, drive.name, folderId, true, item => {
+            return DataSource.loadFiles(webId, webUrl, drive.id, drive.name, folderId, loadPermissions, item => {
                 // Ensure the file extension is valid
                 if ((fileExt || FileExtensions).indexOf(item.file["fileExtension"].substring(1)) < 0) { return; }
 
@@ -426,6 +426,7 @@ export class SearchDocs {
 
     // Gets the form fields to display
     static getFormFields(fileExt: string = "", keywords: string = "", regexPatterns: string = "", regexOnly: boolean = false): Components.IFormControlProps[] {
+        let ctrlPermissions: Components.IFormControl;
         let ctrlRegex: Components.IFormControl;
         let ctrlSearchTerms: Components.IFormControl;
 
@@ -449,10 +450,12 @@ export class SearchDocs {
                     if (item.value == "Keyword") {
                         // Show/Hide the controls
                         ctrlRegex.hide();
+                        ctrlPermissions.hide();
                         ctrlSearchTerms.show();
                     } else {
                         // Show/Hide the controls
                         ctrlRegex.show();
+                        ctrlPermissions.show();
                         ctrlSearchTerms.hide();
                     }
                 }
@@ -499,6 +502,13 @@ export class SearchDocs {
                     // Return the results
                     return results;
                 }
+            },
+            {
+                label: "Load Permissions",
+                name: "LoadPermissions",
+                type: Components.FormControlTypes.Switch,
+                value: true,
+                onControlRendered: ctrl => { ctrlPermissions = ctrl; }
             },
             {
                 label: "File Types",
@@ -617,7 +627,7 @@ export class SearchDocs {
     }
 
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, auditOnly: boolean, searchType: "Search" | "Regex" | "Library", onClose: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, hidePermissions: boolean, searchType: "Search" | "Regex" | "Library", onClose: () => void) {
         let isSearch = searchType === "Search" ? true : false;
 
         // Render the summary
@@ -678,8 +688,8 @@ export class SearchDocs {
                         }
                     ];
 
-                    // See if this is search
-                    if (isSearch) {
+                    // See if we are hiding the permissions
+                    if (hidePermissions) {
                         // Hide the Permissions column
                         dtProps.columnDefs.push({
                             "targets": [3, 4],
@@ -990,6 +1000,7 @@ export class SearchDocs {
         let searchTerms = (values["SearchTerms"] || "").split(' ');
         let searchType = (values["SearchType"] || "");
         let targetFolder = values["TargetFolder"];
+        let loadPermissions = values["LoadPermissions"] as any == true ? true : false;
 
         // Set the regex patterns
         let regexPatterns = [];
@@ -1036,7 +1047,7 @@ export class SearchDocs {
                 this._items = search.results;
 
                 // Render the summary
-                this.renderSummary(el, auditOnly, "Search", onClose);
+                this.renderSummary(el, auditOnly, true, "Search", onClose);
 
                 // Hide the sub-nav
                 this._elSubNav.classList.add("d-none");
@@ -1049,7 +1060,7 @@ export class SearchDocs {
             while (el.firstChild) { el.removeChild(el.firstChild); }
 
             // Render the summary
-            this.renderSummary(el, auditOnly, values["TargetList"] ? "Library" : "Regex", onClose);
+            this.renderSummary(el, auditOnly, loadPermissions, values["TargetList"] ? "Library" : "Regex", onClose);
 
             // Determine the webs to target
             let siteItems: Components.IDropdownItem[] = null;
@@ -1105,7 +1116,7 @@ export class SearchDocs {
                                 // Return a promise
                                 return new Promise(resolveLib => {
                                     // Analyze the library
-                                    this.analyzeLibrary(siteItem.value, siteItem.text, lib, drives.results, targetFolder, fileExt, regexPatterns).then(resolveLib);
+                                    this.analyzeLibrary(siteItem.value, siteItem.text, lib, drives.results, targetFolder, loadPermissions, fileExt, regexPatterns).then(resolveLib);
                                 });
                             }).then(resolve);
                         });
