@@ -554,24 +554,36 @@ export class DataSource {
                             if (permissions) {
                                 // Return a promise
                                 return new Promise(resolve => {
-                                    // Load the permissions
-                                    Web(webUrl, { requestDigest: this.SiteContext.FormDigestValue })
-                                        .Lists(listName).Items(driveItem.listItem["id"]).query({
-                                            Expand: ["RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings"],
-                                            Select: ["Id", "HasUniqueRoleAssignments"]
-                                        }).execute(result => {
-                                            // Set the permissions
-                                            driveItem.listItem = result as any;
+                                    // Wait for the sleep time to prevent throttling
+                                    setTimeout(() => {
+                                        // Load the permissions
+                                        Web(webUrl, { requestDigest: this.SiteContext.FormDigestValue })
+                                            .Lists(listName).Items(driveItem.listItem["id"]).query({
+                                                Expand: ["ParentList", "RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings"],
+                                                Select: ["Id", "HasUniqueRoleAssignments", "ParentList/Id"]
+                                            }).execute(result => {
+                                                // Set the permissions
+                                                driveItem.listItem = result as any;
 
-                                            // Process the file
-                                            processFile();
+                                                // Process the file
+                                                processFile();
 
-                                            // Append the file
-                                            files.push(driveItem);
+                                                // Append the file
+                                                files.push(driveItem);
 
-                                            // Process the next file
-                                            resolve(null);
-                                        }, resolve);
+                                                // Process the next file
+                                                resolve(null);
+                                            }, () => {
+                                                // Process the file
+                                                processFile();
+
+                                                // Append the file
+                                                files.push(driveItem);
+
+                                                // Process the next file
+                                                resolve(null);
+                                            });
+                                    }, sleepTime);
                                 });
                             } else {
                                 // Process the file
@@ -584,7 +596,7 @@ export class DataSource {
                         // Else, it's a folder
                         else if (driveItem.folder) {
                             return new Promise(resolve => {
-                                // Wait for the sleep time before getting the files
+                                // Wait for the sleep time to prevent throttling
                                 setTimeout(() => {
                                     // Get the items for this folder
                                     getFiles(driveId, driveItem.id).then(resolve);
