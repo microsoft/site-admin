@@ -1060,7 +1060,7 @@ export class SearchDocs {
             while (el.firstChild) { el.removeChild(el.firstChild); }
 
             // Render the summary
-            this.renderSummary(el, auditOnly, loadPermissions, values["TargetList"] ? "Library" : "Regex", onClose);
+            this.renderSummary(el, auditOnly, !loadPermissions, values["TargetList"] ? "Library" : "Regex", onClose);
 
             // Determine the webs to target
             let siteItems: Components.IDropdownItem[] = null;
