@@ -202,7 +202,7 @@ export class SearchDocs {
                         Author: item.createdBy.user["email"],
                         DriveId: item.parentReference.driveId,
                         ErrorExtractingContent: true,
-                        ErrorMessage: "Error converting the file content.",
+                        ErrorMessage: "Unable to extract the text from the file. It may be protected.",
                         FileExtension: item.file["fileExtension"].substring(1),
                         FileUrl: item.parentReference.path.split("/root:").pop() + "/" + item.name,
                         HasUniquePermissions: item?.listItem["HasUniquePermissions"],
@@ -233,7 +233,7 @@ export class SearchDocs {
                     Author: item.createdBy.user["email"],
                     DriveId: item.parentReference.driveId,
                     ErrorExtractingContent: true,
-                    ErrorMessage: "Error downloading the file content.",
+                    ErrorMessage: "Unable to download the file. It may be protected.",
                     FileExtension: item.file["fileExtension"].substring(1),
                     FileUrl: item.parentReference.path.split("/root:").pop() + "/" + item.name,
                     HasUniquePermissions: item?.listItem["HasUniquePermissions"],
@@ -393,6 +393,9 @@ export class SearchDocs {
             }).then(() => {
                 // Set the flag
                 allFilesLoaded = true;
+
+                // Ensure the process is running
+                worker.start();
             });
         });
     }
@@ -1126,13 +1129,16 @@ export class SearchDocs {
                 // Hide the sub-nav
                 this._elSubNav.classList.add("d-none");
 
+                // Get the error button
+                let elNav = el.querySelector("#navigation .navbar-nav");
+
                 // See if no errors exist
                 if (this._itemErrors.length == 0) {
-                    // Get the error button
-                    let elNav = el.querySelector("#navigation .navbar-nav");
-
                     // Remove the last button
                     elNav.querySelector("li:last-child").remove();
+                } else {
+                    // Update the error text
+                    elNav.querySelector("li:last-child > a").innerHTML = `${this._itemErrors.length} Errors`;
                 }
             });
 
