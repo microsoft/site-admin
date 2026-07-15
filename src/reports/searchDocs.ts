@@ -6,9 +6,10 @@ import { extractRawText } from "mammoth";
 import * as moment from "moment";
 import { PDFParse } from "pdf-parse";
 import { DataSource } from "../ds";
+import { M365Groups } from "../m365Groups";
+import { IRegexPattern } from "../regexPatternsDialog";
 import Strings from "../strings";
 import { ExportCSV } from "./exportCSV";
-import { M365Groups } from "../m365Groups";
 import { SensitivityLabels } from "./sensitivityLabels";
 import { ViewPermissions } from "./viewPermissions";
 
@@ -431,6 +432,7 @@ export class SearchDocs {
     static getFormFields(fileExt: string = "", keywords: string = "", regexPatterns: string = "", regexOnly: boolean = false): Components.IFormControlProps[] {
         let ctrlPermissions: Components.IFormControl;
         let ctrlRegex: Components.IFormControl;
+        let ctrlRegexPatterns: Components.IFormControl;
         let ctrlSearchTerms: Components.IFormControl;
 
         // Set the items
@@ -438,6 +440,21 @@ export class SearchDocs {
             { text: "Keyword", value: "Keyword" },
             { text: "Regex Pattern", value: "RegexPatterns", isSelected: true }
         ]
+
+        // Convert the regex patterns to an object
+        let regexItems: Components.IDropdownItem[] = [{ text: "Select a Category" }];
+        try {
+            (JSON.parse(regexPatterns) as IRegexPattern[]).forEach(pattern => {
+                // Append the item
+                regexItems.push({
+                    data: pattern,
+                    text: pattern.title
+                });
+            });
+        } catch {
+            // Clear the items
+            regexItems = [];
+        }
 
         // Return the properties
         return [
@@ -453,11 +470,13 @@ export class SearchDocs {
                     if (item.value == "Keyword") {
                         // Show/Hide the controls
                         ctrlRegex.hide();
+                        ctrlRegexPatterns.hide();
                         ctrlPermissions.hide();
                         ctrlSearchTerms.show();
                     } else {
                         // Show/Hide the controls
                         ctrlRegex.show();
+                        regexItems.length > 0 ? ctrlRegexPatterns.show() : null;
                         ctrlPermissions.show();
                         ctrlSearchTerms.hide();
                     }
@@ -475,13 +494,31 @@ export class SearchDocs {
                 onControlRendered: ctrl => { ctrlSearchTerms = ctrl; }
             },
             {
+                label: "Regex Categories",
+                name: "RegexCategories",
+                className: `mb-3 ${regexItems.length == 0 ? "d-none" : ""}`,
+                description: "Populates the regex patterns based on the selected category.",
+                type: Components.FormControlTypes.Dropdown,
+                items: regexItems,
+                onControlRendered: ctrl => { ctrlRegexPatterns = ctrl; },
+                onChange: (item) => {
+                    // See if an item was selected
+                    if (item?.data) {
+                        // Set the patterns
+                        ctrlRegex.setValue((item.data as IRegexPattern).patterns.join(" "));
+                    }
+
+                    // Clear the selection
+                    ctrlRegexPatterns.dropdown.setValue(null);
+                }
+            } as Components.IFormControlPropsDropdown,
+            {
                 label: "Regex Patterns",
                 name: "RegexPatterns",
                 className: "mb-3",
                 description: "Enter the regular expression pattern to search for.",
                 type: Components.FormControlTypes.TextField,
                 required: true,
-                value: regexPatterns,
                 errorMessage: "You must enter at least 1 search term.",
                 onControlRendered: ctrl => { ctrlRegex = ctrl; },
                 onValidate: (ctrl, results) => {

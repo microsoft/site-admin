@@ -1,7 +1,7 @@
 import { Version } from '@microsoft/sp-core-library';
 import {
   IPropertyPaneConfiguration, IPropertyPaneGroup,
-  PropertyPaneDropdown, PropertyPaneHorizontalRule,
+  PropertyPaneButton, PropertyPaneDropdown, PropertyPaneHorizontalRule,
   PropertyPaneLabel, PropertyPaneLink, PropertyPaneTextField, PropertyPaneToggle
 } from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart, WebPartContext } from '@microsoft/sp-webpart-base';
@@ -232,6 +232,7 @@ declare const SiteAdmin: {
       }
     }
   }) => void;
+  showRegexPatterns: (patterns: string, onUpdate: (patterns: string) => void) => void;
   updateTheme: (theme: IReadonlyTheme) => void;
 };
 
@@ -702,12 +703,16 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   rows: 6,
                   value: this.properties.ReportsDocSearchKeywords
                 }),
-                PropertyPaneTextField("ReportsDocSearchKeywords", {
-                  label: strings.ReportsDocSearchRegexPatterns,
-                  description: "The default regex expressions to search for.",
-                  multiline: true,
-                  rows: 6,
-                  value: this.properties.ReportsDocSearchRegexPatterns
+                PropertyPaneButton("", {
+                  text: "Set Regex Patterns",
+                  description: "Set the default Regex patterns to display in a dropdown list for the user to select from.",
+                  onClick: () => {
+                    // Show interface
+                    SiteAdmin.showRegexPatterns(this.properties.ReportsDocSearchRegexPatterns, (patterns: string) => {
+                      // Update the property
+                      this.properties.ReportsDocSearchRegexPatterns = patterns;
+                    });
+                  }
                 }),
               ]
             },
