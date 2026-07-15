@@ -394,7 +394,9 @@ export class Permissions {
 
         // Render the footer
         Components.Button({
+            el: Modal.FooterElement,
             text: "Close",
+            type: Components.ButtonTypes.OutlinePrimary,
             onClick: () => {
                 Modal.hide();
             }

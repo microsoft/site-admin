@@ -482,10 +482,32 @@ export class DataSource {
     }
 
     // Loads the files for a drive
-    static loadFiles(webId: string, webUrl: string, driveId: string, folderId: string, permissions?: boolean, onFile?: (file: Types.Microsoft.Graph.driveItem) => boolean | void): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
+    static loadFiles(webId: string, webUrl: string, driveId: string, listName: string, folderId: string, permissions?: boolean, onFile?: (file: Types.Microsoft.Graph.driveItem) => boolean | void): PromiseLike<Types.Microsoft.Graph.driveItem[]> {
         let files = [];
         let isOneDrive = webId == DataSource.OneDriveWeb?.Id;
         let stopFl = false;
+
+        // Subscribe to the rate info event and set the time to sleep before completing the request
+        let sleepTime = 0;
+        ContextInfo.onRateLimitDetected(rateInfo => {
+            // See if we have dropped below a threshold
+            if (rateInfo.remaining < Strings.RateLimitThreshold) {
+                // Set the sleep time
+                sleepTime = rateInfo.reset * 1000;
+
+                // Show a loading dialog
+                LoadingDialog.setHeader("Throttling Detected");
+                LoadingDialog.setBody(`Throttling has been detected. Pausing requests for ${rateInfo.reset} seconds before sending next request...`);
+                LoadingDialog.show();
+
+                // Wait for the specified time and reset the value
+                setTimeout(() => {
+                    // Clear the sleep time and hide the dialog
+                    sleepTime = 0;
+                    LoadingDialog.hide();
+                }, sleepTime);
+            }
+        });
 
         // Loads the files for a drive
         let getFiles = (driveId: string, folderId: string) => {
@@ -506,7 +528,7 @@ export class DataSource {
                     Top: 5000,
                     Expand: ["listItem"],
                     Select: [
-                        "createdBy", "driveId", "file", "folder", "id", "name",
+                        "createdBy", "driveId", "file", "fileSystemInfo", "folder", "id", "name",
                         "parentReference", "sensitivityLabel", "webUrl", "listItem/id"
                     ]
                 }).execute(resp => {
@@ -532,24 +554,36 @@ export class DataSource {
                             if (permissions) {
                                 // Return a promise
                                 return new Promise(resolve => {
-                                    // Load the permissions
-                                    Web(webUrl, { requestDigest: this.SiteContext.FormDigestValue })
-                                        .Lists(driveItem.parentReference.name).Items(driveItem.listItem["id"]).query({
-                                            Expand: ["RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings"],
-                                            Select: ["Id", "HasUniqueRoleAssignments"]
-                                        }).execute(result => {
-                                            // Set the permissions
-                                            driveItem.listItem = result as any;
+                                    // Wait for the sleep time to prevent throttling
+                                    setTimeout(() => {
+                                        // Load the permissions
+                                        Web(webUrl, { requestDigest: this.SiteContext.FormDigestValue })
+                                            .Lists(listName).Items(driveItem.listItem["id"]).query({
+                                                Expand: ["ParentList", "RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings"],
+                                                Select: ["Id", "HasUniqueRoleAssignments", "ParentList/Id"]
+                                            }).execute(result => {
+                                                // Set the permissions
+                                                driveItem.listItem = result as any;
 
-                                            // Process the file
-                                            processFile();
+                                                // Process the file
+                                                processFile();
 
-                                            // Append the file
-                                            files.push(driveItem);
+                                                // Append the file
+                                                files.push(driveItem);
 
-                                            // Process the next file
-                                            resolve(null);
-                                        }, resolve);
+                                                // Process the next file
+                                                resolve(null);
+                                            }, () => {
+                                                // Process the file
+                                                processFile();
+
+                                                // Append the file
+                                                files.push(driveItem);
+
+                                                // Process the next file
+                                                resolve(null);
+                                            });
+                                    }, sleepTime);
                                 });
                             } else {
                                 // Process the file
@@ -561,8 +595,13 @@ export class DataSource {
                         }
                         // Else, it's a folder
                         else if (driveItem.folder) {
-                            // Get the items for this folder
-                            return getFiles(driveId, driveItem.id);
+                            return new Promise(resolve => {
+                                // Wait for the sleep time to prevent throttling
+                                setTimeout(() => {
+                                    // Get the items for this folder
+                                    getFiles(driveId, driveItem.id).then(resolve);
+                                }, sleepTime);
+                            });
                         }
                     }).then(() => {
                         // Resolve the request

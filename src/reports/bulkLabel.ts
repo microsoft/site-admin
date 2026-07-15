@@ -5,7 +5,7 @@ import Strings from "../strings";
 import { ExportCSV } from "./exportCSV";
 import { ISensitivityLabelItem } from "./sensitivityLabels";
 
-interface ISetSensitivityLabelResponse {
+export interface ISetSensitivityLabelResponse {
     errorFl: boolean;
     error?: any;
     fileName: string;
@@ -80,6 +80,140 @@ export class BulkLabel {
                     resolve(response);
                 }
             );
+        });
+    }
+
+    // Labels files
+    static labelFiles(driveItems: Types.Microsoft.Graph.driveItem[], label: string, labelId: string, justification: string): PromiseLike<ISetSensitivityLabelResponse[]> {
+        // Return a promise
+        return new Promise(resolve => {
+            let responses: ISetSensitivityLabelResponse[] = [];
+
+            // Show the responses
+            this.showResponses(responses, () => {
+                // Stop the worker process
+                worker.stop();
+            });
+
+            // Update the dialog
+            this._elSubNav.children[0].innerHTML = `Processing ${driveItems.length} files...`;
+
+            // Process the labels as we load the files
+            let fileCounter = 0;
+            let filesToProcess: Types.Microsoft.Graph.driveItem[] = driveItems;
+            let processingCounter = 0;
+            let processedCounter = 0;
+
+            // Subscribe to the rate info event and set the time to sleep before completing the request
+            let sleepTime = 0;
+            ContextInfo.onRateLimitDetected(rateInfo => {
+                // See if we have dropped below a threshold
+                if (rateInfo.remaining < Strings.RateLimitThreshold) {
+                    // Set the sleep time
+                    sleepTime = rateInfo.reset * 1000;
+
+                    // Show a loading dialog
+                    LoadingDialog.setHeader("Throttling Detected");
+                    LoadingDialog.setBody(`Throttling has been detected. Pausing requests for ${rateInfo.reset} seconds before sending next request...`);
+                    LoadingDialog.show();
+
+                    // Wait for the specified time and reset the value
+                    setTimeout(() => {
+                        // Clear the sleep time and hide the dialog
+                        sleepTime = 0;
+                        LoadingDialog.hide();
+                    }, sleepTime);
+                }
+            });
+
+            // Create a worker process
+            let worker = Helper.WebWorker(() => {
+                // See if we are stopping this process
+                if (this._stopFl) {
+                    // Stop the process
+                    worker.stop();
+                }
+
+                // Do nothing if we are processing the max files at once
+                if (processingCounter >= Strings.MaxRequests) { return; }
+
+                // Do nothing if we are done
+                if (filesToProcess.length == 0) {
+                    // Stop the process
+                    worker.stop();
+
+                    // Call the event
+                    onCompleted ? onCompleted() : null;
+
+                    // Do nothing
+                    return;
+                }
+
+                // Get the file to process
+                let file = filesToProcess.splice(0, 1)[0];
+
+                // See if this file is already has this label
+                if (file.sensitivityLabel?.id == labelId) {
+                    // Add a response
+                    let response: ISetSensitivityLabelResponse = {
+                        errorFl: false,
+                        fileName: file.name,
+                        message: `Skipping file, it's already labelled: '${file.sensitivityLabel.displayName}'.`,
+                        url: file.webUrl
+                    };
+                    responses.push(response);
+                    this._dashboard.Datatable.addRow(response);
+
+                    // Update the dialog
+                    this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] File Already Labelled: ${response.fileName}`;
+
+                    // Check the next file
+                    return;
+                }
+
+                // Increment the # of files being processed
+                processingCounter++;
+
+                // Update the dialog
+                this._elSubNav.children[1].innerHTML = `[Processing ${processedCounter} of ${fileCounter}] Labelling File: ${file.name}`;
+
+                // Labels the file
+                let labelFile = () => {
+                    // Wait for the specified sleep time to avoid throttling
+                    setTimeout(() => {
+                        // Label the file
+                        this.labelFile(file, label, labelId, justification, responses).then((response) => {
+                            // Add the response
+                            responses.push(response);
+                            this._dashboard.Datatable.addRow(response);
+
+                            // Update the dialog
+                            this._elSubNav.children[1].innerHTML = `[Processed ${++processedCounter} of ${fileCounter}] File Labelled: ${file.name}`;
+
+                            // Decrement the # of files being processed
+                            processingCounter--;
+                        });
+                    }, sleepTime);
+                }
+
+                // Label the file
+                labelFile();
+            }, 100);
+
+            // Set the completed event
+            let onCompleted = () => {
+                // Clear the sub-nav
+                this._elSubNav.classList.add("d-none");
+
+                // Clear the callback events
+                ContextInfo.clearRateLimitCallbacks();
+
+                // Resolve the request
+                resolve(responses);
+            };
+
+            // Ensure the process is running
+            worker.start();
         });
     }
 
@@ -268,7 +402,7 @@ export class BulkLabel {
         };
 
         // Load the files for this drive
-        DataSource.loadFiles(webId, webUrl, driveId, folderId, false, file => {
+        DataSource.loadFiles(webId, webUrl, driveId, listName, folderId, false, file => {
             // Add the file to process
             filesToProcess.push(file);
 
@@ -802,7 +936,7 @@ export class BulkLabel {
 
 
     // Shows the responses for setting the sensitivity labels
-    private static showResponses(responses: ISetSensitivityLabelResponse[], onClose?: () => void) {
+    static showResponses(responses: ISetSensitivityLabelResponse[], onClose?: () => void) {
         // Clear the modal and set the header
         Modal.clear();
         Modal.setType(Components.ModalTypes.Full);

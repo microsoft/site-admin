@@ -2,7 +2,7 @@ import { CanvasForm, Dashboard, Documents, LoadingDialog, Modal } from "dattatab
 import { Components, Helper, SPTypes, Types, Web, v2 } from "gd-sprest-bs";
 import { DataSource } from "../ds";
 import { M365Groups } from "../m365Groups";
-import { BulkLabel } from "./bulkLabel";
+import { BulkLabel, ISetSensitivityLabelResponse } from "./bulkLabel";
 import { ExportCSV } from "./exportCSV";
 import { ViewPermissions } from "./viewPermissions";
 
@@ -52,39 +52,6 @@ export class SensitivityLabels {
     private static _loadOneDrive: boolean = false;
     private static _stopFl: boolean = false;
 
-    // Gets the form fields to display
-    static getFormFields(): Components.IFormControlProps[] {
-        return [
-            {
-                name: "SearchType",
-                className: "my-3",
-                type: Components.FormControlTypes.MultiSwitch,
-                required: true,
-                errorMessage: "A selection is required.",
-                items: [
-                    {
-                        name: "WithLabels",
-                        label: "Find all files with a label",
-                        isSelected: true
-                    },
-                    {
-                        name: "WithoutLabels",
-                        label: "Find all files without a label"
-                    }
-                ]
-            } as Components.IFormControlPropsMultiSwitch,
-            {
-                name: "FilterLabel",
-                className: "mb-3",
-                type: Components.FormControlTypes.MultiDropdownCheckbox,
-                items: DataSource.SensitivityLabelItems.slice(1),
-                label: "Find Files with Label:",
-                placeholder: "Select Label(s)",
-                description: "Filter results for specific sensitivity label(s)."
-            } as Components.IFormControlPropsMultiDropdownCheckbox
-        ];
-    }
-
     // Analyzes the libraries
     private static analyzeLibraries(webId: string, webUrl: string, libraries: Types.SP.ListOData[], drives: Types.Microsoft.Graph.drive[], withLabelsFl, withoutLabelsFl) {
         // Return a promise
@@ -117,7 +84,7 @@ export class SensitivityLabels {
 
                     // Get the files for this library
                     let filesProcessed = 0;
-                    DataSource.loadFiles(webId, webUrl, drive.id, null, true, (file: Types.Microsoft.Graph.driveItem) => {
+                    DataSource.loadFiles(webId, webUrl, drive.id, lib.Title, null, true, (file: Types.Microsoft.Graph.driveItem) => {
                         let hasLabel = file.sensitivityLabel && file.sensitivityLabel.displayName ? true : false;
 
                         // Update the dialog
@@ -180,6 +147,39 @@ export class SensitivityLabels {
                 });
             }).then(resolve);
         });
+    }
+
+    // Gets the form fields to display
+    static getFormFields(): Components.IFormControlProps[] {
+        return [
+            {
+                name: "SearchType",
+                className: "my-3",
+                type: Components.FormControlTypes.MultiSwitch,
+                required: true,
+                errorMessage: "A selection is required.",
+                items: [
+                    {
+                        name: "WithLabels",
+                        label: "Find all files with a label",
+                        isSelected: true
+                    },
+                    {
+                        name: "WithoutLabels",
+                        label: "Find all files without a label"
+                    }
+                ]
+            } as Components.IFormControlPropsMultiSwitch,
+            {
+                name: "FilterLabel",
+                className: "mb-3",
+                type: Components.FormControlTypes.MultiDropdownCheckbox,
+                items: DataSource.SensitivityLabelItems.slice(1),
+                label: "Find Files with Label:",
+                placeholder: "Select Label(s)",
+                description: "Filter results for specific sensitivity label(s)."
+            } as Components.IFormControlPropsMultiDropdownCheckbox
+        ];
     }
 
     // Refreshes the item
@@ -593,7 +593,7 @@ export class SensitivityLabels {
     }
 
     // Shows the form to label a file
-    private static showLabelFileForm(file: Types.Microsoft.Graph.driveItem, onUpdate: (label: string) => void) {
+    static showLabelFileForm(file: Types.Microsoft.Graph.driveItem, onUpdate: (label: string) => void) {
         // Set the canvas
         CanvasForm.clear();
         CanvasForm.setHeader("Set Sensitivity Label");
@@ -717,6 +717,189 @@ export class SensitivityLabels {
                                     // Hide the dialog
                                     LoadingDialog.hide();
                                 });
+                            }
+                        }
+                    }
+                },
+                {
+                    content: "Closes the dialog.",
+                    btnProps: {
+                        text: "Close",
+                        type: Components.ButtonTypes.OutlineSecondary,
+                        onClick: () => {
+                            // Close the form
+                            CanvasForm.hide();
+                        }
+                    }
+                }
+            ]
+        });
+
+        // Show the form
+        CanvasForm.show();
+    }
+
+    // Shows the form to label a file
+    static showLabelFilesForm(driveItems: Types.Microsoft.Graph.driveItem[], onComplete: (responses: ISetSensitivityLabelResponse[]) => void) {
+        // Set the canvas
+        CanvasForm.clear();
+        CanvasForm.setHeader("Set Sensitivity Label");
+        CanvasForm.setSize(Components.OffcanvasSize.Medium2);
+        CanvasForm.setType(Components.OffcanvasTypes.End);
+
+        // Set the content
+        CanvasForm.setBody(`
+            <div></div>
+            <div class="d-flex justify-content-end"></div>
+        `);
+
+        // Set the form
+        let form = Components.Form({
+            el: CanvasForm.BodyElement.querySelector("div"),
+            groupClassName: "mb-3",
+            controls: [
+                {
+                    name: "",
+                    label: "Files to Label:",
+                    description: driveItems.length + " files will be labelled with the selected sensitivity label.",
+                    onControlRendered: ctrl => {
+                        // Show a view link
+                        Components.Button({
+                            el: ctrl.el,
+                            isSmall: true,
+                            type: Components.ButtonTypes.OutlinePrimary,
+                            text: "View Files",
+                            onClick: () => {
+                                // Show the files to label
+                                Modal.clear();
+                                Modal.setHeader("Files to Label");
+
+                                // Set the close event
+                                Modal.setCloseEvent(() => {
+                                    // Show the canvas form
+                                    CanvasForm.show();
+                                });
+
+                                // Render the dashboard
+                                new Dashboard({
+                                    el: Modal.BodyElement,
+                                    hideNavigation: true,
+                                    table: {
+                                        rows: driveItems,
+                                        columns: [
+                                            {
+                                                name: "name",
+                                                title: "Filename"
+                                            },
+                                            {
+                                                name: "",
+                                                title: "Path",
+                                                onRenderCell: (el, col, item: Types.Microsoft.Graph.driveItem) => {
+                                                    // Render the path
+                                                    el.innerHTML = item.parentReference.path.split("/root:").pop();
+                                                }
+                                            }
+                                        ]
+                                    }
+                                });
+
+                                // Hide the canvas form
+                                CanvasForm.hide();
+
+                                // Show the modal
+                                Modal.show();
+                            }
+                        })
+                    }
+                },
+                {
+                    name: "SensitivityLabel",
+                    label: "Select Sensitivity Label:",
+                    description: "This will set any file that isn't currently labelled.",
+                    errorMessage: "A sensitivity label is required.",
+                    items: DataSource.SensitivityLabelItems,
+                    type: Components.FormControlTypes.Dropdown,
+                    required: true,
+                    onValidate: (ctrl, results) => {
+                        // Ensure a selection exists
+                        results.isValid = results.value && results.value.text ? true : false;
+                        return results;
+                    }
+                } as Components.IFormControlPropsDropdown,
+                {
+                    name: "Justification",
+                    label: "Justification:",
+                    description: "Your organization requires justification to change this label.",
+                    type: Components.FormControlTypes.Dropdown,
+                    required: true,
+                    items: [
+                        { text: "Previous label no longer applies" },
+                        { text: "Previous label was incorrect" },
+                        { text: "Other" }
+                    ],
+                    onChange: (item) => {
+                        let ctrlTextbox = form.getControl("JustificationOther");
+
+                        // See if we are showing it
+                        if (item.text == "Other") {
+                            // Show it
+                            ctrlTextbox.show();
+                        } else {
+                            // Hide it
+                            ctrlTextbox.hide();
+                        }
+                    }
+                } as Components.IFormControlPropsDropdown,
+                {
+                    name: "JustificationOther",
+                    label: "Explain Justification:",
+                    description: "Do not enter sensitive information",
+                    className: "d-none",
+                    type: Components.FormControlTypes.TextField,
+                    errorMessage: "A justification is required.",
+                    onValidate: (ctrl, results) => {
+                        let item = form.getValues()["Justification"] as Components.IDropdownItem;
+
+                        // See if we are expecting a justification
+                        if (item.text == "Other") {
+                            // Set the falg
+                            results.isValid = results.value ? true : false;
+                        }
+
+                        // Return the results
+                        return results;
+                    }
+                } as Components.IFormControlPropsTextField,
+            ]
+        });
+
+        // Set the footer
+        Components.TooltipGroup({
+            el: CanvasForm.BodyElement.querySelector("div.d-flex"),
+            tooltips: [
+                {
+                    content: "Sets the default sensitivity label to the selected option.",
+                    btnProps: {
+                        text: "Update",
+                        type: Components.ButtonTypes.OutlinePrimary,
+                        onClick: () => {
+                            // Ensure the form is valid
+                            if (form.isValid()) {
+                                let values = form.getValues();
+                                let label: Components.IDropdownItem = values["SensitivityLabel"];
+
+                                // Update the justification
+                                let justification = values["Justification"].text;
+                                justification = justification == "Other" ? values["JustificationOther"] : justification;
+
+                                // Label the files
+                                BulkLabel.labelFiles(driveItems, label.text, label.value, justification).then(responses => {
+                                    // Call the event
+                                    onComplete(responses);
+                                });
+
+                                // Hide the dialogs
+                                CanvasForm.hide();
                             }
                         }
                     }

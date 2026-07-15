@@ -5,6 +5,7 @@ import { Configuration } from "./cfg";
 import { DataSource } from "./ds";
 import { InstallationModal } from "./install";
 import { PageGenerator } from "./page-generator";
+import { RegexDialog } from "./regexPatternsDialog";
 import { Security } from "./security";
 import Strings, { setContext } from "./strings";
 
@@ -73,6 +74,7 @@ const GlobalVariable = {
             }
         );
     },
+    showRegexPatterns: (patterns: string, onUpdate: (patterns: string) => void) => { new RegexDialog(patterns, onUpdate); },
     updateTheme: (themeInfo) => { ThemeManager.update(themeInfo); }
 };
 

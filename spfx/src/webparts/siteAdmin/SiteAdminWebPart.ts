@@ -1,7 +1,7 @@
 import { Version } from '@microsoft/sp-core-library';
 import {
   IPropertyPaneConfiguration, IPropertyPaneGroup,
-  PropertyPaneDropdown, PropertyPaneHorizontalRule,
+  PropertyPaneButton, PropertyPaneDropdown, PropertyPaneHorizontalRule,
   PropertyPaneLabel, PropertyPaneLink, PropertyPaneTextField, PropertyPaneToggle
 } from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart, WebPartContext } from '@microsoft/sp-webpart-base';
@@ -70,6 +70,7 @@ export interface ISiteAdminWebPartProps {
   ReportsDLPGroups: string;
   ReportsDocSearchFileExt: string;
   ReportsDocSearchKeywords: string;
+  ReportsDocSearchRegexPatterns: string;
   SensitivityLabelFileExt: string;
   SiteAttestation: boolean;
   SiteAttestationText: string;
@@ -204,6 +205,7 @@ declare const SiteAdmin: {
       dlpGroups?: string[];
       docSearchFileExt?: string;
       docSearchKeywords?: string;
+      docSearchRegexPatterns?: string;
       sensitivityLabelFileExt?: string;
     }
     searchProps?: {
@@ -230,6 +232,7 @@ declare const SiteAdmin: {
       }
     }
   }) => void;
+  showRegexPatterns: (patterns: string, onUpdate: (patterns: string) => void) => void;
   updateTheme: (theme: IReadonlyTheme) => void;
 };
 
@@ -337,6 +340,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         docRententionYears: this.properties.ReportsDocRententionYears,
         docSearchFileExt: this.properties.ReportsDocSearchFileExt,
         docSearchKeywords: this.properties.ReportsDocSearchKeywords,
+        docSearchRegexPatterns: this.properties.ReportsDocSearchRegexPatterns,
         sensitivityLabelFileExt: this.properties.SensitivityLabelFileExt
       },
       searchProps: {
@@ -698,6 +702,17 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   multiline: true,
                   rows: 6,
                   value: this.properties.ReportsDocSearchKeywords
+                }),
+                PropertyPaneButton("", {
+                  text: "Set Regex Patterns",
+                  description: "Set the default Regex patterns to display in a dropdown list for the user to select from.",
+                  onClick: () => {
+                    // Show interface
+                    SiteAdmin.showRegexPatterns(this.properties.ReportsDocSearchRegexPatterns, (patterns: string) => {
+                      // Update the property
+                      this.properties.ReportsDocSearchRegexPatterns = patterns;
+                    });
+                  }
                 }),
               ]
             },
