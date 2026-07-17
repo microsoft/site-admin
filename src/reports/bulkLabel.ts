@@ -589,7 +589,7 @@ export class BulkLabel {
                 {
                     name: "OverrideLabel",
                     label: "Override Label?",
-                    description: "Enable this option to override the current label.",
+                    description: "If you select to enable \"Override Label\", then SAT will attempt to force a label update on each file. This may fail under specific conditions.",
                     isDisabled: disableSensitivityLabelOverride,
                     type: Components.FormControlTypes.Switch,
                     value: false
