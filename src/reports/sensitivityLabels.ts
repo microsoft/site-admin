@@ -827,6 +827,13 @@ export class SensitivityLabels {
                     }
                 } as Components.IFormControlPropsDropdown,
                 {
+                    name: "OverrideLabel",
+                    label: "Override Label?",
+                    description: "If you select to enable \"Override Label\", then SAT will attempt to force a label update on each file. This may fail under specific conditions.",
+                    type: Components.FormControlTypes.Switch,
+                    value: false
+                },
+                {
                     name: "Justification",
                     label: "Justification:",
                     description: "Your organization requires justification to change this label.",
@@ -886,6 +893,7 @@ export class SensitivityLabels {
                             // Ensure the form is valid
                             if (form.isValid()) {
                                 let values = form.getValues();
+                                let overrideLabelFl: boolean = values["OverrideLabel"];
                                 let label: Components.IDropdownItem = values["SensitivityLabel"];
 
                                 // Update the justification
@@ -893,7 +901,7 @@ export class SensitivityLabels {
                                 justification = justification == "Other" ? values["JustificationOther"] : justification;
 
                                 // Label the files
-                                BulkLabel.labelFiles(driveItems, label.text, label.value, justification).then(responses => {
+                                BulkLabel.labelFiles(driveItems, label.text, label.value, overrideLabelFl, justification).then(responses => {
                                     // Call the event
                                     onComplete(responses);
                                 });

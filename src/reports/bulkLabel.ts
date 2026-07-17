@@ -84,7 +84,7 @@ export class BulkLabel {
     }
 
     // Labels files
-    static labelFiles(driveItems: Types.Microsoft.Graph.driveItem[], label: string, labelId: string, justification: string): PromiseLike<ISetSensitivityLabelResponse[]> {
+    static labelFiles(driveItems: Types.Microsoft.Graph.driveItem[], label: string, labelId: string, overrideLabelFl: boolean, justification: string): PromiseLike<ISetSensitivityLabelResponse[]> {
         // Return a promise
         return new Promise(resolve => {
             let responses: ISetSensitivityLabelResponse[] = [];
@@ -153,7 +153,9 @@ export class BulkLabel {
                 let file = filesToProcess.splice(0, 1)[0];
 
                 // See if this file is already has this label
-                if (file.sensitivityLabel?.id == labelId) {
+                // or
+                // See if the file has a label and we aren't overriding them 
+                if (file.sensitivityLabel?.id == labelId || (file.sensitivityLabel?.id && !overrideLabelFl)) {
                     // Add a response
                     let response: ISetSensitivityLabelResponse = {
                         errorFl: false,
