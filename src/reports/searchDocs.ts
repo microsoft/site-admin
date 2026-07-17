@@ -916,21 +916,6 @@ export class SearchDocs {
                                 });
                             }
 
-                            // Add a download button
-                            tooltips.add({
-                                content: "Click to download the document.",
-                                btnProps: {
-                                    className: "pe-2 py-1",
-                                    text: "Download",
-                                    type: Components.ButtonTypes.OutlinePrimary,
-                                    isSmall: true,
-                                    onClick: () => {
-                                        // Download the document
-                                        window.open(`${item.SPWebUrl}/_layouts/15/download.aspx?SourceUrl=${item.Path}`, "_blank");
-                                    }
-                                }
-                            });
-
                             // Add the option to delete
                             if (!auditOnly) {
                                 // Add a sensitivity label button
