@@ -149,9 +149,13 @@ export class SearchDocs {
                 driveId: item.parentReference.driveId,
                 siteId: item.parentReference.siteId,
                 webId
-            }).items(item.id)["content"]().execute(buffer => {
+            }).items(item.id)["content"]().execute((buffer) => {
+                // Cast the buffer and ensure it is valid
+                const arrayBuffer = buffer as unknown as ArrayBuffer | undefined;
+                if (!arrayBuffer) { resolve(null); return; }
+
                 // Get the content
-                getContent(buffer).then(content => {
+                getContent(arrayBuffer).then(content => {
                     let patterns = [];
 
                     // See if the regex pattern exists in the content
