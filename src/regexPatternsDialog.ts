@@ -147,6 +147,10 @@ export class RegexDialog {
                         name: "patterns",
                         title: "Patterns",
                         onRenderCell: (el, col, item: IRegexPattern) => {
+                            // Set the style to allow horizontal scrolling
+                            el.style.overflowX = "auto";
+                            el.style.maxWidth = "500px";
+
                             // Show the patterns
                             el.innerHTML = item.patterns.join("<br/>");
                         }
@@ -325,6 +329,10 @@ export class RegexDialog {
                         name: "patterns",
                         title: "Patterns",
                         onRenderCell: (el, col, item) => {
+                            // Set the style to allow horizontal scrolling
+                            el.style.overflowX = "auto";
+                            el.style.maxWidth = "500px";
+
                             // Show the patterns
                             el.innerHTML = item.patterns.join("<br/>");
                         }
