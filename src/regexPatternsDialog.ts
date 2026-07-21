@@ -118,7 +118,11 @@ export class RegexDialog {
                             // Show the form
                             this.showImportForm(items => {
                                 // Append the item to the patterns
-                                this._patterns = this._patterns.concat(items);
+                                this._patterns = this._patterns.concat(items).sort((a, b) => {
+                                    if (a.title < b.title) return -1;
+                                    if (a.title > b.title) return 1;
+                                    return 0;
+                                });
 
                                 // Add the row to the dashboard
                                 this._dashboard.refresh(this._patterns);
@@ -341,6 +345,10 @@ export class RegexDialog {
                         name: "",
                         title: "Errors",
                         onRenderCell: (el, col, item) => {
+                            // Set the style to allow horizontal scrolling
+                            el.style.overflowX = "auto";
+                            el.style.maxWidth = "500px";
+
                             // Show the errors
                             el.innerHTML = item.errors.join("<br/>");
                         }
