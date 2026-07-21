@@ -149,7 +149,7 @@ export class SearchDocs {
                 driveId: item.parentReference.driveId,
                 siteId: item.parentReference.siteId,
                 webId
-            }).items(item.id)["content"]().execute(buffer => {
+            }).items(item.id)["content"]().execute((buffer: ArrayBuffer) => {
                 // Get the content
                 getContent(buffer).then(content => {
                     let patterns = [];
