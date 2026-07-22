@@ -536,7 +536,7 @@ export class SearchDocs {
                             // Validate the regex pattern
                             try {
                                 // Create a new regex
-                                new RegExp(results.value);
+                                new RegExp(pattern);
                             } catch (ex) {
                                 // Add the error
                                 errors.push(pattern);
