@@ -105,7 +105,7 @@ export class DLP {
                             let analyzeFile = true;
 
                             // See if the file extensions are provided
-                            if (fileExtensions) {
+                            if (fileExtensions && fileExtensions.length > 0) {
                                 // Default the flag
                                 analyzeFile = false
 
