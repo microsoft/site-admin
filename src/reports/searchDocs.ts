@@ -136,9 +136,14 @@ export class SearchDocs {
                             }).catch(reject);
                             break;
                         default:
-                            // Convert the buffer to a string
-                            let decoder = new TextDecoder("utf-8");
-                            resolve(decoder.decode(buffer));
+                            try {
+                                // Convert the buffer to a string
+                                let decoder = new TextDecoder("utf-8");
+                                resolve(decoder.decode(buffer));
+                            } catch {
+                                // Reject the request
+                                reject("Unable to decode the file content.");
+                            }
                             break;
                     }
                 });
@@ -505,20 +510,21 @@ export class SearchDocs {
                     // See if an item was selected
                     if (item?.data) {
                         // Set the patterns
-                        ctrlRegex.setValue((item.data as IRegexPattern).patterns.join(" "));
-                    }
+                        ctrlRegex.setValue((item.data as IRegexPattern).patterns.join("\r\n"));
 
-                    // Clear the selection
-                    ctrlRegexPatterns.dropdown.setValue(null);
+                        // Clear the selection
+                        ctrlRegexPatterns.dropdown.setValue(null);
+                    }
                 }
             } as Components.IFormControlPropsDropdown,
             {
                 label: "Regex Patterns",
                 name: "RegexPatterns",
                 className: "mb-3",
-                description: "Enter the regular expression pattern to search for.",
-                type: Components.FormControlTypes.TextField,
+                description: "Enter the regular expression pattern on each line.",
+                type: Components.FormControlTypes.TextArea,
                 required: true,
+                rows: 10,
                 errorMessage: "You must enter at least 1 search term.",
                 onControlRendered: ctrl => { ctrlRegex = ctrl; },
                 onValidate: (ctrl, results) => {
@@ -528,21 +534,32 @@ export class SearchDocs {
                         results.isValid = false;
                         results.invalidMessage = "A regex pattern is required.";
                     } else {
-                        // Validate the regex pattern
-                        try {
-                            // Create a new regex
-                            new RegExp(results.value);
-                        } catch (ex) {
+                        let errors = [];
+
+                        // Parse the patterns
+                        results.value.split(/\r?\n/).forEach(pattern => {
+                            // Validate the regex pattern
+                            try {
+                                // Create a new regex
+                                new RegExp(pattern);
+                            } catch (ex) {
+                                // Add the error
+                                errors.push(pattern);
+                            }
+                        });
+
+                        // See if errors exist
+                        if (errors.length > 0) {
                             // Invalidate the regex pattern
                             results.isValid = false;
-                            results.invalidMessage = "The regex pattern is not valid.";
+                            results.invalidMessage = "The regex pattern(s) were not valid:<br/>" + errors.join("<br/>");
                         }
                     }
 
                     // Return the results
                     return results;
                 }
-            },
+            } as Components.IFormControlPropsTextField,
             {
                 label: "Load Permissions",
                 name: "LoadPermissions",
@@ -1029,7 +1046,7 @@ export class SearchDocs {
 
         // Set the regex patterns
         let regexPatterns = [];
-        (values["RegexPatterns"]?.split(' ') || []).forEach(pattern => {
+        (values["RegexPatterns"]?.split(/\r?\n/) || []).forEach(pattern => {
             regexPatterns.push(new RegExp(pattern));
         });
 
