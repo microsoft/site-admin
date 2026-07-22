@@ -95,7 +95,7 @@ export class SensitivityLabels {
                             // See if we are filter for a label
                             if (this._filterLabels.length > 0) {
                                 // See if this is a target label
-                                if (this._filterLabels.indexOf(file.sensitivityLabel.id) < 0) { return; }
+                                if (this._filterLabels.indexOf(file.sensitivityLabel.id) < 0) { return this._stopFl; }
                             }
 
                             let fileInfo = file.name.split('.');

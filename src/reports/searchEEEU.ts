@@ -79,7 +79,7 @@ export class SearchEEEU {
                     this._elSubNav.children[1].innerHTML = `Creating Batch Requests - Processed ${++itemCounter} items...`;
 
                     // See if this item doesn't have unique permissions
-                    if (!item.HasUniqueRoleAssignments) { return; }
+                    if (!item.HasUniqueRoleAssignments) { return this._stopFl; }
 
                     // Get the permissions
                     batch.Items(item.Id).RoleAssignments().query({

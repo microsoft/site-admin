@@ -396,6 +396,9 @@ export class SearchDocs {
 
                 // Ensure the process is running
                 worker.start();
+
+                // Return the stop floag
+                return this._stopFl;
             }).then(() => {
                 // Set the flag
                 allFilesLoaded = true;
