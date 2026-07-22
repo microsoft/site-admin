@@ -67,10 +67,10 @@ export interface ISiteAdminWebPartProps {
   MaxStorageDescription: string;
   ReportsDocRententionYears: string;
   ReportsDLPFileExt: string;
-  ReportsDLPGroups: string;
   ReportsDocSearchFileExt: string;
   ReportsDocSearchKeywords: string;
   ReportsDocSearchRegexPatterns: string;
+  ReportsOversharedGroups: string;
   SensitivityLabelFileExt: string;
   SiteAttestation: boolean;
   SiteAttestationText: string;
@@ -202,10 +202,10 @@ declare const SiteAdmin: {
     reportProps?: {
       docRententionYears?: string;
       dlpFileExt?: string;
-      dlpGroups?: string[];
       docSearchFileExt?: string;
       docSearchKeywords?: string;
       docSearchRegexPatterns?: string;
+      oversharedGroups?: string[];
       sensitivityLabelFileExt?: string;
     }
     searchProps?: {
@@ -336,11 +336,11 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       maxStorageSize,
       reportProps: {
         dlpFileExt: this.properties.ReportsDLPFileExt,
-        dlpGroups: (this.properties.ReportsDLPGroups || "").split(",").map(group => group.trim()),
         docRententionYears: this.properties.ReportsDocRententionYears,
         docSearchFileExt: this.properties.ReportsDocSearchFileExt,
         docSearchKeywords: this.properties.ReportsDocSearchKeywords,
         docSearchRegexPatterns: this.properties.ReportsDocSearchRegexPatterns,
+        oversharedGroups: (this.properties.ReportsOversharedGroups || "").split(",").map(group => group.trim()),
         sensitivityLabelFileExt: this.properties.SensitivityLabelFileExt
       },
       searchProps: {
@@ -664,12 +664,12 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   rows: 6,
                   value: this.properties.ReportsDLPFileExt
                 }),
-                PropertyPaneTextField("ReportsDLPGroups", {
-                  label: strings.ReportsDLPGroups,
+                PropertyPaneTextField("ReportsOversharedGroups", {
+                  label: strings.ReportsOversharedGroups,
                   description: "A CSV formatted string containing the group names to indicate a file being overshared. Do not include Everyone or EEEU, as they are the default groups to indicate oversharing.",
                   multiline: true,
                   rows: 6,
-                  value: this.properties.ReportsDLPGroups
+                  value: this.properties.ReportsOversharedGroups
                 }),
                 PropertyPaneDropdown("ReportsDocRententionYears", {
                   label: strings.ReportsDocRententionYears,
