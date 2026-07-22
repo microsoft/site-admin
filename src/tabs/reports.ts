@@ -214,6 +214,7 @@ export class ReportsTab {
                 case ReportTypes.ExternalUsers:
                 case ReportTypes.Permissions:
                 case ReportTypes.SearchAgents:
+                case ReportTypes.SearchDocs:
                 case ReportTypes.SearchEEEU:
                 case ReportTypes.SearchUsers:
                 case ReportTypes.SensitivityLabels:
