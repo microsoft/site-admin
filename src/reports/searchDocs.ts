@@ -547,7 +547,7 @@ export class SearchDocs {
                         if (errors.length > 0) {
                             // Invalidate the regex pattern
                             results.isValid = false;
-                            results.invalidMessage = "The regex pattern is not valid.";
+                            results.invalidMessage = "The regex pattern(s) were not valid:<br/>" + errors.join("<br/>");
                         }
                     }
 
