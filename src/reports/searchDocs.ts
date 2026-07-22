@@ -506,10 +506,10 @@ export class SearchDocs {
                     if (item?.data) {
                         // Set the patterns
                         ctrlRegex.setValue((item.data as IRegexPattern).patterns.join(" "));
-                    }
 
-                    // Clear the selection
-                    ctrlRegexPatterns.dropdown.setValue(null);
+                        // Clear the selection
+                        ctrlRegexPatterns.dropdown.setValue(null);
+                    }
                 }
             } as Components.IFormControlPropsDropdown,
             {
