@@ -136,9 +136,14 @@ export class SearchDocs {
                             }).catch(reject);
                             break;
                         default:
-                            // Convert the buffer to a string
-                            let decoder = new TextDecoder("utf-8");
-                            resolve(decoder.decode(buffer));
+                            try {
+                                // Convert the buffer to a string
+                                let decoder = new TextDecoder("utf-8");
+                                resolve(decoder.decode(buffer));
+                            } catch {
+                                // Reject the request
+                                reject("Unable to decode the file content.");
+                            }
                             break;
                     }
                 });
