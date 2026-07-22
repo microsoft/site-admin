@@ -135,7 +135,7 @@ export class Tabs {
                 }
             });
         }
-        if (!(auditOnly || loadOneDrive)) {
+        if (!(auditOnly || loadOneDrive) && !(appProps.hideTabs.features && appProps.hideTabs.management && appProps.hideTabs.webs)) {
             // Add the changes
             items.push({
                 tabName: "Changes",
