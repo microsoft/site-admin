@@ -691,6 +691,13 @@ export class ListsTab {
                                         controls: getDefaultControl(ReportTypes.SearchDocs).concat(SearchDocs.getFormFields(this._appProps.reportProps?.docSearchFileExt, this._appProps.reportProps?.docSearchKeywords, this._appProps.reportProps?.docSearchRegexPatterns, true), ListsTab.generateSubFolders(webId, driveId, folders))
                                     });
                                     break;
+                                case ReportTypes.SearchEEEU:
+                                    // Set the form
+                                    form = Components.Form({
+                                        el: Modal.BodyElement,
+                                        controls: getDefaultControl(ReportTypes.SearchEEEU).concat(SearchEEEU.getFormFields())
+                                    });
+                                    break;
                                 case ReportTypes.SensitivityLabels:
                                     // Set the form
                                     form = Components.Form({
@@ -762,7 +769,9 @@ export class ListsTab {
                                         break;
                                     case ReportTypes.SearchEEEU:
                                         // Run the EEEU report for this list
-                                        SearchEEEU.searchList(item.WebUrl, item.ListName, this._appProps.auditOnly);
+                                        SearchEEEU.searchList(item.WebUrl, item.ListName,
+                                            values["SearchLists"],
+                                            values["IncludeOversharedGroups"] ? this._appProps.reportProps.oversharedGroups : []);
                                         break;
                                     case ReportTypes.SensitivityLabels:
                                         // Set the target web and list

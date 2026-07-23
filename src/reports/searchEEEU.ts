@@ -42,6 +42,7 @@ export class SearchEEEU {
     private static _elSubNav: HTMLElement = null;
     private static _items: ISearchItem[] = null;
     private static _loadOneDrive: boolean = null;
+    private static _oversharedGroups: string[] = null;
     private static _stopFl: boolean = false;
 
     // Analyzes a lists
@@ -83,7 +84,6 @@ export class SearchEEEU {
 
                     // Get the permissions
                     batch.Items(item.Id).RoleAssignments().query({
-                        Filter: `Member/Title eq 'Everyone' or substringof('spo-grid-all-users', Member/LoginName)`,
                         Expand: [
                             "Member", "RoleDefinitionBindings"
                         ]
@@ -93,28 +93,31 @@ export class SearchEEEU {
                             let roleDef = roleAssignment.RoleDefinitionBindings.results[0];
                             let user: Types.SP.User = roleAssignment.Member as any;
 
-                            // Add a row for this entry
-                            let roleItem = {
-                                Email: user.Email,
-                                FileName: item["FileLeafRef"],
-                                FileUrl: item["FileRef"],
-                                Group: "",
-                                GroupId: 0,
-                                GroupInfo: "",
-                                Id: user.Id,
-                                ItemId: item.Id,
-                                ListId: list.Id,
-                                ListName: list.Title,
-                                LoginName: user.LoginName,
-                                ListUrl: list.RootFolder.ServerRelativeUrl,
-                                Name: user.Title || user.LoginName,
-                                Role: roleDef?.Name || "",
-                                RoleInfo: roleDef?.Description || "",
-                                WebUrl: web.Url,
-                                WebTitle: web.Title
-                            };
-                            this._items.push(roleItem);
-                            this._dashboard.Datatable.addRow(roleItem);
+                            // See if it's overshared
+                            if (this.isOvershared(user)) {
+                                // Add a row for this entry
+                                let roleItem = {
+                                    Email: user.Email,
+                                    FileName: item["FileLeafRef"],
+                                    FileUrl: item["FileRef"],
+                                    Group: "",
+                                    GroupId: 0,
+                                    GroupInfo: "",
+                                    Id: user.Id,
+                                    ItemId: item.Id,
+                                    ListId: list.Id,
+                                    ListName: list.Title,
+                                    LoginName: user.LoginName,
+                                    ListUrl: list.RootFolder.ServerRelativeUrl,
+                                    Name: user.Title || user.LoginName,
+                                    Role: roleDef?.Name || "",
+                                    RoleInfo: roleDef?.Description || "",
+                                    WebUrl: web.Url,
+                                    WebTitle: web.Title
+                                };
+                                this._items.push(roleItem);
+                                this._dashboard.Datatable.addRow(roleItem);
+                            }
 
                             // Increment the counter and update the dialog
                             this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${ctrBatchJobs % Strings.MaxBatchSize}...`;
@@ -208,6 +211,13 @@ export class SearchEEEU {
     static getFormFields(): Components.IFormControlProps[] {
         return [
             {
+                name: "IncludeOversharedGroups",
+                label: "Include Overshared Groups?",
+                description: "Selecting this option will include the overshared groups in the search.",
+                type: Components.FormControlTypes.Switch,
+                value: true
+            },
+            {
                 name: "SearchLists",
                 label: "In Depth Search?",
                 description: "Selecting this option will include a search for unique item permissions in lists/libraries.",
@@ -295,7 +305,6 @@ export class SearchEEEU {
             // Get the user information list
             let web = this._loadOneDrive ? Web.getOneDrive() : Web(DataSource.SiteContext.SiteFullUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
             web.Lists("User Information List").Items().query({
-                Filter: `Title eq 'Everyone' or substringof('spo-grid-all-users', Name)`,
                 Select: ["Id", "Name", "EMail", "Title", "UserName"],
                 GetAllItems: true,
                 Top: 5000
@@ -304,20 +313,48 @@ export class SearchEEEU {
                 for (let i = 0; i < items.results.length; i++) {
                     let item = items.results[i];
 
-                    // Add the user
-                    users.push({
-                        EMail: item["EMail"],
-                        Id: item.Id,
-                        Name: item["Name"],
-                        Title: item.Title,
-                        UserName: item["UserName"]
-                    });
+                    // Add the user if this is flagged for overshared
+                    if (this.isOvershared(item)) {
+                        // Add the user
+                        users.push({
+                            EMail: item["EMail"],
+                            Id: item.Id,
+                            Name: item["Name"],
+                            Title: item.Title,
+                            UserName: item["UserName"]
+                        });
+                    }
                 }
 
                 // Resolve the request
                 resolve(users);
             }, reject);
         });
+    }
+
+    // Returns true if the item is an overshared group
+    private static isOvershared(item: Types.SP.ListItemOData | Types.SP.User): boolean {
+        let isOvershared = false;
+
+        // See if this is the default groups
+        if (item.Title == "Everyone" || item.Title == "Everyone except external users" || item["Name"]?.indexOf("spo-grid-all-users") > 0) {
+            // Set the flag
+            isOvershared = true;
+        }
+        // Else, see if this is an overshared group
+        else if (this._oversharedGroups.length > 0) {
+            // Parse the overshared groups
+            for (let j = 0; j < this._oversharedGroups.length; j++) {
+                if (item.Title == this._oversharedGroups[j]) {
+                    // Set the flag
+                    isOvershared = true;
+                    break;
+                }
+            }
+        }
+
+        // Return the flag
+        return isOvershared;
     }
 
     // Removes a user from a group
@@ -673,6 +710,9 @@ export class SearchEEEU {
         // Clear the items
         this._items = [];
 
+        // Set the overshared groups
+        this._oversharedGroups = (values["IncludeOversharedGroups"] == true ? values["OversharedGroups"] : null) || [];
+
         // See if we are showing hidden lists
         let searchLists = values["SearchLists"];
 
@@ -727,12 +767,15 @@ export class SearchEEEU {
     }
 
     // Searches a list for EEEU
-    static searchList(webUrl: string, listName: string, auditOnly: boolean) {
+    static searchList(webUrl: string, listName: string, auditOnly: boolean, oversharedGroups: string[] = []) {
         this._loadOneDrive = false;
         this._stopFl = false;
 
         // Clear the items
         this._items = [];
+
+        // Set the overshared groups
+        this._oversharedGroups = oversharedGroups;
 
         // Clear the modal
         Modal.clear();

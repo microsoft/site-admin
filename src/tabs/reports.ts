@@ -347,6 +347,7 @@ export class ReportsTab {
                         });
                         break;
                     case ReportTypes.SearchEEEU:
+                        formValues["OversharedGroups"] = this._reportProps?.oversharedGroups;
                         Reports.SearchEEEU.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
