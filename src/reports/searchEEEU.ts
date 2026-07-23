@@ -653,7 +653,7 @@ export class SearchEEEU {
                                             type: Components.ButtonTypes.OutlineDanger,
                                             onClick: () => {
                                                 // Confirm the deletion of the group
-                                                if (confirm("Are you sure you restore the permissions to inherit?")) {
+                                                if (confirm("Are you sure you want to revert the permissions to inherit from its parent?")) {
                                                     // Revert the permissions
                                                     this.revertPermissions(row);
                                                 }
