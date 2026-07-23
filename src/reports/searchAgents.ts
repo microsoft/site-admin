@@ -61,6 +61,9 @@ export class SearchAgents {
                             WebUrl: web.Url
                         });
                     }
+
+                    // Return the stop flag
+                    return this._stopFl;
                 })
             }).then(() => { resolve(); });
         });

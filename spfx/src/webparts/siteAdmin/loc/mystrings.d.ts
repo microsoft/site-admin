@@ -5,11 +5,11 @@ declare interface ISiteAdminWebPartStrings {
   MaxStorage: string;
   MaxStorageDescription: string;
   ReportsDLPFileExt: string;
-  ReportsDLPGroups: string;
   ReportsDocRententionYears: string;
   ReportsDocSearchFileExt: string;
   ReportsDocSearchKeywords: string;
   ReportsDocSearchRegexPatterns: string;
+  ReportsOversharedGroups: string;
   SensitivityLabelFileExt: string;
   SitePropAttestationDate: string;
   SitePropAttestationUser: string;

@@ -8,11 +8,11 @@ import { ISearchProps } from "./searchProp";
 // Report Properties
 export interface IReportProps {
     dlpFileExt?: string;
-    dlpGroups?: string[];
     docRententionYears?: string;
     docSearchFileExt?: string;
     docSearchKeywords?: string;
     docSearchRegexPatterns?: string;
+    oversharedGroups?: string[];
     sensitivityLabelFileExt?: string;
 }
 
@@ -57,7 +57,7 @@ export class ReportsTab {
         this._searchProps = appProps.searchProps;
 
         // Set the overshared groups
-        ViewPermissions.OversharedGroups = appProps.reportProps.dlpGroups || [];
+        ViewPermissions.OversharedGroups = appProps.reportProps.oversharedGroups || [];
 
         // Determine if this is in audit mode
         this._auditOnly = !DataSource.IsAdmin || (appProps.auditOnly ? true : false);
@@ -214,6 +214,7 @@ export class ReportsTab {
                 case ReportTypes.ExternalUsers:
                 case ReportTypes.Permissions:
                 case ReportTypes.SearchAgents:
+                case ReportTypes.SearchDocs:
                 case ReportTypes.SearchEEEU:
                 case ReportTypes.SearchUsers:
                 case ReportTypes.SensitivityLabels:

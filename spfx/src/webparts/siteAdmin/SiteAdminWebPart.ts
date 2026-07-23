@@ -1,4 +1,4 @@
-import { Version } from '@microsoft/sp-core-library';
+import { DisplayMode, Version } from '@microsoft/sp-core-library';
 import {
   IPropertyPaneConfiguration, IPropertyPaneGroup,
   PropertyPaneButton, PropertyPaneDropdown, PropertyPaneHorizontalRule,
@@ -67,10 +67,10 @@ export interface ISiteAdminWebPartProps {
   MaxStorageDescription: string;
   ReportsDocRententionYears: string;
   ReportsDLPFileExt: string;
-  ReportsDLPGroups: string;
   ReportsDocSearchFileExt: string;
   ReportsDocSearchKeywords: string;
   ReportsDocSearchRegexPatterns: string;
+  ReportsOversharedGroups: string;
   SensitivityLabelFileExt: string;
   SiteAttestation: boolean;
   SiteAttestationText: string;
@@ -202,10 +202,10 @@ declare const SiteAdmin: {
     reportProps?: {
       docRententionYears?: string;
       dlpFileExt?: string;
-      dlpGroups?: string[];
       docSearchFileExt?: string;
       docSearchKeywords?: string;
       docSearchRegexPatterns?: string;
+      oversharedGroups?: string[];
       sensitivityLabelFileExt?: string;
     }
     searchProps?: {
@@ -237,127 +237,38 @@ declare const SiteAdmin: {
 };
 
 export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWebPartProps> {
+  private _hasRendered: boolean = false;
+
   public render(): void {
-    const propValues = (this.properties as any);
-    const siteProps: {
-      [key: string]: {
-        description: string;
-        disabled: boolean;
-        label: string;
-      }
-    } = {};
-    const webProps: {
-      [key: string]: {
-        description: string;
-        disabled: boolean;
-        label: string;
-      }
-    } = {};
+    // Do nothing if we have already rendered the webpart
+    if (this._hasRendered) { return; }
 
-    // Parse the site properties
-    for (let i = 0; i < this._siteProps.length; i++) {
-      const propName = this._siteProps[i];
-      const key = propName.replace("SiteProp", "");
+    // See if the page is in edit mode
+    if (this.displayMode === DisplayMode.Edit) {
+      // Don't render the application
+      this.domElement.classList.add("bs");
+      this.domElement.innerHTML = `
+        <p>The page is in edit mode and will not render the application.</p>
+        <input type="button" class="btn btn-primary" value="Configure SPARK WebPart" />
+      `;
+      this.domElement.querySelector("input")?.addEventListener("click", () => {
+        // Open the property pane
+        this.context.propertyPane.open();
+      });
 
-      // Add the property
-      siteProps[key] = {
-        description: propValues[propName + "Description"],
-        disabled: propValues[propName],
-        label: propValues[propName + "Label"]
-      };
+      // Set the flag
+      this._hasRendered = true;
+      return;
     }
 
-    // Parse the web properties
-    for (let i = 0; i < this._webProps.length; i++) {
-      const propName = this._webProps[i];
-      const key = propName.replace("WebProp", "");
+    // Render the app
+    if (!this._hasRendered) {
+      // Render the app
+      this.renderApp();
 
-      // Add the property
-      webProps[key] = {
-        description: propValues[propName + "Description"],
-        disabled: propValues[propName],
-        label: propValues[propName + "Label"]
-      };
+      // Set the flag
+      this._hasRendered = true;
     }
-
-    // Determine the size
-    let maxStorageSize = this.properties.MaxStorage;
-    if (maxStorageSize) {
-      // See if this is in TB
-      if (maxStorageSize.toString().indexOf("TB") > 0) {
-        // Remove the TB and convert to a number
-        maxStorageSize = parseInt(maxStorageSize.toString().replace("TB", ""));
-      }
-      // Else, see if this is in GB
-      else if (maxStorageSize.toString().indexOf("GB") > 0) {
-        // Remove the GB, and convert to a number in TB
-        maxStorageSize = parseInt(maxStorageSize.toString().replace("GB", "")) / 1000;
-      }
-    }
-
-    // Render the solution
-    SiteAdmin.render({
-      auditOnly: this.properties.AuditOnly,
-      context: this.context,
-      el: this.domElement,
-      disableSensitivityLabelOverride: this.properties.DisableSensitivityLabelOverride ? true : false,
-      hideCreateSiteBtn: this.properties.HideCreateSiteBtn ? true : false,
-      hideLoadAdminOwnerBtn: this.properties.HideLoadAdminOwnerBtn ? true : false,
-      hideLoadOneDriveBtn: this.properties.HideLoadOneDriveBtn ? true : false,
-      hideReports: {
-        dlp: this.properties.HideReportDLP ? true : false,
-        docRetention: this.properties.HideReportDocRetention ? true : false,
-        externalShares: this.properties.HideReportExternalShares ? true : false,
-        externalUsers: this.properties.HideReportExternalUsers ? true : false,
-        permissions: this.properties.HideReportPermissions ? true : false,
-        retention: this.properties.HideReportRetention ? true : false,
-        searchAgents: this.properties.HideReportSearchAgents ? true : false,
-        searchDocs: this.properties.HideReportSearchDocs ? true : false,
-        searchEEEU: this.properties.HideReportSearchEEEU ? true : false,
-        searchProp: this.properties.HideReportSearchProp ? true : false,
-        searchUsers: this.properties.HideReportSearchUsers ? true : false,
-        sensitivityLabels: this.properties.HideReportSensitivityLabels ? true : false,
-        sharingLinks: this.properties.HideReportSharingLinks ? true : false,
-        uniquePermissions: this.properties.HideReportUniquePermissions ? true : false
-      },
-      hideTabs: {
-        appPermissions: this.properties.HideAppPermissionsTab ? true : false,
-        auditTools: this.properties.HideAuditToolsTab ? true : false,
-        features: this.properties.HideFeaturesTab ? true : false,
-        lists: this.properties.HideListsTab ? true : false,
-        management: this.properties.HideManagementTab ? true : false,
-        search: this.properties.HideSearchTab ? true : false,
-        webs: this.properties.HideWebsTab ? true : false
-      },
-      imageReferences,
-      maxBatchSize: this.properties.MaxBatchSize,
-      maxRequests: this.properties.MaxRequests,
-      maxStorageDesc: this.properties.MaxStorageDescription,
-      maxStorageSize,
-      reportProps: {
-        dlpFileExt: this.properties.ReportsDLPFileExt,
-        dlpGroups: (this.properties.ReportsDLPGroups || "").split(",").map(group => group.trim()),
-        docRententionYears: this.properties.ReportsDocRententionYears,
-        docSearchFileExt: this.properties.ReportsDocSearchFileExt,
-        docSearchKeywords: this.properties.ReportsDocSearchKeywords,
-        docSearchRegexPatterns: this.properties.ReportsDocSearchRegexPatterns,
-        sensitivityLabelFileExt: this.properties.SensitivityLabelFileExt
-      },
-      searchProps: {
-        description: this.properties.WebPropSearchPropertyDescription,
-        key: this.properties.WebPropSearchPropertyKey,
-        label: this.properties.WebPropSearchPropertyLabel,
-        managedProperty: this.properties.WebPropSearchPropertyManagedProperty,
-        reportName: this.properties.WebPropSearchPropertyReportName,
-        tabName: this.properties.WebPropSearchPropertyTabName,
-        values: this.properties.WebPropSearchPropertyValues
-      },
-      siteAttestation: this.properties.SiteAttestation,
-      siteAttestationText: this.properties.SiteAttestationText,
-      siteProps,
-      title: this.properties.AppTitle,
-      webProps
-    });
   }
 
   protected onThemeChanged(currentTheme: IReadonlyTheme | undefined): void {
@@ -664,12 +575,12 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   rows: 6,
                   value: this.properties.ReportsDLPFileExt
                 }),
-                PropertyPaneTextField("ReportsDLPGroups", {
-                  label: strings.ReportsDLPGroups,
+                PropertyPaneTextField("ReportsOversharedGroups", {
+                  label: strings.ReportsOversharedGroups,
                   description: "A CSV formatted string containing the group names to indicate a file being overshared. Do not include Everyone or EEEU, as they are the default groups to indicate oversharing.",
                   multiline: true,
                   rows: 6,
-                  value: this.properties.ReportsDLPGroups
+                  value: this.properties.ReportsOversharedGroups
                 }),
                 PropertyPaneDropdown("ReportsDocRententionYears", {
                   label: strings.ReportsDocRententionYears,
@@ -905,5 +816,129 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         }
       ]
     };
+  }
+
+  private renderApp(): void {
+    // Set the properties for the app
+    const propValues = (this.properties as any);
+    const siteProps: {
+      [key: string]: {
+        description: string;
+        disabled: boolean;
+        label: string;
+      }
+    } = {};
+    const webProps: {
+      [key: string]: {
+        description: string;
+        disabled: boolean;
+        label: string;
+      }
+    } = {};
+
+    // Parse the site properties
+    for (let i = 0; i < this._siteProps.length; i++) {
+      const propName = this._siteProps[i];
+      const key = propName.replace("SiteProp", "");
+
+      // Add the property
+      siteProps[key] = {
+        description: propValues[propName + "Description"],
+        disabled: propValues[propName],
+        label: propValues[propName + "Label"]
+      };
+    }
+
+    // Parse the web properties
+    for (let i = 0; i < this._webProps.length; i++) {
+      const propName = this._webProps[i];
+      const key = propName.replace("WebProp", "");
+
+      // Add the property
+      webProps[key] = {
+        description: propValues[propName + "Description"],
+        disabled: propValues[propName],
+        label: propValues[propName + "Label"]
+      };
+    }
+
+    // Determine the size
+    let maxStorageSize = this.properties.MaxStorage;
+    if (maxStorageSize) {
+      // See if this is in TB
+      if (maxStorageSize.toString().indexOf("TB") > 0) {
+        // Remove the TB and convert to a number
+        maxStorageSize = parseInt(maxStorageSize.toString().replace("TB", ""));
+      }
+      // Else, see if this is in GB
+      else if (maxStorageSize.toString().indexOf("GB") > 0) {
+        // Remove the GB, and convert to a number in TB
+        maxStorageSize = parseInt(maxStorageSize.toString().replace("GB", "")) / 1000;
+      }
+    }
+
+    // Render the solution
+    SiteAdmin.render({
+      auditOnly: this.properties.AuditOnly,
+      context: this.context,
+      el: this.domElement,
+      disableSensitivityLabelOverride: this.properties.DisableSensitivityLabelOverride ? true : false,
+      hideCreateSiteBtn: this.properties.HideCreateSiteBtn ? true : false,
+      hideLoadAdminOwnerBtn: this.properties.HideLoadAdminOwnerBtn ? true : false,
+      hideLoadOneDriveBtn: this.properties.HideLoadOneDriveBtn ? true : false,
+      hideReports: {
+        dlp: this.properties.HideReportDLP ? true : false,
+        docRetention: this.properties.HideReportDocRetention ? true : false,
+        externalShares: this.properties.HideReportExternalShares ? true : false,
+        externalUsers: this.properties.HideReportExternalUsers ? true : false,
+        permissions: this.properties.HideReportPermissions ? true : false,
+        retention: this.properties.HideReportRetention ? true : false,
+        searchAgents: this.properties.HideReportSearchAgents ? true : false,
+        searchDocs: this.properties.HideReportSearchDocs ? true : false,
+        searchEEEU: this.properties.HideReportSearchEEEU ? true : false,
+        searchProp: this.properties.HideReportSearchProp ? true : false,
+        searchUsers: this.properties.HideReportSearchUsers ? true : false,
+        sensitivityLabels: this.properties.HideReportSensitivityLabels ? true : false,
+        sharingLinks: this.properties.HideReportSharingLinks ? true : false,
+        uniquePermissions: this.properties.HideReportUniquePermissions ? true : false
+      },
+      hideTabs: {
+        appPermissions: this.properties.HideAppPermissionsTab ? true : false,
+        auditTools: this.properties.HideAuditToolsTab ? true : false,
+        features: this.properties.HideFeaturesTab ? true : false,
+        lists: this.properties.HideListsTab ? true : false,
+        management: this.properties.HideManagementTab ? true : false,
+        search: this.properties.HideSearchTab ? true : false,
+        webs: this.properties.HideWebsTab ? true : false
+      },
+      imageReferences,
+      maxBatchSize: this.properties.MaxBatchSize,
+      maxRequests: this.properties.MaxRequests,
+      maxStorageDesc: this.properties.MaxStorageDescription,
+      maxStorageSize,
+      reportProps: {
+        dlpFileExt: this.properties.ReportsDLPFileExt,
+        docRententionYears: this.properties.ReportsDocRententionYears,
+        docSearchFileExt: this.properties.ReportsDocSearchFileExt,
+        docSearchKeywords: this.properties.ReportsDocSearchKeywords,
+        docSearchRegexPatterns: this.properties.ReportsDocSearchRegexPatterns,
+        oversharedGroups: (this.properties.ReportsOversharedGroups || "").split(",").map(group => group.trim()),
+        sensitivityLabelFileExt: this.properties.SensitivityLabelFileExt
+      },
+      searchProps: {
+        description: this.properties.WebPropSearchPropertyDescription,
+        key: this.properties.WebPropSearchPropertyKey,
+        label: this.properties.WebPropSearchPropertyLabel,
+        managedProperty: this.properties.WebPropSearchPropertyManagedProperty,
+        reportName: this.properties.WebPropSearchPropertyReportName,
+        tabName: this.properties.WebPropSearchPropertyTabName,
+        values: this.properties.WebPropSearchPropertyValues
+      },
+      siteAttestation: this.properties.SiteAttestation,
+      siteAttestationText: this.properties.SiteAttestationText,
+      siteProps,
+      title: this.properties.AppTitle,
+      webProps
+    });
   }
 }
