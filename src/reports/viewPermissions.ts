@@ -29,6 +29,12 @@ export class ViewPermissions {
         for (let i = 0; i < roles.length; i++) {
             let role = roles[i];
 
+            // Skip permissions that are "Limited Access System Group"
+            if (role.Member.Title.indexOf("Limited Access System Group") === 0) {
+                // Skip this role
+                continue;
+            }
+
             // See if this is the eeeu, everyone or the custom group
             if (role.Member.Title == "Everyone except external users" || role.Member.Title == "Everyone" || this.OversharedGroups.indexOf(role.Member.Title) >= 0) {
                 // Append the group
@@ -59,6 +65,23 @@ export class ViewPermissions {
         for (let i = 0; i < roles.length; i++) {
             let role = roles[i];
 
+            // Parse the role definitions
+            let roleDefs = role.RoleDefinitionBindings?.results || [];
+            let isLimitedAccess = false;
+            for (let j = 0; j < roleDefs.length; j++) {
+                if (roleDefs[j].Name === "Limited Access") {
+                    // Skip this role
+                    isLimitedAccess = true;
+                    break;
+                }
+            }
+
+            // Skip permissions that are "Limited Access System Group"
+            if (isLimitedAccess || role.Member.Title.indexOf("Limited Access System Group") === 0) {
+                // Skip this role
+                continue;
+            }
+
             // See if this is the eeeu or everyone
             if (role.Member.Title == "Everyone except external users" || role.Member.Title == "Everyone" || this.OversharedGroups.indexOf(role.Member.Title) >= 0) {
                 // Set the flag
@@ -69,8 +92,8 @@ export class ViewPermissions {
             else {
                 // Parse the users
                 let users: Types.SP.User[] = role.Member["Users"] ? role.Member["Users"].results : [];
-                for (let i = 0; i < users.length; i++) {
-                    let user = users[i];
+                for (let j = 0; j < users.length; j++) {
+                    let user = users[j];
 
                     // See if this is the eeeu or everyone
                     if (user.Title == "Everyone except external users" || user.Title == "Everyone" || this.OversharedGroups.indexOf(user.Title) >= 0) {
@@ -216,11 +239,23 @@ export class ViewPermissions {
 
         // Parse the permissions
         item.Permissions.forEach(role => {
+            let isLimitedAccess = false;
+
+            // Skip permissions that are "Limited Access System Group"
+            if (role.Member.Title.indexOf("Limited Access System Group") === 0) { isLimitedAccess = true; }
+
             // Parse the role definitions
             let roleDefinitions = [];
             role.RoleDefinitionBindings.results.forEach(roleDef => {
+                // Skip limited access permissions
+                if (roleDef.Name.indexOf("Limited Access") === 0) { isLimitedAccess = true; return; }
+
+                // Append the permission
                 roleDefinitions.push(`<span><b>${roleDef.Name}:</b> ${roleDef.Description}${roleDef.Hidden ? " (Hidden)" : ""}</span>`);
             });
+
+            // Skip this role if it is limited access
+            if (isLimitedAccess) { return; }
 
             // See if this is a user
             switch (role.Member.PrincipalType) {
