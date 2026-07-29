@@ -50,6 +50,7 @@ export class SensitivityLabels {
     private static _filterLabels: string[] = [];
     private static _items: ISensitivityLabelItem[] = [];
     private static _loadOneDrive: boolean = false;
+    private static _maxItemCount: number = 0;
     private static _stopFl: boolean = false;
 
     // Analyzes the libraries
@@ -65,6 +66,9 @@ export class SensitivityLabels {
 
                 // See if we are stopping this process
                 if (this._stopFl) { return; }
+
+                // See if we are skipping large lists
+                if (this._maxItemCount > 0 && lib.ItemCount > this._maxItemCount) { return; }
 
                 // Update the dialog
                 this._elSubNav.children[0].innerHTML = `${siteText} [Analyzing Library ${++counter} of ${libraries.length}]: ${lib.Title}`;
@@ -460,6 +464,7 @@ export class SensitivityLabels {
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
         let data: IWebItem[] = [];
         this._loadOneDrive = values["LoadOneDrive"] == "true";
+        this._maxItemCount = parseInt(values["SkipLargeLists"]) || 0;
         this._stopFl = false;
 
         // Clear the items
@@ -529,7 +534,7 @@ export class SensitivityLabels {
                     Filter: filter,
                     Expand: ["RootFolder"],
                     GetAllItems: true,
-                    Select: ["Id", "Title", "RootFolder/ServerRelativeUrl"],
+                    Select: ["Id", "ItemCount", "Title", "RootFolder/ServerRelativeUrl"],
                     Top: 5000
                 }).execute(libs => {
                     // Add the libraries to analyze

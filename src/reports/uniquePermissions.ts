@@ -33,6 +33,7 @@ export class UniquePermissions {
     private static _elSubNav: HTMLElement = null;
     private static _items: IPermission[] = [];
     private static _loadOneDrive: boolean = false;
+    private static _maxItemCount: number = 0;
     private static _stopFl: boolean = false;
 
     // Analyzes a list
@@ -333,6 +334,7 @@ export class UniquePermissions {
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
         this._loadOneDrive = values["LoadOneDrive"] == "true";
+        this._maxItemCount = parseInt(values["SkipLargeLists"]) || 0;
         this._stopFl = false;
 
         // Show a loading dialog
@@ -378,7 +380,7 @@ export class UniquePermissions {
                 web.Lists().query({
                     Filter: "Hidden eq false",
                     Expand: ["DefaultDisplayFormUrl", "DefaultViewFormUrl", "RootFolder"],
-                    Select: ["BaseTemplate", "Id", "Title", "HasUniqueRoleAssignments", "RootFolder/ServerRelativeUrl"]
+                    Select: ["BaseTemplate", "Id", "ItemCount", "Title", "HasUniqueRoleAssignments", "RootFolder/ServerRelativeUrl"]
                 }).execute(lists => {
                     let ctrList = 0;
 
@@ -389,6 +391,9 @@ export class UniquePermissions {
                     Helper.Executor(lists.results, list => {
                         // See if we are stopping this process
                         if (this._stopFl) { return; }
+
+                        // See if we are skipping large lists
+                        if (this._maxItemCount > 0 && list.ItemCount > this._maxItemCount) { return; }
 
                         // Update the dialog
                         this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing Library ${++ctrList} of ${lists.results.length}]: ${list.Title}`;

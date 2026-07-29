@@ -24,6 +24,7 @@ export class SearchAgents {
     private static _elSubNav: HTMLElement = null;
     private static _items: IAgentItem[] = null;
     private static _loadOneDrive: boolean = null;
+    private static _maxItemCount: number = 0;
     private static _stopFl: boolean = false;
 
     // Analyzes a library
@@ -91,6 +92,9 @@ export class SearchAgents {
                 Helper.Executor(libs, lib => {
                     // See if we are stopping this process
                     if (this._stopFl) { return; }
+
+                    // See if we are skipping large lists
+                    if (this._maxItemCount > 0 && lib.ItemCount > this._maxItemCount) { return; }
 
                     // Show a dialog
                     this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing Library ${++ctrList} of ${libs.length}]: ${lib.Title}`;
@@ -218,6 +222,7 @@ export class SearchAgents {
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: any }, onClose: () => void) {
         this._loadOneDrive = values["LoadOneDrive"] == "true";
+        this._maxItemCount = parseInt(values["SkipLargeLists"]) || 0;
         this._stopFl = false;
 
         // Show a loading dialog

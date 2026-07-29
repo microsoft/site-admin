@@ -52,6 +52,7 @@ export class DLP {
     private static _elSubNav: HTMLElement = null;
     private static _items: IDLPItem[] = [];
     private static _loadOneDrive: boolean = false;
+    private static _maxItemCount: number = 0;
     private static _stopFl: boolean = false;
 
     // Gets the form fields to display
@@ -78,6 +79,9 @@ export class DLP {
             Helper.Executor(libraries, lib => {
                 // See if we are stopping this process
                 if (this._stopFl) { return; }
+
+                // See if we are skipping large lists
+                if (this._maxItemCount > 0 && lib.ItemCount > this._maxItemCount) { return; }
 
                 // Update the dialog
                 this._elSubNav.children[0].innerHTML = `${siteText} [Analyzing Library ${++counter} of ${libraries.length}]: ${lib.Title}`;
@@ -540,6 +544,7 @@ export class DLP {
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
         let data: IWebItem[] = [];
         this._loadOneDrive = values["LoadOneDrive"] == "true";
+        this._maxItemCount = parseInt(values["SkipLargeLists"]) || 0;
         this._stopFl = false;
 
         // Clear the items
@@ -586,7 +591,7 @@ export class DLP {
                 web.Lists().query({
                     Filter: `Hidden eq false and BaseTemplate eq ${SPTypes.ListTemplateType.DocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.MySiteDocumentLibrary} or BaseTemplate eq ${SPTypes.ListTemplateType.PageLibrary}`,
                     GetAllItems: true,
-                    Select: ["Id", "Title"],
+                    Select: ["Id", "Title", "ItemCount"],
                     Top: 5000
                 }).execute(libs => {
                     // Add the libraries to analyze
