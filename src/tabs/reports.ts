@@ -231,6 +231,34 @@ export class ReportsTab {
             }
         }
 
+        // See if this is a report is analyzing lists
+        switch (this._selectedReport) {
+            case ReportTypes.DLP:
+            case ReportTypes.DocRetention:
+            case ReportTypes.SearchAgents:
+            case ReportTypes.SearchDocs:
+            case ReportTypes.SensitivityLabels:
+            case ReportTypes.UniquePermissions:
+                // Add a control to skip large lists/libraries
+                this._form.appendControls([{
+                    name: "SkipLargeLists",
+                    label: "Skip Large Lists",
+                    description: "Skips lists/libraries that have more than the items specified.",
+                    type: Components.FormControlTypes.Dropdown,
+                    items: [
+                        { text: "All Lists", value: "0", isSelected: true },
+                        { text: ">500 Items", value: "500" },
+                        { text: ">1000 Items", value: "1000" },
+                        { text: ">5000 Items", value: "1000" },
+                        { text: ">10000 Items", value: "10000" },
+                        { text: ">25000 Items", value: "25000" },
+                        { text: ">50000 Items", value: "50000" },
+                        { text: ">100000 Items", value: "100000" },
+                    ]
+                } as Components.IFormControlPropsDropdown]);
+                break;
+        }
+
         // Add the controls
         switch (this._selectedReport) {
             case ReportTypes.DLP:
@@ -292,6 +320,7 @@ export class ReportsTab {
                 // Set the form values
                 let formValues = this._form.getValues();
                 formValues["LoadOneDrive"] = this._loadOneDrive ? "true" : "false";
+                formValues["SkipLargeLists"] = parseInt(formValues["SkipLargeLists"] || "0");
 
                 // See if we are targeting a sub-web
                 if (DataSource.WebOnly) {
