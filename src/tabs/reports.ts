@@ -234,7 +234,6 @@ export class ReportsTab {
         // See if this is a report is analyzing lists
         switch (this._selectedReport) {
             case ReportTypes.DLP:
-            case ReportTypes.DocRetention:
             case ReportTypes.SearchAgents:
             case ReportTypes.SearchDocs:
             case ReportTypes.SensitivityLabels:
@@ -320,7 +319,7 @@ export class ReportsTab {
                 // Set the form values
                 let formValues = this._form.getValues();
                 formValues["LoadOneDrive"] = this._loadOneDrive ? "true" : "false";
-                formValues["SkipLargeLists"] = parseInt(formValues["SkipLargeLists"] || "0");
+                formValues["SkipLargeLists"] = formValues["SkipLargeLists"]?.value || "0";
 
                 // See if we are targeting a sub-web
                 if (DataSource.WebOnly) {
