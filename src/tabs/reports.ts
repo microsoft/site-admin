@@ -238,6 +238,7 @@ export class ReportsTab {
             case ReportTypes.DLP:
             case ReportTypes.SearchAgents:
             case ReportTypes.SearchDocs:
+            case ReportTypes.SearchEEEU:
             case ReportTypes.SensitivityLabels:
             case ReportTypes.UniquePermissions:
                 // Add a control to skip large lists/libraries
