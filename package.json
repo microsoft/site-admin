@@ -22,7 +22,7 @@
     "dattatable": "^2.11.76",
     "exceljs": "^4.4.0",
     "fast-xml-parser": "^5.9.3",
-    "gd-sprest-bs": "^10.15.88",
+    "gd-sprest-bs": "^10.15.89",
     "jszip": "^3.10.1",
     "mammoth": "^1.12.0",
     "moment": "^2.30.1",
