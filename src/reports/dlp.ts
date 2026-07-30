@@ -92,7 +92,8 @@ export class DLP {
                     let completed = 0;
 
                     // Set the list
-                    let web = this._loadOneDrive ? Web.getOneDrive() : Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+                    let web = this._loadOneDrive ? Web.getOneDrive({ callbackQuery: () => { if (this._stopFl) { list.stop(); } } })
+                        : Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue, callbackQuery: () => { if (this._stopFl) { list.stop(); } } });
                     let list = web.Lists(lib.Title);
 
                     // Get the item ids for this library
@@ -661,7 +662,8 @@ export class DLP {
         // Create the list for the batch requests
         let batchRequests = 0;
         let completed = 0;
-        let web = this._loadOneDrive ? Web.getOneDrive() : Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
+        let web = this._loadOneDrive ? Web.getOneDrive({ callbackQuery: () => { if (this._stopFl) { list.stop(); } } })
+            : Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue, callbackQuery: () => { if (this._stopFl) { list.stop(); } } });
         let list = web.Lists().getById(libId);
 
         // Get the item ids for this library

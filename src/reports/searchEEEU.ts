@@ -63,7 +63,8 @@ export class SearchEEEU {
             // Create a batch job
             let completed = 0;
             let ctrBatchJobs = 0;
-            let batchWeb = this._loadOneDrive ? Web.getOneDrive() : Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue });
+            let batchWeb = this._loadOneDrive ? Web.getOneDrive({ callbackQuery: () => { if (this._stopFl) { batch.stop(); } } })
+                : Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue, callbackQuery: () => { if (this._stopFl) { batch.stop(); } } });
             let batch = batchWeb.Lists().getById(list.Id);
 
             // Update the dialog
