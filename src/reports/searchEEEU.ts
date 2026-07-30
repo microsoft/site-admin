@@ -42,6 +42,7 @@ export class SearchEEEU {
     private static _elSubNav: HTMLElement = null;
     private static _items: ISearchItem[] = null;
     private static _loadOneDrive: boolean = null;
+    private static _maxItemCount: number = 0;
     private static _oversharedGroups: string[] = null;
     private static _stopFl: boolean = false;
 
@@ -156,7 +157,7 @@ export class SearchEEEU {
                     site.Lists().query({
                         Filter: "Hidden eq false",
                         Expand: ["RootFolder"],
-                        Select: ["Id", "Title", "BaseTemplate", "HasUniqueRoleAssignments", "RootFolder/ServerRelativeUrl"]
+                        Select: ["Id", "Title", "BaseTemplate", "HasUniqueRoleAssignments", "ItemCount", "RootFolder/ServerRelativeUrl"]
                     }).execute(resp => {
                         let ctrList = 0;
                         let siteText = this._elSubNav.children[0].innerHTML;
@@ -166,6 +167,9 @@ export class SearchEEEU {
                         Helper.Executor(lists, list => {
                             // See if we are stopping this process
                             if (this._stopFl) { return; }
+
+                            // See if we are skipping large lists
+                            if (this._maxItemCount > 0 && list.ItemCount > this._maxItemCount) { return; }
 
                             // Show a dialog
                             this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing List ${++ctrList} of ${lists.length}]: ${list.Title}`;
@@ -700,6 +704,7 @@ export class SearchEEEU {
     // Runs the report
     static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: any }, onClose: () => void) {
         this._loadOneDrive = values["LoadOneDrive"] == "true";
+        this._maxItemCount = parseInt(values["SkipLargeLists"]) || 0;
         this._stopFl = false;
 
         // Show a loading dialog
