@@ -13,6 +13,7 @@ export interface IReportProps {
     docSearchKeywords?: string;
     docSearchRegexPatterns?: string;
     oversharedGroups?: string[];
+    secureFileText?: string;
     sensitivityLabelFileExt?: string;
 }
 
@@ -56,8 +57,9 @@ export class ReportsTab {
         this._reportProps = appProps.reportProps;
         this._searchProps = appProps.searchProps;
 
-        // Set the overshared groups
+        // Set the view permissions properties
         ViewPermissions.OversharedGroups = appProps.reportProps.oversharedGroups || [];
+        ViewPermissions.SecureFileText = appProps.reportProps.secureFileText || "";
 
         // Determine if this is in audit mode
         this._auditOnly = !DataSource.IsAdmin || (appProps.auditOnly ? true : false);

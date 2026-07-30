@@ -10,6 +10,7 @@ declare interface ISiteAdminWebPartStrings {
   ReportsDocSearchKeywords: string;
   ReportsDocSearchRegexPatterns: string;
   ReportsOversharedGroups: string;
+  ReportsSecureFileText: string;
   SensitivityLabelFileExt: string;
   SitePropAttestationDate: string;
   SitePropAttestationUser: string;
