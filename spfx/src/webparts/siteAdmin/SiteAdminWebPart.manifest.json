@@ -42,6 +42,7 @@
         "ReportsDocSearchFileExt": "csv doc docx dot dotx pdf pot potx pps ppsx ppt pptx txt xls xlsx xlt xltx",
         "ReportsDocSearchKeywords": "phi pii ssn",
         "ReportsDocSearchRegexPatterns": ".*(\\d{3}-\\d{2}-\\d{4}).* .*([0-9]{3}[\\s.-]?[0-9]{2}[\\s.-]?[0-9]{4}).*",
+        "ReportsSecureFileText": "This action will create unique permissions for the file and remove explicit permissions to groups that are flagging this file as overshared.\n\nIf access to the file is currently granted through a SharePoint group, then that group will be removed from the file's permissions. For example, if the \"Visitors Group\" contains the \"All Guests\" group; then the \"Visitors Group\" will be removed from the file's permissions.\n\nIt is recommended to review the file's permissions after securing it to ensure it is properly permissioned to the people who require access.",
         "SensitivityLabelFileExt": "csv doc docx dot dotx pdf pot potx pps ppsx ppt pptx txt xls xlsx xlt xltx",
         "SiteAttestation": false,
         "SiteAttestationText": "This will confirm that you have completed your tasks defined by your governance for site administration.",

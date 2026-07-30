@@ -11,6 +11,7 @@ define([], function () {
     "ReportsDocSearchKeywords": "Document Search Default Keywords",
     "ReportsDocSearchRegexPatterns": "Document Search Default Regex Patterns",
     "ReportsOversharedGroups": "Overshared Groups",
+    "ReportsSecureFileText": "Secure File Text",
     "SensitivityLabelFileExt": "Sensitivity Label File Extensions",
     "SitePropAttestationDate": "Site Attestation Date",
     "SitePropAttestationUser": "Site Attestation User",

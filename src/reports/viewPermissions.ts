@@ -21,6 +21,10 @@ export class ViewPermissions {
     static get OversharedGroups(): string[] { return this._oversharedGroups; }
     static set OversharedGroups(value: string[]) { this._oversharedGroups = value; }
 
+    private static _secureFileText: string = "";
+    static get SecureFileText(): string { return this._secureFileText; }
+    static set SecureFileText(value: string) { this._secureFileText = value; }
+
     // Returns the groups that are flagging the file as overshared
     static getOversharedGroups(roles: Types.SP.RoleAssignmentOData[]): string[] {
         let groups = [];
@@ -122,9 +126,7 @@ export class ViewPermissions {
 
         // Set the content
         CanvasForm.setBody(`
-            <p>This action will create unique permissions for the file and remove explicit permissions to groups that are flagging this file as overshared.</p>
-            <p>If access to the file is currently granted through a SharePoint group, then that group will be removed from the file's permissions. For example, if the "Visitors Group" contains the "All DoD Guests" group; then the "Visitors Group" will be removed from the file's permissions.</p>
-            <p>It is recommended to review the file's permissions after securing it to ensure it is properly permissioned to the people who require access.</p>
+            <p>${this.SecureFileText.replace(/\n/g, "<br/>")}</p>
             <p>The following groups will be removed from the file's permissions:</p>
             <ul></ul>
             <div class="d-flex justify-content-end"></div>
