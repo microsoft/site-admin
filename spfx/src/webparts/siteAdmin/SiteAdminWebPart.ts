@@ -70,6 +70,7 @@ export interface ISiteAdminWebPartProps {
   ReportsDocSearchFileExt: string;
   ReportsDocSearchKeywords: string;
   ReportsDocSearchRegexPatterns: string;
+  ReportsSecureFileText: string;
   ReportsOversharedGroups: string;
   SensitivityLabelFileExt: string;
   SiteAttestation: boolean;
@@ -206,6 +207,7 @@ declare const SiteAdmin: {
       docSearchKeywords?: string;
       docSearchRegexPatterns?: string;
       oversharedGroups?: string[];
+      secureFileText?: string;
       sensitivityLabelFileExt?: string;
     }
     searchProps?: {
@@ -625,6 +627,13 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                     });
                   }
                 }),
+                PropertyPaneTextField("ReportsSecureFileText", {
+                  label: strings.ReportsSecureFileText,
+                  description: "The text displayed for the secure file confirmation form.",
+                  multiline: true,
+                  rows: 6,
+                  value: this.properties.ReportsSecureFileText
+                }),
               ]
             },
             {
@@ -923,6 +932,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         docSearchKeywords: this.properties.ReportsDocSearchKeywords,
         docSearchRegexPatterns: this.properties.ReportsDocSearchRegexPatterns,
         oversharedGroups: (this.properties.ReportsOversharedGroups || "").split(",").map(group => group.trim()),
+        secureFileText: this.properties.ReportsSecureFileText,
         sensitivityLabelFileExt: this.properties.SensitivityLabelFileExt
       },
       searchProps: {
