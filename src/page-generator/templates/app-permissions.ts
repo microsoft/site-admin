@@ -27,7 +27,8 @@ const CanvasContent = `<div>
         <div data-sp-rte="">
             <p>&#160;</p>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
-                data-alignment="Center" data-imagenaturalheight="523" data-imagenaturalwidth="1454"
+                data-alignment="Center" data-captiontext="App Permissions" data-imagenaturalheight="523"
+                data-imagenaturalwidth="1454"
                 data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/SATAppPermissions/3249223301.png"
                 data-listid="416cc6dd-2088-4197-91e2-3f6f7b4c6219" data-overlaystylesisbold="false"
                 data-overlaystylesisitalic="false" data-overlaystylesoverlaycolor="light"
@@ -36,7 +37,7 @@ const CanvasContent = `<div>
                 data-overlaytextstyles="&#123;&quot;textColor&quot;&#58;&quot;light&quot;,&quot;isBold&quot;&#58;false,&quot;isItalic&quot;&#58;false,&quot;textBoxColor&quot;&#58;&quot;dark&quot;,&quot;textBoxOpacity&quot;&#58;0.54,&quot;overlayColor&quot;&#58;&quot;light&quot;,&quot;overlayTransparency&quot;&#58;0&#125;"
                 data-siteid="8a25e50f-a830-4e23-bfd3-38aaa20b57ba" data-uniqueid="52dce8da-c9fb-41f6-a6fc-38b0b212e8f3"
                 data-webid="caf33edc-08f1-46f1-be6f-3946a595ebc3" data-height="523" data-width="1454"
-                data-widthpercentage="100" data-uploading="0" data-captiontext="App Permissions"></div>
+                data-widthpercentage="100" data-uploading="0"></div>
             <p>The current permissions will be loaded and displayed. The user will have the ability to add, update or
                 remove app permissions from the site.</p>
         </div>
@@ -46,16 +47,17 @@ const CanvasContent = `<div>
         <div data-sp-rte="">
             <h2 class="headingSpacingAbove headingSpacingBelow">Adding Access</h2>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
-                data-alignment="Center"
+                data-alignment="Center" data-captiontext="Add App Permission" data-imagenaturalheight="449"
+                data-imagenaturalwidth="974"
                 data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/SATAppPermissions/34722779.png"
-                data-uploading="0" data-overlaystylesoverlaytransparency="0" data-overlaystylesoverlaycolor="light"
-                data-overlaystylestextboxopacity="0.54" data-overlaystylestextboxcolor="dark"
-                data-overlaystylesisitalic="false" data-overlaystylesisbold="false" data-overlaystylestextcolor="light"
+                data-listid="416cc6dd-2088-4197-91e2-3f6f7b4c6219" data-overlaystylesisbold="false"
+                data-overlaystylesisitalic="false" data-overlaystylesoverlaycolor="light"
+                data-overlaystylesoverlaytransparency="0" data-overlaystylestextboxcolor="dark"
+                data-overlaystylestextboxopacity="0.54" data-overlaystylestextcolor="light"
                 data-overlaytextstyles="&#123;&quot;textColor&quot;&#58;&quot;light&quot;,&quot;isBold&quot;&#58;false,&quot;isItalic&quot;&#58;false,&quot;textBoxColor&quot;&#58;&quot;dark&quot;,&quot;textBoxOpacity&quot;&#58;0.54,&quot;overlayColor&quot;&#58;&quot;light&quot;,&quot;overlayTransparency&quot;&#58;0&#125;"
-                data-uniqueid="5f77b995-7bba-40d6-b501-466ea3fe1f1e" data-webid="caf33edc-08f1-46f1-be6f-3946a595ebc3"
-                data-siteid="8a25e50f-a830-4e23-bfd3-38aaa20b57ba" data-listid="416cc6dd-2088-4197-91e2-3f6f7b4c6219"
-                data-imagenaturalheight="449" data-imagenaturalwidth="974" data-widthpercentage="82.26134234210457"
-                data-width="974" data-height="449" data-captiontext="Add App Permission"></div>
+                data-siteid="8a25e50f-a830-4e23-bfd3-38aaa20b57ba" data-uniqueid="5f77b995-7bba-40d6-b501-466ea3fe1f1e"
+                data-webid="caf33edc-08f1-46f1-be6f-3946a595ebc3" data-height="449" data-width="974"
+                data-widthpercentage="82.26134234210457" data-uploading="0"></div>
             <p>&#160;</p>
             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">To add access to the site, you will need
                 to request an Azure application registration to be created and grated the
@@ -96,16 +98,16 @@ const CanvasContent = `<div>
             <h2 class="headingSpacingAbove headingSpacingBelow">Modifying Access</h2>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center"
-                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/SATAppPermissions/2025904399.png"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/SATAppPermissions/82759635.png"
                 data-uploading="0" data-overlaystylesoverlaytransparency="0" data-overlaystylesoverlaycolor="light"
                 data-overlaystylestextboxopacity="0.54" data-overlaystylestextboxcolor="dark"
                 data-overlaystylesisitalic="false" data-overlaystylesisbold="false" data-overlaystylestextcolor="light"
                 data-overlaytextstyles="&#123;&quot;textColor&quot;&#58;&quot;light&quot;,&quot;isBold&quot;&#58;false,&quot;isItalic&quot;&#58;false,&quot;textBoxColor&quot;&#58;&quot;dark&quot;,&quot;textBoxOpacity&quot;&#58;0.54,&quot;overlayColor&quot;&#58;&quot;light&quot;,&quot;overlayTransparency&quot;&#58;0&#125;"
-                data-uniqueid="f9664799-1331-465e-936d-e6ea5126d3bb" data-webid="caf33edc-08f1-46f1-be6f-3946a595ebc3"
+                data-uniqueid="90385fee-0659-4710-a620-328014c3d272" data-webid="caf33edc-08f1-46f1-be6f-3946a595ebc3"
                 data-siteid="8a25e50f-a830-4e23-bfd3-38aaa20b57ba" data-listid="416cc6dd-2088-4197-91e2-3f6f7b4c6219"
-                data-imagenaturalheight="447" data-imagenaturalwidth="969" data-widthpercentage="81.83978181138859"
-                data-width="969" data-height="447" data-captiontext="Update App Permission"></div>
-            <p>&#160;</p>
+                data-imagenaturalheight="444" data-imagenaturalwidth="968" data-widthpercentage="81.75532383222307"
+                data-width="968" data-height="444"></div>
+            <p>To update access, select the permission to change to and then Update to confirm the request.</p>
             <p class="noSpacingAbove spacingBelow" aria-hidden="true" data-text-type="withSpacing">&#160;</p>
         </div>
     </div>
@@ -118,7 +120,7 @@ const CanvasContent = `<div>
 export const AppPermissions = new PageTemplate(CanvasContent, "8a25e50f-a830-4e23-bfd3-38aaa20b57ba",
     "caf33edc-08f1-46f1-be6f-3946a595ebc3", "416cc6dd-2088-4197-91e2-3f6f7b4c6219",
     "/sites/Demo/SiteAssets/SitePages/SATAppPermissions", {
-        "3249223301": "52dce8da-c9fb-41f6-a6fc-38b0b212e8f3",
-        "34722779": "5f77b995-7bba-40d6-b501-466ea3fe1f1e",
-        "2025904399": "f9664799-1331-465e-936d-e6ea5126d3bb"
-    });
+    "3249223301": "52dce8da-c9fb-41f6-a6fc-38b0b212e8f3",
+    "34722779": "5f77b995-7bba-40d6-b501-466ea3fe1f1e",
+    "82759635": "90385fee-0659-4710-a620-328014c3d272"
+});
