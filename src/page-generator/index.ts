@@ -9,6 +9,8 @@ import { PageTemplate } from "./template";
 const PageMapper: { [key: string]: { filename: string; title: string; template: PageTemplate; } } = {
     "DataReadiness": { filename: "DataReadiness.aspx", title: "Data Readiness", template: Templates.DataReadiness },
     "SAT": { filename: "SAT.aspx", title: "SAT", template: Templates.SAT },
+    "AppPermissions": { filename: "SATAppPermissions.aspx", title: "App Permissions", template: Templates.AppPermissions },
+    "AuditReports": { filename: "SATAuditReports.aspx", title: "Audit Reports", template: Templates.AuditReports },
     "SiteConfiguration": { filename: "SATSiteConfiguration.aspx", title: "Site Configuration", template: Templates.SiteConfiguration },
 }
 
