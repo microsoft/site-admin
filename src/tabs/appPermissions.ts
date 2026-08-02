@@ -158,6 +158,16 @@ export class AppPermissionsTab {
                 },
                 table: {
                     rows: permissions,
+                    onRendering: dtProps => {
+                        dtProps.columnDefs = [
+                            {
+                                "targets": 3,
+                                "orderable": false,
+                                "searchable": false
+                            }
+                        ];
+                        return dtProps;
+                    },
                     columns: [
                         {
                             name: "appId",
