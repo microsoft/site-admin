@@ -499,7 +499,16 @@ export class SearchDocs {
                 required: true,
                 value: keywords,
                 errorMessage: "You must enter at least 1 search term.",
-                onControlRendered: ctrl => { ctrlSearchTerms = ctrl; }
+                onControlRendered: ctrl => { ctrlSearchTerms = ctrl; },
+                onValidate: (ctrl, results) => {
+                    // See if this control is hidden
+                    if (!ctrlSearchTerms.isVisible) {
+                        // Not requires
+                        results.isValid = true;
+                    }
+
+                    return results;
+                }
             },
             {
                 label: "Regex Categories",
@@ -531,8 +540,13 @@ export class SearchDocs {
                 errorMessage: "You must enter at least 1 search term.",
                 onControlRendered: ctrl => { ctrlRegex = ctrl; },
                 onValidate: (ctrl, results) => {
-                    // Ensure a pattern exists
-                    if ((results.value || "").trim().length == 0) {
+                    // See if this control is hidden
+                    if (!ctrlSearchTerms.isVisible) {
+                        // Not requires
+                        results.isValid = true;
+                    }
+                    // Else, ensure a pattern exists
+                    else if ((results.value || "").trim().length == 0) {
                         // Invalidate the extensions
                         results.isValid = false;
                         results.invalidMessage = "A regex pattern is required.";
