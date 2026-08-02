@@ -1,7 +1,8 @@
 import { LoadingDialog, Modal } from "dattatable";
 import { Components, ContextInfo, Helper, SitePages, SPTypes, Web } from "gd-sprest-bs";
 import Strings from "../strings";
-import { Template } from "./template";
+import { DataReadiness } from "./data-readiness";
+import { PageTemplate } from "./template";
 
 /**
  * Page Generator
@@ -28,13 +29,13 @@ export class PageGenerator {
             // Get the folder url of the page
             let pageFolderName = page.file.Name.replace('.aspx', "");
 
-            // Upload the images for the page
-            this.uploadImages(pageFolderName, page.item.Id).then(template => {
-                // Update the loading dialog
-                LoadingDialog.setBody("Configuring the page...");
+            // Update the loading dialog
+            LoadingDialog.setBody("Configuring the page...");
 
+            // Upload the images
+            this.uploadImages(pageFolderName, page.item.Id, DataReadiness).then(pageTemplate => {
                 // Set the content for the page
-                page.item.update(template.CanvasContent1).execute(() => {
+                page.item.update({ CanvasContent1: pageTemplate.Content }).execute(() => {
                     // Show the page in a new tab
                     window.open(page.page.AbsoluteUrl, "_blank");
 
@@ -146,13 +147,13 @@ export class PageGenerator {
     }
 
     // Uploads the images for the site page
-    private uploadImages(pageFolderName: string, pageItemId: number): PromiseLike<Template> {
+    private uploadImages(pageFolderName: string, pageItemId: number, page: PageTemplate): PromiseLike<PageTemplate> {
         // Return a promise
         return new Promise(resolve => {
             // Get the folder info for the page
             this.getFolderInfo(pageFolderName, pageItemId).then(pageFolderInfo => {
-                // Create the template
-                let template = new Template(ContextInfo.siteId, ContextInfo.webId, pageFolderInfo.listId, pageFolderInfo.folderUrl);
+                // Create the data readiness page
+                page.updateFolderInfo(ContextInfo.siteId, ContextInfo.webId, pageFolderInfo.listId, pageFolderInfo.folderUrl);
 
                 // Update the loading dialog
                 LoadingDialog.setBody("Uploading the images...");
@@ -175,9 +176,9 @@ export class PageGenerator {
                                     let fileName = fileInfo[fileInfo.length - 1].split('_')[0];
 
                                     // Upload the file
-                                    SitePages().addImage(pageFolderName, fileName + ".png", pageItemId, data).execute(image => {
+                                    SitePages().addImage(pageFolderName, fileName + ".png", pageItemId, null, data).execute(image => {
                                         // Update the template
-                                        template.updateImageId(fileName, image.UniqueId);
+                                        page.updateImageId(fileName, image.UniqueId);
 
                                         // Get the next file
                                         resolve(image);
@@ -187,7 +188,7 @@ export class PageGenerator {
                         });
                     }).then(() => {
                         // Resolve the request
-                        resolve(template);
+                        resolve(page);
                     });
                 });
             });
