@@ -1,8 +1,15 @@
 import { LoadingDialog, Modal } from "dattatable";
-import { Components, ContextInfo, Helper, SitePages, SPTypes, Web } from "gd-sprest-bs";
+import { Components, ContextInfo, Helper, SitePages, SPTypes, Types, Web } from "gd-sprest-bs";
 import Strings from "../strings";
 import { DataReadiness } from "./data-readiness";
+import { SAT } from "./sat";
 import { PageTemplate } from "./template";
+
+// Page Mapper
+const PageMapper: { [key: string]: { filename: string; title: string; template: PageTemplate; } } = {
+    "DataReadiness": { filename: "DataReadiness.aspx", title: "Data Readiness", template: DataReadiness },
+    "SAT": { filename: "SAT.aspx", title: "SAT", template: SAT }
+}
 
 /**
  * Page Generator
@@ -18,40 +25,88 @@ export class PageGenerator {
     }
 
     // Creates the page
-    private createPage(fileName: string, title: string) {
+    private createFolder(folderName: string): PromiseLike<Types.SP.Folder> {
         // Show a loading dialog
-        LoadingDialog.setHeader("Creating Page");
-        LoadingDialog.setBody("The page is being created...");
+        LoadingDialog.setHeader("Creating Folder");
+        LoadingDialog.setBody("The folder is being created...");
         LoadingDialog.show();
 
-        // Create the page
-        SitePages.createPage(fileName, title, SPTypes.ClientSidePageLayout.Article, Strings.SourceUrl).then(page => {
-            // Get the folder url of the page
-            let pageFolderName = page.file.Name.replace('.aspx', "");
+        // Return a promise
+        return new Promise(resolve => {
+            // Get the site pages
+            Web().Lists().getByTitle("Site Pages").RootFolder().Folders().execute(folders => {
+                // Parse the folders
+                for (let i = 0; i < folders.results.length; i++) {
+                    let folder = folders.results[i];
 
-            // Update the loading dialog
-            LoadingDialog.setBody("Configuring the page...");
+                    // See if the target folder exists
+                    if (folder.Name.toLowerCase() == folderName.toLowerCase()) {
+                        // Resolve the request
+                        resolve(folder);
+                        return;
+                    }
+                }
 
-            // Upload the images
-            this.uploadImages(pageFolderName, page.item.Id, DataReadiness).then(pageTemplate => {
-                // Set the content for the page
-                page.item.update({ CanvasContent1: pageTemplate.Content }).execute(() => {
-                    // Show the page in a new tab
-                    window.open(page.page.AbsoluteUrl, "_blank");
+                // Create the folder
+                Web().Lists().getByTitle("Site Pages").RootFolder().Folders().add(folderName).execute(resolve);
+            });
+        });
+    }
 
-                    // Hide the dialogs
-                    LoadingDialog.hide();
-                    Modal.hide();
-                }, () => {
-                    // Error updating the page
-                    console.error("There was an error configuring the page.");
-                    LoadingDialog.hide();
+    // Creates the pages
+    private createPages(folder: Types.SP.Folder) {
+        // Show a loading dialog
+        LoadingDialog.setHeader("Creating Pages");
+        LoadingDialog.setBody("The pages are being created...");
+        LoadingDialog.show();
 
-                    // Show an error modal in the modal
-                    // TODO
+        // Parse the files to create
+        let counter = 0;
+        Helper.Executor(Object.keys(PageMapper), key => {
+            let pageInfo = PageMapper[key];
+
+            // Update the dialog
+            LoadingDialog.setHeader(`Creating Page ${++counter} of ${Object.keys(PageMapper).length}`);
+
+            // Return a promise
+            return new Promise(resolve => {
+                // Create the page
+                SitePages.createPage(`${folder.Name}/${pageInfo.filename}`, pageInfo.title, SPTypes.ClientSidePageLayout.Article, Strings.SourceUrl).then(page => {
+                    // Get the folder url of the page
+                    let pageFolderName = page.file.Name.replace('.aspx', "");
+
+                    // Update the loading dialog
+                    LoadingDialog.setBody("Configuring the page...");
+
+                    // Upload the images
+                    this.uploadImages(pageFolderName, page.item.Id, pageInfo.template).then(pageTemplate => {
+                        // Set the content for the page
+                        page.item.update({ CanvasContent1: pageTemplate.Content }).execute(() => {
+                            // Show the page in a new tab
+                            window.open(page.page.AbsoluteUrl, "_blank");
+
+                            // Hide the dialogs
+                            LoadingDialog.hide();
+                            Modal.hide();
+
+                            // Create the next page
+                            resolve(null);
+                        }, () => {
+                            // Error updating the page
+                            console.error("There was an error configuring the page.");
+                            LoadingDialog.hide();
+
+                            // Show an error modal in the modal
+                            // TODO
+
+                            // Create the next page
+                            resolve(null);
+                        });
+                    });
                 });
             });
         });
+
     }
 
     // Gets the folder information for the page
@@ -82,30 +137,22 @@ export class PageGenerator {
         // Set the header
         Modal.setHeader("Page Generator");
 
+        Modal.setBody(`<p>This tool will generate pages to help with data readiness guidance. Enter the folder name and click 'Generate'.</p>`);
+
         // Render the form
         let form = Components.Form({
             el: Modal.BodyElement,
             controls: [
                 {
                     name: "Name",
-                    title: "Page Name",
-                    description: "The file name of the page to create.",
+                    title: "Folder Name",
+                    description: "The folder name create in the Site Pages library.",
                     type: Components.FormControlTypes.TextField,
                     isPlainText: true,
                     required: true,
-                    errorMessage: "A file name is required.",
-                    value: "Copilot-Data-Readiness"
-                },
-                {
-                    name: "Title",
-                    title: "Page Title",
-                    description: "The title displayed.",
-                    type: Components.FormControlTypes.TextField,
-                    isPlainText: true,
-                    required: true,
-                    errorMessage: "A title is required.",
-                    value: "Copilot Data Readiness"
-                },
+                    errorMessage: "A folder name is required.",
+                    value: "Site Admin Tool"
+                }
             ]
         });
 
@@ -115,7 +162,7 @@ export class PageGenerator {
             buttonType: Components.ButtonTypes.OutlinePrimary,
             tooltips: [
                 {
-                    content: "Click to create the page.",
+                    content: "Click to create the pages.",
                     btnProps: {
                         text: "Create",
                         onClick: () => {
@@ -123,8 +170,11 @@ export class PageGenerator {
                             if (form.isValid()) {
                                 let values = form.getValues();
 
-                                // Create the page
-                                this.createPage(values["Name"].split('.aspx')[0] + ".aspx", values["Title"]);
+                                // Create the folder
+                                this.createFolder(values["Name"]).then(folder => {
+                                    // Create the pages
+                                    this.createPages(folder);
+                                });
                             }
                         }
                     }
