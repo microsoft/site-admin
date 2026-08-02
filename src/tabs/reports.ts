@@ -372,6 +372,7 @@ export class ReportsTab {
                         });
                         break;
                     case ReportTypes.SearchDocs:
+                        formValues["SearchType"] = formValues["SearchType"]?.value;
                         Reports.SearchDocs.run(this._el, this._auditOnly, formValues, () => {
                             // Render this component
                             this.render(this._selectedReport);
