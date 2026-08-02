@@ -221,7 +221,7 @@ export class AppPermissionsTab {
         Modal.clear();
 
         // Set the header
-        Modal.setHeader("Add App Permission");
+        Modal.setHeader(`${permission ? "Update" : "Add"} App Permission`);
 
         // Set the form
         let form = Components.Form({
