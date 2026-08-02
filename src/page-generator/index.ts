@@ -1,14 +1,15 @@
 import { LoadingDialog, Modal } from "dattatable";
 import { Components, ContextInfo, Helper, SitePages, SPTypes, Types, Web } from "gd-sprest-bs";
 import Strings from "../strings";
-import { DataReadiness } from "./data-readiness";
-import { SAT } from "./sat";
+import * as Templates from "./templates";
+import { } from "./templates/site-configuration";
 import { PageTemplate } from "./template";
 
 // Page Mapper
 const PageMapper: { [key: string]: { filename: string; title: string; template: PageTemplate; } } = {
-    "DataReadiness": { filename: "DataReadiness.aspx", title: "Data Readiness", template: DataReadiness },
-    "SAT": { filename: "SAT.aspx", title: "SAT", template: SAT }
+    "DataReadiness": { filename: "DataReadiness.aspx", title: "Data Readiness", template: Templates.DataReadiness },
+    "SAT": { filename: "SAT.aspx", title: "SAT", template: Templates.SAT },
+    "SiteConfiguration": { filename: "SATSiteConfiguration.aspx", title: "Site Configuration", template: Templates.SiteConfiguration },
 }
 
 /**

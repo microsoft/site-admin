@@ -1,4 +1,4 @@
-import { PageTemplate } from "./template";
+import { PageTemplate } from "../template";
 
 // The html content for the webpart
 const CanvasContent = `<div>
@@ -34,7 +34,7 @@ const CanvasContent = `<div>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center" data-captiontext="Audit Tools" data-imagenaturalheight="633"
                 data-imagenaturalwidth="1821"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/956444907.png"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/956444907.png"
                 data-listid="47e1d508-a230-4984-8c41-2a272a5b255c" data-overlaystylesisbold="false"
                 data-overlaystylesisitalic="false" data-overlaystylesoverlaycolor="light"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylestextboxcolor="dark"
@@ -59,7 +59,7 @@ const CanvasContent = `<div>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center" data-captiontext="Document Retention Report" data-imagenaturalheight="334"
                 data-imagenaturalwidth="1014"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/704156399.png"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/704156399.png"
                 data-listid="47e1d508-a230-4984-8c41-2a272a5b255c" data-overlaystylesisbold="false"
                 data-overlaystylesisitalic="false" data-overlaystylesoverlaycolor="light"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylestextboxcolor="dark"
@@ -76,7 +76,7 @@ const CanvasContent = `<div>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center" data-captiontext="Set Search Property" data-imagenaturalheight="209"
                 data-imagenaturalwidth="521"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/1439995666.png"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/1439995666.png"
                 data-listid="47e1d508-a230-4984-8c41-2a272a5b255c" data-overlaystylesisbold="false"
                 data-overlaystylesisitalic="false" data-overlaystylesoverlaycolor="light"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylestextboxcolor="dark"
@@ -93,7 +93,7 @@ const CanvasContent = `<div>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center" data-captiontext="Inactive Site Report" data-imagenaturalheight="556"
                 data-imagenaturalwidth="994"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/2403381788.png"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/2403381788.png"
                 data-listid="47e1d508-a230-4984-8c41-2a272a5b255c" data-overlaystylesisbold="false"
                 data-overlaystylesisitalic="false" data-overlaystylesoverlaycolor="light"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylestextboxcolor="dark"
@@ -107,7 +107,7 @@ const CanvasContent = `<div>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center" data-captiontext="Sample Inactive Site Report" data-imagenaturalheight="556"
                 data-imagenaturalwidth="1659"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/2009954068.png"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/2009954068.png"
                 data-listid="47e1d508-a230-4984-8c41-2a272a5b255c" data-overlaystylesisbold="false"
                 data-overlaystylesisitalic="false" data-overlaystylesoverlaycolor="light"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylestextboxcolor="dark"
@@ -129,7 +129,7 @@ const CanvasContent = `<div>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center" data-captiontext="External Sharing Report" data-imagenaturalheight="368"
                 data-imagenaturalwidth="1799"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/394511437.png"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/394511437.png"
                 data-listid="47e1d508-a230-4984-8c41-2a272a5b255c" data-overlaystylesisbold="false"
                 data-overlaystylesisitalic="false" data-overlaystylesoverlaycolor="light"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylestextboxcolor="dark"
@@ -148,7 +148,7 @@ const CanvasContent = `<div>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center" data-captiontext="External Users Report" data-imagenaturalheight="382"
                 data-imagenaturalwidth="1808"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/178240801.png"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/178240801.png"
                 data-listid="47e1d508-a230-4984-8c41-2a272a5b255c" data-overlaystylesisbold="false"
                 data-overlaystylesisitalic="false" data-overlaystylesoverlaycolor="light"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylestextboxcolor="dark"
@@ -166,7 +166,7 @@ const CanvasContent = `<div>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center" data-captiontext="Sharing Links Report" data-imagenaturalheight="204"
                 data-imagenaturalwidth="1811"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/2492974796.png"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/2492974796.png"
                 data-listid="47e1d508-a230-4984-8c41-2a272a5b255c" data-overlaystylesisbold="false"
                 data-overlaystylesisitalic="false" data-overlaystylesoverlaycolor="light"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylestextboxcolor="dark"
@@ -184,7 +184,7 @@ const CanvasContent = `<div>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center" data-captiontext="EEEU Report" data-imagenaturalheight="240"
                 data-imagenaturalwidth="1797"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/878621426.png"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/878621426.png"
                 data-listid="47e1d508-a230-4984-8c41-2a272a5b255c" data-overlaystylesisbold="false"
                 data-overlaystylesisitalic="false" data-overlaystylesoverlaycolor="light"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylestextboxcolor="dark"
@@ -201,7 +201,7 @@ const CanvasContent = `<div>
             <h4 class="headingSpacingAbove headingSpacingBelow">Review Site Permissions</h4>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/3639654909.png" data-uploading="0"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/3639654909.png" data-uploading="0"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylesoverlaycolor="light"
                 data-overlaystylestextboxopacity="0.54" data-overlaystylestextboxcolor="dark"
                 data-overlaystylesisitalic="false" data-overlaystylesisbold="false" data-overlaystylestextcolor="light"
@@ -220,7 +220,7 @@ const CanvasContent = `<div>
             <h4 class="headingSpacingAbove headingSpacingBelow">Review Unique Permissions</h4>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/3423846637.png" data-uploading="0"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/3423846637.png" data-uploading="0"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylesoverlaycolor="light"
                 data-overlaystylestextboxopacity="0.54" data-overlaystylestextboxcolor="dark"
                 data-overlaystylesisitalic="false" data-overlaystylesisbold="false" data-overlaystylestextcolor="light"
@@ -242,7 +242,7 @@ const CanvasContent = `<div>
             <h4 class="headingSpacingAbove headingSpacingBelow">Management Tab</h4>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/734992370.png" data-uploading="0"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/734992370.png" data-uploading="0"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylesoverlaycolor="light"
                 data-overlaystylestextboxopacity="0.54" data-overlaystylestextboxcolor="dark"
                 data-overlaystylesisitalic="false" data-overlaystylesisbold="false" data-overlaystylestextcolor="light"
@@ -257,7 +257,7 @@ const CanvasContent = `<div>
             <h4 class="headingSpacingAbove headingSpacingBelow">Features Tab</h4>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/3614134656.png" data-uploading="0"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/3614134656.png" data-uploading="0"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylesoverlaycolor="light"
                 data-overlaystylestextboxopacity="0.54" data-overlaystylestextboxcolor="dark"
                 data-overlaystylesisitalic="false" data-overlaystylesisbold="false" data-overlaystylestextcolor="light"
@@ -282,7 +282,7 @@ const CanvasContent = `<div>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center" data-captiontext="Keyword Search" data-imagenaturalheight="387"
                 data-imagenaturalwidth="806"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/1004145298.png"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/1004145298.png"
                 data-listid="47e1d508-a230-4984-8c41-2a272a5b255c" data-overlaystylesisbold="false"
                 data-overlaystylesisitalic="false" data-overlaystylesoverlaycolor="light"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylestextboxcolor="dark"
@@ -297,7 +297,7 @@ const CanvasContent = `<div>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center" data-captiontext="Search Documents Sample Report" data-imagenaturalheight="226"
                 data-imagenaturalwidth="1813"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/3707825808.png"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/3707825808.png"
                 data-listid="47e1d508-a230-4984-8c41-2a272a5b255c" data-overlaystylesisbold="false"
                 data-overlaystylesisitalic="false" data-overlaystylesoverlaycolor="light"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylestextboxcolor="dark"
@@ -313,7 +313,7 @@ const CanvasContent = `<div>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center" data-captiontext="Set Default Site Sensitivity Label"
                 data-imagenaturalheight="534" data-imagenaturalwidth="1824"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/3194998129.png"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/3194998129.png"
                 data-listid="47e1d508-a230-4984-8c41-2a272a5b255c" data-overlaystylesisbold="false"
                 data-overlaystylesisitalic="false" data-overlaystylesoverlaycolor="light"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylestextboxcolor="dark"
@@ -328,7 +328,7 @@ const CanvasContent = `<div>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center" data-captiontext="Run Lists/Libraries Report" data-imagenaturalheight="379"
                 data-imagenaturalwidth="1821"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/782453716.png"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/782453716.png"
                 data-listid="47e1d508-a230-4984-8c41-2a272a5b255c" data-overlaystylesisbold="false"
                 data-overlaystylesisitalic="false" data-overlaystylesoverlaycolor="light"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylestextboxcolor="dark"
@@ -339,7 +339,7 @@ const CanvasContent = `<div>
                 data-widthpercentage="100" data-uploading="0"></div>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/926485291.png" data-uploading="0"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/926485291.png" data-uploading="0"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylesoverlaycolor="light"
                 data-overlaystylestextboxopacity="0.54" data-overlaystylestextboxcolor="dark"
                 data-overlaystylesisitalic="false" data-overlaystylesisbold="false" data-overlaystylestextcolor="light"
@@ -353,7 +353,7 @@ const CanvasContent = `<div>
                 audit tool report, and select the <strong>Default Label</strong> option for the target library.</p>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/2498076700.png" data-uploading="0"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/2498076700.png" data-uploading="0"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylesoverlaycolor="light"
                 data-overlaystylestextboxopacity="0.54" data-overlaystylestextboxcolor="dark"
                 data-overlaystylesisitalic="false" data-overlaystylesisbold="false" data-overlaystylestextcolor="light"
@@ -366,7 +366,7 @@ const CanvasContent = `<div>
             <h4 class="headingSpacingAbove headingSpacingBelow">Set Folder/Files Sensitivity Label</h4>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/3608935117.png" data-uploading="0"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/3608935117.png" data-uploading="0"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylesoverlaycolor="light"
                 data-overlaystylestextboxopacity="0.54" data-overlaystylestextboxcolor="dark"
                 data-overlaystylesisitalic="false" data-overlaystylesisbold="false" data-overlaystylestextcolor="light"
@@ -381,7 +381,7 @@ const CanvasContent = `<div>
                 option, will display a form to apply sensitivity labels.</p>
             <div class="imagePlugin" style="background-color&#58;transparent;position&#58;relative;"
                 data-alignment="Center"
-                data-imageurl="/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness/4193189816.png" data-uploading="0"
+                data-imageurl="/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness/4193189816.png" data-uploading="0"
                 data-overlaystylesoverlaytransparency="0" data-overlaystylesoverlaycolor="light"
                 data-overlaystylestextboxopacity="0.54" data-overlaystylestextboxcolor="dark"
                 data-overlaystylesisitalic="false" data-overlaystylesisbold="false" data-overlaystylestextcolor="light"
@@ -404,7 +404,7 @@ const CanvasContent = `<div>
 // Export the page
 export const DataReadiness = new PageTemplate(CanvasContent, "4d5a1bbe-e47a-43b4-b3a1-3ff33d0c2fcb",
     "8d297e14-676c-4fc3-880f-b4873451ccbb", "47e1d508-a230-4984-8c41-2a272a5b255c",
-    "/sites/Dev/SiteAssets/SitePages/CopilotDataReadiness", {
+    "/sites/Demo/site-admin/SiteAssets/SitePages/CopilotDataReadiness", {
     "1004145298": "20eef9f5-daae-4c4b-8e2e-99fcd2f724d9",
     "178240801": "f06e61dc-1933-452d-9cda-1a9dfd14c47e",
     "1439995666": "d4440c71-3b19-4245-aeff-b5c82a1c1ab3",
