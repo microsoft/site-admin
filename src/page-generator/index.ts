@@ -19,6 +19,7 @@ const PageMapper: { [key: string]: { filename: string; title: string; template: 
  */
 export class PageGenerator {
     private static _imageReferences: string[];
+    static get ImageReferences() { return this._imageReferences; }
     static set ImageReferences(values: string[]) { this._imageReferences = values; }
 
     // Constructor
