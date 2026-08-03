@@ -7,11 +7,11 @@ import { PageTemplate } from "./template";
 
 // Page Mapper
 const PageMapper: { [key: string]: { filename: string; title: string; template: PageTemplate; } } = {
+    "AppPermissions": { filename: "AppPermissions.aspx", title: "App Permissions", template: Templates.AppPermissions },
+    "AuditReports": { filename: "AuditReports.aspx", title: "Audit Reports", template: Templates.AuditReports },
     "DataReadiness": { filename: "DataReadiness.aspx", title: "Data Readiness", template: Templates.DataReadiness },
-    "AppPermissions": { filename: "SATAppPermissions.aspx", title: "App Permissions", template: Templates.AppPermissions },
-    "AuditReports": { filename: "SATAuditReports.aspx", title: "Audit Reports", template: Templates.AuditReports },
-    "SAT": { filename: "SAT.aspx", title: "SAT", template: Templates.SAT },
-    "SiteConfiguration": { filename: "SATSiteConfiguration.aspx", title: "Site Configuration", template: Templates.SiteConfiguration },
+    "Overview": { filename: "Overview.aspx", title: "Overview", template: Templates.Overview },
+    "SiteConfiguration": { filename: "SiteConfiguration.aspx", title: "Site Configuration", template: Templates.SiteConfiguration },
 }
 
 /**
@@ -86,7 +86,7 @@ export class PageGenerator {
                         // Set the content for the page
                         page.item.update({ CanvasContent1: pageTemplate.Content }).execute(() => {
                             // See if this is the main page
-                            if (pageInfo.template == Templates.SAT) {
+                            if (pageInfo.template == Templates.Overview) {
                                 // Show the page in a new tab
                                 window.open(page.page.AbsoluteUrl, "_blank");
                             }

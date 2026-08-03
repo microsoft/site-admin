@@ -28,7 +28,7 @@ const CanvasContent = `<div>
             <ul class="customListStyle" style="list-style-type&#58;disc;">
                 <li data-list-item-id="ea73ae2b3b656f5f262649095950b609d">
                     <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing"><a
-                            href="/sites/demo/site-admin/sitepages/SATSiteConfiguration.aspx">Site Configuration</a></p>
+                            href="/sites/demo/site-admin/sitepages/Site Admin Tool/SiteConfiguration.aspx">Site Configuration</a></p>
                     <ul class="customListStyle">
                         <li data-list-item-id="e059fb4e82e85412c58e9169d46e42ba7">
                             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">Site Collection Admin
@@ -42,7 +42,7 @@ const CanvasContent = `<div>
                 </li>
                 <li data-list-item-id="edae68bac6218733731f93daf00f63bb1">
                     <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing"><a
-                            href="/sites/demo/site-admin/sitepages/SATAuditReports.aspx">Audit Reports</a></p>
+                            href="/sites/demo/site-admin/sitepages/Site Admin Tool/AuditReports.aspx">Audit Reports</a></p>
                     <ul class="customListStyle">
                         <li data-list-item-id="e46abafc5572b4235016fa2e81c70fc5e">
                             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">Site Collection Admin
@@ -56,7 +56,7 @@ const CanvasContent = `<div>
                 </li>
                 <li data-list-item-id="e6321a3a8c46e931eb6cd4eb038e91cc9">
                     <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing"><a
-                            href="/sites/demo/site-admin/sitepages/SATAppPermissions.aspx">App Permissions</a></p>
+                            href="/sites/demo/site-admin/sitepages/Site Admin Tool/AppPermissions.aspx">App Permissions</a></p>
                     <ul class="customListStyle">
                         <li data-list-item-id="e46959215689b8f1b0f04131cc0e86476">
                             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">Site Collection Admin
@@ -70,7 +70,7 @@ const CanvasContent = `<div>
                 </li>
                 <li data-list-item-id="ebb53ba62bd3edb9f69d2306cf809287a">
                     <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing"><a
-                            href="/sites/demo/site-admin/sitepages/SATFAQ.aspx">FAQ</a></p>
+                            href="/sites/demo/site-admin/sitepages/Site Admin Tool/FAQ.aspx">FAQ</a></p>
                     <ul class="customListStyle">
                         <li data-list-item-id="e4a8d1e26c356882700670655c16e3eb4">
                             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">Review for handling
@@ -87,6 +87,6 @@ const CanvasContent = `<div>
 </div>`;
 
 // Export the page
-export const SAT = new PageTemplate(CanvasContent, "8a25e50f-a830-4e23-bfd3-38aaa20b57ba",
+export const Overview = new PageTemplate(CanvasContent, "8a25e50f-a830-4e23-bfd3-38aaa20b57ba",
     "caf33edc-08f1-46f1-be6f-3946a595ebc3", "416cc6dd-2088-4197-91e2-3f6f7b4c6219",
-    "/sites/Demo/SiteAssets/SitePages/PageGenerator", {});
+    "/sites/Demo/SiteAssets/SitePages/Overview", {});
