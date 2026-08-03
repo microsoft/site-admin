@@ -11,7 +11,7 @@ const PageMapper: { [key: string]: { filename: string; title: string; template: 
     "AuditReports": { filename: "AuditReports.aspx", title: "Audit Reports", template: Templates.AuditReports },
     "DataReadiness": { filename: "DataReadiness.aspx", title: "Data Readiness", template: Templates.DataReadiness },
     "Overview": { filename: "Overview.aspx", title: "Overview", template: Templates.Overview },
-    "SiteConfiguration": { filename: "SiteConfiguration.aspx", title: "Site Configuration", template: Templates.SiteConfiguration },
+    "SiteConfiguration": { filename: "SiteConfiguration.aspx", title: "Site Configuration", template: Templates.SiteConfiguration }
 }
 
 /**
@@ -85,8 +85,15 @@ export class PageGenerator {
 
                     // Upload the images
                     this.uploadImages(pageFolderName, page.item.Id, pageInfo.template).then(pageTemplate => {
+                        // See if this is the main page
+                        let content = pageTemplate.Content;
+                        if (pageInfo.template == Templates.Overview) {
+                            // Update the link references
+                            content = content.replace(/href="\/sites\/demo\/site-admin/g, 'href="' + Strings.SourceUrl);
+                        }
+
                         // Set the content for the page
-                        page.item.update({ CanvasContent1: pageTemplate.Content }).execute(() => {
+                        page.item.update({ CanvasContent1: content }).execute(() => {
                             // See if this is the main page
                             if (pageInfo.template == Templates.Overview) {
                                 // Show the page in a new tab
