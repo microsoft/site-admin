@@ -256,6 +256,9 @@ export class PageGenerator {
                             }, resolve);
                         });
                     }).then(() => {
+                        // Update the loading dialog
+                        LoadingDialog.setBody(`${images.length} images uploaded`);
+
                         // Resolve the request
                         resolve(page);
                     });
