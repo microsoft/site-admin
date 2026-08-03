@@ -18,6 +18,9 @@ export class PageTemplate {
     // Reference to the page content
     get Content(): string { return this._content; }
 
+    // Reference to the page images
+    get Images(): { [key: string]: string } { return this._imageMapper; }
+
     // Update the folder information for the page
     updateFolderInfo(siteId: string, webId: string, listId: string, folderUrl: string) {
         // Set the template

@@ -65,11 +65,12 @@ export class PageGenerator {
 
         // Parse the files to create
         let counter = 0;
-        Helper.Executor(Object.keys(PageMapper), key => {
+        let pages = Object.keys(PageMapper);
+        Helper.Executor(pages, key => {
             let pageInfo = PageMapper[key];
 
             // Update the dialog
-            LoadingDialog.setHeader(`Creating Page ${++counter} of ${Object.keys(PageMapper).length}`);
+            LoadingDialog.setHeader(`Creating Page ${++counter} of ${pages.length}`);
 
             // Return a promise
             return new Promise(resolve => {
@@ -91,10 +92,6 @@ export class PageGenerator {
                                 window.open(page.page.AbsoluteUrl, "_blank");
                             }
 
-                            // Hide the dialogs
-                            LoadingDialog.hide();
-                            Modal.hide();
-
                             // Create the next page
                             resolve(null);
                         }, () => {
@@ -111,8 +108,11 @@ export class PageGenerator {
                     });
                 });
             });
+        }).then(() => {
+            // Hide the dialogs
+            LoadingDialog.hide();
+            Modal.hide();
         });
-
     }
 
     // Gets the folder information for the page
@@ -211,24 +211,36 @@ export class PageGenerator {
                 // Create the data readiness page
                 page.updateFolderInfo(ContextInfo.siteId, ContextInfo.webId, pageFolderInfo.listId, pageFolderInfo.folderUrl);
 
+                // Do nothing if no image references exist
+                let images = Object.keys(page.Images);
+                if (images.length == 0) {
+                    resolve(page);
+                    return;
+                }
+
                 // Update the loading dialog
                 LoadingDialog.setBody("Uploading the images...");
 
-                // Get the web url from the image
-                Web.getWebUrlFromPageUrl(PageGenerator._imageReferences[0]).execute(webRef => {
+                // Get the web reference for the images in the SPFx folder
+                Web.getWebUrlFromPageUrl(PageGenerator.ImageReferences[0]).execute(webRef => {
                     // Parse the image references
                     let ctr = 0;
-                    Helper.Executor(PageGenerator._imageReferences, imageUrl => {
+                    Helper.Executor(images, imageKey => {
+                        // Find the image
+                        let imageRef = PageGenerator.ImageReferences.filter(imageRef => {
+                            if (imageRef.indexOf(imageKey) > 0) { return imageRef; }
+                        })[0];
+
                         // Update the loading dialog
-                        LoadingDialog.setBody(`Uploading image ${++ctr} of ${PageGenerator._imageReferences.length}...`);
+                        LoadingDialog.setBody(`Uploading image ${++ctr} of ${images.length}...`);
 
                         // Return a promise
                         return new Promise(resolve => {
                             // Get the file
-                            Web(webRef.GetWebUrlFromPageUrl).getFileByUrl(imageUrl).execute(file => {
+                            Web(webRef.GetWebUrlFromPageUrl).getFileByUrl(imageRef).execute(file => {
                                 // Get the content
                                 file.content().execute(data => {
-                                    let fileInfo = imageUrl.split('/');
+                                    let fileInfo = imageRef.split('/');
                                     let fileName = fileInfo[fileInfo.length - 1].split('_')[0];
 
                                     // Upload the file
