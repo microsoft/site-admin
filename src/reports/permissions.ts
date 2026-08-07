@@ -50,7 +50,7 @@ export class Permissions {
             let counter = 0;
 
             // Update the dialog
-            this._elSubNav.children[1].innerHTML = `Getting M365 Group information for ${groupIds.length} groups`;
+            this._elSubNav.children[1].innerHTML = `Trying to get M365 Group information: ${++counter} of ${groupIds.length}`;
 
             // Load the group information
             M365Groups.getGroupInfo(groupIds, group => {
