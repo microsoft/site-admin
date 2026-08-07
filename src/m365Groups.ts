@@ -94,6 +94,9 @@ export class M365Groups {
                 // Save the group information
                 this._groups[group.id] = group;
             }, () => {
+                // Save the group information
+                this._groups[groupId] = { id: groupId } as any;
+
                 // Error loading this group
                 this._errorGroupIds[groupId] = true;
 
