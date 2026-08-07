@@ -87,53 +87,63 @@ export class M365Groups {
         // Return a promise
         return new Promise((resolve, reject) => {
             // Get the group information
-            let ds = DirectorySession().group(groupId);
-            ds.query({
-                Select: ["calendarUrl", "displayName", "id", "isPublic", "mail"]
-            }).execute(group => {
-                // Save the group information
+            let getGroupInfo = (): PromiseLike<Types.SP.Directory.GroupOData> => {
+                return new Promise(resolve => {
+                    DirectorySession().group(groupId).query({
+                        Select: ["calendarUrl", "displayName", "id", "isPublic", "mail"]
+                    }).execute(group => {
+                        // Resolve the group information
+                        resolve(group);
+                    }, () => {
+                        // Error loading this group
+                        this._errorGroupIds[groupId] = true;
+
+                        // Resolve the group information
+                        resolve({ id: groupId } as any);
+                    });
+                });
+            }
+
+            // Get the group members/owner information
+            let getGroupUsers = (member: boolean): PromiseLike<any> => {
+                return new Promise(resolve => {
+                    DirectorySession().group(groupId)[member ? "members" : "owners"]().query({
+                        GetAllItems: true,
+                        Top: 5000,
+                        Select: ["principalName", "id", "displayName", "mail"]
+                    }).execute(users => {
+                        // Resolve the users
+                        resolve(users);
+                    }, () => {
+                        // Try the next group
+                        resolve(null);
+                    }, true);
+                });
+            }
+
+            // Get the group information
+            getGroupInfo().then(group => {
+                // Set the group information
                 this._groups[group.id] = group;
-            }, () => {
-                // Save the group information
-                this._groups[groupId] = { id: groupId } as any;
 
-                // Error loading this group
-                this._errorGroupIds[groupId] = true;
+                // Get the group members
+                getGroupUsers(true).then(users => {
+                    // Set the group members
+                    if (users) {
+                        this._groups[group.id].members = users;
+                    }
 
-                // Reject the request
-                reject();
-            });
+                    // Get the group owners
+                    getGroupUsers(false).then(users => {
+                        // Set the group owners
+                        if (users) {
+                            this._groups[group.id].owners = users;
+                        }
 
-            // Get the group members
-            ds.members().query({
-                GetAllItems: true,
-                Top: 5000,
-                Select: ["principalName", "id", "displayName", "mail"]
-            }).execute(members => {
-                // Add the group information to the mapper
-                this._groups[groupId].members = members as any;
-            }, () => {
-                // Try the next group
-                resolve(null);
-            }, true);
-
-            // Get the group owners
-            ds.owners().query({
-                GetAllItems: true,
-                Top: 5000,
-                Select: ["principalName", "id", "displayName", "mail"]
-            }).execute(owners => {
-                // Add the group information to the mapper
-                this._groups[groupId].owners = owners as any;
-            }, () => {
-                // Try the next group
-                resolve(null);
-            }, true);
-
-            // Wait for the requests to complete
-            ds.done(() => {
-                // Try the next group
-                resolve(this._groups[groupId]);
+                        // Resolve the request
+                        resolve(this._groups[group.id]);
+                    });
+                });
             });
         });
     }
