@@ -1,13 +1,25 @@
 import { LoadingDialog, Modal } from "dattatable";
-import { Components, ContextInfo, Helper, SitePages, SPTypes, Web } from "gd-sprest-bs";
+import { Components, ContextInfo, Helper, SitePages, SPTypes, Types, Web } from "gd-sprest-bs";
 import Strings from "../strings";
-import { Template } from "./template";
+import * as Templates from "./templates";
+import { } from "./templates/site-configuration";
+import { PageTemplate } from "./template";
+
+// Page Mapper
+const PageMapper: { [key: string]: { filename: string; title: string; template: PageTemplate; } } = {
+    "AppPermissions": { filename: "AppPermissions.aspx", title: "App Permissions", template: Templates.AppPermissions },
+    "AuditReports": { filename: "AuditReports.aspx", title: "Audit Reports", template: Templates.AuditReports },
+    "DataReadiness": { filename: "DataReadiness.aspx", title: "Data Readiness", template: Templates.DataReadiness },
+    "Overview": { filename: "Overview.aspx", title: "Overview", template: Templates.Overview },
+    "SiteConfiguration": { filename: "SiteConfiguration.aspx", title: "Site Configuration", template: Templates.SiteConfiguration }
+}
 
 /**
  * Page Generator
  */
 export class PageGenerator {
     private static _imageReferences: string[];
+    static get ImageReferences() { return this._imageReferences; }
     static set ImageReferences(values: string[]) { this._imageReferences = values; }
 
     // Constructor
@@ -17,39 +29,97 @@ export class PageGenerator {
     }
 
     // Creates the page
-    private createPage(fileName: string, title: string) {
+    private createFolder(folderName: string): PromiseLike<Types.SP.Folder> {
         // Show a loading dialog
-        LoadingDialog.setHeader("Creating Page");
-        LoadingDialog.setBody("The page is being created...");
+        LoadingDialog.setHeader("Creating Folder");
+        LoadingDialog.setBody("The folder is being created...");
         LoadingDialog.show();
 
-        // Create the page
-        SitePages.createPage(fileName, title, SPTypes.ClientSidePageLayout.Article, Strings.SourceUrl).then(page => {
-            // Get the folder url of the page
-            let pageFolderName = page.file.Name.replace('.aspx', "");
+        // Return a promise
+        return new Promise(resolve => {
+            // Get the site pages
+            Web().Lists().getByTitle("Site Pages").RootFolder().Folders().execute(folders => {
+                // Parse the folders
+                for (let i = 0; i < folders.results.length; i++) {
+                    let folder = folders.results[i];
 
-            // Upload the images for the page
-            this.uploadImages(pageFolderName, page.item.Id).then(template => {
-                // Update the loading dialog
-                LoadingDialog.setBody("Configuring the page...");
+                    // See if the target folder exists
+                    if (folder.Name.toLowerCase() == folderName.toLowerCase()) {
+                        // Resolve the request
+                        resolve(folder);
+                        return;
+                    }
+                }
 
-                // Set the content for the page
-                page.item.update(template.CanvasContent1).execute(() => {
-                    // Show the page in a new tab
-                    window.open(page.page.AbsoluteUrl, "_blank");
+                // Create the folder
+                Web().Lists().getByTitle("Site Pages").RootFolder().Folders().add(folderName).execute(resolve);
+            });
+        });
+    }
 
-                    // Hide the dialogs
-                    LoadingDialog.hide();
-                    Modal.hide();
-                }, () => {
-                    // Error updating the page
-                    console.error("There was an error configuring the page.");
-                    LoadingDialog.hide();
+    // Creates the pages
+    private createPages(folder: Types.SP.Folder) {
+        // Show a loading dialog
+        LoadingDialog.setHeader("Creating Pages");
+        LoadingDialog.setBody("The pages are being created...");
+        LoadingDialog.show();
 
-                    // Show an error modal in the modal
-                    // TODO
+        // Parse the files to create
+        let counter = 0;
+        let pages = Object.keys(PageMapper);
+        Helper.Executor(pages, key => {
+            let pageInfo = PageMapper[key];
+
+            // Update the dialog
+            LoadingDialog.setHeader(`Creating Page ${++counter} of ${pages.length}`);
+
+            // Return a promise
+            return new Promise(resolve => {
+                // Create the page
+                SitePages.createPage(`${folder.Name}/${pageInfo.filename}`, pageInfo.title, SPTypes.ClientSidePageLayout.Article, Strings.SourceUrl).then(page => {
+                    // Get the folder url of the page
+                    let pageFolderName = page.file.Name.replace('.aspx', "");
+
+                    // Update the loading dialog
+                    LoadingDialog.setBody("Configuring the page...");
+
+                    // Upload the images
+                    this.uploadImages(pageFolderName, page.item.Id, pageInfo.template).then(pageTemplate => {
+                        // See if this is the main page
+                        let content = pageTemplate.Content;
+                        if (pageInfo.template == Templates.Overview) {
+                            // Update the link references
+                            content = content.replace(/href="\/sites\/demo\/site-admin/g, 'href="' + Strings.SourceUrl);
+                        }
+
+                        // Set the content for the page
+                        page.item.update({ CanvasContent1: content }).execute(() => {
+                            // See if this is the main page
+                            if (pageInfo.template == Templates.Overview) {
+                                // Show the page in a new tab
+                                window.open(page.page.AbsoluteUrl, "_blank");
+                            }
+
+                            // Create the next page
+                            resolve(null);
+                        }, () => {
+                            // Error updating the page
+                            console.error("There was an error configuring the page.");
+                            LoadingDialog.hide();
+
+                            // Show an error modal in the modal
+                            // TODO
+
+                            // Create the next page
+                            resolve(null);
+                        });
+                    });
                 });
             });
+        }).then(() => {
+            // Hide the dialogs
+            LoadingDialog.hide();
+            Modal.hide();
         });
     }
 
@@ -81,30 +151,22 @@ export class PageGenerator {
         // Set the header
         Modal.setHeader("Page Generator");
 
+        Modal.setBody(`<p>This tool will generate pages to help with data readiness guidance. Enter the folder name and click 'Generate'.</p>`);
+
         // Render the form
         let form = Components.Form({
             el: Modal.BodyElement,
             controls: [
                 {
                     name: "Name",
-                    title: "Page Name",
-                    description: "The file name of the page to create.",
+                    title: "Folder Name",
+                    description: "The folder name create in the Site Pages library.",
                     type: Components.FormControlTypes.TextField,
                     isPlainText: true,
                     required: true,
-                    errorMessage: "A file name is required.",
-                    value: "Copilot-Data-Readiness"
-                },
-                {
-                    name: "Title",
-                    title: "Page Title",
-                    description: "The title displayed.",
-                    type: Components.FormControlTypes.TextField,
-                    isPlainText: true,
-                    required: true,
-                    errorMessage: "A title is required.",
-                    value: "Copilot Data Readiness"
-                },
+                    errorMessage: "A folder name is required.",
+                    value: "Site Admin Tool"
+                }
             ]
         });
 
@@ -114,7 +176,7 @@ export class PageGenerator {
             buttonType: Components.ButtonTypes.OutlinePrimary,
             tooltips: [
                 {
-                    content: "Click to create the page.",
+                    content: "Click to create the pages.",
                     btnProps: {
                         text: "Create",
                         onClick: () => {
@@ -122,8 +184,11 @@ export class PageGenerator {
                             if (form.isValid()) {
                                 let values = form.getValues();
 
-                                // Create the page
-                                this.createPage(values["Name"].split('.aspx')[0] + ".aspx", values["Title"]);
+                                // Create the folder
+                                this.createFolder(values["Name"]).then(folder => {
+                                    // Create the pages
+                                    this.createPages(folder);
+                                });
                             }
                         }
                     }
@@ -146,38 +211,50 @@ export class PageGenerator {
     }
 
     // Uploads the images for the site page
-    private uploadImages(pageFolderName: string, pageItemId: number): PromiseLike<Template> {
+    private uploadImages(pageFolderName: string, pageItemId: number, page: PageTemplate): PromiseLike<PageTemplate> {
         // Return a promise
         return new Promise(resolve => {
             // Get the folder info for the page
             this.getFolderInfo(pageFolderName, pageItemId).then(pageFolderInfo => {
-                // Create the template
-                let template = new Template(ContextInfo.siteId, ContextInfo.webId, pageFolderInfo.listId, pageFolderInfo.folderUrl);
+                // Create the data readiness page
+                page.updateFolderInfo(ContextInfo.siteId, ContextInfo.webId, pageFolderInfo.listId, pageFolderInfo.folderUrl);
+
+                // Do nothing if no image references exist
+                let images = Object.keys(page.Images);
+                if (images.length == 0) {
+                    resolve(page);
+                    return;
+                }
 
                 // Update the loading dialog
                 LoadingDialog.setBody("Uploading the images...");
 
-                // Get the web url from the image
-                Web.getWebUrlFromPageUrl(PageGenerator._imageReferences[0]).execute(webRef => {
+                // Get the web reference for the images in the SPFx folder
+                Web.getWebUrlFromPageUrl(PageGenerator.ImageReferences[0]).execute(webRef => {
                     // Parse the image references
                     let ctr = 0;
-                    Helper.Executor(PageGenerator._imageReferences, imageUrl => {
+                    Helper.Executor(images, imageKey => {
+                        // Find the image
+                        let imageRef = PageGenerator.ImageReferences.filter(imageRef => {
+                            if (imageRef.indexOf(imageKey) > 0) { return imageRef; }
+                        })[0];
+
                         // Update the loading dialog
-                        LoadingDialog.setBody(`Uploading image ${++ctr} of ${PageGenerator._imageReferences.length}...`);
+                        LoadingDialog.setBody(`Uploading image ${++ctr} of ${images.length}...`);
 
                         // Return a promise
                         return new Promise(resolve => {
                             // Get the file
-                            Web(webRef.GetWebUrlFromPageUrl).getFileByUrl(imageUrl).execute(file => {
+                            Web(webRef.GetWebUrlFromPageUrl).getFileByUrl(imageRef).execute(file => {
                                 // Get the content
                                 file.content().execute(data => {
-                                    let fileInfo = imageUrl.split('/');
+                                    let fileInfo = imageRef.split('/');
                                     let fileName = fileInfo[fileInfo.length - 1].split('_')[0];
 
                                     // Upload the file
-                                    SitePages().addImage(pageFolderName, fileName + ".png", pageItemId, data).execute(image => {
+                                    SitePages().addImage(pageFolderName, fileName + ".png", pageItemId, null, data).execute(image => {
                                         // Update the template
-                                        template.updateImageId(fileName, image.UniqueId);
+                                        page.updateImageId(fileName, image.UniqueId);
 
                                         // Get the next file
                                         resolve(image);
@@ -186,8 +263,11 @@ export class PageGenerator {
                             }, resolve);
                         });
                     }).then(() => {
+                        // Update the loading dialog
+                        LoadingDialog.setBody(`${images.length} images uploaded`);
+
                         // Resolve the request
-                        resolve(template);
+                        resolve(page);
                     });
                 });
             });

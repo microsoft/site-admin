@@ -49,6 +49,9 @@ export class Permissions {
         return new Promise(resolve => {
             let counter = 0;
 
+            // Update the dialog
+            this._elSubNav.children[1].innerHTML = `Trying to get M365 Group information: ${++counter} of ${groupIds.length}`;
+
             // Load the group information
             M365Groups.getGroupInfo(groupIds, group => {
                 // Update the dialog
@@ -91,37 +94,45 @@ export class Permissions {
                             if (group) {
                                 // See if this is a reference to the owner's group
                                 if (member.LoginName.endsWith("_o")) {
-                                    // Add the owners
-                                    item.GroupOwners = item.GroupOwners.concat(group.owners.results);
+                                    // Ensure owners were found
+                                    if (group.owners) {
+                                        // Add the owners
+                                        item.GroupOwners = item.GroupOwners.concat(group.owners.results);
 
-                                    // Parse the group owners
-                                    item.GroupOwners.forEach(owner => {
-                                        // Add the member name
-                                        item.GroupOwnersAsString.push(owner.mail);
-                                    });
+                                        // Parse the group owners
+                                        item.GroupOwners.forEach(owner => {
+                                            // Add the member name
+                                            item.GroupOwnersAsString.push(owner.mail);
+                                        });
 
-                                    // Remove duplicates
-                                    item.GroupOwnersAsString = item.GroupOwnersAsString.filter((value, idx, self) => {
-                                        return self.indexOf(value) === idx;
-                                    });
+                                        // Remove duplicates
+                                        item.GroupOwnersAsString = item.GroupOwnersAsString.filter((value, idx, self) => {
+                                            return self.indexOf(value) === idx;
+                                        });
+                                    }
                                 } else {
-                                    // Add the members
-                                    item.GroupMembers = item.GroupMembers.concat(group.members.results);
+                                    // Ensure members were found
+                                    if (group.members) {
+                                        // Add the members
+                                        item.GroupMembers = item.GroupMembers.concat(group.members.results);
 
-                                    // Parse the group members
-                                    item.GroupMembers.forEach(member => {
-                                        // Add the member name
-                                        item.GroupMembersAsString.push(member.mail);
-                                    });
+                                        // Parse the group members
+                                        item.GroupMembers.forEach(member => {
+                                            // Add the member name
+                                            item.GroupMembersAsString.push(member.mail);
+                                        });
 
-                                    // Remove duplicates
-                                    item.GroupMembersAsString = item.GroupMembersAsString.filter((value, idx, self) => {
-                                        return self.indexOf(value) === idx;
-                                    });
+                                        // Remove duplicates
+                                        item.GroupMembersAsString = item.GroupMembersAsString.filter((value, idx, self) => {
+                                            return self.indexOf(value) === idx;
+                                        });
+                                    }
                                 }
 
                                 // Set the group url
-                                item.GroupUrl = group.calendarUrl.replace("calendar/group", "groups") + "/members";
+                                if (group.calendarUrl) {
+                                    item.GroupUrl = group.calendarUrl.replace("calendar/group", "groups") + "/members";
+                                }
                             }
                         } else {
                             // Add the member name
@@ -605,7 +616,7 @@ export class Permissions {
                                         }
 
                                         // Open the url in a new tab
-                                        window.open(url, "_blank");
+                                        url ? window.open(url, "_blank") : null;
                                     }
                                 }
                             }];

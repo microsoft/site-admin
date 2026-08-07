@@ -158,6 +158,16 @@ export class AppPermissionsTab {
                 },
                 table: {
                     rows: permissions,
+                    onRendering: dtProps => {
+                        dtProps.columnDefs = [
+                            {
+                                "targets": 3,
+                                "orderable": false,
+                                "searchable": false
+                            }
+                        ];
+                        return dtProps;
+                    },
                     columns: [
                         {
                             name: "appId",
@@ -211,7 +221,7 @@ export class AppPermissionsTab {
         Modal.clear();
 
         // Set the header
-        Modal.setHeader("Add App Permission");
+        Modal.setHeader(`${permission ? "Update" : "Add"} App Permission`);
 
         // Set the form
         let form = Components.Form({

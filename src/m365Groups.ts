@@ -84,53 +84,62 @@ export class M365Groups {
 
     // Loads the m365 group
     private static loadGroupById(groupId: string): PromiseLike<Types.SP.Directory.GroupOData> {
+        let group: Types.SP.Directory.GroupOData = { id: groupId } as Types.SP.Directory.GroupOData;
+
         // Return a promise
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             // Get the group information
-            let ds = DirectorySession().group(groupId);
-            ds.query({
-                Select: ["calendarUrl", "displayName", "id", "isPublic", "mail"]
-            }).execute(group => {
-                // Save the group information
+            let getGroupInfo = (): PromiseLike<void> => {
+                return new Promise(resolve => {
+                    DirectorySession().group(groupId).query({
+                        Select: ["calendarUrl", "displayName", "id", "isPublic", "mail"]
+                    }).execute(group => {
+                        // Update the group information
+                        group.calendarUrl = group.calendarUrl;
+                        group.displayName = group.displayName;
+                        group.id = group.id;
+                        group.isPublic = group.isPublic;
+                        group.mail = group.mail;
+
+                        // Resolve the group information
+                        resolve();
+                    }, () => {
+                        // Error loading this group
+                        this._errorGroupIds[groupId] = true;
+
+                        // Resolve the group information
+                        resolve();
+                    });
+                });
+            }
+
+            // Get the group members/owner information
+            let getGroupUsers = (member: boolean): PromiseLike<void> => {
+                return new Promise(resolve => {
+                    DirectorySession().group(groupId)[member ? "members" : "owners"]().query({
+                        GetAllItems: true,
+                        Top: 5000,
+                        Select: ["principalName", "id", "displayName", "mail"]
+                    }).execute(users => {
+                        // Set the users
+                        group[member ? "members" : "owners"] = users as any;
+
+                        // Resolve the users
+                        resolve();
+                    }, () => {
+                        // Resolve the request
+                        resolve();
+                    }, true);
+                });
+            }
+
+            // Get the group information, members and users
+            Promise.all([getGroupInfo(), getGroupUsers(true), getGroupUsers(false)]).then(() => {
+                // Set the group
                 this._groups[group.id] = group;
-            }, () => {
-                // Error loading this group
-                this._errorGroupIds[groupId] = true;
 
-                // Reject the request
-                reject();
-            });
-
-            // Get the group members
-            ds.members().query({
-                GetAllItems: true,
-                Top: 5000,
-                Select: ["principalName", "id", "displayName", "mail"]
-            }).execute(members => {
-                // Add the group information to the mapper
-                this._groups[groupId].members = members as any;
-            }, () => {
-                // Try the next group
-                resolve(null);
-            }, true);
-
-            // Get the group owners
-            ds.owners().query({
-                GetAllItems: true,
-                Top: 5000,
-                Select: ["principalName", "id", "displayName", "mail"]
-            }).execute(owners => {
-                // Add the group information to the mapper
-                this._groups[groupId].owners = owners as any;
-            }, () => {
-                // Try the next group
-                resolve(null);
-            }, true);
-
-            // Wait for the requests to complete
-            ds.done(() => {
-                // Try the next group
-                resolve(this._groups[groupId]);
+                // Resolve the request
+                resolve(this._groups[group.id]);
             });
         });
     }

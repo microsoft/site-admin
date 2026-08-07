@@ -116,6 +116,9 @@ export class SearchUsers {
                 let groupIds = [];
                 for (let groupId in groups) { groupIds.push(groupId); }
 
+                // Update the dialog
+                this._elSubNav.children[1].innerHTML = `Trying to get M365 Group information: ${++counter} of ${groupIds.length}`;
+
                 // Get the group information
                 M365Groups.getGroupInfo(groupIds, (group, groupId) => {
                     // Update the dialog
