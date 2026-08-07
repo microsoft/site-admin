@@ -84,66 +84,62 @@ export class M365Groups {
 
     // Loads the m365 group
     private static loadGroupById(groupId: string): PromiseLike<Types.SP.Directory.GroupOData> {
+        let group: Types.SP.Directory.GroupOData = { id: groupId } as Types.SP.Directory.GroupOData;
+
         // Return a promise
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             // Get the group information
-            let getGroupInfo = (): PromiseLike<Types.SP.Directory.GroupOData> => {
+            let getGroupInfo = (): PromiseLike<void> => {
                 return new Promise(resolve => {
                     DirectorySession().group(groupId).query({
                         Select: ["calendarUrl", "displayName", "id", "isPublic", "mail"]
                     }).execute(group => {
+                        // Update the group information
+                        group.calendarUrl = group.calendarUrl;
+                        group.displayName = group.displayName;
+                        group.id = group.id;
+                        group.isPublic = group.isPublic;
+                        group.mail = group.mail;
+
                         // Resolve the group information
-                        resolve(group);
+                        resolve();
                     }, () => {
                         // Error loading this group
                         this._errorGroupIds[groupId] = true;
 
                         // Resolve the group information
-                        resolve({ id: groupId } as any);
+                        resolve();
                     });
                 });
             }
 
             // Get the group members/owner information
-            let getGroupUsers = (member: boolean): PromiseLike<any> => {
+            let getGroupUsers = (member: boolean): PromiseLike<void> => {
                 return new Promise(resolve => {
                     DirectorySession().group(groupId)[member ? "members" : "owners"]().query({
                         GetAllItems: true,
                         Top: 5000,
                         Select: ["principalName", "id", "displayName", "mail"]
                     }).execute(users => {
+                        // Set the users
+                        group[member ? "members" : "owners"] = users as any;
+
                         // Resolve the users
-                        resolve(users);
+                        resolve();
                     }, () => {
-                        // Try the next group
-                        resolve(null);
+                        // Resolve the request
+                        resolve();
                     }, true);
                 });
             }
 
-            // Get the group information
-            getGroupInfo().then(group => {
-                // Set the group information
+            // Get the group information, members and users
+            Promise.all([getGroupInfo(), getGroupUsers(true), getGroupUsers(false)]).then(() => {
+                // Set the group
                 this._groups[group.id] = group;
 
-                // Get the group members
-                getGroupUsers(true).then(users => {
-                    // Set the group members
-                    if (users) {
-                        this._groups[group.id].members = users;
-                    }
-
-                    // Get the group owners
-                    getGroupUsers(false).then(users => {
-                        // Set the group owners
-                        if (users) {
-                            this._groups[group.id].owners = users;
-                        }
-
-                        // Resolve the request
-                        resolve(this._groups[group.id]);
-                    });
-                });
+                // Resolve the request
+                resolve(this._groups[group.id]);
             });
         });
     }

@@ -49,6 +49,9 @@ export class Permissions {
         return new Promise(resolve => {
             let counter = 0;
 
+            // Update the dialog
+            this._elSubNav.children[1].innerHTML = `Getting M365 Group information for ${groupIds.length} groups`;
+
             // Load the group information
             M365Groups.getGroupInfo(groupIds, group => {
                 // Update the dialog
