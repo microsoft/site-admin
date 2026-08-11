@@ -76,13 +76,18 @@ export class SearchDocs {
                             // Get the content
                             pdfjsLib.getDocument({ data: buffer }).promise.then(pdf => {
                                 let fullText = '';
+
+                                // Parse the pages
                                 let pages = [];
                                 for (let i = 0; i < pdf.numPages; i++) { pages.push(i); }
                                 Helper.Executor(pages, pageNum => {
                                     // Return a promise
                                     return new Promise(resolve => {
+                                        // Get the page
                                         pdf.getPage(pageNum + 1).then(page => {
+                                            // Get the text
                                             page.getTextContent().then(content => {
+                                                // Append the text
                                                 fullText += content.items.map((item: any) => item.str || "").join(" ");
                                                 resolve(null);
                                             });
