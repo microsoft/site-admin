@@ -4,7 +4,7 @@ import { Workbook } from "exceljs";
 import { loadAsync } from "jszip";
 import { extractRawText } from "mammoth";
 import * as moment from "moment";
-import { PDFParse } from "pdf-parse";
+import * as pdfjsLib from "pdfjs-dist";
 import { DataSource } from "../ds";
 import { M365Groups } from "../m365Groups";
 import { IRegexPattern } from "../regexPatternsDialog";
@@ -74,8 +74,22 @@ export class SearchDocs {
                             break;
                         case "pdf":
                             // Get the content
-                            let pdf = new PDFParse({ data: buffer });
-                            pdf.getText().then(content => { resolve(content.text); }).catch(reject);
+                            pdfjsLib.getDocument({ data: buffer }).promise.then(pdf => {
+                                let fullText = '';
+                                let pages = [];
+                                for (let i = 0; i < pdf.numPages; i++) { pages.push(i); }
+                                Helper.Executor(pages, pageNum => {
+                                    // Return a promise
+                                    return new Promise(resolve => {
+                                        pdf.getPage(pageNum + 1).then(page => {
+                                            page.getTextContent().then(content => {
+                                                fullText += content.items.map((item: any) => item.str || "").join(" ");
+                                                resolve(null);
+                                            });
+                                        });
+                                    });
+                                }).then(() => { resolve(fullText); });
+                            }).catch(reject);
                             break;
                         case "pptx":
                             // Load the file
