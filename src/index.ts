@@ -12,6 +12,11 @@ import Strings, { setContext } from "./strings";
 // Styling
 import "./styles.scss";
 
+// PDF - Set Worker Source
+import * as pdfjsLib from "pdfjs-dist";
+import * as pdfWorker from "pdfjs-dist/build/pdf.worker.min.js";
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
+
 // Create the global variable for this solution
 const GlobalVariable = {
     Configuration,
