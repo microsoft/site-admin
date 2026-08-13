@@ -183,7 +183,7 @@ export class DataSource {
                     // See if this is targeting the owner's group
                     if (groupIdMapper[groupId].endsWith("_o")) {
                         // Parse the owners
-                        let owners = group?.owners.results || [];
+                        let owners = group.owners?.results || [];
                         for (let i = 0; i < owners.length; i++) {
                             let owner = owners[i];
 
@@ -196,7 +196,7 @@ export class DataSource {
                         }
                     } else {
                         // Parse the members
-                        let members = group?.members.results || [];
+                        let members = group.members?.results || [];
                         for (let i = 0; i < members.length; i++) {
                             let member = members[i];
 
