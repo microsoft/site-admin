@@ -15,6 +15,7 @@ interface IPermissionItem {
     GroupUsersCount?: number;
     GroupUrl?: string;
     Id?: number;
+    IsLimitedAccess: boolean;
     LoginName: string;
     Name: string;
     Roles?: string[];
@@ -210,6 +211,7 @@ export class Permissions {
                         Everyone: false,
                         GroupIds: [],
                         Id: role.Member.Id,
+                        IsLimitedAccess: false,
                         LoginName: role.Member.LoginName,
                         Name: role.Member.Title,
                         Roles: [],
@@ -229,6 +231,7 @@ export class Permissions {
                         Everyone: false,
                         GroupIds: [],
                         Id: role.Member.Id,
+                        IsLimitedAccess: false,
                         LoginName: role.Member.LoginName,
                         Name: role.Member.Title,
                         Roles: [],
@@ -249,6 +252,7 @@ export class Permissions {
                         Everyone: role.Member.Title == "Everyone",
                         GroupIds: groupId ? [groupId] : [],
                         Id: role.Member.Id,
+                        IsLimitedAccess: false,
                         LoginName: role.Member.LoginName,
                         Name: role.Member.Title,
                         Roles: [],
@@ -266,6 +270,12 @@ export class Permissions {
                     // Add the permission
                     item.Roles.push(roleDef.Name);
                     item.RoleInfo.push(roleDef.Description);
+
+                    // See if this only has limited access
+                    if (roleDef.Name == "Limited Access" && item.Roles.length === 1) {
+                        // Set the flag
+                        item.IsLimitedAccess = true;
+                    }
                 });
 
                 // Analyze the users for this item
@@ -435,6 +445,35 @@ export class Permissions {
             }
         }];
 
+        // Show the filter button for permissions
+        navItems.push({
+            text: "Show Limited Access",
+            className: "btn-outline-light ms-2",
+            isButton: true,
+            onClick: () => {
+                // Get the error button
+                let elNav = this._elDashboard.querySelector("#navigation .navbar-nav");
+
+                // Remove the last button
+                let btn = elNav.querySelector("li:nth-child(2) a");
+
+                // See if we are currently hiding limited access items
+                if (btn.textContent == "Show Limited Access") {
+                    // Remove the filter
+                    this._dashboard.filter(3);
+
+                    // Update the button text
+                    btn.innerHTML = "Hide Limited Access";
+                } else {
+                    // Apply the filter
+                    this._dashboard.filter(3, "false");
+
+                    // Update the button text
+                    btn.innerHTML = "Show Limited Access";
+                }
+            }
+        });
+
         // Show the error button
         navItems.push({
             text: "Errors",
@@ -466,10 +505,17 @@ export class Permissions {
             table: {
                 rows: items,
                 onRendering: dtProps => {
+                    // Remove the order/sort option for the action column
                     dtProps.columnDefs.push({
-                        "targets": 8,
+                        "targets": 9,
                         "orderable": false,
                         "searchable": false
+                    });
+
+                    // Hide the limited access column
+                    dtProps.columnDefs.push({
+                        "targets": 3,
+                        "visible": false
                     });
 
                     // Order by the 1st column
@@ -498,6 +544,10 @@ export class Permissions {
                     {
                         name: "EEEU",
                         title: "Has<br/>EEEU?"
+                    },
+                    {
+                        name: "IsLimitedAccess",
+                        title: "Is<br/>Limited Access?"
                     },
                     {
                         name: "",
@@ -655,6 +705,9 @@ export class Permissions {
         this._elSubNav.classList.remove("d-none");
         this._elSubNav.classList.add("my-2");
         this._elSubNav.innerHTML = `<div class="h6"></div><div></div>`;
+
+        // Hide the limited access items by default
+        this._dashboard.filter(3, "false");
     }
 
     // Runs the report
