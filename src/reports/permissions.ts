@@ -653,7 +653,7 @@ export class Permissions {
                             let tooltips: Components.ITooltipProps[] = [{
                                 content: "Click to view the group/user information in another tab.",
                                 btnProps: {
-                                    text: item.Name,
+                                    text: "View " + (item.Type == "User" ? "User" : "Group"),
                                     type: Components.ButtonTypes.OutlinePrimary,
                                     onClick: () => {
                                         let url: string = null;
