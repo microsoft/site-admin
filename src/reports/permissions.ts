@@ -3,6 +3,7 @@ import { Components, ContextInfo, Helper, SPTypes, Types, Web } from "gd-sprest-
 import { DataSource } from "../ds";
 import { IM365Result, M365Groups } from "../m365Groups";
 import { ExportCSV } from "./exportCSV";
+import { ViewPermissions } from "./viewPermissions";
 
 interface IPermissionItem {
     EEEU?: boolean;
@@ -18,6 +19,7 @@ interface IPermissionItem {
     IsLimitedAccess: boolean;
     LoginName: string;
     Name: string;
+    Overshared?: boolean;
     Roles?: string[];
     RoleInfo?: string[];
     SiteMembers?: Types.SP.User[];
@@ -214,6 +216,7 @@ export class Permissions {
                         IsLimitedAccess: false,
                         LoginName: role.Member.LoginName,
                         Name: role.Member.Title,
+                        Overshared: false,
                         Roles: [],
                         RoleInfo: [],
                         SiteMembers: [],
@@ -234,6 +237,7 @@ export class Permissions {
                         IsLimitedAccess: false,
                         LoginName: role.Member.LoginName,
                         Name: role.Member.Title,
+                        Overshared: ViewPermissions.isOvershared([role], true),
                         Roles: [],
                         RoleInfo: [],
                         SiteMembers: role.Member["Users"] ? role.Member["Users"].results : [],
@@ -255,6 +259,7 @@ export class Permissions {
                         IsLimitedAccess: false,
                         LoginName: role.Member.LoginName,
                         Name: role.Member.Title,
+                        Overshared: ViewPermissions.isOvershared([role], true),
                         Roles: [],
                         RoleInfo: [],
                         SiteMembers: role.Member["Users"] ? role.Member["Users"].results : [],
@@ -460,13 +465,13 @@ export class Permissions {
                 // See if we are currently hiding limited access items
                 if (btn.textContent == "Show Limited Access") {
                     // Remove the filter
-                    this._dashboard.filter(3);
+                    this._dashboard.filter(4);
 
                     // Update the button text
                     btn.innerHTML = "Hide Limited Access";
                 } else {
                     // Apply the filter
-                    this._dashboard.filter(3, "false");
+                    this._dashboard.filter(4, "false");
 
                     // Update the button text
                     btn.innerHTML = "Show Limited Access";
@@ -507,14 +512,14 @@ export class Permissions {
                 onRendering: dtProps => {
                     // Remove the order/sort option for the action column
                     dtProps.columnDefs.push({
-                        "targets": 9,
+                        "targets": 10,
                         "orderable": false,
                         "searchable": false
                     });
 
                     // Hide the limited access column
                     dtProps.columnDefs.push({
-                        "targets": 3,
+                        "targets": 4,
                         "visible": false
                     });
 
@@ -544,6 +549,10 @@ export class Permissions {
                     {
                         name: "EEEU",
                         title: "Has<br/>EEEU?"
+                    },
+                    {
+                        name: "Overshared",
+                        title: "Contains<br/>Overshared Group?"
                     },
                     {
                         name: "IsLimitedAccess",
@@ -644,7 +653,7 @@ export class Permissions {
                             let tooltips: Components.ITooltipProps[] = [{
                                 content: "Click to view the group/user information in another tab.",
                                 btnProps: {
-                                    text: item.Name,
+                                    text: "View " + (item.Type == "User" ? "User" : "Group"),
                                     type: Components.ButtonTypes.OutlinePrimary,
                                     onClick: () => {
                                         let url: string = null;
@@ -707,7 +716,7 @@ export class Permissions {
         this._elSubNav.innerHTML = `<div class="h6"></div><div></div>`;
 
         // Hide the limited access items by default
-        this._dashboard.filter(3, "false");
+        this._dashboard.filter(4, "false");
     }
 
     // Runs the report
