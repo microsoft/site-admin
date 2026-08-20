@@ -62,7 +62,7 @@ export class ViewPermissions {
     }
 
     // Determines if a file is overshared
-    static isOvershared(roles: Types.SP.RoleAssignmentOData[]): boolean {
+    static isOvershared(roles: Types.SP.RoleAssignmentOData[], checkGroupOnly: boolean = false): boolean {
         let isOvershared = false;
 
         // Check if any role assignment matches the overshared groups
@@ -71,14 +71,7 @@ export class ViewPermissions {
 
             // Parse the role definitions
             let roleDefs = role.RoleDefinitionBindings?.results || [];
-            let isLimitedAccess = false;
-            for (let j = 0; j < roleDefs.length; j++) {
-                if (roleDefs[j].Name === "Limited Access") {
-                    // Skip this role
-                    isLimitedAccess = true;
-                    break;
-                }
-            }
+            let isLimitedAccess = roleDefs.length === 1 && roleDefs[0].Name === "Limited Access";
 
             // Skip permissions that are "Limited Access System Group"
             if (isLimitedAccess || role.Member.Title.indexOf("Limited Access System Group") === 0) {
@@ -87,7 +80,13 @@ export class ViewPermissions {
             }
 
             // See if this is the eeeu or everyone
-            if (role.Member.Title == "Everyone except external users" || role.Member.Title == "Everyone" || this.OversharedGroups.indexOf(role.Member.Title) >= 0) {
+            if (!checkGroupOnly && (role.Member.Title == "Everyone except external users" || role.Member.Title == "Everyone")) {
+                // Set the flag
+                isOvershared = true;
+                break;
+            }
+            // Else, see if it contains the custom group
+            else if (this.OversharedGroups.indexOf(role.Member.Title) >= 0) {
                 // Set the flag
                 isOvershared = true;
                 break;
@@ -100,7 +99,12 @@ export class ViewPermissions {
                     let user = users[j];
 
                     // See if this is the eeeu or everyone
-                    if (user.Title == "Everyone except external users" || user.Title == "Everyone" || this.OversharedGroups.indexOf(user.Title) >= 0) {
+                    if (!checkGroupOnly && (user.Title == "Everyone except external users" || user.Title == "Everyone")) {
+                        // Set the flag
+                        isOvershared = true;
+                        break;
+                    }
+                    else if (this.OversharedGroups.indexOf(user.Title) >= 0) {
                         // Set the flag
                         isOvershared = true;
                         break;
