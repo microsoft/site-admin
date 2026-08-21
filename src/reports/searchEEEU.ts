@@ -12,12 +12,14 @@ interface ISearchItem {
     GroupId?: number;
     GroupInfo?: string;
     Id?: number;
+    IsLimitedAccess: boolean;
     ItemId?: number;
     ListId?: string;
     ListName?: string;
     ListUrl?: string;
     LoginName: string;
     Name: string;
+    ObjectType: "Site" | "Group" | "List" | "Item" | "File" | "User";
     Role?: string;
     RoleInfo?: string;
     WebTitle: string;
@@ -33,7 +35,7 @@ interface IUserInfo {
 }
 
 const CSVFields = [
-    "Name", "UserName", "Email", "Group", "GroupInfo", "FileName", "FileUrl",
+    "Name", "UserName", "Email", "ObjectType", "Group", "GroupInfo", "FileName", "FileUrl",
     "ItemId", "ListName", "ListUrl", "Role", "RoleInfo", "WebTitle", "WebUrl"
 ]
 
@@ -47,97 +49,135 @@ export class SearchEEEU {
     private static _stopFl: boolean = false;
 
     // Analyzes a lists
-    private static analyzeList(web: Types.SP.WebOData, list: Types.SP.ListOData): PromiseLike<void> {
+    private static analyzeList(web: Types.SP.WebOData, list: Types.SP.ListOData, searchItems: boolean): PromiseLike<void> {
         // Return a promise
         return new Promise(resolve => {
-            // Set the fields to query
-            let Select = ["Id", "HasUniqueRoleAssignments"];
-            if (list.BaseTemplate == SPTypes.ListTemplateType.DocumentLibrary ||
-                list.BaseTemplate == SPTypes.ListTemplateType.MySiteDocumentLibrary ||
-                list.BaseTemplate == SPTypes.ListTemplateType.PageLibrary) {
-                // Get the file information
-                Select.push("FileLeafRef");
-                Select.push("FileRef");
-            }
+            // Parse the role assignments
+            Helper.Executor(list.RoleAssignments.results, roleAssignment => {
+                let roleDef = (roleAssignment as any as Types.SP.RoleAssignmentOData).RoleDefinitionBindings.results[0];
+                let user: Types.SP.User = roleAssignment.Member as any;
 
-            // Create a batch job
-            let completed = 0;
-            let ctrBatchJobs = 0;
-            let batchWeb = this._loadOneDrive ? Web.getOneDrive({ callbackQuery: () => { if (this._stopFl) { batch.stop(); } } })
-                : Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue, callbackQuery: () => { if (this._stopFl) { batch.stop(); } } });
-            let batch = batchWeb.Lists().getById(list.Id);
-
-            // Update the dialog
-            this._elSubNav.children[1].innerHTML = `Loading the items...`;
-
-            // Get the items for the list
-            let itemCounter = 0;
-            DataSource.loadItems({
-                isOnedrive: this._loadOneDrive,
-                listId: list.Id,
-                webUrl: web.Url,
-                query: { Select },
-                onItem: item => {
-                    // Update the dialog
-                    this._elSubNav.children[1].innerHTML = `Creating Batch Requests - Processed ${++itemCounter} items...`;
-
-                    // See if this item doesn't have unique permissions
-                    if (!item.HasUniqueRoleAssignments) { return this._stopFl; }
-
-                    // Get the permissions
-                    batch.Items(item.Id).RoleAssignments().query({
-                        Expand: [
-                            "Member", "RoleDefinitionBindings"
-                        ]
-                    }).batch(roles => {
-                        // Parse the role assignments
-                        Helper.Executor(roles.results, roleAssignment => {
-                            let roleDef = roleAssignment.RoleDefinitionBindings.results[0];
-                            let user: Types.SP.User = roleAssignment.Member as any;
-
-                            // See if it's overshared
-                            if (this.isOvershared(user)) {
-                                // Add a row for this entry
-                                let roleItem = {
-                                    Email: user.Email,
-                                    FileName: item["FileLeafRef"],
-                                    FileUrl: item["FileRef"],
-                                    Group: "",
-                                    GroupId: 0,
-                                    GroupInfo: "",
-                                    Id: user.Id,
-                                    ItemId: item.Id,
-                                    ListId: list.Id,
-                                    ListName: list.Title,
-                                    LoginName: user.LoginName,
-                                    ListUrl: list.RootFolder.ServerRelativeUrl,
-                                    Name: user.Title || user.LoginName,
-                                    Role: roleDef?.Name || "",
-                                    RoleInfo: roleDef?.Description || "",
-                                    WebUrl: web.Url,
-                                    WebTitle: web.Title
-                                };
-                                this._items.push(roleItem);
-                                this._dashboard.Datatable.addRow(roleItem);
-                            }
-
-                            // Increment the counter and update the dialog
-                            this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${ctrBatchJobs % Strings.MaxBatchSize}...`;
-                        });
-                    }, ctrBatchJobs++ % Strings.MaxBatchSize == 0);
-
-                    // Return the stop flag
-                    return this._stopFl;
+                // See if it's overshared
+                if (this.isOvershared(user)) {
+                    // Add a row for this entry
+                    let roleItem: ISearchItem = {
+                        Email: user.Email,
+                        Group: "",
+                        GroupId: 0,
+                        GroupInfo: "",
+                        Id: user.Id,
+                        IsLimitedAccess: roleDef.Name == "Limited Access",
+                        ListId: list.Id,
+                        ListName: list.Title,
+                        LoginName: user.LoginName,
+                        ListUrl: list.RootFolder.ServerRelativeUrl,
+                        Name: user.Title || user.LoginName,
+                        ObjectType: "List",
+                        Role: roleDef?.Name || "",
+                        RoleInfo: roleDef?.Description || "",
+                        WebUrl: web.Url,
+                        WebTitle: web.Title
+                    };
+                    this._items.push(roleItem);
+                    this._dashboard.Datatable.addRow(roleItem);
                 }
             }).then(() => {
-                // Update the dialog
-                this._elSubNav.children[1].innerHTML = `Executing Batch Request for ${ctrBatchJobs} items...`;
+                if (searchItems) {
+                    // Set the fields to query
+                    let Select = ["Id", "HasUniqueRoleAssignments"];
+                    if (list.BaseTemplate == SPTypes.ListTemplateType.DocumentLibrary ||
+                        list.BaseTemplate == SPTypes.ListTemplateType.MySiteDocumentLibrary ||
+                        list.BaseTemplate == SPTypes.ListTemplateType.PageLibrary) {
+                        // Get the file information
+                        Select.push("FileLeafRef");
+                        Select.push("FileRef");
+                    }
 
-                // Execute the batch jobs
-                batch.execute(() => {
+                    // Create a batch job
+                    let completed = 0;
+                    let ctrBatchJobs = 0;
+                    let batchWeb = this._loadOneDrive ? Web.getOneDrive({ callbackQuery: () => { if (this._stopFl) { batch.stop(); } } })
+                        : Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue, callbackQuery: () => { if (this._stopFl) { batch.stop(); } } });
+                    let batch = batchWeb.Lists().getById(list.Id);
+
+                    // Update the dialog
+                    this._elSubNav.children[1].innerHTML = `Loading the items...`;
+
+                    // Get the items for the list
+                    let itemCounter = 0;
+                    DataSource.loadItems({
+                        isOnedrive: this._loadOneDrive,
+                        listId: list.Id,
+                        webUrl: web.Url,
+                        query: { Select },
+                        onItem: item => {
+                            // Update the dialog
+                            this._elSubNav.children[1].innerHTML = `Creating Batch Requests - Processed ${++itemCounter} items...`;
+
+                            // See if this item doesn't have unique permissions
+                            if (!item.HasUniqueRoleAssignments) { return this._stopFl; }
+
+                            // Get the permissions
+                            batch.Items(item.Id).RoleAssignments().query({
+                                Expand: [
+                                    "Member", "RoleDefinitionBindings"
+                                ]
+                            }).batch(roles => {
+                                // Parse the role assignments
+                                Helper.Executor(roles.results, roleAssignment => {
+                                    let roleDef = roleAssignment.RoleDefinitionBindings.results[0];
+                                    let user: Types.SP.User = roleAssignment.Member as any;
+
+                                    // See if it's overshared
+                                    if (this.isOvershared(user)) {
+                                        // Add a row for this entry
+                                        let roleItem: ISearchItem = {
+                                            Email: user.Email,
+                                            FileName: item["FileLeafRef"],
+                                            FileUrl: item["FileRef"],
+                                            Group: "",
+                                            GroupId: 0,
+                                            GroupInfo: "",
+                                            Id: user.Id,
+                                            IsLimitedAccess: roleDef.Name == "Limited Access",
+                                            ItemId: item.Id,
+                                            ListId: list.Id,
+                                            ListName: list.Title,
+                                            LoginName: user.LoginName,
+                                            ListUrl: list.RootFolder.ServerRelativeUrl,
+                                            Name: user.Title || user.LoginName,
+                                            ObjectType: item["FileLeafRef"] ? "File" : "Item",
+                                            Role: roleDef?.Name || "",
+                                            RoleInfo: roleDef?.Description || "",
+                                            WebUrl: web.Url,
+                                            WebTitle: web.Title
+                                        };
+                                        this._items.push(roleItem);
+                                        this._dashboard.Datatable.addRow(roleItem);
+                                    }
+
+                                    // Increment the counter and update the dialog
+                                    this._elSubNav.children[1].innerHTML = `Batch Requests Processed ${++completed} of ${ctrBatchJobs % Strings.MaxBatchSize}...`;
+                                });
+                            }, ctrBatchJobs++ % Strings.MaxBatchSize == 0);
+
+                            // Return the stop flag
+                            return this._stopFl;
+                        }
+                    }).then(() => {
+                        // Update the dialog
+                        this._elSubNav.children[1].innerHTML = `Executing Batch Request for ${ctrBatchJobs} items...`;
+
+                        // Execute the batch jobs
+                        batch.execute(() => {
+                            // Resolve the request
+                            resolve();
+                        });
+                    });
+                } else {
                     // Resolve the request
                     resolve();
-                });
+                }
             });
         });
     }
@@ -148,44 +188,41 @@ export class SearchEEEU {
         return new Promise(resolve => {
             // Search the users
             this.analyzeUsers(web).then(() => {
-                // See if we are searching lists
-                if (searchLists) {
-                    // Show a dialog
-                    this._elSubNav.children[1].innerHTML = `Analyzing lists...`;
+                // Show a dialog
+                this._elSubNav.children[1].innerHTML = `Analyzing lists...`;
 
-                    // Get the lists
-                    let site = this._loadOneDrive ? Web.getOneDrive() : Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue });
-                    site.Lists().query({
-                        Filter: "Hidden eq false",
-                        Expand: ["RootFolder"],
-                        Select: ["Id", "Title", "BaseTemplate", "HasUniqueRoleAssignments", "ItemCount", "RootFolder/ServerRelativeUrl"]
-                    }).execute(resp => {
-                        let ctrList = 0;
-                        let siteText = this._elSubNav.children[0].innerHTML;
+                // Get the lists
+                let site = this._loadOneDrive ? Web.getOneDrive() : Web(web.Url, { requestDigest: DataSource.SiteContext.FormDigestValue });
+                site.Lists().query({
+                    Filter: "Hidden eq false",
+                    Expand: [
+                        "RoleAssignments", "RoleAssignments/Groups", "RoleAssignments/Member",
+                        "RoleAssignments/RoleDefinitionBindings", "RootFolder"
+                    ],
+                    Select: ["Id", "Title", "BaseTemplate", "HasUniqueRoleAssignments", "ItemCount", "RootFolder/ServerRelativeUrl"]
+                }).execute(resp => {
+                    let ctrList = 0;
+                    let siteText = this._elSubNav.children[0].innerHTML;
 
-                        // Parse the lists
-                        let lists = this._loadOneDrive ? resp["value"] : resp.results;
-                        Helper.Executor(lists, list => {
-                            // See if we are stopping this process
-                            if (this._stopFl) { return; }
+                    // Parse the lists
+                    let lists = this._loadOneDrive ? resp["value"] : resp.results;
+                    Helper.Executor(lists, list => {
+                        // See if we are stopping this process
+                        if (this._stopFl) { return; }
 
-                            // See if we are skipping large lists
-                            if (this._maxItemCount > 0 && list.ItemCount > this._maxItemCount) { return; }
+                        // See if we are skipping large lists
+                        if (this._maxItemCount > 0 && list.ItemCount > this._maxItemCount) { return; }
 
-                            // Show a dialog
-                            this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing List ${++ctrList} of ${lists.length}]: ${list.Title}`;
+                        // Show a dialog
+                        this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing List ${++ctrList} of ${lists.length}]: ${list.Title}`;
 
-                            // Analyze the list
-                            return this.analyzeList(web, list);
-                        }).then(() => {
-                            // Resolve the request
-                            resolve(null);
-                        });
+                        // Analyze the list
+                        return this.analyzeList(web, list, searchLists);
+                    }).then(() => {
+                        // Resolve the request
+                        resolve(null);
                     });
-                } else {
-                    // Resolve the request
-                    resolve();
-                }
+                });
             })
         });
     }
@@ -244,12 +281,14 @@ export class SearchEEEU {
                 // See if this role is the user
                 if (role.Member.LoginName == userInfo.Name) {
                     // Add the user information
-                    let roleItem = {
+                    let roleItem: ISearchItem = {
                         WebUrl: web.Url,
                         WebTitle: web.Title,
                         Id: userInfo.Id,
+                        IsLimitedAccess: roleDef.Name == "Limited Access",
                         LoginName: userInfo.Name,
                         Name: userInfo.Title || userInfo.Name,
+                        ObjectType: "User",
                         Email: userInfo.EMail,
                         Group: "",
                         GroupId: 0,
@@ -279,12 +318,14 @@ export class SearchEEEU {
                             let roleDef = role.RoleDefinitionBindings.results[0];
 
                             // Add the user information
-                            let roleItem = {
+                            let roleItem: ISearchItem = {
                                 WebUrl: web.Url,
                                 WebTitle: web.Title,
                                 Id: userInfo.Id,
+                                IsLimitedAccess: roleDef.Name == "Limited Access",
                                 LoginName: userInfo.Name,
                                 Name: userInfo.Title || userInfo.Name,
+                                ObjectType: "Group",
                                 Email: userInfo.EMail,
                                 Group: group.Title,
                                 GroupId: group.Id,
@@ -429,24 +470,57 @@ export class SearchEEEU {
 
     // Renders the search summary
     private static renderSummary(el: HTMLElement, auditOnly: boolean, items: ISearchItem[], onClose?: () => void) {
+
+        // Create the nav items
+        let navItems: Components.INavbarItem[] = onClose ? [{
+            text: "New Search",
+            className: "btn-outline-light",
+            isButton: true,
+            onClick: () => {
+                // Set the stop flag
+                this._stopFl = true;
+
+                // Call the close event
+                onClose();
+            }
+        }] : [];
+
+        // Show the filter button for permissions
+        navItems.push({
+            text: "Show Limited Access",
+            className: "btn-outline-light ms-2",
+            isButton: true,
+            onClick: () => {
+                // Get the error button
+                let elNav = el.querySelector("#navigation .navbar-nav");
+
+                // Remove the last button
+                let btn = elNav.querySelector("li:last-child a");
+
+                // See if we are currently hiding limited access items
+                if (btn.textContent == "Show Limited Access") {
+                    // Remove the filter
+                    this._dashboard.filter(2);
+
+                    // Update the button text
+                    btn.innerHTML = "Hide Limited Access";
+                } else {
+                    // Apply the filter
+                    this._dashboard.filter(2, "false");
+
+                    // Update the button text
+                    btn.innerHTML = "Show Limited Access";
+                }
+            }
+        });
+
         // Render the summary
         this._dashboard = new Dashboard({
             el,
             navigation: {
                 title: "Search EEEU",
                 showFilter: false,
-                items: onClose ? [{
-                    text: "New Search",
-                    className: "btn-outline-light",
-                    isButton: true,
-                    onClick: () => {
-                        // Set the stop flag
-                        this._stopFl = true;
-
-                        // Call the close event
-                        onClose();
-                    }
-                }] : null,
+                items: navItems,
                 itemsEnd: [{
                     text: "Export to CSV",
                     className: "btn-outline-light me-2",
@@ -462,11 +536,17 @@ export class SearchEEEU {
                 onRendering: dtProps => {
                     dtProps.columnDefs = [
                         {
-                            "targets": 5,
+                            "targets": 6,
                             "orderable": false,
                             "searchable": false
                         }
                     ];
+
+                    // Hide the limited access column
+                    dtProps.columnDefs.push({
+                        "targets": 2,
+                        "visible": false
+                    });
 
                     // Order by the 1st column
                     dtProps.order = [[0, "asc"]];
@@ -477,21 +557,24 @@ export class SearchEEEU {
                 columns: [
                     {
                         name: "Name",
-                        title: "Object Type",
+                        title: "Information",
                         onRenderCell: (el, col, item: ISearchItem) => {
-                            // Set the object type
-                            let objType = "Site";
-                            if (item.GroupId > 0) { objType = "Group"; }
-                            if (item.ItemId > 0) { objType = "Item"; }
-                            if (item.FileUrl) { objType = "File" }
-
                             // Render the info
                             el.innerHTML = `
                                 <b>Name: </b>${item.Name}
+                                ${item.ListId ? `<br/><b>List: </b>${item.ListName}` : ""}
                                 <br/>
-                                <b>Type: </b>${objType}
+                                <b>Web: </b>${item.WebUrl}
                             `;
                         }
+                    },
+                    {
+                        name: "ObjectType",
+                        title: "Object Type"
+                    },
+                    {
+                        name: "IsLimitedAccess",
+                        title: "Is<br/>Limited Access?"
                     },
                     {
                         name: "Group",
@@ -527,35 +610,26 @@ export class SearchEEEU {
                         }
                     },
                     {
-                        name: "Role",
-                        title: "Permission"
-                    },
-                    {
-                        name: "RoleInfo",
-                        title: "Permission Detail",
-                        onRenderCell: (el) => {
-                            // Declare a span element
-                            let span = document.createElement("span");
-                            span.className = "notes";
+                        name: "",
+                        title: "Permissions",
+                        onRenderCell: (el, col, item: ISearchItem) => {
+                            // Set the style
+                            el.style.cursor = "pointer";
 
-                            // Return the plain text if less than 50 chars
-                            if (el.innerHTML.length < 50) {
-                                span.innerHTML = el.innerHTML;
-                            } else {
-                                // Truncate to the last white space character in the text after 50 chars and add an ellipsis
-                                span.innerHTML = el.innerHTML.substring(0, 50).replace(/\s([^\s]*)$/, '') + '&#8230';
+                            // Render a badge
+                            let badge = Components.Badge({
+                                el,
+                                className: "me-2",
+                                isPill: true,
+                                content: item.Role,
+                                type: Components.BadgeTypes.Primary
+                            });
 
-                                // Add a tooltip containing the text
-                                Components.Tooltip({
-                                    content: "<small>" + el.innerHTML + "</small>",
-                                    target: span
-                                });
-                            }
-
-                            // Clear the element
-                            el.innerHTML = "";
-                            // Append the span
-                            el.appendChild(span);
+                            // Add a tooltip containing the text
+                            Components.Tooltip({
+                                content: "<small>" + item.RoleInfo + "</small>",
+                                target: badge.el
+                            });
                         }
                     },
                     {
@@ -568,58 +642,92 @@ export class SearchEEEU {
                             // Render the tooltips
                             let tooltips = Components.TooltipGroup({ el });
 
-                            // See if this is a file
-                            if (row.FileUrl) {
-                                // Add a button to the file
-                                tooltips.add({
-                                    content: "Click to view the file.",
-                                    btnProps: {
-                                        className: "pe-2 py-1",
-                                        text: "View File",
-                                        type: Components.ButtonTypes.OutlinePrimary,
-                                        onClick: () => {
-                                            // View the file
-                                            window.open(Documents.isWopi(row.FileName) ? row.WebUrl + "/_layouts/15/WopiFrame.aspx?sourcedoc=" + row.FileUrl + "&action=view" : row.FileUrl, "_blank");
+                            // Add the tooltip, based on the type
+                            switch (row.ObjectType) {
+                                case "File":
+                                    // Add a button to the file
+                                    tooltips.add({
+                                        content: "Click to view the file.",
+                                        btnProps: {
+                                            className: "pe-2 py-1",
+                                            text: "View File",
+                                            type: Components.ButtonTypes.OutlinePrimary,
+                                            onClick: () => {
+                                                // View the file
+                                                window.open(`${row.WebUrl}/${ContextInfo.layoutsUrl}/user.aspx`, "_blank");
+                                            }
                                         }
-                                    }
-                                });
+                                    });
+                                    break;
+                                case "Group":
+                                    // Add the view button
+                                    tooltips.add({
+                                        content: "Click to view the site group.",
+                                        btnProps: {
+                                            className: "pe-2 py-1",
+                                            //iconType: GetIcon(24, 24, "PeopleTeam", "mx-1"),
+                                            text: "View Group",
+                                            type: Components.ButtonTypes.OutlinePrimary,
+                                            onClick: () => {
+                                                // View the group
+                                                window.open(`${row.WebUrl}/${ContextInfo.layoutsUrl}/people.aspx?MembershipGroupId=${row.GroupId}`);
+                                            }
+                                        }
+                                    });
+                                    break;
+                                case "Item":
+                                    // Add the view button
+                                    tooltips.add({
+                                        content: "Click to view the item unique permissions.",
+                                        btnProps: {
+                                            className: "pe-2 py-1",
+                                            text: "View Group",
+                                            type: Components.ButtonTypes.OutlinePrimary,
+                                            onClick: () => {
+                                                // View the group
+                                                window.open(`${row.WebUrl}/${ContextInfo.layoutsUrl}/user.aspx?List=${row.ListId}&obj=${row.ListId},${row.FileUrl ? "1" : "2"},LISTITEM`, "_blank");
+                                            }
+                                        }
+                                    });
+                                    break;
+                                case "List":
+                                    // Add the view button
+                                    tooltips.add({
+                                        content: "Click to view the list permissions.",
+                                        btnProps: {
+                                            className: "pe-2 py-1",
+                                            text: "View List",
+                                            type: Components.ButtonTypes.OutlinePrimary,
+                                            onClick: () => {
+                                                // View the group
+                                                window.open(`${row.WebUrl}/${ContextInfo.layoutsUrl}/user.aspx?List=${row.ListId}&obj=${row.ListId},LIST`, "_blank");
+                                            }
+                                        }
+                                    });
+                                    break;
+                                case "Site":
+                                    // Add a button to show the site permissions
+                                    tooltips.add({
+                                        content: "Click to view the site permissions.",
+                                        btnProps: {
+                                            className: "pe-2 py-1",
+                                            text: "View Permissions",
+                                            type: Components.ButtonTypes.OutlinePrimary,
+                                            onClick: () => {
+                                                // View the file
+                                                window.open(Documents.isWopi(row.FileName) ? row.WebUrl + "/_layouts/15/WopiFrame.aspx?sourcedoc=" + row.FileUrl + "&action=view" : row.FileUrl, "_blank");
+                                            }
+                                        }
+                                    });
+                                    break;
                             }
 
                             // See if this is a list item
                             if (row.ListId) {
-                                // Add the view button
-                                tooltips.add({
-                                    content: "Click to view the item unique permissions.",
-                                    btnProps: {
-                                        className: "pe-2 py-1",
-                                        //iconType: GetIcon(24, 24, "PeopleTeam", "mx-1"),
-                                        text: "View Group",
-                                        type: Components.ButtonTypes.OutlinePrimary,
-                                        onClick: () => {
-                                            // View the group
-                                            window.open(`${row.WebUrl}/${ContextInfo.layoutsUrl}/user.aspx?List=${row.ListId}&obj=${row.ListId},${row.FileUrl ? "1" : "2"},LISTITEM`);
-                                        }
-                                    }
-                                });
                             }
 
                             // Ensure this is a group
                             if (row.GroupId > 0) {
-                                // Add the view button
-                                tooltips.add({
-                                    content: "Click to view the site group.",
-                                    btnProps: {
-                                        className: "pe-2 py-1",
-                                        //iconType: GetIcon(24, 24, "PeopleTeam", "mx-1"),
-                                        text: "View Group",
-                                        type: Components.ButtonTypes.OutlinePrimary,
-                                        onClick: () => {
-                                            // View the group
-                                            window.open(`${row.WebUrl}/${ContextInfo.layoutsUrl}/people.aspx?MembershipGroupId=${row.GroupId}`);
-                                        }
-                                    }
-                                });
-
                                 // Ensure we can remove
                                 if (!auditOnly) {
                                     // Add the remove button
@@ -700,6 +808,9 @@ export class SearchEEEU {
         this._elSubNav.classList.remove("d-none");
         this._elSubNav.classList.add("my-2");
         this._elSubNav.innerHTML = `<div class="h6"></div><div></div>`;
+
+        // Hide the limited access items by default
+        this._dashboard.filter(2, "false");
     }
 
     // Runs the report
@@ -831,11 +942,14 @@ export class SearchEEEU {
 
             // Get the list information
             web.Lists(listName).query({
-                Expand: ["RootFolder"],
+                Expand: [
+                    "RoleAssignments", "RoleAssignments/Groups", "RoleAssignments/Member",
+                    "RoleAssignments/RoleDefinitionBindings", "RootFolder"
+                ],
                 Select: ["Id", "Title", "BaseTemplate", "HasUniqueRoleAssignments", "RootFolder/ServerRelativeUrl"]
             }).execute(list => {
                 // Analyze the list
-                this.analyzeList(webInfo, list).then(() => {
+                this.analyzeList(webInfo, list, true).then(() => {
                     // Hide the sub-nav
                     this._elSubNav.classList.add("d-none");
                 });
