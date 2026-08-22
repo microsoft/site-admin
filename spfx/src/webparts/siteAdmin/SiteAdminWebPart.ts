@@ -104,6 +104,20 @@ export interface ISiteAdminWebPartProps {
   ReportsDocSearchFileExt: string;
   ReportsDocSearchKeywords: string;
   ReportsDocSearchRegexPatterns: string;
+  ReportNameDLP: string;
+  ReportNameDocRetention: string;
+  ReportNameExternalShares: string;
+  ReportNameExternalUsers: string;
+  ReportNamePermissions: string;
+  ReportNameRetention: string;
+  ReportNameSearchAgents: string;
+  ReportNameSearchDocs: string;
+  ReportNameSearchEEEU: string;
+  ReportNameSearchProp: string;
+  ReportNameSearchUsers: string;
+  ReportNameSensitivityLabels: string;
+  ReportNameSharingLinks: string;
+  ReportNameUniquePermissions: string;
   ReportsSecureFileText: string;
   ReportsOversharedGroups: string;
   SensitivityLabelFileExt: string;
@@ -234,6 +248,22 @@ declare const SiteAdmin: {
     maxStorageSize?: number;
     siteAttestation?: boolean;
     siteAttestationText?: string;
+    reportNames?: {
+      dlp: string;
+      docRetention: string;
+      externalShares: string;
+      externalUsers: string;
+      permissions: string;
+      retention: string;
+      searchAgents: string;
+      searchDocs: string;
+      searchEEEU: string;
+      searchProp: string;
+      searchUsers: string;
+      sensitivityLabels: string;
+      sharingLinks: string;
+      uniquePermissions: string;
+    }
     reportProps?: {
       docRententionYears?: string;
       dlpFileExt?: string;
@@ -818,6 +848,85 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         {
           groups: [
             {
+              groupName: "Report Names",
+              groupFields: [
+                PropertyPaneTextField("ReportNameDLP", {
+                  label: "Data Loss Prevention (DLP):",
+                  description: "The report name displayed in the form.",
+                  value: this.properties.ReportNameDLP
+                }),
+                PropertyPaneTextField("HideReportDocRetention", {
+                  label: "Document Retention:",
+                  description: "The report name displayed in the form.",
+                  value: this.properties.ReportNameDocRetention
+                }),
+                PropertyPaneTextField("HideReportExternalShares", {
+                  label: "External Shares:",
+                  description: "The report name displayed in the form.",
+                  value: this.properties.ReportNameExternalShares
+                }),
+                PropertyPaneTextField("HideReportExternalUsers", {
+                  label: "External Users:",
+                  description: "The report name displayed in the form.",
+                  value: this.properties.ReportNameExternalUsers
+                }),
+                PropertyPaneTextField("HideReportPermissions", {
+                  label: "Permissions:",
+                  description: "The report name displayed in the form.",
+                  value: this.properties.ReportNamePermissions
+                }),
+                PropertyPaneTextField("HideReportRetention", {
+                  label: "Retention:",
+                  description: "The report name displayed in the form.",
+                  value: this.properties.ReportNameRetention
+                }),
+                PropertyPaneTextField("HideReportSearchAgents", {
+                  label: "Search Agents:",
+                  description: "The report name displayed in the form.",
+                  value: this.properties.ReportNameSearchAgents
+                }),
+                PropertyPaneTextField("HideReportSearchDocs", {
+                  label: "Document Search:",
+                  description: "The report name displayed in the form.",
+                  value: this.properties.ReportNameSearchDocs
+                }),
+                PropertyPaneTextField("HideReportSearchEEEU", {
+                  label: "Search EEEU:",
+                  description: "The report name displayed in the form.",
+                  value: this.properties.ReportNameSearchEEEU
+                }),
+                PropertyPaneTextField("HideReportSearchProp", {
+                  label: "Search Property:",
+                  description: "The report name displayed in the form.",
+                  value: this.properties.ReportNameSearchProp
+                }),
+                PropertyPaneTextField("HideReportSearchUsers", {
+                  label: "Search Users:",
+                  description: "The report name displayed in the form.",
+                  value: this.properties.ReportNameSearchUsers
+                }),
+                PropertyPaneTextField("HideReportSensitivityLabels", {
+                  label: "Sensitivity Labels:",
+                  description: "The report name displayed in the form.",
+                  value: this.properties.ReportNameSensitivityLabels
+                }),
+                PropertyPaneTextField("HideReportSharingLinks", {
+                  label: "Sharing Links:",
+                  description: "The report name displayed in the form.",
+                  value: this.properties.ReportNameSharingLinks
+                }),
+                PropertyPaneTextField("HideReportUniquePermissions", {
+                  label: "Unique Permissions:",
+                  description: "The report name displayed in the form.",
+                  value: this.properties.ReportNameUniquePermissions
+                })
+              ]
+            }
+          ]
+        },
+        {
+          groups: [
+            {
               groupName: "About this app:",
               groupFields: [
                 PropertyPaneLabel('version', {
@@ -959,6 +1068,22 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       maxRequests: this.properties.MaxRequests,
       maxStorageDesc: this.properties.MaxStorageDescription,
       maxStorageSize,
+      reportNames: {
+        dlp: this.properties.ReportNameDLP,
+        docRetention: this.properties.ReportNameDocRetention,
+        externalShares: this.properties.ReportNameExternalShares,
+        externalUsers: this.properties.ReportNameExternalUsers,
+        permissions: this.properties.ReportNamePermissions,
+        retention: this.properties.ReportNameRetention,
+        searchAgents: this.properties.ReportNameSearchAgents,
+        searchDocs: this.properties.ReportNameSearchDocs,
+        searchEEEU: this.properties.ReportNameSearchEEEU,
+        searchProp: this.properties.ReportNameSearchProp,
+        searchUsers: this.properties.ReportNameSearchUsers,
+        sensitivityLabels: this.properties.ReportNameSensitivityLabels,
+        sharingLinks: this.properties.ReportNameSharingLinks,
+        uniquePermissions: this.properties.ReportNameUniquePermissions
+      },
       reportProps: {
         dlpFileExt: this.properties.ReportsDLPFileExt,
         docRententionYears: this.properties.ReportsDocRententionYears,
