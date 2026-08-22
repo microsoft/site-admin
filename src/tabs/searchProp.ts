@@ -7,7 +7,6 @@ export interface ISearchProps {
     key: string;
     label: string;
     managedProperty: string;
-    reportName: string;
     tabName: string;
     values: string;
 }
