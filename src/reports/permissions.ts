@@ -601,11 +601,11 @@ export class Permissions {
                         }
                     },
                     {
-                        name: "Overshared",
+                        name: "",
                         title: "Contains<br/>Overshared Group?",
                         onRenderCell: (el, col, item: IPermissionItem) => {
                             // Set the order info
-                            el.setAttribute("data-order", item.EEEU ? "true" : "false");
+                            el.setAttribute("data-order", item.Overshared ? "true" : "false");
 
                             // Make the badge display in the middle
                             el.style.verticalAlign = "middle";
@@ -614,13 +614,13 @@ export class Permissions {
                             let badge = Components.Badge({
                                 el,
                                 className: "me-2",
-                                content: item.EEEU ? "Yes" : "No",
-                                type: item.EEEU ? Components.BadgeTypes.Danger : Components.BadgeTypes.Secondary,
+                                content: item.Overshared ? "Yes" : "No",
+                                type: item.Overshared ? Components.BadgeTypes.Danger : Components.BadgeTypes.Secondary,
                                 isPill: true
                             });
 
                             // See if this is overshared
-                            if (item.EEEU) {
+                            if (item.Overshared) {
                                 // Render a tooltip
                                 Components.Tooltip({
                                     target: badge.el,
