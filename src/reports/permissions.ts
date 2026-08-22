@@ -543,16 +543,91 @@ export class Permissions {
                         }
                     },
                     {
-                        name: "Everyone",
-                        title: "Has<br/>Everyone?"
+                        name: "",
+                        title: "Has<br/>Everyone?",
+                        onRenderCell: (el, col, item: IPermissionItem) => {
+                            // Set the order info
+                            el.setAttribute("data-order", item.Everyone ? "true" : "false");
+
+                            // Make the badge display in the middle
+                            el.style.verticalAlign = "middle";
+
+                            // Render a badge
+                            let badge = Components.Badge({
+                                el,
+                                className: "me-2",
+                                content: item.Everyone ? "Yes" : "No",
+                                type: item.Everyone ? Components.BadgeTypes.Danger : Components.BadgeTypes.Secondary,
+                                isPill: true
+                            });
+
+                            // See if this is overshared
+                            if (item.Everyone) {
+                                // Render a tooltip
+                                Components.Tooltip({
+                                    target: badge.el,
+                                    content: `The file has been flagged as overshared because it's shared with the Everyone group. This means that anyone in the organization can access this file.}`
+                                });
+                            }
+                        }
                     },
                     {
-                        name: "EEEU",
-                        title: "Has<br/>EEEU?"
+                        name: "",
+                        title: "Has<br/>EEEU?",
+                        onRenderCell: (el, col, item: IPermissionItem) => {
+                            // Set the order info
+                            el.setAttribute("data-order", item.EEEU ? "true" : "false");
+
+                            // Make the badge display in the middle
+                            el.style.verticalAlign = "middle";
+
+                            // Render a badge
+                            let badge = Components.Badge({
+                                el,
+                                className: "me-2",
+                                content: item.EEEU ? "Yes" : "No",
+                                type: item.EEEU ? Components.BadgeTypes.Danger : Components.BadgeTypes.Secondary,
+                                isPill: true
+                            });
+
+                            // See if this is overshared
+                            if (item.EEEU) {
+                                // Render a tooltip
+                                Components.Tooltip({
+                                    target: badge.el,
+                                    content: `The file has been flagged as overshared because it's shared with the Everyone Except External Users group. This means that all internal users can access this file.}`
+                                });
+                            }
+                        }
                     },
                     {
-                        name: "Overshared",
-                        title: "Contains<br/>Overshared Group?"
+                        name: "",
+                        title: "Contains<br/>Overshared Group?",
+                        onRenderCell: (el, col, item: IPermissionItem) => {
+                            // Set the order info
+                            el.setAttribute("data-order", item.Overshared ? "true" : "false");
+
+                            // Make the badge display in the middle
+                            el.style.verticalAlign = "middle";
+
+                            // Render a badge
+                            let badge = Components.Badge({
+                                el,
+                                className: "me-2",
+                                content: item.Overshared ? "Yes" : "No",
+                                type: item.Overshared ? Components.BadgeTypes.Danger : Components.BadgeTypes.Secondary,
+                                isPill: true
+                            });
+
+                            // See if this is overshared
+                            if (item.Overshared) {
+                                // Render a tooltip
+                                Components.Tooltip({
+                                    target: badge.el,
+                                    content: `The file has been flagged as overshared because it's shared with the following groups:<br/>${item.Roles.join("<br/>")}`
+                                });
+                            }
+                        }
                     },
                     {
                         name: "IsLimitedAccess",
@@ -562,10 +637,7 @@ export class Permissions {
                     {
                         name: "",
                         title: "M365<br/>Groups",
-                        onClickHeader: (el) => {
-                            // Set the data type
-                            el.setAttribute("data-type", "num");
-                        },
+                        dataAttributes: { "data-type": "num" },
                         onRenderCell: (el, col, item: IPermissionItem) => {
                             // Set the value
                             el.setAttribute("data-order", item.GroupIds.length.toString());
@@ -575,10 +647,7 @@ export class Permissions {
                     {
                         name: "",
                         title: "M365<br/>Users",
-                        onClickHeader: (el) => {
-                            // Set the data type
-                            el.setAttribute("data-type", "num");
-                        },
+                        dataAttributes: { "data-type": "num" },
                         onRenderCell: (el, col, item: IPermissionItem) => {
                             // Set the value
                             el.setAttribute("data-order", item.GroupUsersCount.toString());
@@ -588,10 +657,7 @@ export class Permissions {
                     {
                         name: "",
                         title: "AD<br/>Accounts",
-                        onClickHeader: (el) => {
-                            // Set the data type
-                            el.setAttribute("data-type", "num");
-                        },
+                        dataAttributes: { "data-type": "num" },
                         onRenderCell: (el, col, item: IPermissionItem) => {
                             // Ensure the site members exist
                             if (item.SiteMembers) {
@@ -616,10 +682,7 @@ export class Permissions {
                     {
                         name: "",
                         title: "Site<br/>Users",
-                        onClickHeader: (el) => {
-                            // Set the data type
-                            el.setAttribute("data-type", "num");
-                        },
+                        dataAttributes: { "data-type": "num" },
                         onRenderCell: (el, col, item: IPermissionItem) => {
                             // Set the data type
                             el.setAttribute("data-type", "num");
