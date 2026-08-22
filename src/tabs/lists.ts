@@ -601,7 +601,7 @@ export class ListsTab {
         // DLP
         if (typeof (this._appProps.hideReports.dlp) === "undefined" || this._appProps.hideReports.dlp != true) {
             items.push({
-                text: "Data Loss Prevention",
+                text: this._appProps.reportNames.dlp || "Data Loss Prevention",
                 data: "Finds files that has DLP applied to it.",
                 value: ReportTypes.DLP
             });
@@ -612,7 +612,7 @@ export class ListsTab {
             // Ensure it's a library
             if (isLibrary) {
                 items.push({
-                    text: "Search Agents",
+                    text: this._appProps.reportNames.searchAgents || "Search Agents",
                     data: "Search the library for agents.",
                     value: ReportTypes.SearchAgents
                 });
@@ -623,7 +623,7 @@ export class ListsTab {
         if (isLibrary && item.DriveId) {
             if (typeof (this._appProps.hideReports.searchDocs) === "undefined" || this._appProps.hideReports.searchDocs != true) {
                 items.push({
-                    text: "Search Documents",
+                    text: this._appProps.reportNames.searchDocs || "Search Documents",
                     data: "Search for documents using regex patterns.",
                     value: ReportTypes.SearchDocs
                 });
@@ -633,7 +633,7 @@ export class ListsTab {
         // Search EEEU
         if (typeof (this._appProps.hideReports.searchEEEU) === "undefined" || this._appProps.hideReports.searchEEEU != true) {
             items.push({
-                text: "Search EEEU",
+                text: this._appProps.reportNames.searchEEEU || "Search EEEU",
                 data: "Search for the 'Every' and 'Everyone exception external users' accounts.",
                 value: ReportTypes.SearchEEEU
             });
@@ -644,7 +644,7 @@ export class ListsTab {
             // See if we are displaying this option
             if (typeof (this._appProps.hideReports.sensitivityLabels) === "undefined" || this._appProps.hideReports.sensitivityLabels != true) {
                 items.push({
-                    text: "Sensitivity Labels",
+                    text: this._appProps.reportNames.sensitivityLabels || "Sensitivity Labels",
                     data: "Click to view sensitivity label options.",
                     value: ReportTypes.SensitivityLabels
                 });
@@ -654,7 +654,7 @@ export class ListsTab {
         // Unique Permissions
         if (typeof (this._appProps.hideReports.uniquePermissions) === "undefined" || this._appProps.hideReports.uniquePermissions != true) {
             items.push({
-                text: "Unique Permissions",
+                text: this._appProps.reportNames.uniquePermissions || "Unique Permissions",
                 data: "Scans for items that have unique permissions.",
                 value: ReportTypes.UniquePermissions
             });
