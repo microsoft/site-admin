@@ -40,7 +40,6 @@ declare interface ISiteAdminWebPartStrings {
   WebPropSearchPropertyDescription: string;
   WebPropSearchPropertyLabel: string;
   WebPropSearchPropertyManagedProperty: string;
-  WebPropSearchPropertyReportName: string;
   WebPropSearchPropertyTabName: string;
   WebPropSearchPropertyValues: string;
   WebPropSearchScope: string;

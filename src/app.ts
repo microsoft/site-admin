@@ -8,7 +8,7 @@ import Strings from "./strings";
 import { Security } from "./security";
 import { SiteAttestationForm } from "./siteAttestationForm";
 import { Tabs } from "./tabs";
-import { IReportProps } from "./tabs/reports";
+import { IReportNames, IReportProps } from "./tabs/reports";
 import { ISearchProps } from "./tabs/searchProp";
 
 // App Properties
@@ -55,6 +55,7 @@ export interface IAppProps {
     maxRequests?: number;
     maxStorageDesc?: string;
     maxStorageSize?: number;
+    reportNames?: IReportNames;
     reportProps?: IReportProps;
     searchProps?: ISearchProps;
     siteAttestation?: boolean;
