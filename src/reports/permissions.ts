@@ -558,9 +558,14 @@ export class Permissions {
                         name: "IsLimitedAccess",
                         title: "Is<br/>Limited Access?"
                     },
+                    /** These need to be tested with sorting the value is sorting as a string not number. */
                     {
                         name: "",
                         title: "M365<br/>Groups",
+                        onClickHeader: (el) => {
+                            // Set the data type
+                            el.setAttribute("data-type", "num");
+                        },
                         onRenderCell: (el, col, item: IPermissionItem) => {
                             // Set the value
                             el.setAttribute("data-order", item.GroupIds.length.toString());
@@ -570,6 +575,10 @@ export class Permissions {
                     {
                         name: "",
                         title: "M365<br/>Users",
+                        onClickHeader: (el) => {
+                            // Set the data type
+                            el.setAttribute("data-type", "num");
+                        },
                         onRenderCell: (el, col, item: IPermissionItem) => {
                             // Set the value
                             el.setAttribute("data-order", item.GroupUsersCount.toString());
@@ -579,6 +588,10 @@ export class Permissions {
                     {
                         name: "",
                         title: "AD<br/>Accounts",
+                        onClickHeader: (el) => {
+                            // Set the data type
+                            el.setAttribute("data-type", "num");
+                        },
                         onRenderCell: (el, col, item: IPermissionItem) => {
                             // Ensure the site members exist
                             if (item.SiteMembers) {
@@ -603,7 +616,14 @@ export class Permissions {
                     {
                         name: "",
                         title: "Site<br/>Users",
+                        onClickHeader: (el) => {
+                            // Set the data type
+                            el.setAttribute("data-type", "num");
+                        },
                         onRenderCell: (el, col, item: IPermissionItem) => {
+                            // Set the data type
+                            el.setAttribute("data-type", "num");
+
                             if (item.Type == "User") {
                                 el.innerHTML = "1";
                                 el.setAttribute("data-order", "1");
