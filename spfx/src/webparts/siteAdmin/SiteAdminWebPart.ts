@@ -313,7 +313,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       this.domElement.classList.add("bs");
       this.domElement.innerHTML = `
         <p>The page is in edit mode and will not render the application.</p>
-        <input type="button" class="btn btn-primary" value="Configure SPARK WebPart" />
+        <input type="button" class="btn btn-primary" value="Configure SAT WebPart" />
       `;
       this.domElement.querySelector("input")?.addEventListener("click", () => {
         // Open the property pane
