@@ -481,11 +481,6 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   onText: "The option to create a new site will be hidden.",
                   offText: "The option to create a new site will be visible."
                 }),
-                PropertyPaneTextField("Get Site Admins/Owners Flow", {
-                  label: "Get Site Admins/Owners Flow",
-                  description: "The URL to the Power Automate flow that will return the site admins/owners.",
-                  value: this.properties.FlowGetSiteAdminsAndOwners
-                }),
                 PropertyPaneToggle("HideLoadOneDriveBtn", {
                   label: "Hide Load OneDrive Button",
                   checked: this.properties.HideLoadOneDriveBtn,
@@ -536,6 +531,16 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                     { key: 10, text: "10" }
                   ]
                 })
+              ]
+            },
+            {
+              groupName: "Flow Settings",
+              groupFields: [
+                PropertyPaneTextField("Get Site Admins/Owners Flow", {
+                  label: "Get Site Admins/Owners Flow",
+                  description: "The URL to the Power Automate flow that will return the site admins/owners.",
+                  value: this.properties.FlowGetSiteAdminsAndOwners
+                }),
               ]
             },
             {
