@@ -536,7 +536,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
             {
               groupName: "Flow Settings",
               groupFields: [
-                PropertyPaneTextField("Get Site Admins/Owners Flow", {
+                PropertyPaneTextField("FlowGetSiteAdminsAndOwners", {
                   label: "Get Site Admins/Owners Flow",
                   description: "The URL to the Power Automate flow that will return the site admins/owners.",
                   value: this.properties.FlowGetSiteAdminsAndOwners
