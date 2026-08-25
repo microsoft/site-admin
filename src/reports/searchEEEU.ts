@@ -705,21 +705,6 @@ export class SearchEEEU {
                                         }
                                     });
                                     break;
-                                case "Site":
-                                    // Add a button to show the site permissions
-                                    tooltips.add({
-                                        content: "Click to view the site permissions.",
-                                        btnProps: {
-                                            className: "pe-2 py-1",
-                                            text: "View Permissions",
-                                            type: Components.ButtonTypes.OutlinePrimary,
-                                            onClick: () => {
-                                                // View the file
-                                                window.open(Documents.isWopi(row.FileName) ? row.WebUrl + "/_layouts/15/WopiFrame.aspx?sourcedoc=" + row.FileUrl + "&action=view" : row.FileUrl, "_blank");
-                                            }
-                                        }
-                                    });
-                                    break;
                             }
 
                             // See if this is a list item
