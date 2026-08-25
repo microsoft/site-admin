@@ -14,30 +14,30 @@ export class LoadForm {
     private _onLoadOneDrive: () => void = null;
 
     // Renders the modal
-    constructor(elForm: HTMLElement, elFooter: HTMLElement, hideLoadAdminOwnerBtn: boolean = false, hideLoadOneDriveBtn: boolean = false, onSuccess: () => void, onLoadOneDrive: () => void) {
+    constructor(elForm: HTMLElement, elFooter: HTMLElement, flowGetSiteAdminsAndOwners: string, hideLoadOneDriveBtn: boolean = false, onSuccess: () => void, onLoadOneDrive: () => void) {
         this._onSuccess = onSuccess;
         this._onLoadOneDrive = onLoadOneDrive;
 
         // Render the form and footer
         this.renderForm(elForm);
-        this.renderFooter(elFooter, hideLoadAdminOwnerBtn, hideLoadOneDriveBtn);
+        this.renderFooter(elFooter, flowGetSiteAdminsAndOwners, hideLoadOneDriveBtn);
     }
 
     // Renders the footer
-    private renderFooter(el: HTMLElement, hideLoadAdminOwnerBtn: boolean, hideLoadOneDriveBtn: boolean) {
+    private renderFooter(el: HTMLElement, flowGetSiteAdminsAndOwners: string, hideLoadOneDriveBtn: boolean) {
         // Clear the element
         while (el.firstChild) { el.removeChild(el.firstChild); }
 
         // Set the tooltips
         let tooltips = []
-        if (!hideLoadAdminOwnerBtn) {
+        if (flowGetSiteAdminsAndOwners) {
             tooltips.push({
                 content: "Views the owners/admins of the site.",
                 btnProps: {
                     text: "View Admins/Owners",
                     onClick: () => {
                         // Load the admins/owners of the site
-                        this.viewAdminsOwners();
+                        this.viewAdminsOwners(flowGetSiteAdminsAndOwners);
                     }
                 }
             });
@@ -265,7 +265,7 @@ export class LoadForm {
     }
 
     // Shows the modal
-    static showModal(hideLoadAdminOwnerBtn: boolean = false, hideLoadOneDriveBtn: boolean = false, onSuccess: () => void, onLoadOneDrive: () => void) {
+    static showModal(flowGetSiteAdminsAndOwners: string, hideLoadOneDriveBtn: boolean = false, onSuccess: () => void, onLoadOneDrive: () => void) {
         // Clear the modal
         Modal.clear();
 
@@ -273,7 +273,7 @@ export class LoadForm {
         Modal.setHeader("Load Site");
 
         // Create the form/footer
-        new LoadForm(Modal.BodyElement, Modal.FooterElement, hideLoadAdminOwnerBtn, hideLoadOneDriveBtn, onSuccess, onLoadOneDrive);
+        new LoadForm(Modal.BodyElement, Modal.FooterElement, flowGetSiteAdminsAndOwners, hideLoadOneDriveBtn, onSuccess, onLoadOneDrive);
 
         // Show the modal
         Modal.show();
@@ -322,19 +322,19 @@ export class LoadForm {
     }
 
     // Views the admins/owners of the site
-    private viewAdminsOwners() {
+    private viewAdminsOwners(flowGetSiteAdminsAndOwners: string) {
         // Validate the form
         if (this._form.isValid()) {
             let ctrl = this._form.getControl("url");
             let url = this._form.getValues()["url"];
 
             // Show a loading dialog
-            LoadingDialog.setHeader("Validating Site");
-            LoadingDialog.setBody("This will close after the site url is validated...");
+            LoadingDialog.setHeader("Calling Flow");
+            LoadingDialog.setBody("This will close after the flow has completed...");
             LoadingDialog.show();
 
             // Load the admins/owners
-            DataSource.loadAdminsOwners(typeof (url) === "string" ? url : url.value).then(
+            DataSource.loadAdminsOwners(flowGetSiteAdminsAndOwners, typeof (url) === "string" ? url : url.value).then(
                 // Success
                 users => {
                     // Clear the modal
