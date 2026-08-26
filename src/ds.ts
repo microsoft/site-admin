@@ -445,7 +445,14 @@ export class DataSource {
                 },
                 body: JSON.stringify({ url: siteUrl })
             })
-                .then(resp => { return resp.json(); })
+                .then(resp => {
+                    // Ensure it was successful
+                    if(resp.ok) {
+                        return resp.json();
+                    } else {
+                        throw new Error("Failed to load admins/owners");
+                    }
+                })
                 .then(resp => { resolve(resp); })
                 .catch(ex => { reject(ex); });
         });
