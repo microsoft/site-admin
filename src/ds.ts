@@ -447,13 +447,22 @@ export class DataSource {
             })
                 .then(resp => {
                     // Ensure it was successful
-                    if(resp.ok) {
+                    if (resp.ok) {
                         return resp.json();
                     } else {
                         throw new Error("Failed to load admins/owners");
                     }
                 })
-                .then(resp => { resolve(resp); })
+                .then(resp => {
+                    // Ensure the data is converted
+                    if (typeof (resp.admins) === "string") {
+                        resp.admins = JSON.parse(resp.admins);
+                    }
+                    if (typeof (resp.owners) === "string") {
+                        resp.owners = JSON.parse(resp.owners);
+                    }
+                    resolve(resp);
+                })
                 .catch(ex => { reject(ex); });
         });
     }
