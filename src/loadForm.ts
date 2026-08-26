@@ -350,6 +350,13 @@ export class LoadForm {
                     new DataTable({
                         el: Modal.BodyElement,
                         rows: users.admins.concat(users.owners),
+                        onRendering: dtProps => {
+                            // Order by the 1st column
+                            dtProps.order = [[0, "asc"]];
+
+                            // Return the properties
+                            return dtProps;
+                        },
                         columns: [
                             {
                                 name: "type",
