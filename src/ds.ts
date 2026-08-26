@@ -433,51 +433,37 @@ export class DataSource {
     }
 
     // Loads the admins/owners of the site
-    static loadAdminsOwners(siteUrl: string): PromiseLike<{ admins: IUserInfo[], owners: IUserInfo[] }> {
+    static loadAdminsOwners(flowUri: string, siteUrl: string): PromiseLike<{ admins: IUserInfo[], owners: IUserInfo[] }> {
         // Return a promise
         return new Promise((resolve, reject) => {
-            let errorFl = false;
-            let web = Web(siteUrl);
-
-            // Get the admins
-            let admins: IUserInfo[] = [];
-            web.SiteUserInfoList().Items().query({
-                Filter: "IsSiteAdmin eq 1"
-            }).execute(users => {
-                // Add the admins
-                users.results.forEach(user => {
-                    admins.push({
-                        email: user["EMail"] || user["UserName"],
-                        name: user.Title,
-                        type: "Site Admin"
-                    });
-                });
-            }, () => {
-                // Set the flag
-                errorFl = true;
-            });
-
-            // Get the owners
-            let owners: IUserInfo[] = [];
-            web.AssociatedOwnerGroup().Users().execute(users => {
-                // Add the owners
-                users.results.forEach(user => {
-                    owners.push({
-                        email: user.Email || user.LoginName,
-                        name: user.Title,
-                        type: "Site Owner"
-                    });
-                });
-            }, () => {
-                // Set the flag
-                errorFl = true;
-            }, true);
-
-            // Wait for the requests to complete
-            web.done(() => {
-                // Complete the request
-                errorFl ? reject() : resolve({ admins, owners })
-            });
+            // Call the flow
+            fetch(flowUri, {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ url: siteUrl })
+            })
+                .then(resp => {
+                    // Ensure it was successful
+                    if (resp.ok) {
+                        return resp.json();
+                    } else {
+                        throw new Error("Failed to load admins/owners");
+                    }
+                })
+                .then(resp => {
+                    // Ensure the data is converted
+                    if (typeof (resp.admins) === "string") {
+                        resp.admins = JSON.parse(resp.admins);
+                    }
+                    if (typeof (resp.owners) === "string") {
+                        resp.owners = JSON.parse(resp.owners);
+                    }
+                    resolve(resp);
+                })
+                .catch(ex => { reject(ex); });
         });
     }
 

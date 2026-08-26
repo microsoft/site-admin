@@ -22,8 +22,8 @@ export interface IAppProps {
     context?: any;
     disableSensitivityLabelOverride?: boolean;
     el: HTMLElement;
+    flowGetSiteAdminsAndOwners?: string;
     hideCreateSiteBtn?: boolean;
-    hideLoadAdminOwnerBtn?: boolean;
     hideLoadOneDriveBtn?: boolean;
     hideReports: {
         dlp?: boolean;
@@ -119,7 +119,7 @@ export class App {
 
         // Render the form
         new LoadForm(el.children[0].children[0] as HTMLElement, el.children[0].children[1] as HTMLElement,
-            this._props.hideLoadAdminOwnerBtn, this._props.hideLoadOneDriveBtn, () => {
+            this._props.flowGetSiteAdminsAndOwners, this._props.hideLoadOneDriveBtn, () => {
                 // Render the tabs
                 new App(this._props, false);
             }, () => {
@@ -154,7 +154,7 @@ export class App {
                 text: "Load Site",
                 onClick: () => {
                     // Show the load form
-                    LoadForm.showModal(this._props.hideLoadAdminOwnerBtn, this._props.hideLoadOneDriveBtn, () => {
+                    LoadForm.showModal(this._props.flowGetSiteAdminsAndOwners, this._props.hideLoadOneDriveBtn, () => {
                         // Render the tabs
                         this.renderTabs(elRow.children[1] as HTMLElement, false);
                     }, () => {

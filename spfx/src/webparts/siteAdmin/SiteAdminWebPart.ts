@@ -71,12 +71,12 @@ export interface ISiteAdminWebPartProps {
   AppTitle: string;
   AuditOnly: boolean;
   DisableSensitivityLabelOverride: boolean;
+  FlowGetSiteAdminsAndOwners: string;
   HideAppPermissionsTab: boolean;
   HideAuditToolsTab: boolean;
   HideFeaturesTab: boolean;
   HideListsTab: boolean;
   HideCreateSiteBtn: boolean;
-  HideLoadAdminOwnerBtn: boolean;
   HideLoadOneDriveBtn: boolean;
   HideManagementTab: boolean;
   HideSearchTab: boolean;
@@ -212,8 +212,8 @@ declare const SiteAdmin: {
     el: HTMLElement;
     title?: string;
     disableSensitivityLabelOverride?: boolean;
+    flowGetSiteAdminsAndOwners?: string;
     hideCreateSiteBtn?: boolean;
-    hideLoadAdminOwnerBtn: boolean;
     hideLoadOneDriveBtn: boolean;
     hideReports: {
       dlp: boolean;
@@ -481,12 +481,6 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   onText: "The option to create a new site will be hidden.",
                   offText: "The option to create a new site will be visible."
                 }),
-                PropertyPaneToggle("HideLoadAdminOwnerBtn", {
-                  label: "Hide Load Admin/Owner Button",
-                  checked: this.properties.HideLoadAdminOwnerBtn,
-                  onText: "The option to view a site's admins/owners will be hidden.",
-                  offText: "The option to view a site's admins/owners will be visible."
-                }),
                 PropertyPaneToggle("HideLoadOneDriveBtn", {
                   label: "Hide Load OneDrive Button",
                   checked: this.properties.HideLoadOneDriveBtn,
@@ -537,6 +531,16 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                     { key: 10, text: "10" }
                   ]
                 })
+              ]
+            },
+            {
+              groupName: "Flow Settings",
+              groupFields: [
+                PropertyPaneTextField("FlowGetSiteAdminsAndOwners", {
+                  label: "Get Site Admins/Owners Flow",
+                  description: "The URL to the Power Automate flow that will return the site admins/owners.",
+                  value: this.properties.FlowGetSiteAdminsAndOwners
+                }),
               ]
             },
             {
@@ -1028,8 +1032,8 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       context: this.context,
       el: this.domElement,
       disableSensitivityLabelOverride: this.properties.DisableSensitivityLabelOverride ? true : false,
+      flowGetSiteAdminsAndOwners: this.properties.FlowGetSiteAdminsAndOwners,
       hideCreateSiteBtn: this.properties.HideCreateSiteBtn ? true : false,
-      hideLoadAdminOwnerBtn: this.properties.HideLoadAdminOwnerBtn ? true : false,
       hideLoadOneDriveBtn: this.properties.HideLoadOneDriveBtn ? true : false,
       hideReports: {
         dlp: this.properties.HideReportDLP ? true : false,
