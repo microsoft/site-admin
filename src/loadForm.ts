@@ -333,8 +333,11 @@ export class LoadForm {
             LoadingDialog.setBody("This will close after the flow has completed...");
             LoadingDialog.show();
 
+            // Set the absolute url of the site
+            let siteUrl = document.location.origin + typeof (url) === "string" ? url : url.value;
+
             // Load the admins/owners
-            DataSource.loadAdminsOwners(flowGetSiteAdminsAndOwners, typeof (url) === "string" ? url : url.value).then(
+            DataSource.loadAdminsOwners(flowGetSiteAdminsAndOwners, siteUrl).then(
                 // Success
                 users => {
                     // Clear the modal
