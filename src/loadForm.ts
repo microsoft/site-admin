@@ -334,7 +334,7 @@ export class LoadForm {
             LoadingDialog.show();
 
             // Set the absolute url of the site
-            let siteUrl = document.location.origin + typeof (url) === "string" ? url : url.value;
+            let siteUrl = document.location.origin + (typeof (url) === "string" ? url : url.value);
 
             // Load the admins/owners
             DataSource.loadAdminsOwners(flowGetSiteAdminsAndOwners, siteUrl).then(
