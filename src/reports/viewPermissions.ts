@@ -254,7 +254,7 @@ export class ViewPermissions {
             let roleDefinitions = [];
             role.RoleDefinitionBindings.results.forEach(roleDef => {
                 // Skip limited access permissions
-                if (roleDef.Name.indexOf("Limited Access") === 0) { isLimitedAccess = true; return; }
+                if (roleDef.Name.indexOf("Limited Access") === 0 && role.RoleDefinitionBindings.results.length === 1) { isLimitedAccess = true; return; }
 
                 // Append the permission
                 roleDefinitions.push(`<span><b>${roleDef.Name}:</b> ${roleDef.Description}${roleDef.Hidden ? " (Hidden)" : ""}</span>`);
