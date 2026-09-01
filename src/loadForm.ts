@@ -329,8 +329,8 @@ export class LoadForm {
             let url = this._form.getValues()["url"];
 
             // Show a loading dialog
-            LoadingDialog.setHeader("Calling Flow");
-            LoadingDialog.setBody("This will close after the flow has completed...");
+            LoadingDialog.setHeader("Loading Site Admins/Owners");
+            LoadingDialog.setBody("This window will close after the request has completed...");
             LoadingDialog.show();
 
             // Set the absolute url of the site
