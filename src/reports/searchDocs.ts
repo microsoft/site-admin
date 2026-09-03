@@ -520,12 +520,16 @@ export class SearchDocs {
                 errorMessage: "You must enter at least 1 search term.",
                 onControlRendered: ctrl => { ctrlSearchTerms = ctrl; },
                 onValidate: (ctrl, results) => {
-                    // See if this control is hidden
-                    if (!ctrlSearchTerms.isVisible) {
-                        // Not requires
+                    // See if we are searching by keyword
+                    if (ctrlSearchTerms.isVisible) {
+                        // Ensure a value exists
+                        results.isValid = (results.value || "").trim().length > 0;
+                    } else {
+                        // Not required
                         results.isValid = true;
                     }
 
+                    // Return the results
                     return results;
                 }
             },
@@ -559,9 +563,9 @@ export class SearchDocs {
                 errorMessage: "You must enter at least 1 search term.",
                 onControlRendered: ctrl => { ctrlRegex = ctrl; },
                 onValidate: (ctrl, results) => {
-                    // See if this control is hidden
-                    if (!ctrlSearchTerms.isVisible) {
-                        // Not requires
+                    // See if we are search by keyword
+                    if (ctrlSearchTerms.isVisible) {
+                        // Not required
                         results.isValid = true;
                     }
                     // Else, ensure a pattern exists
