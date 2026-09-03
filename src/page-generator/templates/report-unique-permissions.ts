@@ -56,8 +56,8 @@ const CanvasContent = `<div>
 
 // Export the page
 // Input Params: content, siteId, webId, listId, folderUrl, imageMapper
-export const AppPage = new PageTemplate(CanvasContent, "",
-    "", "",
+export const AppPage = new PageTemplate(CanvasContent, "8a25e50f-a830-4e23-bfd3-38aaa20b57ba",
+    "caf33edc-08f1-46f1-be6f-3946a595ebc3", "416cc6dd-2088-4197-91e2-3f6f7b4c6219",
     "/sites/Demo/SiteAssets/SitePages/SATAuditReportsUniquePermissions.aspx", {
     "1051374010": "985982ea-ddaf-40af-905f-106bd9705b3a",
     "2928770881": "97cfa8fc-5081-4198-bcff-4a59f4ba786a"
