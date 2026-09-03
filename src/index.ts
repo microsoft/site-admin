@@ -21,6 +21,10 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 const GlobalVariable = {
     Configuration,
     appDescription: Strings.ProjectDescription,
+    pageGenerator: () => {
+        // Show the page generator form
+        new PageGenerator();
+    },
     render: (props: IAppProps) => {
         // See if the page context exists
         if (props.context) {

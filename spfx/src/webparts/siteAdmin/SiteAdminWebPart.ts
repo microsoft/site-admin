@@ -179,6 +179,7 @@ export interface ISiteAdminWebPartProps {
 import "main-lib";
 declare const SiteAdmin: {
   appDescription: string;
+  pageGenerator: () => void;
   render: (props: {
     auditOnly?: boolean;
     context?: WebPartContext;
@@ -931,6 +932,14 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   href: "https://github.com/microsoft/site-admin",
                   text: "View Source on GitHub",
                   target: "_blank"
+                }),
+                PropertyPaneButton("", {
+                  text: "Generate Pages",
+                  description: "Generates user guides for the tool.",
+                  onClick: () => {
+                    // Show the page generator
+                    SiteAdmin.pageGenerator();
+                  }
                 })
               ]
             }
