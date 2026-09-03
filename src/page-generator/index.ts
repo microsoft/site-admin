@@ -11,6 +11,19 @@ const PageMapper: { [key: string]: { filename: string; title: string; template: 
     "AuditReports": { filename: "AuditReports.aspx", title: "Audit Reports", template: Templates.AuditReports },
     "DataReadiness": { filename: "DataReadiness.aspx", title: "Data Readiness", template: Templates.DataReadiness },
     "Overview": { filename: "Overview.aspx", title: "Overview", template: Templates.Overview },
+    "ReportDLP": { filename: "ReportDLP.aspx", title: "SAT - Data Loss Prevention (DLP)", template: Templates.ReportDLP },
+    "ReportDocRetention": { filename: "ReportDocRetention.aspx", title: "SAT - Document Retention", template: Templates.ReportDocRetention },
+    "ReportExtShares": { filename: "ReportExtShares.aspx", title: "SAT - External Shares", template: Templates.ReportExtShares },
+    "ReportExtUsers": { filename: "ReportExtUsers.aspx", title: "SAT - External Users", template: Templates.ReportExtUsers },
+    "ReportPermissions": { filename: "ReportPermissions.aspx", title: "SAT - Permissions", template: Templates.ReportPermissions },
+    "ReportSearchAgents": { filename: "ReportSearchAgents.aspx", title: "SAT - Search Agents", template: Templates.ReportSearchAgents },
+    "ReportSearchDocs": { filename: "ReportSearchDocs.aspx", title: "SAT - Search Documents", template: Templates.ReportSearchDocs },
+    "ReportSearchEEEU": { filename: "ReportSearchEEEU.aspx", title: "SAT - Search External and External Users (EEEU)", template: Templates.ReportSearchEEEU },
+    "ReportSearchProp": { filename: "ReportSearchProp.aspx", title: "SAT - Search Properties", template: Templates.ReportSearchProp },
+    "ReportSearchUsers": { filename: "ReportSearchUsers.aspx", title: "SAT - Search Users", template: Templates.ReportSearchUsers },
+    "ReportSensitivityLabels": { filename: "ReportSensitivityLabels.aspx", title: "SAT - Sensitivity Labels", template: Templates.ReportSensitivityLabels },
+    "ReportSharingLinks": { filename: "ReportSharingLinks.aspx", title: "SAT - Sharing Links", template: Templates.ReportSharingLinks },
+    "ReportUniquePermissions": { filename: "ReportUniquePermissions.aspx", title: "SAT - Unique Permissions", template: Templates.ReportUniquePermissions },
     "SiteConfiguration": { filename: "SiteConfiguration.aspx", title: "Site Configuration", template: Templates.SiteConfiguration }
 }
 
