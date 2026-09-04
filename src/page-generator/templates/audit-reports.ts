@@ -48,16 +48,16 @@ const CanvasContent = `<div>
                 various reports that help identify if content is being overshared or not.</p>
             <h2 class="headingSpacingAbove headingSpacingBelow">Available Reports</h2>
             <h4 class="headingSpacingAbove headingSpacingBelow"><a
-                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/ReportDocRetention.aspx">Data Loss Prevention
+                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/ReportDLP.aspx">Data Loss Prevention
                     (DLP)</a></h4>
             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">The DLP report will help identify
                 sensitive content in the site. This requires DLP to be configured in the environment.</p>
             <h4 class="headingSpacingAbove headingSpacingBelow"><a
-                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/ReportExtShares.aspx">Document Retention</a></h4>
+                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/ReportDocRetention.aspx">Document Retention</a></h4>
             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">The Document Retention report will help
                 identify old content to be removed or archived as part of clean-up of stale data.</p>
             <h4 class="headingSpacingAbove headingSpacingBelow"><a
-                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/ReportExtUsers.aspx">External Shares</a></h4>
+                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/ReportExtShares.aspx">External Shares</a></h4>
             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">The External Shares report will help
                 identify content that is viewable externally. This report requires the site to be in the search index.
             </p>
