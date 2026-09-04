@@ -1,5 +1,6 @@
-import { Dashboard, LoadingDialog, Modal, DataTable } from "dattatable";
+import { LoadingDialog, Modal, DataTable } from "dattatable";
 import { Components, Search } from "gd-sprest-bs";
+import { ExportCSV } from "./reports/exportCSV";
 import { DataSource } from "./ds";
 import { PageGenerator } from "./page-generator";
 import { Security } from "./security";
@@ -346,10 +347,13 @@ export class LoadForm {
                     // Set the header
                     Modal.setHeader("Site Admins/Owners");
 
+                    // Combine the data
+                    let rows = users.admins.concat(users.owners)
+
                     // Set the body
                     new DataTable({
                         el: Modal.BodyElement,
-                        rows: users.admins.concat(users.owners),
+                        rows,
                         onRendering: dtProps => {
                             // Order by the 1st column
                             dtProps.order = [[0, "asc"]];
@@ -377,6 +381,16 @@ export class LoadForm {
                     Components.TooltipGroup({
                         el: Modal.FooterElement,
                         tooltips: [
+                            {
+                                content: "Click to export the admins/owners to a CSV file.",
+                                btnProps: {
+                                    text: "Export to CSV",
+                                    onClick: () => {
+                                        // Export the CSV
+                                        new ExportCSV("site-admin-owners.csv", ["type", "name", "email"], rows);
+                                    }
+                                }
+                            },
                             {
                                 content: "Closes the form.",
                                 btnProps: {
