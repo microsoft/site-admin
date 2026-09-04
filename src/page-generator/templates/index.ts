@@ -1,6 +1,7 @@
 export * from "./app-permissions";
 export * from "./audit-reports";
 export * from "./data-readiness";
+export * from "./faq";
 export * from "./overview";
 export * from "./report-dlp";
 export * from "./report-doc-retention";

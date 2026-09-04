@@ -85,7 +85,7 @@ const CanvasContent = `<div>
             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">The Search EEEU report will help
                 identify oversharing by the EEEU, Everyone group and large M365 groups.</p>
             <h4 class="headingSpacingAbove headingSpacingBelow"><a
-                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/ReportSearchProperty.aspx">Search Property</a></h4>
+                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/ReportSearchProp.aspx">Search Property</a></h4>
             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">The Search Property report allows sites
                 to be tagged by a configurable set of values the site admin/owner can use for tagging their sites. This
                 will help with identifying sites that are orphaned or inactive. This report requires the sites to be in

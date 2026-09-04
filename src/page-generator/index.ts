@@ -10,6 +10,7 @@ const PageMapper: { [key: string]: { filename: string; title: string; template: 
     "AppPermissions": { filename: "AppPermissions.aspx", title: "App Permissions", template: Templates.AppPermissions },
     "AuditReports": { filename: "AuditReports.aspx", title: "Audit Reports", template: Templates.AuditReports },
     "DataReadiness": { filename: "DataReadiness.aspx", title: "Data Readiness", template: Templates.DataReadiness },
+    "FAQ": { filename: "FAQ.aspx", title: "Frequently Asked Questions", template: Templates.FAQ },
     "Overview": { filename: "Overview.aspx", title: "Overview", template: Templates.Overview },
     "ReportDLP": { filename: "ReportDLP.aspx", title: "SAT - Data Loss Prevention (DLP)", template: Templates.ReportDLP },
     "ReportDocRetention": { filename: "ReportDocRetention.aspx", title: "SAT - Document Retention", template: Templates.ReportDocRetention },
