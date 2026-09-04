@@ -64,7 +64,7 @@ const CanvasContent = `<div>
 // Input Params: content, siteId, webId, listId, folderUrl, imageMapper
 export const ReportSensitivityLabels = new PageTemplate(CanvasContent, "8a25e50f-a830-4e23-bfd3-38aaa20b57ba",
     "caf33edc-08f1-46f1-be6f-3946a595ebc3", "416cc6dd-2088-4197-91e2-3f6f7b4c6219",
-    "/sites/Demo/SiteAssets/SitePages/SATAuditReportsSensitivityLabels", {
+    "/sites/Demo/site-admin/SiteAssets/SitePages/SATAuditReportsSensitivityLabels", {
     "1952315463": "1812db47-266a-40fc-b15d-21c4aa5d5c42",
     "3517625209": "b23a25f2-fa8c-450b-9bee-43e05fd096e5"
 });

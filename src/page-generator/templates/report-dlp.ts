@@ -71,7 +71,7 @@ const CanvasContent = `<div>
 // Input Params: content, siteId, webId, listId, folderUrl, imageMapper
 export const ReportDLP = new PageTemplate(CanvasContent, "8a25e50f-a830-4e23-bfd3-38aaa20b57ba",
     "caf33edc-08f1-46f1-be6f-3946a595ebc3", "416cc6dd-2088-4197-91e2-3f6f7b4c6219",
-    "/sites/Demo/SiteAssets/SitePages/SATAuditReportsDLP", {
+    "/sites/Demo/site-admin/SiteAssets/SitePages/SATAuditReportsDLP", {
     "2299432232": "e61178f9-571a-4005-901e-35501abfdee5",
     "2978296301": "927878bc-377d-4be3-ac0f-8e81e6a705f9"
 });

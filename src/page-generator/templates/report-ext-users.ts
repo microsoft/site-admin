@@ -59,7 +59,7 @@ const CanvasContent = `<div>
 // Input Params: content, siteId, webId, listId, folderUrl, imageMapper
 export const ReportExtUsers = new PageTemplate(CanvasContent, "8a25e50f-a830-4e23-bfd3-38aaa20b57ba",
     "caf33edc-08f1-46f1-be6f-3946a595ebc3", "416cc6dd-2088-4197-91e2-3f6f7b4c6219",
-    "/sites/Demo/SiteAssets/SitePages/SATAuditReportsExtUsers", {
+    "/sites/Demo/site-admin/SiteAssets/SitePages/SATAuditReportsExtUsers", {
     "3772245627": "45741a83-0972-4d23-9354-9a93ff36b849",
     "3539902807": "a161ed67-4892-4736-9d3b-cc8e7fdc83a7"
 });
