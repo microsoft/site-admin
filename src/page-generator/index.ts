@@ -100,7 +100,7 @@ export class PageGenerator {
                     this.uploadImages(pageFolderName, page.item.Id, pageInfo.template).then(pageTemplate => {
                         // See if this is the main page
                         let content = pageTemplate.Content;
-                        if (pageInfo.template == Templates.Overview) {
+                        if (pageInfo.template == Templates.Overview || pageInfo.template == Templates.AuditReports) {
                             // Update the link references
                             content = content.replace(/href="\/sites\/demo\/site-admin/g, 'href="' + Strings.SourceUrl);
                         }
