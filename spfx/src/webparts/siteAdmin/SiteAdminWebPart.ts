@@ -10,12 +10,12 @@ import * as strings from 'SiteAdminWebPartStrings';
 
 // Images to include in the SPFx package
 const imageReferences = [
-  require("./assets/4222049231.png"),
   require("./assets/34722779.png"),
   require("./assets/82759635.png"),
   require("./assets/178240801.png"),
   require("./assets/394511437.png"),
   require("./assets/459558559.png"),
+  require("./assets/551865496.png"),
   require("./assets/704156399.png"),
   require("./assets/734992370.png"),
   require("./assets/782453716.png"),
@@ -23,11 +23,11 @@ const imageReferences = [
   require("./assets/878621426.png"),
   require("./assets/926485291.png"),
   require("./assets/956444907.png"),
+  require("./assets/975197195.png"),
   require("./assets/1004145298.png"),
   require("./assets/1034045247.png"),
   require("./assets/1036008522.png"),
   require("./assets/1051374010.png"),
-  require("./assets/1366143702.png"),
   require("./assets/1392219256.png"),
   require("./assets/1439995666.png"),
   require("./assets/1539840079.png"),
@@ -41,6 +41,7 @@ const imageReferences = [
   require("./assets/2403381788.png"),
   require("./assets/2492974796.png"),
   require("./assets/2498076700.png"),
+  require("./assets/2794747446.png"),
   require("./assets/2892564598.png"),
   require("./assets/2897641524.png"),
   require("./assets/2928770881.png"),
@@ -55,7 +56,6 @@ const imageReferences = [
   require("./assets/3510901274.png"),
   require("./assets/3517625209.png"),
   require("./assets/3539902807.png"),
-  require("./assets/3602715702.png"),
   require("./assets/3608935117.png"),
   require("./assets/3614134656.png"),
   require("./assets/3639654909.png"),
@@ -64,8 +64,9 @@ const imageReferences = [
   require("./assets/3772245627.png"),
   require("./assets/3795830073.png"),
   require("./assets/4007861782.png"),
-  require("./assets/4193189816.png")
-]
+  require("./assets/4193189816.png"),
+  require("./assets/4222049231.png")
+];
 
 export interface ISiteAdminWebPartProps {
   AppTitle: string;
@@ -206,6 +207,7 @@ export interface ISiteAdminWebPartProps {
 import "main-lib";
 declare const SiteAdmin: {
   appDescription: string;
+  pageGenerator: () => void;
   render: (props: {
     auditOnly?: boolean;
     context?: WebPartContext;
@@ -958,6 +960,14 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   href: "https://github.com/microsoft/site-admin",
                   text: "View Source on GitHub",
                   target: "_blank"
+                }),
+                PropertyPaneButton("", {
+                  text: "Generate Pages",
+                  description: "Generates user guides for the tool.",
+                  onClick: () => {
+                    // Show the page generator
+                    SiteAdmin.pageGenerator();
+                  }
                 })
               ]
             }
