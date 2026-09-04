@@ -48,65 +48,65 @@ const CanvasContent = `<div>
                 various reports that help identify if content is being overshared or not.</p>
             <h2 class="headingSpacingAbove headingSpacingBelow">Available Reports</h2>
             <h4 class="headingSpacingAbove headingSpacingBelow"><a
-                    href="/sites/demo/site-admin/sitepages/SATAuditReportsDocRetention.aspx">Data Loss Prevention
+                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/SATAuditReportsDocRetention.aspx">Data Loss Prevention
                     (DLP)</a></h4>
             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">The DLP report will help identify
                 sensitive content in the site. This requires DLP to be configured in the environment.</p>
             <h4 class="headingSpacingAbove headingSpacingBelow"><a
-                    href="/sites/demo/site-admin/sitepages/SATAuditReportsExtShares.aspx">Document Retention</a></h4>
+                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/SATAuditReportsExtShares.aspx">Document Retention</a></h4>
             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">The Document Retention report will help
                 identify old content to be removed or archived as part of clean-up of stale data.</p>
             <h4 class="headingSpacingAbove headingSpacingBelow"><a
-                    href="/sites/demo/site-admin/sitepages/SATAuditReportsExtUsers.aspx">External Shares</a></h4>
+                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/SATAuditReportsExtUsers.aspx">External Shares</a></h4>
             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">The External Shares report will help
                 identify content that is viewable externally. This report requires the site to be in the search index.
             </p>
             <h4 class="headingSpacingAbove headingSpacingBelow"><a
-                    href="/sites/demo/site-admin/sitepages/SATAuditReportsExtUsers.aspx">External Users</a></h4>
+                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/SATAuditReportsExtUsers.aspx">External Users</a></h4>
             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">The External Users report will help
                 identify guest accounts with access to the site.</p>
             <h4 class="headingSpacingAbove headingSpacingBelow"><a
-                    href="/sites/demo/site-admin/sitepages/SATAuditReportsPermissions.aspx">Permissions</a></h4>
+                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/SATAuditReportsPermissions.aspx">Permissions</a></h4>
             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">The Permissions report will help
                 identify oversharing of content in the site by displaying all role assignments currently in use by the
                 site.</p>
             <h4 class="headingSpacingAbove headingSpacingBelow"><a
-                    href="/sites/demo/site-admin/sitepages/SATAuditReportsSearchAgents.aspx">Search Agents</a></h4>
+                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/SATAuditReportsSearchAgents.aspx">Search Agents</a></h4>
             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">The Search Agents report will help
                 identify any agent files that may exist in a site.</p>
             <h4 class="headingSpacingAbove headingSpacingBelow"><a
-                    href="/sites/demo/site-admin/sitepages/SATAuditReportsSearchDocs.aspx">Search Documents</a></h4>
+                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/SATAuditReportsSearchDocs.aspx">Search Documents</a></h4>
             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">The Search Documents report will help
                 identify sensitive content by keyword or regex pattern. The keyword search option will require the site
                 to be in the search index.</p>
             <h4 class="headingSpacingAbove headingSpacingBelow"><a
-                    href="/sites/demo/site-admin/sitepages/SATAuditReportsSearchEEEU.aspx">Search Everyone Except
+                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/SATAuditReportsSearchEEEU.aspx">Search Everyone Except
                     External Users (EEEU)</a></h4>
             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">The Search EEEU report will help
                 identify oversharing by the EEEU, Everyone group and large M365 groups.</p>
             <h4 class="headingSpacingAbove headingSpacingBelow"><a
-                    href="/sites/demo/site-admin/sitepages/SATAuditReportsSearchProperty.aspx">Search Property</a></h4>
+                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/SATAuditReportsSearchProperty.aspx">Search Property</a></h4>
             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">The Search Property report allows sites
                 to be tagged by a configurable set of values the site admin/owner can use for tagging their sites. This
                 will help with identifying sites that are orphaned or inactive. This report requires the sites to be in
                 the search index.</p>
             <h4 class="headingSpacingAbove headingSpacingBelow"><a
-                    href="/sites/demo/site-admin/sitepages/SATAuditReportsSearchUsers.aspx">Search Users</a></h4>
+                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/SATAuditReportsSearchUsers.aspx">Search Users</a></h4>
             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">The Search Users report will allow the
                 site admin/owner to find users by text or account. This will help with offboarding users to ensure they
                 are removed from a site.</p>
             <h4 class="headingSpacingAbove headingSpacingBelow"><a
-                    href="/sites/demo/site-admin/sitepages/SATAuditReportsSensitivityLabels.aspx">Sensitivity Labels</a>
+                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/SATAuditReportsSensitivityLabels.aspx">Sensitivity Labels</a>
             </h4>
             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">The Sensitivity Labels report will help
                 identify files that do not have a label assigned to them. The report will also allow you to find files
                 that have been labelled.</p>
             <h4 class="headingSpacingAbove headingSpacingBelow"><a
-                    href="/sites/demo/site-admin/sitepages/SATAuditReportsSharingLinks.aspx">Sharing Links</a></h4>
+                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/SATAuditReportsSharingLinks.aspx">Sharing Links</a></h4>
             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">The Sharing Links report will help
                 identify files that have been shared.</p>
             <h4 class="headingSpacingAbove headingSpacingBelow"><a
-                    href="/sites/demo/site-admin/sitepages/SATAuditReportsUniquePermissions.aspx">Unique Permissions</a>
+                    href="/sites/demo/site-admin/sitepages/Site Admin Tool/SATAuditReportsUniquePermissions.aspx">Unique Permissions</a>
             </h4>
             <p class="noSpacingAbove spacingBelow" data-text-type="withSpacing">The Unique Permissions report will help
                 identify content that has unique permissions.</p>
