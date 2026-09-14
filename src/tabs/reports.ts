@@ -269,7 +269,7 @@ export class ReportsTab {
                         { text: "All Lists", value: "0", isSelected: true },
                         { text: ">500 Items", value: "500" },
                         { text: ">1000 Items", value: "1000" },
-                        { text: ">5000 Items", value: "1000" },
+                        { text: ">5000 Items", value: "5000" },
                         { text: ">10000 Items", value: "10000" },
                         { text: ">25000 Items", value: "25000" },
                         { text: ">50000 Items", value: "50000" },
