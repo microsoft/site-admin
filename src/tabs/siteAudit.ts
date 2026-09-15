@@ -179,10 +179,10 @@ export class SiteAudit {
         while (this._el.firstChild) { this._el.removeChild(this._el.firstChild); }
 
         // Render a navigation
-        Components.Nav({
+        Components.Navbar({
             el: this._el,
+            brand: "Site Audit",
             items: [{
-                title: "Site Audit",
                 onClick: () => {
                     // Render the site audit
                     this.render();
