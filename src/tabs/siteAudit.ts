@@ -226,8 +226,11 @@ export class SiteAudit {
                 let formValues = {};
 
                 // Ensure this tab is enabled and show it
-                nav.getTab(report.label).enable();
-                nav.showTab(report.name);
+                let tab = nav.getTab(report.label);
+                if (tab) {
+                    tab.enable();
+                    nav.showTab(report.name);
+                }
 
                 // See which report we are running
                 switch (report.name) {
