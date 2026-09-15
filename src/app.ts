@@ -48,6 +48,7 @@ export interface IAppProps {
         lists?: boolean;
         management?: boolean;
         search?: boolean;
+        siteAudit?: boolean;
         webs?: boolean;
     }
     imageReferences: string[];
