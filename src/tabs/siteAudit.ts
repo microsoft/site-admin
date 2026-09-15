@@ -183,6 +183,9 @@ export class SiteAudit {
             el: this._el,
             brand: "Site Audit",
             items: [{
+                text: "New Audit",
+                className: "btn-outline-light",
+                isButton: true,
                 onClick: () => {
                     // Render the site audit
                     this.render();
