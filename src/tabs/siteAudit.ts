@@ -226,7 +226,7 @@ export class SiteAudit {
                 let formValues = {};
 
                 // Ensure this tab is enabled and show it
-                nav.getTab(report.name).enable();
+                nav.getTab(report.label).enable();
                 nav.showTab(report.name);
 
                 // See which report we are running
