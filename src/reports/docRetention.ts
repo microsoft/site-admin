@@ -237,13 +237,16 @@ export class DocRetention {
     }
 
     // Runs the report
-    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
+    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void, onComplete?: () => void) {
         this._loadOneDrive = values["LoadOneDrive"] == "true";
 
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Site");
         LoadingDialog.setBody("Searching the site for files...");
         LoadingDialog.show();
+
+        // Get the show search flag
+        let showSearch = typeof (values["ShowSearch"]) === "boolean" ? values["ShowSearch"] : true;
 
         // Get the start date
         let startDate = moment(values["SelectedDate"]).format("YYYY-MM-DD");
@@ -268,6 +271,9 @@ export class DocRetention {
 
             // Render the summary
             this.renderSummary(el, auditOnly, search.results, onClose);
+
+            // Call the event
+            onComplete ? onComplete() : null;
 
             // Hide the loading dialog
             LoadingDialog.hide();

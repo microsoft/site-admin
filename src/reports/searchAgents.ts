@@ -115,14 +115,14 @@ export class SearchAgents {
     }
 
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, auditOnly: boolean, items: IAgentItem[], onClose?: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, showSearch: boolean, items: IAgentItem[], onClose?: () => void) {
         // Render the summary
         this._dashboard = new Dashboard({
             el,
             navigation: {
                 title: "Search Agents",
                 showFilter: false,
-                items: onClose ? [{
+                items: showSearch ? [{
                     text: "New Search",
                     className: "btn-outline-light",
                     isButton: true,
@@ -220,7 +220,7 @@ export class SearchAgents {
     }
 
     // Runs the report
-    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: any }, onClose: () => void) {
+    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: any }, onClose: () => void, onComplete?: () => void) {
         this._loadOneDrive = values["LoadOneDrive"] == "true";
         this._maxItemCount = parseInt(values["SkipLargeLists"]) || 0;
         this._stopFl = false;
@@ -230,6 +230,9 @@ export class SearchAgents {
         LoadingDialog.setBody("Loading the sites to search...");
         LoadingDialog.show();
 
+        // Get the show search flag
+        let showSearch = typeof (values["ShowSearch"]) === "boolean" ? values["ShowSearch"] : true;
+
         // Clear the items
         this._items = [];
 
@@ -237,7 +240,7 @@ export class SearchAgents {
         while (el.firstChild) { el.removeChild(el.firstChild); }
 
         // Render the summary
-        this.renderSummary(el, auditOnly, this._items, onClose);
+        this.renderSummary(el, auditOnly, showSearch, this._items, onClose);
 
         // Hide the loading dialog
         LoadingDialog.hide();
@@ -275,6 +278,9 @@ export class SearchAgents {
         }).then(() => {
             // Hide the sub-nav
             this._elSubNav.classList.add("d-none");
+
+            // Call the event
+            onComplete ? onComplete() : null;
         });
     }
 
@@ -312,7 +318,7 @@ export class SearchAgents {
         });
 
         // Render the summary
-        this.renderSummary(Modal.BodyElement, auditOnly, this._items);
+        this.renderSummary(Modal.BodyElement, auditOnly, false, this._items);
 
         // Show the modal
         Modal.show();

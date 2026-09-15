@@ -433,11 +433,11 @@ export class Permissions {
     }
 
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, auditOnly: boolean, items: IPermissionItem[], onClose: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, showSearch: boolean, items: IPermissionItem[], onClose: () => void) {
         this._elDashboard = el;
 
         // Create the nav items
-        let navItems: Components.INavbarItem[] = [{
+        let navItems: Components.INavbarItem[] = showSearch ? [{
             text: "New Search",
             className: "btn-outline-light",
             isButton: true,
@@ -448,7 +448,7 @@ export class Permissions {
                 // Call the close event
                 onClose();
             }
-        }];
+        }] : [];
 
         // Show the filter button for permissions
         navItems.push({
@@ -803,7 +803,7 @@ export class Permissions {
     }
 
     // Runs the report
-    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: any }, onClose: () => void) {
+    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: any }, onClose: () => void, onComplete?: () => void) {
         this._loadOneDrive = values["LoadOneDrive"] == "true";
         this._stopFl = false;
 
@@ -811,6 +811,9 @@ export class Permissions {
         LoadingDialog.setHeader("Getting Site Roles");
         LoadingDialog.setBody("Searching the current permissions of the site...");
         LoadingDialog.show();
+
+        // Get the show search flag
+        let showSearch = typeof (values["ShowSearch"]) === "boolean" ? values["ShowSearch"] : true;
 
         // Clear the items
         this._groups = null;
@@ -821,7 +824,7 @@ export class Permissions {
         while (el.firstChild) { el.removeChild(el.firstChild); }
 
         // Render the summary
-        this.renderSummary(el, auditOnly, this._items, onClose);
+        this.renderSummary(el, auditOnly, showSearch, this._items, onClose);
 
         // Hide the loading dialog
         LoadingDialog.hide();
@@ -877,6 +880,9 @@ export class Permissions {
                 // Remove the last button
                 elNav.querySelector("li:last-child").remove();
             }
+
+            // Call the event
+            onComplete ? onComplete() : null;
         });
     }
 

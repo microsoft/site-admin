@@ -169,14 +169,14 @@ export class UniquePermissions {
     static getFormFields(): Components.IFormControlProps[] { return []; }
 
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, auditOnly: boolean, onClose?: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, showSearch: boolean, onClose?: () => void) {
         // Render the summary
         this._dashboard = new Dashboard({
             el,
             navigation: {
                 title: "Unique Permissions",
                 showFilter: false,
-                items: onClose ? [{
+                items: showSearch ? [{
                     text: "New Search",
                     className: "btn-outline-light",
                     isButton: true,
@@ -332,7 +332,7 @@ export class UniquePermissions {
     }
 
     // Runs the report
-    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
+    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void, onComplete?: () => void) {
         this._loadOneDrive = values["LoadOneDrive"] == "true";
         this._maxItemCount = parseInt(values["SkipLargeLists"]) || 0;
         this._stopFl = false;
@@ -342,6 +342,9 @@ export class UniquePermissions {
         LoadingDialog.setBody("Searching the site...");
         LoadingDialog.show();
 
+        // Get the show search flag
+        let showSearch = typeof (values["ShowSearch"]) === "boolean" ? values["ShowSearch"] : true;
+
         // Clear the items
         this._items = [];
 
@@ -349,7 +352,7 @@ export class UniquePermissions {
         while (el.firstChild) { el.removeChild(el.firstChild); }
 
         // Render the summary
-        this.renderSummary(el, auditOnly, onClose);
+        this.renderSummary(el, auditOnly, showSearch, onClose);
 
         // Hide the loading dialog
         LoadingDialog.hide();
@@ -406,6 +409,9 @@ export class UniquePermissions {
         }).then(() => {
             // Hide the sub-nav
             this._elSubNav.classList.add("d-none");
+
+            // Call the event
+            onComplete ? onComplete() : null;
         });
     }
 
@@ -443,7 +449,7 @@ export class UniquePermissions {
         });
 
         // Render the summary
-        this.renderSummary(Modal.BodyElement, auditOnly);
+        this.renderSummary(Modal.BodyElement, auditOnly, false);
 
         // Show the modal
         Modal.show();
