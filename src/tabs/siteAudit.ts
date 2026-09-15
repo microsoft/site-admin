@@ -222,7 +222,8 @@ export class SiteAudit {
                 // Set the default form values
                 let formValues = {};
 
-                // Ensure this tab is enabled
+                // Ensure this tab is enabled and show it
+                nav.getTab(report.name).enable();
                 nav.showTab(report.name);
 
                 // See which report we are running
