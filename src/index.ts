@@ -7,6 +7,7 @@ import { InstallationModal } from "./install";
 import { PageGenerator } from "./page-generator";
 import { RegexDialog } from "./regexPatternsDialog";
 import { Security } from "./security";
+import { SiteAuditReportDialog } from "./siteAuditReportDialog";
 import Strings, { setContext } from "./strings";
 
 // Styling
@@ -84,6 +85,7 @@ const GlobalVariable = {
         );
     },
     showRegexPatterns: (patterns: string, onUpdate: (patterns: string) => void) => { new RegexDialog(patterns, onUpdate); },
+    showSiteAuditReports: (appProps: IAppProps, reports: string[], onUpdate: (reports: string[]) => void) => { new SiteAuditReportDialog(appProps, reports, onUpdate); },
     updateTheme: (themeInfo) => { ThemeManager.update(themeInfo); }
 };
 

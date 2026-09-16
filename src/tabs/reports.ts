@@ -33,6 +33,7 @@ export interface IReportProps {
     oversharedGroups?: string[];
     secureFileText?: string;
     sensitivityLabelFileExt?: string;
+    siteAuditReports?: string[];
 }
 
 // Report Types

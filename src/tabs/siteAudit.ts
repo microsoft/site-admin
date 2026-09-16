@@ -1,4 +1,3 @@
-import { CanvasForm } from "dattatable";
 import { Components, Helper } from "gd-sprest-bs";
 import * as moment from "moment";
 import { IAppProps } from "../app";
@@ -11,7 +10,6 @@ import { ReportTypes } from "./reports";
 export class SiteAudit {
     private _appProps: IAppProps = null;
     private _el: HTMLElement = null;
-    private _elLog: HTMLElement = null;
 
     // Constructor
     constructor(el: HTMLElement, appProps: IAppProps) {
@@ -70,6 +68,7 @@ export class SiteAudit {
                 data: "Searches all libraries for agent files in the site."
             });
         }
+        /*
         if (typeof (this._appProps.hideReports.searchDocs) === "undefined" || this._appProps.hideReports.searchDocs != true) {
             items.push({
                 name: ReportTypes.SearchDocs,
@@ -77,6 +76,7 @@ export class SiteAudit {
                 data: "Find documents by keywords."
             });
         }
+        */
         if (typeof (this._appProps.hideReports.searchEEEU) === "undefined" || this._appProps.hideReports.searchEEEU != true) {
             items.push({
                 name: ReportTypes.SearchEEEU,
@@ -126,7 +126,7 @@ export class SiteAudit {
                     type: Components.FormControlTypes.MultiSwitch,
                     items: this.getReports(),
                     required: true,
-                    //value: this._currValues.WebTemplate
+                    value: this._appProps.reportProps.siteAuditReports,
                 } as Components.IFormControlPropsMultiSwitch,
                 {
                     name: "SkipLargeLists",
@@ -198,6 +198,7 @@ export class SiteAudit {
             items.push({
                 data: report.name,
                 title: report.label,
+                tabContent: Components.Alert({ header: report.name, content: "Waiting to run report..." }).el,
                 onRenderTab: (el, item) => { elTabs[item.data] = el; }
             });
         });
@@ -240,6 +241,7 @@ export class SiteAudit {
                     case ReportTypes.SearchAgents:
                         return Reports.SearchAgents.run(elTabs[report.name], this._appProps.auditOnly, formValues, null, () => { resolve(null); });
                     case ReportTypes.SearchDocs:
+                        formValues["FileTypes"] = this._appProps.reportProps.docSearchFileExt;
                         return Reports.SearchDocs.run(elTabs[report.name], this._appProps.auditOnly, formValues, null, () => { resolve(null); });
                     case ReportTypes.SearchEEEU:
                         return Reports.SearchEEEU.run(elTabs[report.name], this._appProps.auditOnly, formValues, null, () => { resolve(null); });

@@ -105,6 +105,7 @@ export interface ISiteAdminWebPartProps {
   ReportsDocSearchFileExt: string;
   ReportsDocSearchKeywords: string;
   ReportsDocSearchRegexPatterns: string;
+  ReportsSiteAudit: string[];
   ReportNameDLP: string;
   ReportNameDocRetention: string;
   ReportNameExternalShares: string;
@@ -205,100 +206,103 @@ export interface ISiteAdminWebPartProps {
 
 // Reference the solution
 import "main-lib";
+interface IAppProps {
+  auditOnly?: boolean;
+  context?: WebPartContext;
+  el: HTMLElement;
+  title?: string;
+  disableSensitivityLabelOverride?: boolean;
+  flowGetSiteAdminsAndOwners?: string;
+  hideCreateSiteBtn?: boolean;
+  hideLoadOneDriveBtn: boolean;
+  hideReports: {
+    dlp: boolean;
+    docRetention: boolean;
+    externalShares: boolean;
+    externalUsers: boolean;
+    permissions: boolean;
+    retention: boolean;
+    searchAgents: boolean;
+    searchDocs: boolean;
+    searchEEEU: boolean;
+    searchProp: boolean;
+    searchUsers: boolean;
+    sensitivityLabels: boolean;
+    sharingLinks: boolean;
+    uniquePermissions: boolean;
+  },
+  hideTabs: {
+    appPermissions: boolean;
+    auditTools: boolean;
+    features: boolean;
+    lists: boolean;
+    management: boolean;
+    search: boolean;
+    webs: boolean;
+  }
+  imageReferences: string[];
+  maxBatchSize?: number;
+  maxRequests?: number;
+  maxStorageDesc?: string;
+  maxStorageSize?: number;
+  siteAttestation?: boolean;
+  siteAttestationText?: string;
+  reportNames?: {
+    dlp: string;
+    docRetention: string;
+    externalShares: string;
+    externalUsers: string;
+    permissions: string;
+    retention: string;
+    searchAgents: string;
+    searchDocs: string;
+    searchEEEU: string;
+    searchProp: string;
+    searchUsers: string;
+    sensitivityLabels: string;
+    sharingLinks: string;
+    uniquePermissions: string;
+  }
+  reportProps?: {
+    docRententionYears?: string;
+    dlpFileExt?: string;
+    docSearchFileExt?: string;
+    docSearchKeywords?: string;
+    docSearchRegexPatterns?: string;
+    oversharedGroups?: string[];
+    secureFileText?: string;
+    sensitivityLabelFileExt?: string;
+    siteAuditReports?: string[];
+  }
+  searchProps?: {
+    description: string;
+    key: string;
+    label: string;
+    managedProperty: string;
+    tabName: string;
+    values: string;
+  }
+  siteProps: {
+    [key: string]: {
+      description: string;
+      disabled: boolean;
+      label: string;
+    }
+  }
+  webProps: {
+    [key: string]: {
+      description: string;
+      disabled: boolean;
+      label: string;
+    }
+  }
+}
 declare const SiteAdmin: {
   appDescription: string;
   pageGenerator: () => void;
-  render: (props: {
-    auditOnly?: boolean;
-    context?: WebPartContext;
-    el: HTMLElement;
-    title?: string;
-    disableSensitivityLabelOverride?: boolean;
-    flowGetSiteAdminsAndOwners?: string;
-    hideCreateSiteBtn?: boolean;
-    hideLoadOneDriveBtn: boolean;
-    hideReports: {
-      dlp: boolean;
-      docRetention: boolean;
-      externalShares: boolean;
-      externalUsers: boolean;
-      permissions: boolean;
-      retention: boolean;
-      searchAgents: boolean;
-      searchDocs: boolean;
-      searchEEEU: boolean;
-      searchProp: boolean;
-      searchUsers: boolean;
-      sensitivityLabels: boolean;
-      sharingLinks: boolean;
-      uniquePermissions: boolean;
-    },
-    hideTabs: {
-      appPermissions: boolean;
-      auditTools: boolean;
-      features: boolean;
-      lists: boolean;
-      management: boolean;
-      search: boolean;
-      webs: boolean;
-    }
-    imageReferences: string[];
-    maxBatchSize?: number;
-    maxRequests?: number;
-    maxStorageDesc?: string;
-    maxStorageSize?: number;
-    siteAttestation?: boolean;
-    siteAttestationText?: string;
-    reportNames?: {
-      dlp: string;
-      docRetention: string;
-      externalShares: string;
-      externalUsers: string;
-      permissions: string;
-      retention: string;
-      searchAgents: string;
-      searchDocs: string;
-      searchEEEU: string;
-      searchProp: string;
-      searchUsers: string;
-      sensitivityLabels: string;
-      sharingLinks: string;
-      uniquePermissions: string;
-    }
-    reportProps?: {
-      docRententionYears?: string;
-      dlpFileExt?: string;
-      docSearchFileExt?: string;
-      docSearchKeywords?: string;
-      docSearchRegexPatterns?: string;
-      oversharedGroups?: string[];
-      secureFileText?: string;
-      sensitivityLabelFileExt?: string;
-    }
-    searchProps?: {
-      description: string;
-      key: string;
-      label: string;
-      managedProperty: string;
-      tabName: string;
-      values: string;
-    }
-    siteProps: {
-      [key: string]: {
-        description: string;
-        disabled: boolean;
-        label: string;
-      }
-    }
-    webProps: {
-      [key: string]: {
-        description: string;
-        disabled: boolean;
-        label: string;
-      }
-    }
-  }) => void;
+  render: (props: IAppProps) => void;
   showRegexPatterns: (patterns: string, onUpdate: (patterns: string) => void) => void;
+  showSiteAuditReports: (appProps: IAppProps, reports: string[], onUpdate: (reports: string[]) => void) => void;
   updateTheme: (theme: IReadonlyTheme) => void;
 };
 
@@ -329,8 +333,8 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
 
     // Render the app
     if (!this._hasRendered) {
-      // Render the app
-      this.renderApp();
+      // Render the solution
+      SiteAdmin.render(this.getAppProps());
 
       // Set the flag
       this._hasRendered = true;
@@ -638,6 +642,17 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
             {
               groupName: "Audit Tools",
               groupFields: [
+                PropertyPaneButton("", {
+                  text: "Site Audit Reports",
+                  description: "Set the default reports to be selected for the site audit tab.",
+                  onClick: () => {
+                    // Show interface
+                    SiteAdmin.showSiteAuditReports(this.getAppProps(), this.properties.ReportsSiteAudit, (reports: string[]) => {
+                      // Update the property
+                      this.properties.ReportsSiteAudit = reports;
+                    });
+                  }
+                }),
                 PropertyPaneTextField("ReportsDLPFileExt", {
                   label: strings.ReportsDLPFileExt,
                   description: "The default file extensions to search.",
@@ -977,7 +992,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     };
   }
 
-  private renderApp(): void {
+  private getAppProps(): IAppProps {
     // Set the properties for the app
     const propValues = (this.properties as any);
     const siteProps: {
@@ -1035,9 +1050,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         maxStorageSize = parseInt(maxStorageSize.toString().replace("GB", "")) / 1000;
       }
     }
-
-    // Render the solution
-    SiteAdmin.render({
+    return {
       auditOnly: this.properties.AuditOnly,
       context: this.context,
       el: this.domElement,
@@ -1099,6 +1112,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         docSearchRegexPatterns: this.properties.ReportsDocSearchRegexPatterns,
         oversharedGroups: (this.properties.ReportsOversharedGroups || "").split(",").map(group => group.trim()),
         secureFileText: this.properties.ReportsSecureFileText,
+        siteAuditReports: this.properties.ReportsSiteAudit,
         sensitivityLabelFileExt: this.properties.SensitivityLabelFileExt
       },
       searchProps: {
@@ -1114,6 +1128,6 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       siteProps,
       title: this.properties.AppTitle,
       webProps
-    });
+    };
   }
 }
