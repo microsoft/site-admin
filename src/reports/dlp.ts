@@ -4,6 +4,7 @@ import { DataSource } from "../ds";
 import { M365Groups } from "../m365Groups";
 import Strings from "../strings";
 import { ExportCSV } from "./exportCSV";
+import { SkippedListsDialog } from "./skippedListsDialog";
 import { ViewPermissions } from "./viewPermissions";
 
 export interface IDLPItem {
@@ -53,6 +54,7 @@ export class DLP {
     private static _items: IDLPItem[] = [];
     private static _loadOneDrive: boolean = false;
     private static _maxItemCount: number = 0;
+    private static _skippedLists: string[] = [];
     private static _stopFl: boolean = false;
 
     // Gets the form fields to display
@@ -81,7 +83,7 @@ export class DLP {
                 if (this._stopFl) { return; }
 
                 // See if we are skipping large lists
-                if (this._maxItemCount > 0 && lib.ItemCount > this._maxItemCount) { return; }
+                if (this._maxItemCount > 0 && lib.ItemCount > this._maxItemCount) { this._skippedLists.push(lib.Title); return; }
 
                 // Update the dialog
                 this._elSubNav.children[0].innerHTML = `${siteText} [Analyzing Library ${++counter} of ${libraries.length}]: ${lib.Title}`;
@@ -227,24 +229,38 @@ export class DLP {
 
     // Renders the search summary
     private static renderSummary(el: HTMLElement, auditOnly: boolean, showSearch?: boolean, onClose?: () => void) {
+        // Create the nav items
+        let navItems: Components.INavbarItem[] = showSearch ? [{
+            text: "New Search",
+            className: "btn-outline-light",
+            isButton: true,
+            onClick: () => {
+                // Set the stop flag
+                this._stopFl = true;
+
+                // Call the close event
+                onClose();
+            }
+        }] : [];
+
+        // Show the filter button for permissions
+        navItems.push({
+            text: "Show Skipped Lists",
+            className: "btn-outline-light ms-2 skipped-lists",
+            isButton: true,
+            onClick: () => {
+                // Show the lists
+                new SkippedListsDialog(this._skippedLists);
+            }
+        });
+
         // Render the summary
         this._dashboard = new Dashboard({
             el,
             navigation: {
                 title: "DLP Report",
                 showFilter: false,
-                items: showSearch ? [{
-                    text: "New Search",
-                    className: "btn-outline-light",
-                    isButton: true,
-                    onClick: () => {
-                        // Set the stop flag
-                        this._stopFl = true;
-
-                        // Call the close event
-                        onClose();
-                    }
-                }] : null,
+                items: navItems,
                 itemsEnd: [{
                     text: "Export to CSV",
                     className: "btn-outline-light me-2",
@@ -620,6 +636,12 @@ export class DLP {
             // Hide the sub-nav
             this._elSubNav.classList.add("d-none");
 
+            // See if we have skipped any lists
+            if (this._skippedLists.length === 0) {
+                // Remove the button
+                el.querySelector(".skipped-lists").parentElement.remove();
+            }
+
             // Call the event
             onComplete ? onComplete() : null;
         });
@@ -657,6 +679,9 @@ export class DLP {
 
         // Show the results
         this.renderSummary(Modal.BodyElement, auditOnly, false);
+
+        // Remove the skipped lists button
+        Modal.BodyElement.querySelector(".skipped-lists").parentElement.remove();
 
         // Show the modal
         Modal.show();
