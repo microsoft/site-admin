@@ -81,14 +81,14 @@ export class DocRetention {
     }
 
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, auditOnly: boolean, items: ISearchItem[], onClose: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, showSearch: boolean, items: ISearchItem[], onClose: () => void) {
         // Render the summary
         new Dashboard({
             el,
             navigation: {
                 title: "Doc Retention",
                 showFilter: false,
-                items: [{
+                items: showSearch ? [{
                     text: "New Search",
                     className: "btn-outline-light",
                     isButton: true,
@@ -96,7 +96,7 @@ export class DocRetention {
                         // Call the close event
                         onClose();
                     }
-                }],
+                }] : null,
                 itemsEnd: [{
                     text: "Export to CSV",
                     className: "btn-outline-light me-2",
@@ -237,13 +237,16 @@ export class DocRetention {
     }
 
     // Runs the report
-    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
+    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void, onComplete?: () => void) {
         this._loadOneDrive = values["LoadOneDrive"] == "true";
 
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Site");
         LoadingDialog.setBody("Searching the site for files...");
         LoadingDialog.show();
+
+        // Get the show search flag
+        let showSearch = typeof (values["ShowSearch"]) === "boolean" ? values["ShowSearch"] : true;
 
         // Get the start date
         let startDate = moment(values["SelectedDate"]).format("YYYY-MM-DD");
@@ -267,7 +270,10 @@ export class DocRetention {
             while (el.firstChild) { el.removeChild(el.firstChild); }
 
             // Render the summary
-            this.renderSummary(el, auditOnly, search.results, onClose);
+            this.renderSummary(el, auditOnly, showSearch, search.results, onClose);
+
+            // Call the event
+            onComplete ? onComplete() : null;
 
             // Hide the loading dialog
             LoadingDialog.hide();

@@ -724,8 +724,43 @@ export class SearchDocs {
     }
 
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, auditOnly: boolean, hidePermissions: boolean, searchType: "Search" | "Regex" | "Library", onClose: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, showSearch: boolean, hidePermissions: boolean, searchType: "Search" | "Regex" | "Library", onClose: () => void) {
         let isSearch = searchType === "Search" ? true : false;
+
+        // Set the nav items
+        let navItems = showSearch ? [{
+            text: "New Search",
+            className: "btn-outline-light" + (searchType === "Library" ? " d-none" : ""),
+            isButton: true,
+            onClick: () => {
+                // Call the close event
+                onClose();
+            }
+        }] : [];
+        navItems.push({
+            text: "Bulk Label",
+            className: isSearch ? "d-none" : "btn-outline-light ms-2",
+            isButton: true,
+            onClick: () => {
+                // Get the drive items
+                let driveItems = [];
+                this._items.forEach(item => { driveItems.push(item._driveItem); });
+
+                // Show the label form
+                SensitivityLabels.showLabelFilesForm(driveItems, responses => {
+                    // Update the items
+                });
+            }
+        });
+        navItems.push({
+            text: "Errors",
+            className: "btn-outline-light ms-2",
+            isButton: true,
+            onClick: () => {
+                // Display the errors
+                this.renderErrors(searchType);
+            }
+        });
 
         // Render the summary
         this._dashboard = new Dashboard({
@@ -733,37 +768,7 @@ export class SearchDocs {
             navigation: {
                 title: "Search Documents",
                 showFilter: false,
-                items: [{
-                    text: "New Search",
-                    className: "btn-outline-light" + (searchType === "Library" ? " d-none" : ""),
-                    isButton: true,
-                    onClick: () => {
-                        // Call the close event
-                        onClose();
-                    }
-                }, {
-                    text: "Bulk Label",
-                    className: isSearch ? "d-none" : "btn-outline-light ms-2",
-                    isButton: true,
-                    onClick: () => {
-                        // Get the drive items
-                        let driveItems = [];
-                        this._items.forEach(item => { driveItems.push(item._driveItem); });
-
-                        // Show the label form
-                        SensitivityLabels.showLabelFilesForm(driveItems, responses => {
-                            // Update the items
-                        });
-                    }
-                }, {
-                    text: "Errors",
-                    className: "btn-outline-light ms-2",
-                    isButton: true,
-                    onClick: () => {
-                        // Display the errors
-                        this.renderErrors(searchType);
-                    }
-                }],
+                items: navItems,
                 itemsEnd: [{
                     text: "Export to CSV",
                     className: "btn-outline-light me-2",
@@ -1067,7 +1072,7 @@ export class SearchDocs {
     }
 
     // Runs the report
-    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
+    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void, onComplete?: () => void) {
         this._items = [];
         this._itemErrors = [];
         this._loadOneDrive = values["LoadOneDrive"] == "true";
@@ -1081,6 +1086,7 @@ export class SearchDocs {
         let fileExt = values["FileTypes"] ? values["FileTypes"].split(' ') : null;
         let searchTerms = (values["SearchTerms"] || "").split(' ');
         let searchType = (values["SearchType"] || "");
+        let showSearch = typeof (values["ShowSearch"]) === "boolean" ? values["ShowSearch"] : true;
         let targetFolder = values["TargetFolder"];
         let loadPermissions = values["LoadPermissions"] as any == true ? true : false;
 
@@ -1129,10 +1135,13 @@ export class SearchDocs {
                 this._items = search.results;
 
                 // Render the summary
-                this.renderSummary(el, auditOnly, true, "Search", onClose);
+                this.renderSummary(el, auditOnly, showSearch, true, "Search", onClose);
 
                 // Hide the sub-nav
                 this._elSubNav.classList.add("d-none");
+
+                // Call the event
+                onComplete ? onComplete() : null;
 
                 // Hide the loading dialog
                 LoadingDialog.hide();
@@ -1142,7 +1151,7 @@ export class SearchDocs {
             while (el.firstChild) { el.removeChild(el.firstChild); }
 
             // Render the summary
-            this.renderSummary(el, auditOnly, !loadPermissions, values["TargetList"] ? "Library" : "Regex", onClose);
+            this.renderSummary(el, auditOnly, showSearch, !loadPermissions, values["TargetList"] ? "Library" : "Regex", onClose);
 
             // Determine the webs to target
             let siteItems: Components.IDropdownItem[] = null;
@@ -1219,6 +1228,9 @@ export class SearchDocs {
                     // Update the error text
                     elNav.querySelector("li:last-child > a").innerHTML = `${this._itemErrors.length} Errors`;
                 }
+
+                // Call the event
+                onComplete ? onComplete() : null;
             });
 
             // Hide the loading dialog

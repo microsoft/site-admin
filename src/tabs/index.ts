@@ -10,6 +10,7 @@ import { InfoTab } from "./info";
 import { ListsTab } from "./lists";
 import { ManagementTab } from "./management";
 import { SearchPropTab } from "./searchProp";
+import { SiteAudit } from "./siteAudit";
 import { ReportsTab } from "./reports";
 import { WebTab } from "./web";
 
@@ -28,6 +29,7 @@ export class Tabs {
     private _tabManagement: ManagementTab = null;
     private _tabReports: ReportsTab = null;
     private _tabSearch: SearchPropTab = null;
+    private _tabSiteAudit: SiteAudit = null;
     private _tabWeb: WebTab = null;
 
     // Constructor
@@ -119,6 +121,16 @@ export class Tabs {
                 onRender: (el) => {
                     // Render the tab
                     this._tabReports = new ReportsTab(el, appProps, loadOneDrive);
+                }
+            });
+        }
+        if (loadOneDrive || !appProps.hideTabs.siteAudit || DataSource.WebOnly) {
+            items.push({
+                isActive: loadOneDrive,
+                tabName: "Site Audit",
+                onRender: (el) => {
+                    // Render the tab
+                    this._tabSiteAudit = new SiteAudit(el, appProps);
                 }
             });
         }

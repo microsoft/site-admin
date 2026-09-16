@@ -60,14 +60,14 @@ export class ExternalShares {
     static getFormFields(): Components.IFormControlProps[] { return []; }
 
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, auditOnly: boolean, items: ISearchItem[], onClose: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, showSearch: boolean, items: ISearchItem[], onClose: () => void) {
         // Render the summary
         new Dashboard({
             el,
             navigation: {
                 title: "External Shares",
                 showFilter: false,
-                items: [{
+                items: showSearch ? [{
                     text: "New Search",
                     className: "btn-outline-light",
                     isButton: true,
@@ -75,7 +75,7 @@ export class ExternalShares {
                         // Call the close event
                         onClose();
                     }
-                }],
+                }] : null,
                 itemsEnd: [{
                     text: "Export to CSV",
                     className: "btn-outline-light me-2",
@@ -224,13 +224,16 @@ export class ExternalShares {
     }
 
     // Runs the report
-    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
+    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void, onComplete?: () => void) {
         this._loadOneDrive = values["LoadOneDrive"] == "true";
 
         // Show a loading dialog
         LoadingDialog.setHeader("Searching Site");
         LoadingDialog.setBody("Searching the content on this site...");
         LoadingDialog.show();
+
+        // Get the show search flag
+        let showSearch = typeof (values["ShowSearch"]) === "boolean" ? values["ShowSearch"] : true;
 
         // Set the query
         let query: Types.Microsoft.Office.Server.Search.REST.SearchRequest = {
@@ -255,7 +258,10 @@ export class ExternalShares {
             while (el.firstChild) { el.removeChild(el.firstChild); }
 
             // Render the summary
-            this.renderSummary(el, auditOnly, search.results, onClose);
+            this.renderSummary(el, auditOnly, showSearch, search.results, onClose);
+
+            // Call the event
+            onComplete ? onComplete() : null;
 
             // Hide the loading dialog
             LoadingDialog.hide();

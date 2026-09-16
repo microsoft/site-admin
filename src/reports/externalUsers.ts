@@ -180,14 +180,14 @@ export class ExternalUsers {
     }
 
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, auditOnly: boolean, onClose: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, showSearch: boolean, onClose: () => void) {
         // Render the summary
         new Dashboard({
             el,
             navigation: {
                 title: "External Users",
                 showFilter: false,
-                items: [{
+                items: showSearch ? [{
                     text: "New Search",
                     className: "btn-outline-light",
                     isButton: true,
@@ -195,7 +195,7 @@ export class ExternalUsers {
                         // Call the close event
                         onClose();
                     }
-                }],
+                }] : null,
                 itemsEnd: [{
                     text: "Export to CSV",
                     className: "btn-outline-light me-2",
@@ -390,7 +390,7 @@ export class ExternalUsers {
     }
 
     // Runs the report
-    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
+    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void, onComplete?: () => void) {
         this._loadOneDrive = values["LoadOneDrive"] == "true";
         let users: IUserInfo[] = [];
 
@@ -398,6 +398,9 @@ export class ExternalUsers {
         LoadingDialog.setHeader("Loading Security Groups");
         LoadingDialog.setBody("Loading the permissions for this site...");
         LoadingDialog.show();
+
+        // Get the show search flag
+        let showSearch = typeof (values["ShowSearch"]) === "boolean" ? values["ShowSearch"] : true;
 
         // Clear the items
         this._items = [];
@@ -447,7 +450,10 @@ export class ExternalUsers {
                     while (el.firstChild) { el.removeChild(el.firstChild); }
 
                     // Render the summary
-                    this.renderSummary(el, auditOnly, onClose);
+                    this.renderSummary(el, auditOnly, showSearch, onClose);
+
+                    // Call the event
+                    onComplete ? onComplete() : null;
 
                     // Hide the loading dialog
                     LoadingDialog.hide();

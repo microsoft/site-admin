@@ -542,7 +542,7 @@ export class DLP {
     }
 
     // Runs the report
-    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void) {
+    static run(el: HTMLElement, auditOnly: boolean, values: { [key: string]: string }, onClose: () => void, onComplete?: () => void) {
         let data: IWebItem[] = [];
         this._loadOneDrive = values["LoadOneDrive"] == "true";
         this._maxItemCount = parseInt(values["SkipLargeLists"]) || 0;
@@ -559,11 +559,14 @@ export class DLP {
         // Get the file extensions
         let fileExtensions: string[] = values["FileTypes"] ? values["FileTypes"].trim().split(' ') : [];
 
+        // Get the show search flag
+        let showSearch = typeof (values["ShowSearch"]) === "boolean" ? values["ShowSearch"] : true;
+
         // Clear the element
         while (el.firstChild) { el.removeChild(el.firstChild); }
 
         // Render the summary
-        this.renderSummary(el, auditOnly, true, onClose);
+        this.renderSummary(el, auditOnly, showSearch, onClose);
 
         // Hide the loading dialog
         LoadingDialog.hide();
@@ -616,6 +619,9 @@ export class DLP {
         }).then(() => {
             // Hide the sub-nav
             this._elSubNav.classList.add("d-none");
+
+            // Call the event
+            onComplete ? onComplete() : null;
         });
     }
 
