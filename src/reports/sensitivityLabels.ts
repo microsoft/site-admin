@@ -4,7 +4,7 @@ import { DataSource } from "../ds";
 import { M365Groups } from "../m365Groups";
 import { BulkLabel, ISetSensitivityLabelResponse } from "./bulkLabel";
 import { ExportCSV } from "./exportCSV";
-import { SkippedListsDialog } from "./skippedListsDialog";
+import { ISkippedList, SkippedListsDialog } from "./skippedListsDialog";
 import { ViewPermissions } from "./viewPermissions";
 
 export interface ISensitivityLabelItem {
@@ -52,7 +52,7 @@ export class SensitivityLabels {
     private static _items: ISensitivityLabelItem[] = [];
     private static _loadOneDrive: boolean = false;
     private static _maxItemCount: number = 0;
-    private static _skippedLists: string[] = [];
+    private static _skippedLists: ISkippedList[] = [];
     private static _stopFl: boolean = false;
 
     // Analyzes the libraries
@@ -70,7 +70,7 @@ export class SensitivityLabels {
                 if (this._stopFl) { return; }
 
                 // See if we are skipping large lists
-                if (this._maxItemCount > 0 && lib.ItemCount > this._maxItemCount) { this._skippedLists.push(lib.Title); return; }
+                if (this._maxItemCount > 0 && lib.ItemCount > this._maxItemCount) { this._skippedLists.push({ title: lib.Title, webUrl }); return; }
 
                 // Update the dialog
                 this._elSubNav.children[0].innerHTML = `${siteText} [Analyzing Library ${++counter} of ${libraries.length}]: ${lib.Title}`;

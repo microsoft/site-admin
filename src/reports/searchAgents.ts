@@ -2,7 +2,7 @@ import { Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
 import { Components, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
 import { DataSource } from "../ds";
 import { ExportCSV } from "./exportCSV";
-import { SkippedListsDialog } from "./skippedListsDialog";
+import { ISkippedList, SkippedListsDialog } from "./skippedListsDialog";
 
 interface IAgentItem {
     FileName?: string;
@@ -26,7 +26,7 @@ export class SearchAgents {
     private static _items: IAgentItem[] = null;
     private static _loadOneDrive: boolean = null;
     private static _maxItemCount: number = 0;
-    private static _skippedLists: string[] = [];
+    private static _skippedLists: ISkippedList[] = [];
     private static _stopFl: boolean = false;
 
     // Analyzes a library
@@ -96,7 +96,7 @@ export class SearchAgents {
                     if (this._stopFl) { return; }
 
                     // See if we are skipping large lists
-                    if (this._maxItemCount > 0 && lib.ItemCount > this._maxItemCount) { this._skippedLists.push(lib.Title); return; }
+                    if (this._maxItemCount > 0 && lib.ItemCount > this._maxItemCount) { this._skippedLists.push({ title: lib.Title, webUrl: web.Url }); return; }
 
                     // Show a dialog
                     this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing Library ${++ctrList} of ${libs.length}]: ${lib.Title}`;

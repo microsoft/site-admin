@@ -3,7 +3,7 @@ import { Components, ContextInfo, Helper, SPTypes, Types, Web } from "gd-sprest-
 import { DataSource } from "../ds";
 import Strings from "../strings";
 import { ExportCSV } from "./exportCSV";
-import { SkippedListsDialog } from "./skippedListsDialog";
+import { ISkippedList, SkippedListsDialog } from "./skippedListsDialog";
 
 interface ISearchItem {
     Email?: string;
@@ -47,7 +47,7 @@ export class SearchEEEU {
     private static _loadOneDrive: boolean = null;
     private static _maxItemCount: number = 0;
     private static _oversharedGroups: string[] = null;
-    private static _skippedLists: string[] = [];
+    private static _skippedLists: ISkippedList[] = [];
     private static _stopFl: boolean = false;
 
     // Analyzes a lists
@@ -213,7 +213,7 @@ export class SearchEEEU {
                         if (this._stopFl) { return; }
 
                         // See if we are skipping large lists
-                        if (this._maxItemCount > 0 && list.ItemCount > this._maxItemCount) { this._skippedLists.push(list.Title); return; }
+                        if (this._maxItemCount > 0 && list.ItemCount > this._maxItemCount) { this._skippedLists.push({ title: list.Title, webUrl: web.Url }); return; }
 
                         // Show a dialog
                         this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing List ${++ctrList} of ${lists.length}]: ${list.Title}`;

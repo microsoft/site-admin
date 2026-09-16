@@ -4,7 +4,7 @@ import { cardList } from "gd-sprest-bs/build/icons/svgs/cardList";
 import { DataSource } from "../ds";
 import Strings from "../strings";
 import { ExportCSV } from "./exportCSV";
-import { SkippedListsDialog } from "./skippedListsDialog";
+import { ISkippedList, SkippedListsDialog } from "./skippedListsDialog";
 
 interface IPermission {
     FileName?: string;
@@ -35,7 +35,7 @@ export class UniquePermissions {
     private static _items: IPermission[] = [];
     private static _loadOneDrive: boolean = false;
     private static _maxItemCount: number = 0;
-    private static _skippedLists: string[] = [];
+    private static _skippedLists: ISkippedList[] = [];
     private static _stopFl: boolean = false;
 
     // Analyzes a list
@@ -412,7 +412,7 @@ export class UniquePermissions {
                         if (this._stopFl) { return; }
 
                         // See if we are skipping large lists
-                        if (this._maxItemCount > 0 && list.ItemCount > this._maxItemCount) { this._skippedLists.push(list.Title); return; }
+                        if (this._maxItemCount > 0 && list.ItemCount > this._maxItemCount) { this._skippedLists.push({ title: list.Title, webUrl: siteItem.text }); return; }
 
                         // Update the dialog
                         this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing Library ${++ctrList} of ${lists.results.length}]: ${list.Title}`;
