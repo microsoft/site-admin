@@ -198,14 +198,12 @@ export class SiteAudit {
             items.push({
                 data: report.name,
                 title: report.label,
-                isDisabled: true,
                 onRenderTab: (el, item) => { elTabs[item.data] = el; }
             });
         });
 
         // Set the first tab to be active
         items[0].isActive = true;
-        items[0].isDisabled = false;
 
         // Render tabs
         let nav = Components.Nav({
