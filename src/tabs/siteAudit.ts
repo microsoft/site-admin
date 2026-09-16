@@ -185,6 +185,9 @@ export class SiteAudit {
                 className: "btn-outline-light",
                 isButton: true,
                 onClick: () => {
+                    // Stop all reports
+                    this.stop();
+
                     // Render the site audit
                     this.render();
                 }
@@ -257,5 +260,17 @@ export class SiteAudit {
             });
         }).then(() => {
         });
+    }
+
+    // Stops all reports that are currently running
+    private stop() {
+        // Stop the reports
+        Reports.DLP.stop();
+        Reports.Permissions.stop();
+        Reports.SearchAgents.stop();
+        Reports.SearchDocs.stop();
+        Reports.SearchEEEU.stop();
+        Reports.SensitivityLabels.stop();
+        Reports.UniquePermissions.stop();
     }
 }
