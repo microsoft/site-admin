@@ -165,13 +165,14 @@ export class SiteAudit {
                 if (!form.isValid()) { return; }
 
                 // Run the site audit reports against the sites
-                this.run(form.getValues()["Reports"]);
+                let formValues = form.getValues();
+                this.run(formValues["Reports"], parseInt(formValues["SkipLargeLists"].value));
             }
         });
     }
 
     // Runs the site audit
-    private run(reports: Components.ICheckboxGroupItem[]) {
+    private run(reports: Components.ICheckboxGroupItem[], skipLargeLists: number) {
         // Clear the element
         while (this._el.firstChild) { this._el.removeChild(this._el.firstChild); }
 
@@ -219,7 +220,7 @@ export class SiteAudit {
             // Return a promise
             return new Promise(resolve => {
                 // Set the default form values
-                let formValues: any = { ShowSearch: false };
+                let formValues: any = { ShowSearch: false, SkipLargeLists: skipLargeLists };
 
                 // Show the tab
                 nav.showTab(report.label);
