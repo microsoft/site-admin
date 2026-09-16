@@ -81,14 +81,14 @@ export class DocRetention {
     }
 
     // Renders the search summary
-    private static renderSummary(el: HTMLElement, auditOnly: boolean, items: ISearchItem[], onClose: () => void) {
+    private static renderSummary(el: HTMLElement, auditOnly: boolean, showSearch: boolean, items: ISearchItem[], onClose: () => void) {
         // Render the summary
         new Dashboard({
             el,
             navigation: {
                 title: "Doc Retention",
                 showFilter: false,
-                items: [{
+                items: showSearch ? [{
                     text: "New Search",
                     className: "btn-outline-light",
                     isButton: true,
@@ -96,7 +96,7 @@ export class DocRetention {
                         // Call the close event
                         onClose();
                     }
-                }],
+                }] : null,
                 itemsEnd: [{
                     text: "Export to CSV",
                     className: "btn-outline-light me-2",
@@ -270,7 +270,7 @@ export class DocRetention {
             while (el.firstChild) { el.removeChild(el.firstChild); }
 
             // Render the summary
-            this.renderSummary(el, auditOnly, search.results, onClose);
+            this.renderSummary(el, auditOnly, showSearch, search.results, onClose);
 
             // Call the event
             onComplete ? onComplete() : null;

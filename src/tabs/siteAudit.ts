@@ -167,7 +167,6 @@ export class SiteAudit {
                 // Run the site audit reports against the sites
                 // Set the default values to use
                 let formValues = form.getValues();
-                formValues["ShowSearch"] = false;
                 this.run(formValues["Reports"]);
             }
         });
@@ -223,14 +222,10 @@ export class SiteAudit {
             // Return a promise
             return new Promise(resolve => {
                 // Set the default form values
-                let formValues = {};
+                let formValues: any = { ShowSearch: false };
 
-                // Ensure this tab is enabled and show it
-                let tab = nav.getTab(report.label);
-                if (tab) {
-                    tab.enable();
-                    nav.showTab(report.name);
-                }
+                // Show the tab
+                nav.showTab(report.label);
 
                 // See which report we are running
                 switch (report.name) {
