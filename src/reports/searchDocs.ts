@@ -1140,6 +1140,9 @@ export class SearchDocs {
                 // Hide the sub-nav
                 this._elSubNav.classList.add("d-none");
 
+                // Call the event
+                onComplete ? onComplete() : null;
+
                 // Hide the loading dialog
                 LoadingDialog.hide();
             });
@@ -1225,10 +1228,10 @@ export class SearchDocs {
                     // Update the error text
                     elNav.querySelector("li:last-child > a").innerHTML = `${this._itemErrors.length} Errors`;
                 }
-            });
 
-            // Call the event
-            onComplete ? onComplete() : null;
+                // Call the event
+                onComplete ? onComplete() : null;
+            });
 
             // Hide the loading dialog
             LoadingDialog.hide();
