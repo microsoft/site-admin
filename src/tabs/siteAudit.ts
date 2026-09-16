@@ -165,9 +165,7 @@ export class SiteAudit {
                 if (!form.isValid()) { return; }
 
                 // Run the site audit reports against the sites
-                // Set the default values to use
-                let formValues = form.getValues();
-                this.run(formValues["Reports"]);
+                this.run(form.getValues()["Reports"]);
             }
         });
     }
