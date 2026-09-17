@@ -173,6 +173,8 @@ export class SiteAudit {
 
     // Runs the site audit
     private run(reports: Components.ICheckboxGroupItem[], skipLargeLists: number) {
+        let stopFl = false;
+
         // Clear the element
         while (this._el.firstChild) { this._el.removeChild(this._el.firstChild); }
 
@@ -185,6 +187,9 @@ export class SiteAudit {
                 className: "btn-outline-light",
                 isButton: true,
                 onClick: () => {
+                    // Set the flag
+                    stopFl = true;
+
                     // Stop all reports
                     this.stop();
 
@@ -220,6 +225,9 @@ export class SiteAudit {
 
         // Parse the reports
         Helper.Executor(reports, report => {
+            // See if we set the flag
+            if (stopFl) { return; }
+
             // Return a promise
             return new Promise(resolve => {
                 // Set the default form values
@@ -258,7 +266,6 @@ export class SiteAudit {
                         return Reports.UniquePermissions.run(elTabs[report.name], this._appProps.auditOnly, formValues, null, () => { resolve(null); });
                 }
             });
-        }).then(() => {
         });
     }
 
