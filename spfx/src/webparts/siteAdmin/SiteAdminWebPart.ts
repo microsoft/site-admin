@@ -81,6 +81,7 @@ export interface ISiteAdminWebPartProps {
   HideLoadOneDriveBtn: boolean;
   HideManagementTab: boolean;
   HideSearchTab: boolean;
+  HideSiteAuditTab: boolean;
   HideWebsTab: boolean;
   HideReportDLP: boolean;
   HideReportDocRetention: boolean;
@@ -238,6 +239,7 @@ interface IAppProps {
     lists: boolean;
     management: boolean;
     search: boolean;
+    siteAudit: boolean;
     webs: boolean;
   }
   imageReferences: string[];
@@ -588,6 +590,12 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   onText: "The 'Search' tab will be hidden.",
                   offText: "The 'Search' tab will be visible"
                 }),
+                PropertyPaneToggle("HideSiteAuditTab", {
+                  label: "Hide Site Audit Tab",
+                  checked: this.properties.HideSiteAuditTab,
+                  onText: "The 'Site Audit' tab will be hidden.",
+                  offText: "The 'Site Audit' tab will be visible"
+                }),
                 PropertyPaneToggle("HideWebsTab", {
                   label: "Hide Webs Tab",
                   checked: this.properties.HideWebsTab,
@@ -869,27 +877,27 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   description: "The report name displayed in the form.",
                   value: this.properties.ReportNameDLP
                 }),
-                PropertyPaneTextField("HideReportDocRetention", {
+                PropertyPaneTextField("ReportNameDocRetention", {
                   label: "Document Retention:",
                   description: "The report name displayed in the form.",
                   value: this.properties.ReportNameDocRetention
                 }),
-                PropertyPaneTextField("HideReportExternalShares", {
+                PropertyPaneTextField("ReportNameExternalShares", {
                   label: "External Shares:",
                   description: "The report name displayed in the form.",
                   value: this.properties.ReportNameExternalShares
                 }),
-                PropertyPaneTextField("HideReportExternalUsers", {
+                PropertyPaneTextField("ReportNameExternalUsers", {
                   label: "External Users:",
                   description: "The report name displayed in the form.",
                   value: this.properties.ReportNameExternalUsers
                 }),
-                PropertyPaneTextField("HideReportPermissions", {
+                PropertyPaneTextField("ReportNamePermissions", {
                   label: "Permissions:",
                   description: "The report name displayed in the form.",
                   value: this.properties.ReportNamePermissions
                 }),
-                PropertyPaneTextField("HideReportRetention", {
+                PropertyPaneTextField("ReportNameRetention", {
                   label: "Retention:",
                   description: "The report name displayed in the form.",
                   value: this.properties.ReportNameRetention
@@ -899,37 +907,37 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   description: "The report name displayed in the form.",
                   value: this.properties.ReportNameSearchAgents
                 }),
-                PropertyPaneTextField("HideReportSearchDocs", {
+                PropertyPaneTextField("ReportNameSearchDocs", {
                   label: "Document Search:",
                   description: "The report name displayed in the form.",
                   value: this.properties.ReportNameSearchDocs
                 }),
-                PropertyPaneTextField("HideReportSearchEEEU", {
+                PropertyPaneTextField("ReportNameSearchEEEU", {
                   label: "Search EEEU:",
                   description: "The report name displayed in the form.",
                   value: this.properties.ReportNameSearchEEEU
                 }),
-                PropertyPaneTextField("HideReportSearchProp", {
+                PropertyPaneTextField("ReportNameSearchProp", {
                   label: "Search Property:",
                   description: "The report name displayed in the form.",
                   value: this.properties.ReportNameSearchProp
                 }),
-                PropertyPaneTextField("HideReportSearchUsers", {
+                PropertyPaneTextField("ReportNameSearchUsers", {
                   label: "Search Users:",
                   description: "The report name displayed in the form.",
                   value: this.properties.ReportNameSearchUsers
                 }),
-                PropertyPaneTextField("HideReportSensitivityLabels", {
+                PropertyPaneTextField("ReportNameSensitivityLabels", {
                   label: "Sensitivity Labels:",
                   description: "The report name displayed in the form.",
                   value: this.properties.ReportNameSensitivityLabels
                 }),
-                PropertyPaneTextField("HideReportSharingLinks", {
+                PropertyPaneTextField("ReportNameSharingLinks", {
                   label: "Sharing Links:",
                   description: "The report name displayed in the form.",
                   value: this.properties.ReportNameSharingLinks
                 }),
-                PropertyPaneTextField("HideReportUniquePermissions", {
+                PropertyPaneTextField("ReportNameUniquePermissions", {
                   label: "Unique Permissions:",
                   description: "The report name displayed in the form.",
                   value: this.properties.ReportNameUniquePermissions
@@ -1081,6 +1089,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         lists: this.properties.HideListsTab ? true : false,
         management: this.properties.HideManagementTab ? true : false,
         search: this.properties.HideSearchTab ? true : false,
+        siteAudit: this.properties.HideSiteAuditTab ? true : false,
         webs: this.properties.HideWebsTab ? true : false
       },
       imageReferences,
