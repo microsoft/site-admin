@@ -20,7 +20,6 @@ export interface IReportNames {
     searchUsers: string;
     sensitivityLabels: string;
     sharingLinks: string;
-    siteAudit: boolean;
     uniquePermissions: string;
 }
 

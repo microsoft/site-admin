@@ -96,7 +96,6 @@ export interface ISiteAdminWebPartProps {
   HideReportSearchUsers: boolean;
   HideReportSensitivityLabels: boolean;
   HideReportSharingLinks: boolean;
-  HideReportSiteAudit: boolean;
   HideReportUniquePermissions: boolean;
   MaxBatchSize: number;
   MaxRequests: number;
@@ -121,7 +120,6 @@ export interface ISiteAdminWebPartProps {
   ReportNameSearchUsers: string;
   ReportNameSensitivityLabels: string;
   ReportNameSharingLinks: string;
-  ReportNameSiteAudit: string;
   ReportNameUniquePermissions: string;
   ReportsSecureFileText: string;
   ReportsOversharedGroups: string;
@@ -232,7 +230,6 @@ interface IAppProps {
     searchUsers: boolean;
     sensitivityLabels: boolean;
     sharingLinks: boolean;
-    siteAudit?: boolean;
     uniquePermissions: boolean;
   },
   hideTabs: {
@@ -266,7 +263,6 @@ interface IAppProps {
     searchUsers: string;
     sensitivityLabels: string;
     sharingLinks: string;
-    siteAudit: string;
     uniquePermissions: string;
   }
   reportProps?: {
@@ -861,12 +857,6 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   onText: "The sharing links report will be hidden.",
                   offText: "The sharing links report will be visible."
                 }),
-                PropertyPaneToggle("HideReportSiteAudit", {
-                  label: "Site Audit:",
-                  checked: this.properties.HideReportSiteAudit,
-                  onText: "The site audit report will be hidden.",
-                  offText: "The site audit report will be visible."
-                }),
                 PropertyPaneToggle("HideReportUniquePermissions", {
                   label: "Unique Permissions:",
                   checked: this.properties.HideReportUniquePermissions,
@@ -946,11 +936,6 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   label: "Sharing Links:",
                   description: "The report name displayed in the form.",
                   value: this.properties.ReportNameSharingLinks
-                }),
-                PropertyPaneTextField("ReportNameSiteAudit", {
-                  label: "Site Audit:",
-                  description: "The report name displayed in the form.",
-                  value: this.properties.ReportNameSiteAudit
                 }),
                 PropertyPaneTextField("ReportNameUniquePermissions", {
                   label: "Unique Permissions:",
@@ -1095,7 +1080,6 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         searchUsers: this.properties.HideReportSearchUsers ? true : false,
         sensitivityLabels: this.properties.HideReportSensitivityLabels ? true : false,
         sharingLinks: this.properties.HideReportSharingLinks ? true : false,
-        siteAudit: this.properties.HideReportSiteAudit ? true : false,
         uniquePermissions: this.properties.HideReportUniquePermissions ? true : false
       },
       hideTabs: {
@@ -1127,7 +1111,6 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         searchUsers: this.properties.ReportNameSearchUsers,
         sensitivityLabels: this.properties.ReportNameSensitivityLabels,
         sharingLinks: this.properties.ReportNameSharingLinks,
-        siteAudit: this.properties.ReportNameSiteAudit,
         uniquePermissions: this.properties.ReportNameUniquePermissions
       },
       reportProps: {

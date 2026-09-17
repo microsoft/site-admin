@@ -39,7 +39,6 @@ export interface IAppProps {
         searchUsers?: boolean;
         sensitivityLabels?: boolean;
         sharingLinks?: boolean;
-        siteAudit?: boolean;
         uniquePermissions?: boolean;
     }
     hideTabs: {
