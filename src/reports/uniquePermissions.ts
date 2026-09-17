@@ -4,6 +4,7 @@ import { cardList } from "gd-sprest-bs/build/icons/svgs/cardList";
 import { DataSource } from "../ds";
 import Strings from "../strings";
 import { ExportCSV } from "./exportCSV";
+import { ISkippedList, SkippedListsDialog } from "./skippedListsDialog";
 
 interface IPermission {
     FileName?: string;
@@ -34,6 +35,7 @@ export class UniquePermissions {
     private static _items: IPermission[] = [];
     private static _loadOneDrive: boolean = false;
     private static _maxItemCount: number = 0;
+    private static _skippedLists: ISkippedList[] = [];
     private static _stopFl: boolean = false;
 
     // Analyzes a list
@@ -170,24 +172,38 @@ export class UniquePermissions {
 
     // Renders the search summary
     private static renderSummary(el: HTMLElement, auditOnly: boolean, showSearch: boolean, onClose?: () => void) {
+        // Create the nav items
+        let navItems: Components.INavbarItem[] = showSearch ? [{
+            text: "New Search",
+            className: "btn-outline-light",
+            isButton: true,
+            onClick: () => {
+                // Set the stop flag
+                this._stopFl = true;
+
+                // Call the close event
+                onClose();
+            }
+        }] : [];
+
+        // Show the filter button for permissions
+        navItems.push({
+            text: "Show Skipped Lists",
+            className: "btn-outline-light ms-2 skipped-lists",
+            isButton: true,
+            onClick: () => {
+                // Show the lists
+                new SkippedListsDialog(this._skippedLists);
+            }
+        });
+
         // Render the summary
         this._dashboard = new Dashboard({
             el,
             navigation: {
                 title: "Unique Permissions",
                 showFilter: false,
-                items: showSearch ? [{
-                    text: "New Search",
-                    className: "btn-outline-light",
-                    isButton: true,
-                    onClick: () => {
-                        // Set the stop flag
-                        this._stopFl = true;
-
-                        // Call the close event
-                        onClose();
-                    }
-                }] : null,
+                items: navItems,
                 itemsEnd: [{
                     text: "Export to CSV",
                     className: "btn-outline-light me-2",
@@ -396,7 +412,7 @@ export class UniquePermissions {
                         if (this._stopFl) { return; }
 
                         // See if we are skipping large lists
-                        if (this._maxItemCount > 0 && list.ItemCount > this._maxItemCount) { return; }
+                        if (this._maxItemCount > 0 && list.ItemCount > this._maxItemCount) { this._skippedLists.push({ title: list.Title, webUrl: siteItem.text }); return; }
 
                         // Update the dialog
                         this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing Library ${++ctrList} of ${lists.results.length}]: ${list.Title}`;
@@ -409,6 +425,12 @@ export class UniquePermissions {
         }).then(() => {
             // Hide the sub-nav
             this._elSubNav.classList.add("d-none");
+
+            // See if we have skipped any lists
+            if (this._skippedLists.length === 0) {
+                // Remove the button
+                el.querySelector(".skipped-lists").parentElement.remove();
+            }
 
             // Call the event
             onComplete ? onComplete() : null;
@@ -450,6 +472,9 @@ export class UniquePermissions {
 
         // Render the summary
         this.renderSummary(Modal.BodyElement, auditOnly, false);
+
+        // Remove the skipped lists button
+        Modal.BodyElement.querySelector(".skipped-lists").parentElement.remove();
 
         // Show the modal
         Modal.show();

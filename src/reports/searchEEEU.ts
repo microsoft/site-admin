@@ -3,6 +3,7 @@ import { Components, ContextInfo, Helper, SPTypes, Types, Web } from "gd-sprest-
 import { DataSource } from "../ds";
 import Strings from "../strings";
 import { ExportCSV } from "./exportCSV";
+import { ISkippedList, SkippedListsDialog } from "./skippedListsDialog";
 
 interface ISearchItem {
     Email?: string;
@@ -46,6 +47,7 @@ export class SearchEEEU {
     private static _loadOneDrive: boolean = null;
     private static _maxItemCount: number = 0;
     private static _oversharedGroups: string[] = null;
+    private static _skippedLists: ISkippedList[] = [];
     private static _stopFl: boolean = false;
 
     // Analyzes a lists
@@ -211,7 +213,7 @@ export class SearchEEEU {
                         if (this._stopFl) { return; }
 
                         // See if we are skipping large lists
-                        if (this._maxItemCount > 0 && list.ItemCount > this._maxItemCount) { return; }
+                        if (this._maxItemCount > 0 && list.ItemCount > this._maxItemCount) { this._skippedLists.push({ title: list.Title, webUrl: web.Url }); return; }
 
                         // Show a dialog
                         this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing List ${++ctrList} of ${lists.length}]: ${list.Title}`;
@@ -484,6 +486,17 @@ export class SearchEEEU {
                 onClose();
             }
         }] : [];
+
+        // Show the filter button for permissions
+        navItems.push({
+            text: "Show Skipped Lists",
+            className: "btn-outline-light ms-2 skipped-lists",
+            isButton: true,
+            onClick: () => {
+                // Show the lists
+                new SkippedListsDialog(this._skippedLists);
+            }
+        });
 
         // Show the filter button for permissions
         navItems.push({
@@ -869,6 +882,12 @@ export class SearchEEEU {
             // Hide the sub-nav
             this._elSubNav.classList.add("d-none");
 
+            // See if we have skipped any lists
+            if (this._skippedLists.length === 0) {
+                // Remove the button
+                el.querySelector(".skipped-lists").parentElement.remove();
+            }
+
             // Call the event
             onComplete ? onComplete() : null;
         });
@@ -912,6 +931,9 @@ export class SearchEEEU {
 
         // Render the summary
         this.renderSummary(Modal.BodyElement, auditOnly, false, this._items);
+
+        // Remove the skipped lists button
+        Modal.BodyElement.querySelector(".skipped-lists").parentElement.remove();
 
         // Show the modal
         Modal.show();
