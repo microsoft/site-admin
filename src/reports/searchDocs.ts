@@ -754,7 +754,7 @@ export class SearchDocs {
         });
         navItems.push({
             text: "Errors",
-            className: "btn-outline-light ms-2",
+            className: "btn-outline-light ms-2 errors",
             isButton: true,
             onClick: () => {
                 // Display the errors
@@ -1218,15 +1218,15 @@ export class SearchDocs {
                 this._elSubNav.classList.add("d-none");
 
                 // Get the error button
-                let elNav = el.querySelector("#navigation .navbar-nav");
+                let elButton = el.querySelector("#navigation .errors");
 
                 // See if no errors exist
                 if (this._itemErrors.length == 0) {
-                    // Remove the last button
-                    elNav.querySelector("li:last-child").remove();
+                    // Remove the button
+                    elButton.remove();
                 } else {
                     // Update the error text
-                    elNav.querySelector("li:last-child > a").innerHTML = `${this._itemErrors.length} Errors`;
+                    elButton.querySelector("a").innerHTML = `${this._itemErrors.length} Errors`;
                 }
 
                 // Call the event

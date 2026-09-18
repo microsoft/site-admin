@@ -453,28 +453,25 @@ export class Permissions {
         // Show the filter button for permissions
         navItems.push({
             text: "Show Limited Access",
-            className: "btn-outline-light ms-2",
+            className: "btn-outline-light ms-2 limited-access",
             isButton: true,
             onClick: () => {
-                // Get the error button
-                let elNav = this._elDashboard.querySelector("#navigation .navbar-nav");
-
-                // Remove the last button
-                let btn = elNav.querySelector("li:nth-child(2) a");
+                // Get the button
+                let elButton = this._elDashboard.querySelector("#navigation .limited-access");
 
                 // See if we are currently hiding limited access items
-                if (btn.textContent == "Show Limited Access") {
+                if (elButton.textContent == "Show Limited Access") {
                     // Remove the filter
                     this._dashboard.filter(4);
 
                     // Update the button text
-                    btn.innerHTML = "Hide Limited Access";
+                    elButton.innerHTML = "Hide Limited Access";
                 } else {
                     // Apply the filter
                     this._dashboard.filter(4, "false");
 
                     // Update the button text
-                    btn.innerHTML = "Show Limited Access";
+                    elButton.innerHTML = "Show Limited Access";
                 }
             }
         });
@@ -482,7 +479,7 @@ export class Permissions {
         // Show the error button
         navItems.push({
             text: "Errors",
-            className: "btn-outline-light ms-2",
+            className: "btn-outline-light ms-2 errors",
             isButton: true,
             onClick: () => {
                 // Display the errors
@@ -874,11 +871,8 @@ export class Permissions {
 
             // See if no errors exist
             if (Object.keys(this._groups.error).length == 0) {
-                // Get the error button
-                let elNav = this._elDashboard.querySelector("#navigation .navbar-nav");
-
-                // Remove the last button
-                elNav.querySelector("li:last-child").remove();
+                // Remove the error button
+                this._elDashboard.querySelector("#navigation .errors").remove();
             }
 
             // Call the event
