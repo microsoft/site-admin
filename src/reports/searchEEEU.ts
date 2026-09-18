@@ -510,13 +510,13 @@ export class SearchEEEU {
                 // See if we are currently hiding limited access items
                 if (elButton.textContent == "Show Limited Access") {
                     // Remove the filter
-                    this._dashboard.filter(4);
+                    this._dashboard.filter(2);
 
                     // Update the button text
                     elButton.innerHTML = "Hide Limited Access";
                 } else {
                     // Apply the filter
-                    this._dashboard.filter(4, "false");
+                    this._dashboard.filter(2, "false");
 
                     // Update the button text
                     elButton.innerHTML = "Show Limited Access";
