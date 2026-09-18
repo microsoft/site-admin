@@ -1223,10 +1223,10 @@ export class SearchDocs {
                 // See if no errors exist
                 if (this._itemErrors.length == 0) {
                     // Remove the button
-                    elButton.remove();
+                    elButton.parentElement.remove();
                 } else {
                     // Update the error text
-                    elButton.querySelector("a").innerHTML = `${this._itemErrors.length} Errors`;
+                    elButton.innerHTML = `${this._itemErrors.length} Errors`;
                 }
 
                 // Call the event
