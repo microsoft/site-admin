@@ -872,7 +872,7 @@ export class Permissions {
             // See if no errors exist
             if (Object.keys(this._groups.error).length == 0) {
                 // Remove the error button
-                this._elDashboard.querySelector("#navigation .errors").remove();
+                this._elDashboard.querySelector("#navigation .errors").parentElement.remove();
             }
 
             // Call the event
