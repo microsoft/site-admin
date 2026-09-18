@@ -501,28 +501,25 @@ export class SearchEEEU {
         // Show the filter button for permissions
         navItems.push({
             text: "Show Limited Access",
-            className: "btn-outline-light ms-2",
+            className: "btn-outline-light ms-2 limited-access",
             isButton: true,
             onClick: () => {
-                // Get the error button
-                let elNav = el.querySelector("#navigation .navbar-nav");
-
-                // Remove the last button
-                let btn = elNav.querySelector("li:last-child a");
+                // Get the button
+                let elButton = el.querySelector("#navigation .limited-access");
 
                 // See if we are currently hiding limited access items
-                if (btn.textContent == "Show Limited Access") {
+                if (elButton.textContent == "Show Limited Access") {
                     // Remove the filter
                     this._dashboard.filter(2);
 
                     // Update the button text
-                    btn.innerHTML = "Hide Limited Access";
+                    elButton.innerHTML = "Hide Limited Access";
                 } else {
                     // Apply the filter
                     this._dashboard.filter(2, "false");
 
                     // Update the button text
-                    btn.innerHTML = "Show Limited Access";
+                    elButton.innerHTML = "Show Limited Access";
                 }
             }
         });
