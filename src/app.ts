@@ -42,6 +42,7 @@ export interface IAppProps {
         uniquePermissions?: boolean;
     }
     hideTabs: {
+        access?: boolean;
         appPermissions?: boolean;
         auditTools?: boolean;
         features?: boolean;
