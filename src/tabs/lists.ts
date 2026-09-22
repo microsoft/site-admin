@@ -371,7 +371,7 @@ export class ListsTab {
                             tooltip.setContent(`Click to ${item.IncludedInSearch ? "remove" : "add"} the content from the search index.`);
 
                             // Update the row cell
-                            this._dt.updateCell(rowIdx, 4, item.IncludedInSearch);
+                            this._dt.updateCell(rowIdx, 3, item);
                         });
                     }
                 }
