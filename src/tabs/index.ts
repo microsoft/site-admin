@@ -212,6 +212,11 @@ export class Tabs {
                 this._webRequests = this._webRequests.concat(this._tabWeb.getRequests());
             }
 
+            // Set the web url for the access tab
+            if (this._tabAccess) {
+                this._tabAccess.setWebUrl(url);
+            }
+
             // Load the web information
             DataSource.loadWebInfo(url).then(() => {
                 // See if the tab exists

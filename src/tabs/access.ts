@@ -440,4 +440,13 @@ export class AccessTab {
             });
         });
     }
+
+    // Sets the web url for this component
+    setWebUrl(webUrl: string) {
+        // Set the web url
+        this._webUrl = webUrl;
+
+        // Render the solution
+        this.render();
+    }
 }
