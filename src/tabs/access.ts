@@ -1,5 +1,5 @@
 import { Dashboard, Modal } from "dattatable";
-import { Components, SPTypes, Web } from "gd-sprest-bs";
+import { Components, DirectorySession, Web } from "gd-sprest-bs";
 import { IAppProps } from "../app";
 import { DataSource, ISiteUserInfo } from "../ds";
 
@@ -140,21 +140,41 @@ export class AccessTab {
                                         onAddUser();
                                     });
                                 } else {
-                                    // Add the user to the default owner's group
-                                    web.AssociatedOwnerGroup().Users().addUserById(user.Id).execute(() => {
-                                        // Add the user to the admin
-                                        this._admins.push({
-                                            email: user.Email,
-                                            id: user.Id,
-                                            name: user.LoginName,
-                                            permission: "Owner",
-                                            title: user.Title,
-                                            type: user.PrincipalType
-                                        });
+                                    // See if the web has an associated owner group
+                                    let groupId = DataSource.Web.AllProperties["GroupId"];
+                                    if (groupId) {
+                                        // Add the user to the m365 group
+                                        DirectorySession().group(groupId).owners().add("00000000-0000-0000-0000-000000000000", user.Email).execute(() => {
+                                            // Add the user to the admin
+                                            this._admins.push({
+                                                email: user.Email,
+                                                id: user.Id,
+                                                name: user.LoginName,
+                                                permission: "Owner",
+                                                title: user.Title,
+                                                type: user.PrincipalType
+                                            });
 
-                                        // Call the event
-                                        onAddUser();
-                                    });
+                                            // Call the event
+                                            onAddUser();
+                                        });
+                                    } else {
+                                        // Add the user to the default owner's group
+                                        web.AssociatedOwnerGroup().Users().addUserById(user.Id).execute(() => {
+                                            // Add the user to the admin
+                                            this._admins.push({
+                                                email: user.Email,
+                                                id: user.Id,
+                                                name: user.LoginName,
+                                                permission: "Owner",
+                                                title: user.Title,
+                                                type: user.PrincipalType
+                                            });
+
+                                            // Call the event
+                                            onAddUser();
+                                        });
+                                    }
                                 }
                             }, () => {
                                 // Error adding the user
@@ -198,6 +218,9 @@ export class AccessTab {
                     // See if we are done
                     if (++ctr >= 2) { resolve(); }
                 });
+            } else {
+                // Increment the counter
+                ctr++;
             }
 
             // Load the owners
@@ -445,6 +468,9 @@ export class AccessTab {
     setWebUrl(webUrl: string) {
         // Set the web url
         this._webUrl = webUrl;
+
+        // Clear the content
+        while (this._el.firstChild) { this._el.removeChild(this._el.firstChild); }
 
         // Render the solution
         this.render();

@@ -212,11 +212,6 @@ export class Tabs {
                 this._webRequests = this._webRequests.concat(this._tabWeb.getRequests());
             }
 
-            // Set the web url for the access tab
-            if (this._tabAccess) {
-                this._tabAccess.setWebUrl(url);
-            }
-
             // Load the web information
             DataSource.loadWebInfo(url).then(() => {
                 // See if the tab exists
@@ -228,7 +223,10 @@ export class Tabs {
                     this._tabWeb ? this._tabWeb.refresh() : null;
                 }
 
-                // Refresh the lists tabs
+                // Refresh the access tab
+                this._tabAccess ? this._tabAccess.setWebUrl(url) : null;
+
+                // Refresh the lists tab
                 this._tabLists ? this._tabLists.loadLists(false) : null;
 
                 // Hide the loading dialog
