@@ -1,7 +1,8 @@
 import { Dashboard, Modal } from "dattatable";
-import { Components, DirectorySession, Web } from "gd-sprest-bs";
+import { Components, DirectorySession, SPTypes, Web } from "gd-sprest-bs";
 import { IAppProps } from "../app";
 import { DataSource, ISiteUserInfo } from "../ds";
+import { M365Groups } from "../m365Groups";
 
 /**
  * Access
@@ -131,6 +132,7 @@ export class AccessTab {
                                             email: user.Email,
                                             id: user.Id,
                                             name: user.LoginName,
+                                            parent: "M365 Group",
                                             permission: "Admin",
                                             title: user.Title,
                                             type: user.PrincipalType
@@ -150,6 +152,7 @@ export class AccessTab {
                                                 email: user.Email,
                                                 id: user.Id,
                                                 name: user.LoginName,
+                                                parent: "M365 Group",
                                                 permission: "Owner",
                                                 title: user.Title,
                                                 type: user.PrincipalType
@@ -166,6 +169,7 @@ export class AccessTab {
                                                 email: user.Email,
                                                 id: user.Id,
                                                 name: user.LoginName,
+                                                parent: "M365 Group",
                                                 permission: "Owner",
                                                 title: user.Title,
                                                 type: user.PrincipalType
@@ -202,6 +206,67 @@ export class AccessTab {
         Modal.show();
     }
 
+    // Determines the M365 groups and expands the information
+    private expandM365Groups(users: ISiteUserInfo[], isAdmin: boolean): PromiseLike<ISiteUserInfo[]> {
+        // Return a promise
+        return new Promise(resolve => {
+            let groupIds = [];
+            let groupIdMapper = {};
+
+            // Parse the users
+            users.forEach(user => {
+                // See if this is a group
+                if (user.type == SPTypes.PrincipalTypes.SecurityGroup) {
+                    // Get the group id
+                    let groupId = M365Groups.getGroupId(user.name);
+                    if (groupId) {
+                        // Add the group id
+                        groupIdMapper[groupId] = user.name;
+                    }
+                }
+            });
+
+            // Get the group information
+            M365Groups.getGroupInfo(groupIds).then(groupInfo => {
+                // Parse the group ids
+                groupIds.forEach(groupId => {
+                    // Get the group info
+                    let group = groupInfo.groups[groupId];
+                    if (group) {
+                        // Parse the users
+                        for (let i = 0; i < users.length; i++) {
+                            // See if this is the target admin
+                            if (users[i].name === groupIdMapper[groupId]) {
+                                // Set the group information
+                                users[i].group = group;
+
+                                // Parse the owners/members
+                                (M365Groups.isOwner(groupId) ? group.owners : group.members).results.forEach(user => {
+                                    // Add the user
+                                    users.push({
+                                        email: user["email"],
+                                        id: user.id,
+                                        name: user["email"],
+                                        parent: "M365 Group",
+                                        permission: isAdmin ? "Admin" : "Owner",
+                                        title: user.displayName,
+                                        type: SPTypes.PrincipalTypes.User
+                                    })
+                                });
+
+                                // Break from the loop
+                                break;
+                            }
+                        }
+                    }
+                });
+
+                // Resolve the request
+                resolve(users);
+            });
+        });
+    }
+
     // Returns the permissions for the admins/owners
     private loadUsers(): PromiseLike<void> {
         // Return a promise
@@ -212,11 +277,14 @@ export class AccessTab {
             if (this._admins === null) {
                 // Load the site admins
                 DataSource.loadSiteAdministrators().then(admins => {
-                    // Set the admins
-                    this._admins = admins;
+                    // Expand the m365 groups
+                    this.expandM365Groups(admins, true).then((users) => {
+                        // Set the admins
+                        this._admins = users;
 
-                    // See if we are done
-                    if (++ctr >= 2) { resolve(); }
+                        // See if we are done
+                        if (++ctr >= 2) { resolve(); }
+                    });
                 });
             } else {
                 // Increment the counter
@@ -225,11 +293,14 @@ export class AccessTab {
 
             // Load the owners
             DataSource.loadSiteOwners(this._webUrl).then(owners => {
-                // Set the owners
-                this._owners = owners;
+                // Expand the m365 groups
+                this.expandM365Groups(owners, false).then((users) => {
+                    // Set the owners
+                    this._owners = users;
 
-                // See if we are done
-                if (++ctr >= 2) { resolve(); }
+                    // See if we are done
+                    if (++ctr >= 2) { resolve(); }
+                });
             });
         });
     }
@@ -256,8 +327,26 @@ export class AccessTab {
                         onClick: () => {
                             let web = Web(this._webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue });
 
-                            // See if this is an admin or owner
-                            if (user.permission === "Admin") {
+                            // See if we are removing the user from a group
+                            if (user.parent === "M365 Group") {
+                                // Remove the user from the group
+                                let group = DirectorySession().group(user.group.id);
+                                (M365Groups.isOwner(user.group.id) ? group.owners : group.members)().remove(user.id).execute(() => {
+                                    // Parse the admins
+                                    for (let i = 0; i < this._admins.length; i++) {
+                                        let admin = this._admins[i];
+                                        if (admin.email === user.email) {
+                                            this._admins.splice(i, 1);
+                                            break;
+                                        }
+                                    }
+
+                                    // Call the event
+                                    onRemove();
+                                });
+                            }
+                            // Else, see if this is an admin or owner
+                            else if (user.permission === "Admin") {
                                 // Get the user
                                 web.SiteUsers().getById(user.id).update({ IsSiteAdmin: false }).execute(() => {
                                     // Parse the admins
@@ -378,6 +467,21 @@ export class AccessTab {
                                 window.open(this._webUrl + "/_layouts/15/user.aspx", "_blank");
                             }
                         }
+                    ],
+                    itemsEnd: [
+                        {
+                            className: "btn-outline-light ms-2",
+                            isButton: true,
+                            text: "Refresh",
+                            onClick: () => {
+                                // Clear the admins/owners
+                                this._admins = null;
+                                this._owners = null;
+
+                                // Render the solution
+                                this.render();
+                            }
+                        }
                     ]
                 },
                 filters: {
@@ -400,7 +504,7 @@ export class AccessTab {
                         // Disable ordering/searching for the last column
                         dtProps.columnDefs = [
                             {
-                                "targets": 3,
+                                "targets": 4,
                                 "orderable": false,
                                 "searchable": false
                             }
@@ -425,6 +529,10 @@ export class AccessTab {
                         {
                             name: "email",
                             title: "Email"
+                        },
+                        {
+                            name: "parent",
+                            title: "Parent"
                         },
                         {
                             name: "",

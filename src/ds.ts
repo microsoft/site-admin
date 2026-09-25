@@ -54,8 +54,10 @@ export interface ISensitivityLabel {
  */
 export interface ISiteUserInfo {
     email: string;
+    group?: Types.SP.Directory.GroupOData;
     id: number;
     name: string;
+    parent: "M365 Group" | "Site Group";
     permission: "Admin" | "Owner";
     title: string;
     type: number;
@@ -778,6 +780,7 @@ export class DataSource {
                                     email: item.Email,
                                     id: item.Id,
                                     name: item.LoginName,
+                                    parent: "Site Group",
                                     permission: "Admin",
                                     title: item.Title,
                                     type: item.PrincipalType
@@ -818,6 +821,7 @@ export class DataSource {
                         email: item.Email,
                         id: item.Id,
                         name: item.LoginName,
+                        parent: "Site Group",
                         permission: "Owner",
                         title: item.Title,
                         type: item.PrincipalType
