@@ -210,9 +210,9 @@ export class AccessTab {
     private expandM365Groups(users: ISiteUserInfo[], isAdmin: boolean): PromiseLike<ISiteUserInfo[]> {
         // Return a promise
         return new Promise(resolve => {
+            
+            // Parse the users for any M365 groups
             let groupIdMapper = {};
-
-            // Parse the users
             users.forEach(user => {
                 // See if this is a group
                 if (user.type == SPTypes.PrincipalTypes.SecurityGroup) {
@@ -246,9 +246,9 @@ export class AccessTab {
                                 (M365Groups.isOwner(groupId) ? group.owners : group.members).results.forEach(user => {
                                     // Add the user
                                     users.push({
-                                        email: user["email"],
+                                        email: user["mail"],
                                         id: user.id,
-                                        name: user["email"],
+                                        name: user["mail"],
                                         parent: "M365 Group",
                                         permission: isAdmin ? "Admin" : "Owner",
                                         title: user.displayName,
