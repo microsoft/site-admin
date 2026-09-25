@@ -210,7 +210,6 @@ export class AccessTab {
     private expandM365Groups(users: ISiteUserInfo[], isAdmin: boolean): PromiseLike<ISiteUserInfo[]> {
         // Return a promise
         return new Promise(resolve => {
-            let groupIds = [];
             let groupIdMapper = {};
 
             // Parse the users
@@ -225,6 +224,9 @@ export class AccessTab {
                     }
                 }
             });
+
+            // Get the group ids
+            let groupIds = Object.keys(groupIdMapper);
 
             // Get the group information
             M365Groups.getGroupInfo(groupIds).then(groupInfo => {
