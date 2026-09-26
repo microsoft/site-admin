@@ -50,6 +50,20 @@ export interface ISensitivityLabel {
 }
 
 /**
+ * Site User Information
+ */
+export interface ISiteUserInfo {
+    email: string;
+    group?: Types.SP.Directory.GroupOData;
+    id: number;
+    name: string;
+    parent: "M365 Group" | "Site Group";
+    permission: "Admin" | "Owner";
+    title: string;
+    type: number;
+}
+
+/**
  * User Information
  */
 export interface IUserInfo {
@@ -735,6 +749,88 @@ export class DataSource {
                 },
                 reject
             )
+        });
+    }
+
+    // Loads the site administrators
+    static loadSiteAdministrators(): PromiseLike<ISiteUserInfo[]> {
+        // Return a promise
+        return new Promise(resolve => {
+            let users: ISiteUserInfo[] = [];
+
+            // See if the user is part of the owner's group
+            Web(this.SiteContext.SiteFullUrl).Lists().query({
+                Filter: "BaseTemplate eq " + SPTypes.ListTemplateType.UserInformation
+            }).execute(lists => {
+                // Get the items
+                if (lists.results.length > 0) {
+                    Web(this.SiteContext.SiteFullUrl).Lists().getById(lists.results[0].Id).Items().query({
+                        Filter: "IsSiteAdmin eq 1",
+                        Top: 5000
+                    }).execute(items => {
+                        // Create a batch request
+                        let web = Web(this.SiteContext.SiteFullUrl);
+
+                        // Parse the site admins
+                        items.results.forEach(item => {
+                            // Get the user
+                            web.SiteUsers().getByEmail(item["EMail"]).batch(item => {
+                                // Add the owner information
+                                users.push({
+                                    email: item.Email,
+                                    id: item.Id,
+                                    name: item.LoginName,
+                                    parent: "Site Group",
+                                    permission: "Admin",
+                                    title: item.Title,
+                                    type: item.PrincipalType
+                                });
+                            });
+                        });
+
+                        // Execute the batch request
+                        web.execute(() => {
+                            // Resolve the request
+                            resolve(users);
+                        });
+                    }, () => { resolve(users); });
+                } else {
+                    // Resolve the request
+                    resolve(users);
+                }
+            }, () => { resolve(users); });
+        });
+    }
+
+    // Loads the site owners
+    static loadSiteOwners(url: string): PromiseLike<ISiteUserInfo[]> {
+        // Return a promise
+        return new Promise(resolve => {
+            let users: ISiteUserInfo[] = [];
+
+            // See if the user is part of the owner's group
+            Web(url).AssociatedOwnerGroup().query({
+                Expand: ["Users"]
+            }).execute(ownersGroup => {
+                // Parse the group users
+                for (let i = 0; i < ownersGroup.Users.results.length; i++) {
+                    let item = ownersGroup.Users.results[i];
+
+                    // Add the owner information
+                    users.push({
+                        email: item.Email,
+                        id: item.Id,
+                        name: item.LoginName,
+                        parent: "Site Group",
+                        permission: "Owner",
+                        title: item.Title,
+                        type: item.PrincipalType
+                    });
+                }
+
+                // Resolve the request
+                resolve(users);
+            }, () => { resolve(users); });
         });
     }
 

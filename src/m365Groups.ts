@@ -82,6 +82,9 @@ export class M365Groups {
         });
     }
 
+    // Determines if the group is referencing the owners
+    static isOwner(groupId: string) { return groupId.endsWith("_o"); }
+
     // Loads the m365 group
     private static loadGroupById(groupId: string): PromiseLike<Types.SP.Directory.GroupOData> {
         let group: Types.SP.Directory.GroupOData = { id: groupId } as Types.SP.Directory.GroupOData;
