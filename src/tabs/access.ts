@@ -26,6 +26,8 @@ export class AccessTab {
 
     // Shows the add user form
     private addUser(onAddUser: () => void) {
+        let siteGroupId = DataSource.Web.AllProperties["GroupId"];
+
         // Clear the modal
         Modal.clear();
 
@@ -36,10 +38,22 @@ export class AccessTab {
         let items: Components.IDropdownItem[] = [{ text: "Owner", value: "Owner" }];
         if (DataSource.IsAdmin) { items.push({ text: "Admin", value: "Admin" }); }
 
+        // Determine the dropdown options for how we are sharing the access (M365 Group or Site Group)
+        let shareItems: Components.IDropdownItem[] = [{ text: "Site Group", value: "Site Group" }];
+        if (siteGroupId) { shareItems.push({ text: "M365 Group", value: "M365 Group" }); }
+
         // Set the form
         let form = Components.Form({
             el: Modal.BodyElement,
             controls: [
+                {
+                    name: "shareType",
+                    type: Components.FormControlTypes.Dropdown,
+                    label: "Share Type",
+                    description: "Adds the user to either the site group or m365 group associated with the site.",
+                    required: true,
+                    items: shareItems
+                } as Components.IFormControlPropsDropdown,
                 {
                     name: "permission",
                     type: Components.FormControlTypes.Dropdown,
@@ -116,6 +130,7 @@ export class AccessTab {
                             // Get the user email
                             let values = form.getValues();
                             let permission = values["permission"].value;
+                            let shareType = values["shareType"].value;
                             let userEmail = values["user"][0].Email;
 
                             // Set the web
@@ -142,11 +157,10 @@ export class AccessTab {
                                         onAddUser();
                                     });
                                 } else {
-                                    // See if the web has an associated owner group
-                                    let groupId = DataSource.Web.AllProperties["GroupId"];
-                                    if (groupId) {
+                                    // See if we are adding to the m365 group
+                                    if (shareType === "M365 Group") {
                                         // Add the user to the m365 group
-                                        DirectorySession().group(groupId).owners().add("00000000-0000-0000-0000-000000000000", user.Email).execute(() => {
+                                        DirectorySession().group(siteGroupId).owners().add("00000000-0000-0000-0000-000000000000", user.Email).execute(() => {
                                             // Add the user to the admin
                                             this._admins.push({
                                                 email: user.Email,
@@ -210,7 +224,7 @@ export class AccessTab {
     private expandM365Groups(users: ISiteUserInfo[], isAdmin: boolean): PromiseLike<ISiteUserInfo[]> {
         // Return a promise
         return new Promise(resolve => {
-            
+
             // Parse the users for any M365 groups
             let groupIdMapper = {};
             users.forEach(user => {
@@ -472,7 +486,7 @@ export class AccessTab {
                     ],
                     itemsEnd: [
                         {
-                            className: "btn-outline-light ms-2",
+                            className: "btn-outline-light me-2",
                             isButton: true,
                             text: "Refresh",
                             onClick: () => {
@@ -489,6 +503,17 @@ export class AccessTab {
                 filters: {
                     items: [
                         {
+                            header: "By Type",
+                            items: [
+                                { label: "M365 Group", type: Components.CheckboxGroupTypes.Switch },
+                                { label: "Site Group", type: Components.CheckboxGroupTypes.Switch }
+                            ],
+                            onFilter: (value: string) => {
+                                // Filter the table
+                                dt.filter(0, value);
+                            }
+                        },
+                        {
                             header: "By Permission",
                             items: [
                                 { label: "Admin", type: Components.CheckboxGroupTypes.Switch },
@@ -496,7 +521,7 @@ export class AccessTab {
                             ],
                             onFilter: (value: string) => {
                                 // Filter the table
-                                dt.filter(0, value);
+                                dt.filter(1, value);
                             }
                         }
                     ]
@@ -513,13 +538,17 @@ export class AccessTab {
                         ];
 
                         // Sort by the first column
-                        dtProps.order = [[0, "asc"]];
+                        dtProps.order = [[1, "asc"]];
 
                         // Return the properties
                         return dtProps;
                     },
                     rows: this._admins.concat(this._owners),
                     columns: [
+                        {
+                            name: "parent",
+                            title: "Parent"
+                        },
                         {
                             name: "permission",
                             title: "Permission"
@@ -531,10 +560,6 @@ export class AccessTab {
                         {
                             name: "email",
                             title: "Email"
-                        },
-                        {
-                            name: "parent",
-                            title: "Parent"
                         },
                         {
                             name: "",
