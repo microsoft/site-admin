@@ -358,7 +358,7 @@ export class AccessTab {
                             if (user.parent === "M365 Group") {
                                 // Remove the user from the group
                                 let group = DirectorySession().group(user.group.id);
-                                (M365Groups.isOwner(user.name) ? group.owners : group.members)().remove(user.id).execute(() => {
+                                (M365Groups.isOwner(user.name) ? group.owners() : group.members()).remove(user.id).execute(() => {
                                     // Parse the admins
                                     for (let i = 0; i < this._admins.length; i++) {
                                         let admin = this._admins[i];
