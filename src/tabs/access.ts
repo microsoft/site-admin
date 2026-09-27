@@ -182,8 +182,11 @@ export class AccessTab {
                                                 type: user.PrincipalType
                                             });
 
-                                            // Call the event
-                                            onAddUser();
+                                            // Refresh the group information
+                                            M365Groups.refreshGroupInfo(siteGroupId).then(() => {
+                                                // Call the event
+                                                onAddUser();
+                                            });
                                         });
                                     } else {
                                         // Add the user to the default owner's group
@@ -368,8 +371,11 @@ export class AccessTab {
                                         }
                                     }
 
-                                    // Call the event
-                                    onRemove();
+                                    // Refresh the group information
+                                    M365Groups.refreshGroupInfo(user.group.id).then(() => {
+                                        // Call the event
+                                        onRemove();
+                                    });
                                 });
                             }
                             // Else, see if this is an admin or owner
@@ -388,34 +394,6 @@ export class AccessTab {
                                     // Call the event
                                     onRemove();
                                 });
-                                /*
-                                // Get the item to update
-                                web.Lists().query({
-                                    Filter: "BaseTemplate eq " + SPTypes.ListTemplateType.UserInformation
-                                }).execute(lists => {
-                                    // Get the item
-                                    web.Lists().getById(lists.results[0].Id).Items().query({
-                                        Filter: "Email eq '" + user.email + "'"
-                                    }).execute(items => {
-                                        // Update the user
-                                        web.Lists().getById(lists.results[0].Id).Items(items.results[0].Id).update({
-                                            IsSiteAdmin: false
-                                        }).execute(() => {
-                                            // Parse the admins
-                                            for (let i = 0; i < this._admins.length; i++) {
-                                                let admin = this._admins[i];
-                                                if (admin.email === user.email) {
-                                                    this._admins.splice(i, 1);
-                                                    break;
-                                                }
-                                            }
-
-                                            // Call the event
-                                            onRemove();
-                                        });
-                                    });
-                                });
-                                */
                             } else {
                                 // Get the owners group
                                 web.AssociatedOwnerGroup().Users().removeById(user.id).execute(() => {

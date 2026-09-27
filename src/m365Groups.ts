@@ -146,4 +146,16 @@ export class M365Groups {
             });
         });
     }
+
+    // Refreshes the group information
+    static refreshGroupInfo(groupId: string): PromiseLike<Types.SP.Directory.GroupOData> {
+        // Clear the cached group if it exists
+        if (this._groups[groupId]) {
+            // Delete the cached group
+            delete this._groups[groupId];
+        }
+
+        // Load the group information
+        return this.loadGroupById(groupId);
+    }
 }
