@@ -271,6 +271,7 @@ export class AccessTab {
                                     // Add the user
                                     users.push({
                                         email: user["mail"],
+                                        group,
                                         id: user.id,
                                         name: user["mail"],
                                         parent: "M365 Group",
