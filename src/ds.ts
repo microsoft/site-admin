@@ -55,6 +55,7 @@ export interface ISensitivityLabel {
 export interface ISiteUserInfo {
     email: string;
     group?: Types.SP.Directory.GroupOData;
+    groupRef?: "Owners" | "Members";
     id: number;
     name: string;
     parent: "M365 Group" | "Site Group";

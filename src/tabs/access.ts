@@ -270,11 +270,13 @@ export class AccessTab {
                                 users[i].group = group;
 
                                 // Parse the owners/members
-                                (M365Groups.isOwner(users[i].name) ? group.owners : group.members).results.forEach(user => {
+                                let refOwners = M365Groups.isOwner(users[i].name);
+                                (refOwners ? group.owners : group.members).results.forEach(user => {
                                     // Add the user
                                     users.push({
                                         email: user["mail"],
                                         group,
+                                        groupRef: refOwners ? "Owners" : "Members",
                                         id: user.id,
                                         name: user["mail"],
                                         parent: "M365 Group",
@@ -361,7 +363,7 @@ export class AccessTab {
                             if (user.parent === "M365 Group") {
                                 // Remove the user from the group
                                 let group = DirectorySession().group(user.group.id);
-                                (M365Groups.isOwner(user.name) ? group.owners() : group.members()).remove(user.id).execute(() => {
+                                (user.groupRef === "Owners" ? group.owners() : group.members()).remove(user.id).execute(() => {
                                     // Parse the admins
                                     for (let i = 0; i < this._admins.length; i++) {
                                         let admin = this._admins[i];
