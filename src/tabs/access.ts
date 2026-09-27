@@ -47,19 +47,29 @@ export class AccessTab {
             el: Modal.BodyElement,
             controls: [
                 {
+                    name: "permission",
+                    type: Components.FormControlTypes.Dropdown,
+                    label: "Permission",
+                    required: true,
+                    items,
+                    onChange: (item) => {
+                        // See if we are adding an owner
+                        if (item.value === "Owner") {
+                            // Show the share type
+                            form.getControl("shareType").show();
+                        } else {
+                            // Hide the share type
+                            form.getControl("shareType").hide();
+                        }
+                    }
+                } as Components.IFormControlPropsDropdown,
+                {
                     name: "shareType",
                     type: Components.FormControlTypes.Dropdown,
                     label: "Share Type",
                     description: "Adds the user to either the site group or m365 group associated with the site.",
                     required: true,
                     items: shareItems
-                } as Components.IFormControlPropsDropdown,
-                {
-                    name: "permission",
-                    type: Components.FormControlTypes.Dropdown,
-                    label: "Permission",
-                    required: true,
-                    items
                 } as Components.IFormControlPropsDropdown,
                 {
                     name: "user",
