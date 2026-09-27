@@ -267,7 +267,7 @@ export class AccessTab {
                                 users[i].group = group;
 
                                 // Parse the owners/members
-                                (M365Groups.isOwner(groupId) ? group.owners : group.members).results.forEach(user => {
+                                (M365Groups.isOwner(users[i].name) ? group.owners : group.members).results.forEach(user => {
                                     // Add the user
                                     users.push({
                                         email: user["mail"],
@@ -357,7 +357,7 @@ export class AccessTab {
                             if (user.parent === "M365 Group") {
                                 // Remove the user from the group
                                 let group = DirectorySession().group(user.group.id);
-                                (M365Groups.isOwner(user.group.id) ? group.owners : group.members)().remove(user.id).execute(() => {
+                                (M365Groups.isOwner(user.name) ? group.owners : group.members)().remove(user.id).execute(() => {
                                     // Parse the admins
                                     for (let i = 0; i < this._admins.length; i++) {
                                         let admin = this._admins[i];
@@ -452,6 +452,9 @@ export class AccessTab {
 
     // Renders the audit form
     private render() {
+        // Clear the tab content
+        while (this._el.firstChild) { this._el.removeChild(this._el.firstChild); }
+
         // Render an alert
         Components.Alert({
             el: this._el,
