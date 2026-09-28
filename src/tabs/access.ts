@@ -364,11 +364,12 @@ export class AccessTab {
                                 // Remove the user from the group
                                 let group = DirectorySession().group(user.group.id);
                                 (user.groupRef === "Owners" ? group.owners() : group.members()).remove(user.id).execute(() => {
-                                    // Parse the admins
-                                    for (let i = 0; i < this._admins.length; i++) {
-                                        let admin = this._admins[i];
-                                        if (admin.email === user.email) {
-                                            this._admins.splice(i, 1);
+                                    // Parse the admins/owners
+                                    let users = user.groupRef === "Owners" ? this._owners : this._admins;
+                                    for (let i = 0; i < users.length; i++) {
+                                        let user = users[i];
+                                        if (user.email === user.email) {
+                                            users.splice(i, 1);
                                             break;
                                         }
                                     }
