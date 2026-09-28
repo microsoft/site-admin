@@ -770,7 +770,7 @@ export class DataSource {
                         Top: 5000
                     }).execute(items => {
                         // Create a batch request
-                        let web = Web(this.SiteContext.SiteFullUrl);
+                        let web = Web(this.SiteContext.SiteFullUrl, { requestDigest: this.SiteContext.FormDigestValue });
 
                         // Parse the site admins
                         items.results.forEach(item => {
