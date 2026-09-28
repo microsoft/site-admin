@@ -28,6 +28,18 @@ export class AccessTab {
     private addUser(onAddUser: () => void) {
         let siteGroupId = DataSource.Web.AllProperties["GroupId"];
 
+        // Parse the admins and see if this group is associated with it
+        let adminGroupId = null;
+        let adminGroupRef = null;
+        this._admins.forEach(admin => {
+            // See if this is a group and matches the associated group
+            if (admin.type === SPTypes.PrincipalTypes.SecurityGroup && M365Groups.getGroupId(admin.name) === siteGroupId) {
+                // Set the id
+                adminGroupId = siteGroupId;
+                adminGroupRef = M365Groups.isOwner(admin.name) ? "Owners" : "Members";
+            }
+        });
+
         // Clear the modal
         Modal.clear();
 
@@ -57,7 +69,9 @@ export class AccessTab {
                         if (item.value === "Owner") {
                             // Show the share type
                             form.getControl("shareType").show();
-                        } else {
+                        }
+                        // Else, see if it's not associated with the admin group
+                        else if (adminGroupId == null) {
                             // Hide the share type
                             form.getControl("shareType").hide();
                         }
@@ -150,38 +164,31 @@ export class AccessTab {
                             web.ensureUser(userEmail).execute((user) => {
                                 // See if this is an admin or owner
                                 if (permission === "Admin") {
-                                    // Set the flag
-                                    user.update({ IsSiteAdmin: true }).execute(() => {
-                                        // Add the user to the admin
-                                        this._admins.push({
-                                            email: user.Email,
-                                            id: user.Id,
-                                            name: user.LoginName,
-                                            parent: "M365 Group",
-                                            permission: "Admin",
-                                            title: user.Title,
-                                            type: user.PrincipalType
+                                    // See if we are adding to the m365 group
+                                    if (shareType === "M365 Group") {
+                                        // Add the user to the m365 group
+                                        let group = DirectorySession().group(siteGroupId);
+                                        (adminGroupRef === "Owners" ? group.owners() : group.members()).add("00000000-0000-0000-0000-000000000000", user.Email).execute(() => {
+                                            // Refresh the group information
+                                            M365Groups.refreshGroupInfo(siteGroupId).then(() => {
+                                                // Call the event
+                                                onAddUser();
+                                            });
                                         });
-
-                                        // Call the event
-                                        onAddUser();
-                                    });
+                                    } else {
+                                        // Update the user to be an admin
+                                        user.update({ IsSiteAdmin: true }).execute(() => {
+                                            // Call the event
+                                            onAddUser();
+                                        });
+                                    }
+                                    // Set the flag
                                 } else {
                                     // See if we are adding to the m365 group
                                     if (shareType === "M365 Group") {
                                         // Add the user to the m365 group
-                                        DirectorySession().group(siteGroupId).owners().add("00000000-0000-0000-0000-000000000000", user.Email).execute(() => {
-                                            // Add the user to the admin
-                                            this._admins.push({
-                                                email: user.Email,
-                                                id: user.Id,
-                                                name: user.LoginName,
-                                                parent: "M365 Group",
-                                                permission: "Owner",
-                                                title: user.Title,
-                                                type: user.PrincipalType
-                                            });
-
+                                        let group = DirectorySession().group(siteGroupId);
+                                        (adminGroupRef === "Owners" ? group.owners() : group.members()).add("00000000-0000-0000-0000-000000000000", user.Email).execute(() => {
                                             // Refresh the group information
                                             M365Groups.refreshGroupInfo(siteGroupId).then(() => {
                                                 // Call the event
@@ -191,28 +198,17 @@ export class AccessTab {
                                     } else {
                                         // Add the user to the default owner's group
                                         web.AssociatedOwnerGroup().Users().addUserById(user.Id).execute(() => {
-                                            // Add the user to the admin
-                                            this._admins.push({
-                                                email: user.Email,
-                                                id: user.Id,
-                                                name: user.LoginName,
-                                                parent: "M365 Group",
-                                                permission: "Owner",
-                                                title: user.Title,
-                                                type: user.PrincipalType
-                                            });
-
                                             // Call the event
                                             onAddUser();
                                         });
                                     }
                                 }
                             }, () => {
+                                // Hide the modal
+                                Modal.hide();
+
                                 // Error adding the user
                                 console.error("Error adding the user to the site. Refresh the page and try again.");
-
-                                // Call the event
-                                onAddUser();
                             });
                         }
                     }
@@ -221,9 +217,7 @@ export class AccessTab {
                     content: "Click to close the form.",
                     btnProps: {
                         text: "Close",
-                        onClick: () => {
-                            Modal.hide();
-                        }
+                        onClick: () => { Modal.hide(); }
                     }
                 }
             ]
@@ -337,6 +331,16 @@ export class AccessTab {
         });
     }
 
+    // Refreshes the data
+    private refresh() {
+        // Clear the admins/owners
+        this._admins = null;
+        this._owners = null;
+
+        // Render the solution
+        this.render();
+    }
+
     // Shows the remove user dialog
     private removeUser(user: ISiteUserInfo, onRemove: () => void) {
         // Clear the dialog
@@ -364,16 +368,6 @@ export class AccessTab {
                                 // Remove the user from the group
                                 let group = DirectorySession().group(user.group.id);
                                 (user.groupRef === "Owners" ? group.owners() : group.members()).remove(user.id).execute(() => {
-                                    // Parse the admins/owners
-                                    let users = user.groupRef === "Owners" ? this._owners : this._admins;
-                                    for (let i = 0; i < users.length; i++) {
-                                        let user = users[i];
-                                        if (user.email === user.email) {
-                                            users.splice(i, 1);
-                                            break;
-                                        }
-                                    }
-
                                     // Refresh the group information
                                     M365Groups.refreshGroupInfo(user.group.id).then(() => {
                                         // Call the event
@@ -385,15 +379,6 @@ export class AccessTab {
                             else if (user.permission === "Admin") {
                                 // Get the user
                                 web.SiteUsers().getById(user.id).update({ IsSiteAdmin: false }).execute(() => {
-                                    // Parse the admins
-                                    for (let i = 0; i < this._admins.length; i++) {
-                                        let admin = this._admins[i];
-                                        if (admin.email === user.email) {
-                                            this._admins.splice(i, 1);
-                                            break;
-                                        }
-                                    }
-
                                     // Call the event
                                     onRemove();
                                 });
@@ -420,9 +405,7 @@ export class AccessTab {
                     content: "Click to close the form.",
                     btnProps: {
                         text: "Close",
-                        onClick: () => {
-                            Modal.hide();
-                        }
+                        onClick: () => { Modal.hide(); }
                     }
                 }
             ]
@@ -462,7 +445,7 @@ export class AccessTab {
                                 // Show the add user dialog
                                 this.addUser(() => {
                                     // Refresh the table
-                                    dt.refresh(this._admins.concat(this._owners));
+                                    this.refresh();
 
                                     // Hide the modal
                                     Modal.hide();
@@ -485,12 +468,8 @@ export class AccessTab {
                             isButton: true,
                             text: "Refresh",
                             onClick: () => {
-                                // Clear the admins/owners
-                                this._admins = null;
-                                this._owners = null;
-
-                                // Render the solution
-                                this.render();
+                                // Refresh the table
+                                this.refresh();
                             }
                         }
                     ]
@@ -575,8 +554,8 @@ export class AccessTab {
                                                 onClick: () => {
                                                     // Show the remove user dialog
                                                     this.removeUser(item, () => {
-                                                        // Refresh the datatable
-                                                        dt.refresh(this._admins.concat(this._owners));
+                                                        // Refresh the table
+                                                        this.refresh();
 
                                                         // Hide the modal
                                                         Modal.hide();
@@ -585,7 +564,7 @@ export class AccessTab {
                                             }
                                         }
                                     ]
-                                })
+                                });
                             }
                         },
                     ]
