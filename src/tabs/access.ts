@@ -263,22 +263,26 @@ export class AccessTab {
                                 // Set the group information
                                 users[i].group = group;
 
-                                // Parse the owners/members
+                                // Parse the owners/members of the m365 group
                                 let refOwners = M365Groups.isOwner(users[i].name);
-                                (refOwners ? group.owners : group.members).results.forEach(user => {
-                                    // Add the user
-                                    users.push({
-                                        email: user["mail"],
-                                        group,
-                                        groupRef: refOwners ? "Owners" : "Members",
-                                        id: user.id,
-                                        name: user["mail"],
-                                        parent: "M365 Group",
-                                        permission: isAdmin ? "Admin" : "Owner",
-                                        title: user.displayName,
-                                        type: SPTypes.PrincipalTypes.User
-                                    })
-                                });
+                                let m365Group = (refOwners ? group.owners : group.members);
+                                if (m365Group) {
+                                    // Add the users
+                                    m365Group.results.forEach(user => {
+                                        // Add the user
+                                        users.push({
+                                            email: user["mail"],
+                                            group,
+                                            groupRef: refOwners ? "Owners" : "Members",
+                                            id: user.id,
+                                            name: user["mail"],
+                                            parent: "M365 Group",
+                                            permission: isAdmin ? "Admin" : "Owner",
+                                            title: user.displayName,
+                                            type: SPTypes.PrincipalTypes.User
+                                        })
+                                    });
+                                }
 
                                 // Break from the loop
                                 break;

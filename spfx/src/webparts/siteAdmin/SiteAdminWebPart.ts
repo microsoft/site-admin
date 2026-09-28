@@ -73,6 +73,7 @@ export interface ISiteAdminWebPartProps {
   AuditOnly: boolean;
   DisableSensitivityLabelOverride: boolean;
   FlowGetSiteAdminsAndOwners: string;
+  HideAccessTab: boolean;
   HideAppPermissionsTab: boolean;
   HideAuditToolsTab: boolean;
   HideFeaturesTab: boolean;
@@ -233,6 +234,7 @@ interface IAppProps {
     uniquePermissions: boolean;
   },
   hideTabs: {
+    access: boolean;
     appPermissions: boolean;
     auditTools: boolean;
     features: boolean;
@@ -554,6 +556,12 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
             {
               groupName: "Show/Hide Tabs",
               groupFields: [
+                PropertyPaneToggle("HideAccessTab", {
+                  label: "Hide Access Tab",
+                  checked: this.properties.HideAccessTab,
+                  onText: "The 'Access' tab will be hidden.",
+                  offText: "The 'Access' tab will be visible"
+                }),
                 PropertyPaneToggle("HideAppPermissionsTab", {
                   label: "Hide App Permissions Tab",
                   checked: this.properties.HideAppPermissionsTab,
@@ -1083,6 +1091,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         uniquePermissions: this.properties.HideReportUniquePermissions ? true : false
       },
       hideTabs: {
+        access: this.properties.HideAccessTab ? true : false,
         appPermissions: this.properties.HideAppPermissionsTab ? true : false,
         auditTools: this.properties.HideAuditToolsTab ? true : false,
         features: this.properties.HideFeaturesTab ? true : false,
