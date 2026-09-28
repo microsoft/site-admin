@@ -82,6 +82,9 @@ export class M365Groups {
         });
     }
 
+    // Determines if the group is referencing the owners
+    static isOwner(groupId: string) { return groupId.endsWith("_o"); }
+
     // Loads the m365 group
     private static loadGroupById(groupId: string): PromiseLike<Types.SP.Directory.GroupOData> {
         let group: Types.SP.Directory.GroupOData = { id: groupId } as Types.SP.Directory.GroupOData;
@@ -142,5 +145,17 @@ export class M365Groups {
                 resolve(this._groups[group.id]);
             });
         });
+    }
+
+    // Refreshes the group information
+    static refreshGroupInfo(groupId: string): PromiseLike<Types.SP.Directory.GroupOData> {
+        // Clear the cached group if it exists
+        if (this._groups[groupId]) {
+            // Delete the cached group
+            delete this._groups[groupId];
+        }
+
+        // Load the group information
+        return this.loadGroupById(groupId);
     }
 }

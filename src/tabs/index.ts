@@ -3,6 +3,7 @@ import { Components } from "gd-sprest-bs";
 import { AppPermissionsTab } from "./appPermissions";
 import { ChangesTab, IChangeRequest } from "./changes";
 import { isEmpty } from "./common";
+import { AccessTab } from "./access";
 import { IAppProps } from "../app";
 import { DataSource } from "../ds";
 import { FeaturesTab } from "./features";
@@ -22,6 +23,7 @@ export class Tabs {
     private _elWebTab: HTMLElement = null;
     private _loadOneDrive: boolean = false;
     private _webRequests: IChangeRequest[];
+    private _tabAccess: AccessTab = null;
     private _tabAppPermissions: AppPermissionsTab = null;
     private _tabChanges: ChangesTab = null;
     private _tabFeatures: FeaturesTab = null;
@@ -69,6 +71,15 @@ export class Tabs {
         }];
 
         // Add the tabs
+        if (!(auditOnly || loadOneDrive) && !appProps.hideTabs.access) {
+            items.push({
+                tabName: "Access",
+                onRender: (el) => {
+                    // Render the tab
+                    this._tabAccess = new AccessTab(el, appProps);
+                }
+            });
+        }
         if (!(auditOnly || loadOneDrive) && !appProps.hideTabs.search && !isEmpty(appProps.searchProps) && appProps.searchProps.key) {
             items.push({
                 tabName: appProps.searchProps.tabName || "Search Property",
@@ -212,7 +223,10 @@ export class Tabs {
                     this._tabWeb ? this._tabWeb.refresh() : null;
                 }
 
-                // Refresh the lists tabs
+                // Refresh the access tab
+                this._tabAccess ? this._tabAccess.setWebUrl(url) : null;
+
+                // Refresh the lists tab
                 this._tabLists ? this._tabLists.loadLists(false) : null;
 
                 // Hide the loading dialog
