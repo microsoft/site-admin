@@ -234,7 +234,7 @@ export class AccessTab {
 
         // See if there are restricted accounts
         let restrictedAccounts = (this._appProps.restrictRemovalAccounts || "").split(",").map(account => account.trim().toLowerCase());
-        if (restrictedAccounts.indexOf(item.email.toLowerCase()) > -1) { return false; }
+        if (restrictedAccounts.indexOf(item.title.toLowerCase()) > -1) { return false; }
 
         // Return true
         return true;
