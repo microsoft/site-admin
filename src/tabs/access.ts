@@ -227,6 +227,19 @@ export class AccessTab {
         Modal.show();
     }
 
+    // Returns true if the user is able to remove the account
+    private canRemove(item: ISiteUserInfo): boolean {
+        // See if this is an owner and this is an admin item
+        if (!DataSource.IsAdmin && item.permission === "Admin") { return false; }
+
+        // See if there are restricted accounts
+        let restrictedAccounts = (this._appProps.restrictRemovalAccounts || "").split(",").map(account => account.trim().toLowerCase());
+        if (restrictedAccounts.indexOf(item.email.toLowerCase()) > -1) { return false; }
+
+        // Return true
+        return true;
+    }
+
     // Determines the M365 groups and expands the information
     private expandM365Groups(users: ISiteUserInfo[], isAdmin: boolean): PromiseLike<ISiteUserInfo[]> {
         // Return a promise
@@ -543,32 +556,32 @@ export class AccessTab {
                             name: "",
                             title: "Actions",
                             onRenderCell: (el, row, item: ISiteUserInfo) => {
-                                // See if this is an owner and this is an admin item
-                                if (!DataSource.IsAdmin && item.permission === "Admin") { return; }
+                                // Ensure the user can remove this account
+                                if (this.canRemove(item)) {
+                                    // Render the actions
+                                    Components.TooltipGroup({
+                                        el,
+                                        isSmall: true,
+                                        tooltips: [
+                                            {
+                                                content: "Click to remove the user from the group.",
+                                                btnProps: {
+                                                    text: "Remove",
+                                                    onClick: () => {
+                                                        // Show the remove user dialog
+                                                        this.removeUser(item, () => {
+                                                            // Refresh the table
+                                                            this.refresh();
 
-                                // Render the actions
-                                Components.TooltipGroup({
-                                    el,
-                                    isSmall: true,
-                                    tooltips: [
-                                        {
-                                            content: "Click to remove the user from the group.",
-                                            btnProps: {
-                                                text: "Remove",
-                                                onClick: () => {
-                                                    // Show the remove user dialog
-                                                    this.removeUser(item, () => {
-                                                        // Refresh the table
-                                                        this.refresh();
-
-                                                        // Hide the modal
-                                                        Modal.hide();
-                                                    });
+                                                            // Hide the modal
+                                                            Modal.hide();
+                                                        });
+                                                    }
                                                 }
                                             }
-                                        }
-                                    ]
-                                });
+                                        ]
+                                    });
+                                }
                             }
                         },
                     ]

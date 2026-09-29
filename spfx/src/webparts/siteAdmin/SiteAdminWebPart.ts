@@ -69,6 +69,7 @@ const imageReferences = [
 ];
 
 export interface ISiteAdminWebPartProps {
+  AccessTabRestrictRemoval: string;
   AppTitle: string;
   AuditOnly: boolean;
   DisableSensitivityLabelOverride: boolean;
@@ -249,6 +250,7 @@ interface IAppProps {
   maxRequests?: number;
   maxStorageDesc?: string;
   maxStorageSize?: number;
+  restrictRemovalAccounts?: string;
   siteAttestation?: boolean;
   siteAttestationText?: string;
   reportNames?: {
@@ -610,6 +612,16 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   onText: "The 'Webs' tab will be hidden.",
                   offText: "The 'Webs' tab will be visible"
                 }),
+              ]
+            },
+            {
+              groupName: "Access Tab",
+              groupFields: [
+                PropertyPaneTextField("AccessTabRestrictRemoval", {
+                  label: "Restricted Accounts",
+                  description: "The accounts that should be restricted from removal. Enter the names separated by commas.",
+                  value: this.properties.AccessTabRestrictRemoval
+                })
               ]
             },
             {
@@ -1133,6 +1145,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         siteAuditReports: this.properties.ReportsSiteAudit,
         sensitivityLabelFileExt: this.properties.SensitivityLabelFileExt
       },
+      restrictRemovalAccounts: this.properties.AccessTabRestrictRemoval,
       searchProps: {
         description: this.properties.WebPropSearchPropertyDescription,
         key: this.properties.WebPropSearchPropertyKey,

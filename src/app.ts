@@ -57,6 +57,7 @@ export interface IAppProps {
     maxRequests?: number;
     maxStorageDesc?: string;
     maxStorageSize?: number;
+    restrictRemovalAccounts?: string;
     reportNames?: IReportNames;
     reportProps?: IReportProps;
     searchProps?: ISearchProps;
