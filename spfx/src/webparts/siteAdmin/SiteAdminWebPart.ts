@@ -69,7 +69,8 @@ const imageReferences = [
 ];
 
 export interface ISiteAdminWebPartProps {
-  AccessTabRestrictRemoval: string;
+  AccessTabRestrictAdminRemoval: string;
+  AccessTabRestrictOwnerRemoval: string;
   AppTitle: string;
   AuditOnly: boolean;
   DisableSensitivityLabelOverride: boolean;
@@ -250,7 +251,8 @@ interface IAppProps {
   maxRequests?: number;
   maxStorageDesc?: string;
   maxStorageSize?: number;
-  restrictRemovalAccounts?: string;
+  restrictRemovalAdminAccounts?: string;
+  restrictRemovalOwnerAccounts?: string;
   siteAttestation?: boolean;
   siteAttestationText?: string;
   reportNames?: {
@@ -617,10 +619,15 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
             {
               groupName: "Access Tab",
               groupFields: [
-                PropertyPaneTextField("AccessTabRestrictRemoval", {
-                  label: "Restricted Accounts",
-                  description: "The accounts that should be restricted from removal. Enter the names separated by commas.",
-                  value: this.properties.AccessTabRestrictRemoval
+                PropertyPaneTextField("AccessTabRestrictAdminRemoval", {
+                  label: "Restricted Admin Accounts",
+                  description: "The admin accounts that should be restricted from removal. Enter the names separated by commas.",
+                  value: this.properties.AccessTabRestrictAdminRemoval
+                }),
+                PropertyPaneTextField("AccessTabRestrictOwnerRemoval", {
+                  label: "Restricted Owner Accounts",
+                  description: "The owner accounts that should be restricted from removal. Enter the names separated by commas.",
+                  value: this.properties.AccessTabRestrictOwnerRemoval
                 })
               ]
             },
@@ -1145,7 +1152,8 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         siteAuditReports: this.properties.ReportsSiteAudit,
         sensitivityLabelFileExt: this.properties.SensitivityLabelFileExt
       },
-      restrictRemovalAccounts: this.properties.AccessTabRestrictRemoval,
+      restrictRemovalAdminAccounts: this.properties.AccessTabRestrictAdminRemoval,
+      restrictRemovalOwnerAccounts: this.properties.AccessTabRestrictOwnerRemoval,
       searchProps: {
         description: this.properties.WebPropSearchPropertyDescription,
         key: this.properties.WebPropSearchPropertyKey,

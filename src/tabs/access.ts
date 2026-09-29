@@ -233,7 +233,7 @@ export class AccessTab {
         if (!DataSource.IsAdmin && item.permission === "Admin") { return false; }
 
         // See if there are restricted accounts
-        let restrictedAccounts = (this._appProps.restrictRemovalAccounts || "").split(",").map(account => account.trim().toLowerCase());
+        let restrictedAccounts = ((item.permission === "Admin" ? this._appProps.restrictRemovalAdminAccounts : this._appProps.restrictRemovalOwnerAccounts) || "").split(",").map(account => account.trim().toLowerCase());
         if (restrictedAccounts.indexOf(item.title.toLowerCase()) > -1) { return false; }
 
         // Return true
