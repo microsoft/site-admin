@@ -774,19 +774,33 @@ export class DataSource {
 
                         // Parse the site admins
                         items.results.forEach(item => {
-                            // Get the user
-                            web.SiteUsers().getByEmail(item["EMail"]).batch(item => {
-                                // Add the owner information
+                            // Ensure the email exists
+                            if (item["EMail"]) {
+                                // Get the user
+                                web.SiteUsers().getByEmail(item["EMail"]).batch(item => {
+                                    // Add the user information
+                                    users.push({
+                                        email: item.Email,
+                                        id: item.Id,
+                                        name: item.LoginName,
+                                        parent: "Site Group",
+                                        permission: "Admin",
+                                        title: item.Title,
+                                        type: item.PrincipalType
+                                    });
+                                });
+                            } else {
+                                // Add the user information
                                 users.push({
-                                    email: item.Email,
+                                    email: item["EMail"],
                                     id: item.Id,
-                                    name: item.LoginName,
+                                    name: item["Name"],
                                     parent: "Site Group",
                                     permission: "Admin",
                                     title: item.Title,
-                                    type: item.PrincipalType
+                                    type: SPTypes.PrincipalTypes.SecurityGroup
                                 });
-                            });
+                            }
                         });
 
                         // Execute the batch request
