@@ -377,7 +377,7 @@ export class SearchDocs {
                         // Analyze the file
                         this.analyzeFile(file, file.parentReference["driveUrl"], library.Id, webUrl, webId, regexPatterns).then(() => {
                             // Update the dialog
-                            this._elSubNav.children[0].innerHTML = `Analyzing Library: ${library.Title} - Processed ${++processedCounter} of ${filesLoaded}`;
+                            this._elSubNav.children[0].textContent = `Analyzing Library: ${library.Title} - Processed ${++processedCounter} of ${filesLoaded}`;
                             this._elSubNav.children[1].innerHTML = `[${processingCounter} Processing] File Labelled: ${file.name}`;
 
                             // Decrement the # of files being processed
@@ -397,7 +397,7 @@ export class SearchDocs {
             });
 
             // Set the status
-            this._elSubNav.children[0].innerHTML = `Analyzing Library: ${library.Title}`;
+            this._elSubNav.children[0].textContent = `Analyzing Library: ${library.Title}`;
             this._elSubNav.children[1].innerHTML = `Loading the files for this library...`;
 
             // Load the files for this drive

@@ -216,7 +216,7 @@ export class SearchEEEU {
                         if (this._maxItemCount > 0 && list.ItemCount > this._maxItemCount) { this._skippedLists.push({ title: list.Title, webUrl: web.Url }); return; }
 
                         // Show a dialog
-                        this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing List ${++ctrList} of ${lists.length}]: ${list.Title}`;
+                        this._elSubNav.children[0].textContent = `${siteText} - [Analyzing List ${++ctrList} of ${lists.length}]: ${list.Title}`;
 
                         // Analyze the list
                         return this.analyzeList(web, list, searchLists);
@@ -570,12 +570,14 @@ export class SearchEEEU {
                         title: "Information",
                         onRenderCell: (el, col, item: ISearchItem) => {
                             // Render the info
-                            el.innerHTML = `
-                                <b>Name: </b>${item.Name}
-                                ${item.ListId ? `<br/><b>List: </b>${item.ListName}` : ""}
-                                <br/>
-                                <b>Web: </b>${item.WebUrl}
-                            `;
+                            el.innerHTML = `<b>Name: </b>${item.Name}`
+                            if (item.ListId) {
+                                el.innerHTML += `<br/><b>List: </b>`;
+                                let span = document.createElement("span");
+                                span.textContent = item.ListName;
+                                el.appendChild(span);
+                            }
+                            el.innerHTML += `<br/><b>Web: </b>${item.WebUrl}`;
                         }
                     },
                     {
@@ -936,7 +938,7 @@ export class SearchEEEU {
         Modal.show();
 
         // Update the status
-        this._elSubNav.children[0].innerHTML = `Searching List: ${listName}`;
+        this._elSubNav.children[0].textContent = `Searching List: ${listName}`;
         this._elSubNav.children[1].innerHTML = "Getting the info for the web...";
 
         // Get the permissions

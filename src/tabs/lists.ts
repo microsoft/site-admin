@@ -478,9 +478,11 @@ export class ListsTab {
                         title: "List Info",
                         onRenderCell: (el, col, item: IList) => {
                             // Render the info
-                            el.innerHTML = `
-                                <b>Name: </b>${item.ListName}
-                                <br/>
+                            el.innerHTML = `<b>Name: </b>`
+                            let span = document.createElement("span");
+                            span.textContent = item.ListName;
+                            el.appendChild(span);
+                            el.innerHTML += `<br/>
                                 <b>Type: </b>${item.ListTemplate}
                                 <br/>
                                 <b>Url: </b>${item.ListUrl}

@@ -73,7 +73,7 @@ export class SensitivityLabels {
                 if (this._maxItemCount > 0 && lib.ItemCount > this._maxItemCount) { this._skippedLists.push({ title: lib.Title, webUrl }); return; }
 
                 // Update the dialog
-                this._elSubNav.children[0].innerHTML = `${siteText} [Analyzing Library ${++counter} of ${libraries.length}]: ${lib.Title}`;
+                this._elSubNav.children[0].textContent = `${siteText} [Analyzing Library ${++counter} of ${libraries.length}]: ${lib.Title}`;
 
                 // Get the drive for this library
                 let drive = drives.find(drive => {

@@ -230,7 +230,7 @@ export class BulkLabel {
         });
 
         // Update the dialog
-        this._elSubNav.children[0].innerHTML = `Loading files from library: ${listName}`;
+        this._elSubNav.children[0].textContent = `Loading files from library: ${listName}`;
 
         // Process the labels as we load the files
         let fileCounter = 0;
