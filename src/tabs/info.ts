@@ -22,13 +22,6 @@ export class InfoTab extends Tab {
         return `${DataSource.Site.RootWeb.WebTemplate}#${DataSource.Site.RootWeb.Configuration}`;
     }
 
-    // Returns the site type, based on the template
-    private getSiteType(): string {
-        if (DataSource.Site.RootWeb.WebTemplate?.startsWith("GROUP")) { return "Teams"; }
-        if (DataSource.Site.RootWeb.WebTemplate?.startsWith("TEAMCHANNEL")) { return "Teams Channel"; }
-        return "SharePoint";
-    }
-
     // Renders the tab
     private render(siteAttestation: boolean) {
         let dtAttestation = DataSource.Web.AllProperties["AttestationDate"] || "";
@@ -79,7 +72,7 @@ export class InfoTab extends Tab {
                     name: "SiteType",
                     label: "Site Type:",
                     type: Components.FormControlTypes.Readonly,
-                    value: this.getSiteType()
+                    value: DataSource.getSiteType()
                 },
                 {
                     name: "Template",

@@ -94,7 +94,7 @@ export class Tabs {
                 tabName: "Management",
                 onRender: (el) => {
                     // Render the tab
-                    this._tabManagement = new ManagementTab(el, appProps.siteProps, appProps.maxStorageSize, appProps.maxStorageDesc);
+                    this._tabManagement = new ManagementTab(el, appProps.siteProps, appProps.disableStorageForSharePoint, appProps.disableStorageForTeams, appProps.maxStorageSize, appProps.maxStorageDesc);
                 }
             });
         }
