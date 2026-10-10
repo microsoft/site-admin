@@ -40,6 +40,11 @@ export class WebTab extends Tab<{
     }
 
 
+    // Returns the site template
+    private getSiteTemplate(): string {
+        return `${DataSource.Web.WebTemplate}#${DataSource.Web.Configuration}`;
+    }
+
     // Method to refresh the tab
     refresh() {
         // Update the current values
@@ -79,12 +84,19 @@ export class WebTab extends Tab<{
                     label: this._props["Template"].label,
                     description: this._props["Template"].description,
                     type: Components.FormControlTypes.Readonly,
+                    value: this.getSiteTemplate()
+                },
+                {
+                    name: "TemplateName",
+                    label: this._props["TemplateName"].label,
+                    description: this._props["TemplateName"].description,
+                    type: Components.FormControlTypes.Readonly,
                     value: this._currValues.WebTemplate,
                     onControlRendering: ctrl => {
                         // Return a promise
                         return new Promise(resolve => {
                             // Get the web template
-                            DataSource.getWebTemplate(this._currValues.WebTemplate).then(template => {
+                            DataSource.getWebTemplate(this.getSiteTemplate()).then(template => {
                                 // Set the value
                                 ctrl.value = template;
 
