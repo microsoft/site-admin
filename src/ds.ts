@@ -1062,6 +1062,7 @@ export class DataSource {
                     "MediaTranscriptionDisabled",
                     "Owner",
                     "ReadOnly",
+                    "RootWeb/Configuration",
                     "RootWeb/Created",
                     "RootWeb/Id",
                     "RootWeb/Title",
@@ -1151,7 +1152,7 @@ export class DataSource {
             if (this._webTemplates[key]) { resolve(this._webTemplates[key]); return; }
 
             // Get the web template
-            this.Web.getAvailableWebTemplates(1033).getByName(key).execute(template => {
+            this.Web.getAvailableWebTemplates(1033).getByName(key.replace("#", "%23")).execute(template => {
                 // Set the value
                 this._webTemplates[key] = template.Title;
 
