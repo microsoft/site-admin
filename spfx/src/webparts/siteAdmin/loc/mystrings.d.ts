@@ -21,6 +21,7 @@ declare interface ISiteAdminWebPartStrings {
   SitePropCustomScriptsEnabled: string;
   SitePropDisableCompanyWideSharingLinks: string;
   SitePropExcludeFromOfflineClient: string;
+  SitePropGroup: string;
   SitePropHubSite: string;
   SitePropHubSiteConnected: string;
   SitePropIncreaseStorage: string;
@@ -32,6 +33,7 @@ declare interface ISiteAdminWebPartStrings {
   SitePropSocialBarOnSitePagesDisabled: string;
   SitePropStorageUsed: string;
   SitePropTemplate: string;
+  SitePropTemplateName: string;
   SitePropTitle: string;
   WebPropCommentsOnSitePagesDisabled: string;
   WebPropExcludeFromOfflineClient: string;
@@ -44,6 +46,7 @@ declare interface ISiteAdminWebPartStrings {
   WebPropSearchPropertyValues: string;
   WebPropSearchScope: string;
   WebPropWebTemplate: string;
+  WebPropWebTemplateName: string;
   AppLocalEnvironmentSharePoint: string;
   AppLocalEnvironmentTeams: string;
   AppLocalEnvironmentOffice: string;
