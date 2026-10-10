@@ -21,9 +21,9 @@ export interface IAppProps {
     auditOnly?: boolean;
     context?: any;
     disableSensitivityLabelOverride?: boolean;
+    disableStorageForSharePoint?: boolean;
+    disableStorageForTeams?: boolean;
     el: HTMLElement;
-    enableStorageForSharePoint?: boolean;
-    enableStorageForTeams?: boolean;
     flowGetSiteAdminsAndOwners?: string;
     hideCreateSiteBtn?: boolean;
     hideLoadOneDriveBtn?: boolean;

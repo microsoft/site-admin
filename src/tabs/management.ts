@@ -24,7 +24,7 @@ export class ManagementTab extends Tab<{
     ShareByEmailEnabled: boolean;
 }> {
     // Constructor
-    constructor(el: HTMLElement, props: { [key: string]: IProp; }, enableStorageForSharePoint: boolean, enableStorageForTeams: boolean, maxStorageSize: number, maxStorageDesc: string) {
+    constructor(el: HTMLElement, props: { [key: string]: IProp; }, disableStorageForSharePoint: boolean, disableStorageForTeams: boolean, maxStorageSize: number, maxStorageDesc: string) {
         super(el, props, "Site");
 
         // Set the current values
@@ -38,11 +38,11 @@ export class ManagementTab extends Tab<{
         }
 
         // Render the tab
-        this.render(enableStorageForSharePoint, enableStorageForTeams, maxStorageSize, maxStorageDesc);
+        this.render(disableStorageForSharePoint, disableStorageForTeams, maxStorageSize, maxStorageDesc);
     }
 
     // Renders the tab
-    private render(enableStorageForSharePoint: boolean, enableStorageForTeams: boolean, maxStorageSize: number = 0, maxStorageDesc: string = "") {
+    private render(disableStorageForSharePoint: boolean, disableStorageForTeams: boolean, maxStorageSize: number = 0, maxStorageDesc: string = "") {
         // Render the form
         Components.Form({
             el: this._el,
@@ -152,7 +152,7 @@ export class ManagementTab extends Tab<{
                         }
 
                         // See if we are disabling the ability to increase storage based on the type of site
-                        if ((DataSource.getSiteType() === "SharePoint" && !enableStorageForSharePoint) || (DataSource.getSiteType() === "Teams" && !enableStorageForTeams)) {
+                        if ((DataSource.getSiteType() === "SharePoint" && disableStorageForSharePoint) || (DataSource.getSiteType() === "Teams" && disableStorageForTeams)) {
                             // Disable this property
                             ctrl.isDisabled = true;
                         }
