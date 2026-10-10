@@ -154,6 +154,8 @@ export interface ISiteAdminWebPartProps {
   SitePropExcludeFromOfflineClientDescription: string;
   SitePropExcludeFromOfflineClientLabel: string;
   SitePropHubSiteDescription: string;
+  SitePropGroupDescription: string;
+  SitePropGroupLabel: string;
   SitePropHubSiteLabel: string;
   SitePropHubSiteConnectedDescription: string;
   SitePropHubSiteConnectedLabel: string;
@@ -182,6 +184,8 @@ export interface ISiteAdminWebPartProps {
   SitePropStorageUsedLabel: string;
   SitePropTemplateDescription: string;
   SitePropTemplateLabel: string;
+  SitePropTemplateNameDescription: string;
+  SitePropTemplateNameLabel: string;
   SitePropTitleDescription: string;
   SitePropTitleLabel: string;
   WebPropCommentsOnSitePagesDisabled: boolean;
@@ -204,6 +208,8 @@ export interface ISiteAdminWebPartProps {
   WebPropSearchScopeLabel: string;
   WebPropTemplateDescription: string;
   WebPropTemplateLabel: string;
+  WebPropTemplateNameDescription: string;
+  WebPropTemplateNameLabel: string;
   WebPropTitleDescription: string;
   WebPropTitleLabel: string;
 }
@@ -374,6 +380,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     "SitePropCustomScriptsEnabled",
     "SitePropDisableCompanyWideSharingLinks",
     "SitePropExcludeFromOfflineClient",
+    "SitePropGroup",
     "SitePropHubSite",
     "SitePropHubSiteConnected",
     "SitePropIncreaseStorage",
@@ -385,6 +392,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     "SitePropSocialBarOnSitePagesDisabled",
     "SitePropStorageUsed",
     "SitePropTemplate",
+    "SitePropTemplateName",
     "SitePropTitle"
   ];
 
@@ -392,12 +400,15 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     "SitePropAttestationDate",
     "SitePropAttestationUser",
     "SitePropCreated",
+    "SitePropGroup",
     "SitePropHubSite",
     "SitePropHubSiteConnected",
     "SitePropStorageUsed",
     "SitePropTemplate",
+    "SitePropTemplateName",
     "SitePropTitle",
     "WebPropTemplate",
+    "WebPropTemplateName",
     "WebPropTitle"
   ]
 
@@ -407,6 +418,7 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
     "WebPropNoCrawl",
     "WebPropSearchScope",
     "WebPropTemplate",
+    "WebPropTemplateName",
     "WebPropTitle"
   ];
 
