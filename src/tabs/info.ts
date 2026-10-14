@@ -3,6 +3,7 @@ import * as moment from "moment";
 import { IProp } from "../app";
 import { DataSource } from "../ds";
 import { Tab } from "./base";
+import { getStorageUsed } from "./common";
 import { M365Groups } from "../m365Groups";
 
 /**
@@ -95,8 +96,8 @@ export class InfoTab extends Tab {
                             // Get the group information
                             M365Groups.getGroupInfo([DataSource.Web.AllProperties["GroupId"]], group => {
                                 // Set the group name
-                                ctrl.setValue(group.displayName);
-                                ctrl.setDescription("The group id: " + group.id);
+                                ctrl.setValue(group.mail);
+                                ctrl.setLabel(`${this._props["Group"].label} (${group.id})`)
                             });
                         } else {
                             // Set the value
@@ -123,7 +124,7 @@ export class InfoTab extends Tab {
                     label: this._props["StorageUsed"].label,
                     description: this._props["StorageUsed"].description,
                     type: Components.FormControlTypes.Readonly,
-                    value: `${DataSource.formatBytes(DataSource.Site.Usage.Storage)} of ${DataSource.formatBytes(DataSource.Site.Usage.Storage / DataSource.Site.Usage.StoragePercentageUsed)} (${Math.round(DataSource.Site.Usage.StoragePercentageUsed * 100) + "%"} Used)`
+                    value: getStorageUsed()
                 },
                 {
                     name: "AttestationDate",

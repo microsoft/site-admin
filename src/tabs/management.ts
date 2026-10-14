@@ -1,7 +1,8 @@
 import { Components } from "gd-sprest-bs";
-import { Tab } from "./base";
 import { IProp } from "../app";
 import { DataSource, IRequest, RequestTypes } from "../ds";
+import { Tab } from "./base";
+import { getStorageUsed } from "./common";
 
 /**
  * Management Tab
@@ -138,21 +139,27 @@ export class ManagementTab extends Tab<{
                 {
                     name: "IncreaseStorage",
                     label: this._props["IncreaseStorage"].label,
-                    description: this._props["IncreaseStorage"].description + ` The current usage is: ${DataSource.formatBytes(DataSource.Site.Usage.Storage)} of ${DataSource.formatBytes(DataSource.Site.Usage.Storage / DataSource.Site.Usage.StoragePercentageUsed)}`,
+                    description: this._props["IncreaseStorage"].description + getStorageUsed(),
                     isDisabled: this._props["IncreaseStorage"].disabled,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.IncreaseStorage,
                     onControlRendering: ctrl => {
-                        // See if the max threshold has been reached
-                        // 1 TB = 1024GB = 1024*1024MB = 1024*1024*1024KB = 1024*1024*1024*1024 = 1099511627776
-                        if (Math.round(DataSource.Site.Usage.Storage / DataSource.Site.Usage.StoragePercentageUsed) >= maxStorageSize * 1099511627776) {
-                            // Update the props
-                            ctrl.isDisabled = true;
-                            ctrl.description = maxStorageDesc || ctrl.description;
-                        }
+                        // Ensure the percentage exists
+                        if (DataSource.Site.Usage.StoragePercentageUsed > 0) {
+                            // See if the max threshold has been reached
+                            // 1 TB = 1024GB = 1024*1024MB = 1024*1024*1024KB = 1024*1024*1024*1024 = 1099511627776
+                            if (Math.round(DataSource.Site.Usage.Storage / DataSource.Site.Usage.StoragePercentageUsed) >= maxStorageSize * 1099511627776) {
+                                // Update the props
+                                ctrl.isDisabled = true;
+                                ctrl.description = maxStorageDesc || ctrl.description;
+                            }
 
-                        // See if we are disabling the ability to increase storage based on the type of site
-                        if ((DataSource.getSiteType() === "SharePoint" && disableStorageForSharePoint) || (DataSource.getSiteType() === "Teams" && disableStorageForTeams)) {
+                            // See if we are disabling the ability to increase storage based on the type of site
+                            if ((DataSource.getSiteType() === "SharePoint" && disableStorageForSharePoint) || (DataSource.getSiteType() === "Teams" && disableStorageForTeams)) {
+                                // Disable this property
+                                ctrl.isDisabled = true;
+                            }
+                        } else {
                             // Disable this property
                             ctrl.isDisabled = true;
                         }
