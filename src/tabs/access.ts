@@ -449,36 +449,39 @@ export class AccessTab {
             // Clear the alert
             while (this._el.firstChild) { this._el.removeChild(this._el.firstChild); }
 
+            // Set the nav items
+            let navItems = this._appProps.auditOnly ? [] : [
+                {
+                    className: "btn-outline-light ms-2",
+                    isButton: true,
+                    text: "Add User",
+                    onClick: () => {
+                        // Show the add user dialog
+                        this.addUser(() => {
+                            // Refresh the table
+                            this.refresh();
+
+                            // Hide the modal
+                            Modal.hide();
+                        });
+                    }
+                }
+            ];
+            navItems.push({
+                className: "btn-outline-light ms-2",
+                isButton: true,
+                text: "View Permissions",
+                onClick: () => {
+                    // Open the site permissions in a new tab
+                    window.open(this._webUrl + "/_layouts/15/user.aspx", "_blank");
+                }
+            });
+
             // Render the table
             let dt = new Dashboard({
                 el: this._el,
                 navigation: {
-                    items: [
-                        {
-                            className: "btn-outline-light ms-2",
-                            isButton: true,
-                            text: "Add User",
-                            onClick: () => {
-                                // Show the add user dialog
-                                this.addUser(() => {
-                                    // Refresh the table
-                                    this.refresh();
-
-                                    // Hide the modal
-                                    Modal.hide();
-                                });
-                            }
-                        },
-                        {
-                            className: "btn-outline-light ms-2",
-                            isButton: true,
-                            text: "View Permissions",
-                            onClick: () => {
-                                // Open the site permissions in a new tab
-                                window.open(this._webUrl + "/_layouts/15/user.aspx", "_blank");
-                            }
-                        }
-                    ],
+                    items: navItems,
                     itemsEnd: [
                         {
                             className: "btn-outline-light me-2",
@@ -557,7 +560,7 @@ export class AccessTab {
                             title: "Actions",
                             onRenderCell: (el, row, item: ISiteUserInfo) => {
                                 // Ensure the user can remove this account
-                                if (this.canRemove(item)) {
+                                if (!this._appProps.auditOnly || this.canRemove(item)) {
                                     // Render the actions
                                     Components.TooltipGroup({
                                         el,
