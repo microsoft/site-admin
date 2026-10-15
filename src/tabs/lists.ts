@@ -479,11 +479,13 @@ export class ListsTab {
                         title: "List Info",
                         onRenderCell: (el, col, item: IList) => {
                             // Render the info
-                            el.innerHTML = `<b>Name: </b><span>${sanitizeString(item.ListName)}</span>;
+                            el.innerHTML = `
+                                <b>Name: </b><span>${sanitizeString(item.ListName)}</span>
                                 <br/>
                                 <b>Type: </b>${item.ListTemplate}
                                 <br/>
-                                <b>Url: </b>${item.ListUrl}`;
+                                <b>Url: </b>${item.ListUrl}
+                            `;
                         }
                     },
                     {
