@@ -70,6 +70,8 @@
         "SitePropExcludeFromOfflineClient": false,
         "SitePropExcludeFromOfflineClientDescription": "If true, the ability to sync an app with a site/library will be disabled for the site collection.",
         "SitePropExcludeFromOfflineClientLabel": "Prevent Apps to Sync:",
+        "SitePropGroupDescription": "The group associated with this site.",
+        "SitePropGroupLabel": "Associated Group:",
         "SitePropHubSiteDescription": "If true, this is the top level hub site.",
         "SitePropHubSiteLabel": "Hub Site:",
         "SitePropHubSiteConnectedDescription": "If true, the site is connected to a hub site.",
@@ -99,6 +101,8 @@
         "SitePropStorageUsedLabel": "Storage Used:",
         "SitePropTemplateDescription": "",
         "SitePropTemplateLabel": "Site Template:",
+        "SitePropTemplateNameDescription": "",
+        "SitePropTemplateNameLabel": "Site Template Name:",
         "SitePropTitleDescription": "",
         "SitePropTitleLabel": "Title:",
         "WebPropCommentsOnSitePagesDisabled": false,
@@ -119,6 +123,8 @@
         "WebPropSearchScopeLabel": "Search Scope:",
         "WebPropTemplateDescription": "",
         "WebPropTemplateLabel": "Site Template:",
+        "WebPropTemplateNameDescription": "",
+        "WebPropTemplateNameLabel": "Site Template Name:",
         "WebPropTitleDescription": "",
         "WebPropTitleLabel": "Title:"
       }

@@ -52,8 +52,11 @@ export class Tabs {
 
     // Event when the webs are loaded
     onWebsLoaded(webs: Components.IDropdownItem[]) {
-        // Update the webs
-        this._tabReports.setWebs(webs);
+        // Ensure the reports tab exists
+        if (this._tabReports) {
+            // Update the webs
+            this._tabReports.setWebs(webs);
+        }
     }
 
     // Renders the tabs
@@ -71,7 +74,7 @@ export class Tabs {
         }];
 
         // Add the tabs
-        if (!(auditOnly || loadOneDrive) && !appProps.hideTabs.access) {
+        if (!loadOneDrive && !appProps.hideTabs.access) {
             items.push({
                 tabName: "Access",
                 onRender: (el) => {
@@ -94,7 +97,7 @@ export class Tabs {
                 tabName: "Management",
                 onRender: (el) => {
                     // Render the tab
-                    this._tabManagement = new ManagementTab(el, appProps.siteProps, appProps.maxStorageSize, appProps.maxStorageDesc);
+                    this._tabManagement = new ManagementTab(el, appProps.siteProps, appProps.disableStorageForSharePoint, appProps.disableStorageForTeams, appProps.maxStorageSize, appProps.maxStorageDesc);
                 }
             });
         }

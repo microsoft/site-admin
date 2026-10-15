@@ -3,6 +3,8 @@ import * as moment from "moment";
 import { IProp } from "../app";
 import { DataSource } from "../ds";
 import { Tab } from "./base";
+import { getStorageUsed } from "./common";
+import { M365Groups } from "../m365Groups";
 
 /**
  * Information Tab
@@ -14,6 +16,11 @@ export class InfoTab extends Tab {
 
         // Render the tab
         this.render(siteAttestation);
+    }
+
+    // Returns the site template
+    private getSiteTemplate(): string {
+        return `${DataSource.Site.RootWeb.WebTemplate}#${DataSource.Site.RootWeb.Configuration}`;
     }
 
     // Renders the tab
@@ -45,16 +52,22 @@ export class InfoTab extends Tab {
                     value: DataSource.Site.RootWeb.Title
                 },
                 {
-                    name: "Template",
-                    label: this._props["Template"].label,
-                    description: this._props["Template"].description,
+                    name: "SiteType",
+                    label: "Site Type:",
+                    type: Components.FormControlTypes.Readonly,
+                    value: DataSource.getSiteType()
+                },
+                {
+                    name: "TemplateName",
+                    label: this._props["TemplateName"].label,
+                    description: this._props["TemplateName"].description,
                     type: Components.FormControlTypes.Readonly,
                     value: DataSource.Site.RootWeb.WebTemplate,
                     onControlRendering: ctrl => {
                         // Return a promise
                         return new Promise(resolve => {
                             // Get the web template
-                            DataSource.getWebTemplate(DataSource.Site.RootWeb.WebTemplate).then(template => {
+                            DataSource.getWebTemplate(this.getSiteTemplate()).then(template => {
                                 // Set the value
                                 ctrl.value = template;
 
@@ -62,6 +75,34 @@ export class InfoTab extends Tab {
                                 resolve(ctrl);
                             });
                         });
+                    }
+                },
+                {
+                    name: "Template",
+                    label: this._props["Template"].label,
+                    description: this._props["Template"].description,
+                    type: Components.FormControlTypes.Readonly,
+                    value: this.getSiteTemplate()
+                },
+                {
+                    name: "Group",
+                    label: this._props["Group"].label,
+                    description: this._props["Group"].description,
+                    type: Components.FormControlTypes.Readonly,
+                    value: DataSource.Web.AllProperties["GroupId"],
+                    onControlRendered: ctrl => {
+                        // Get the m365 group
+                        if (DataSource.Web.AllProperties["GroupId"]) {
+                            // Get the group information
+                            M365Groups.getGroupInfo([DataSource.Web.AllProperties["GroupId"]], group => {
+                                // Set the group name
+                                ctrl.setValue(group.mail);
+                                ctrl.setLabel(`${this._props["Group"].label} (${group.id})`)
+                            });
+                        } else {
+                            // Set the value
+                            ctrl.setValue("N/A");
+                        }
                     }
                 },
                 {
@@ -83,7 +124,7 @@ export class InfoTab extends Tab {
                     label: this._props["StorageUsed"].label,
                     description: this._props["StorageUsed"].description,
                     type: Components.FormControlTypes.Readonly,
-                    value: `${DataSource.formatBytes(DataSource.Site.Usage.Storage)} of ${DataSource.formatBytes(DataSource.Site.Usage.Storage / DataSource.Site.Usage.StoragePercentageUsed)} (${Math.round(DataSource.Site.Usage.StoragePercentageUsed * 100) + "%"} Used)`
+                    value: getStorageUsed()
                 },
                 {
                     name: "AttestationDate",
@@ -104,4 +145,11 @@ export class InfoTab extends Tab {
             ]
         });
     }
+}
+
+/**
+ * Mapper for Template Name to Human-Readable Description
+ */
+const TemplateNameMapper: { [key: string]: string } = {
+
 }

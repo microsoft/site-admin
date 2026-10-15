@@ -96,13 +96,13 @@ export class M365Groups {
                 return new Promise(resolve => {
                     DirectorySession().group(groupId).query({
                         Select: ["calendarUrl", "displayName", "id", "isPublic", "mail"]
-                    }).execute(group => {
+                    }).execute(m365Group => {
                         // Update the group information
-                        group.calendarUrl = group.calendarUrl;
-                        group.displayName = group.displayName;
-                        group.id = group.id;
-                        group.isPublic = group.isPublic;
-                        group.mail = group.mail;
+                        group.calendarUrl = m365Group.calendarUrl;
+                        group.displayName = m365Group.displayName;
+                        group.id = m365Group.id;
+                        group.isPublic = m365Group.isPublic;
+                        group.mail = m365Group.mail;
 
                         // Resolve the group information
                         resolve();
