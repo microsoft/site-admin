@@ -76,7 +76,7 @@ export class Tabs {
         // Add the tabs
         if (!loadOneDrive && !appProps.hideTabs.access) {
             items.push({
-                tabName: "Access",
+                tabName: "Admins/Owners",
                 onRender: (el) => {
                     // Render the tab
                     this._tabAccess = new AccessTab(el, appProps);
@@ -141,7 +141,7 @@ export class Tabs {
         if (loadOneDrive || !appProps.hideTabs.siteAudit || DataSource.WebOnly) {
             items.push({
                 isActive: loadOneDrive,
-                tabName: "Site Audit",
+                tabName: "Auditing",
                 onRender: (el) => {
                     // Render the tab
                     this._tabSiteAudit = new SiteAudit(el, appProps);
