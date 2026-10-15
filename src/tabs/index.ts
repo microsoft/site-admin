@@ -74,7 +74,7 @@ export class Tabs {
         }];
 
         // Add the tabs
-        if (!(auditOnly || loadOneDrive) && !appProps.hideTabs.access) {
+        if (!loadOneDrive && !appProps.hideTabs.access) {
             items.push({
                 tabName: "Access",
                 onRender: (el) => {
