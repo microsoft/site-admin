@@ -560,7 +560,7 @@ export class AccessTab {
                             title: "Actions",
                             onRenderCell: (el, row, item: ISiteUserInfo) => {
                                 // Ensure the user can remove this account
-                                if (!this._appProps.auditOnly || this.canRemove(item)) {
+                                if (!this._appProps.auditOnly && this.canRemove(item)) {
                                     // Render the actions
                                     Components.TooltipGroup({
                                         el,
