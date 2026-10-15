@@ -139,7 +139,7 @@ export class ManagementTab extends Tab<{
                 {
                     name: "IncreaseStorage",
                     label: this._props["IncreaseStorage"].label,
-                    description: this._props["IncreaseStorage"].description + getStorageUsed(),
+                    description: this._props["IncreaseStorage"].description + " " + getStorageUsed(),
                     isDisabled: this._props["IncreaseStorage"].disabled,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.IncreaseStorage,
@@ -155,9 +155,18 @@ export class ManagementTab extends Tab<{
                             }
 
                             // See if we are disabling the ability to increase storage based on the type of site
-                            if ((DataSource.getSiteType() === "SharePoint" && disableStorageForSharePoint) || (DataSource.getSiteType() === "Teams" && disableStorageForTeams)) {
+                            if (DataSource.getSiteType() === "SharePoint" && disableStorageForSharePoint) {
                                 // Disable this property
                                 ctrl.isDisabled = true;
+
+                                // Set the description
+                                ctrl.description = `${this._props["IncreaseStorage"].description} (Increasing SharePoint sites has been disabled)`;
+                            } else if (DataSource.getSiteType().startsWith("Team") && disableStorageForTeams) {
+                                // Disable this property
+                                ctrl.isDisabled = true;
+
+                                // Set the description
+                                ctrl.description = `${this._props["IncreaseStorage"].description} (Increasing Teams sites has been disabled)`;
                             }
                         } else {
                             // Disable this property

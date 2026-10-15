@@ -8,7 +8,7 @@ export function getStorageUsed(): string {
         return `${DataSource.formatBytes(DataSource.Site.Usage.Storage)} of ${DataSource.formatBytes(DataSource.Site.Usage.Storage / DataSource.Site.Usage.StoragePercentageUsed)} (${Math.round(DataSource.Site.Usage.StoragePercentageUsed * 100) + "%"} Used)`;
     } else {
         // Return the usage only
-        return `${DataSource.formatBytes(DataSource.Site.Usage.Storage)} (${Math.round(DataSource.Site.Usage.StoragePercentageUsed * 100) + "%"} Used)`;
+        return DataSource.formatBytes(DataSource.Site.Usage.Storage);
     }
 }
 
