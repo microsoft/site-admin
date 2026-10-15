@@ -65,7 +65,7 @@ export class Tabs {
 
         // Show the info tab by default always
         let items: Components.IListGroupItem[] = loadOneDrive ? [] : [{
-            tabName: "Information",
+            tabName: "Info",
             isActive: true,
             onRender: (el) => {
                 // Render the tab
