@@ -571,11 +571,11 @@ export class SearchEEEU {
                         title: "Information",
                         onRenderCell: (el, col, item: ISearchItem) => {
                             // Render the info
-                            el.innerHTML = `<b>Name: </b>${item.Name}`;
-                            if (item.ListId) {
-                                el.innerHTML += `<br/><b>List: </b><span>${sanitizeString(item.ListName)}</span>`;
-                            }
-                            el.innerHTML += `<br/><b>Web: </b>${item.WebUrl}`;
+                            el.innerHTML = `
+                                <b>Name: </b>${item.Name}
+                                ${item.ListId ? `<br/><b>List: </b>${sanitizeString(item.ListName)}` : ""}
+                                <br/><b>Web: </b>${item.WebUrl}
+                            `;
                         }
                     },
                     {
