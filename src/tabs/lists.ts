@@ -480,7 +480,7 @@ export class ListsTab {
                         onRenderCell: (el, col, item: IList) => {
                             // Render the info
                             el.innerHTML = `
-                                <b>Name: </b><span>${sanitizeString(item.ListName)}</span>
+                                <b>Name: </b>${sanitizeString(item.ListName)}
                                 <br/>
                                 <b>Type: </b>${item.ListTemplate}
                                 <br/>
