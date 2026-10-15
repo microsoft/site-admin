@@ -429,6 +429,13 @@ export class DataSource {
         });
     }
 
+    // Returns the site type, based on the template
+    static getSiteType(): string {
+        if (this.Site.RootWeb.WebTemplate?.startsWith("GROUP")) { return "Teams"; }
+        if (this.Site.RootWeb.WebTemplate?.startsWith("TEAMCHANNEL")) { return "Teams Channel"; }
+        return "SharePoint";
+    }
+
     // List
     private static _list: List<IListItem> = null;
     static get List(): List<IListItem> { return this._list; }

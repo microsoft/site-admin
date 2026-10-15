@@ -74,6 +74,8 @@ export interface ISiteAdminWebPartProps {
   AppTitle: string;
   AuditOnly: boolean;
   DisableSensitivityLabelOverride: boolean;
+  DisableStorageForSharePoint: boolean;
+  DisableStorageForTeams: boolean;
   FlowGetSiteAdminsAndOwners: string;
   HideAccessTab: boolean;
   HideAppPermissionsTab: boolean;
@@ -220,8 +222,9 @@ interface IAppProps {
   auditOnly?: boolean;
   context?: WebPartContext;
   el: HTMLElement;
-  title?: string;
   disableSensitivityLabelOverride?: boolean;
+  disableStorageForSharePoint?: boolean;
+  disableStorageForTeams?: boolean;
   flowGetSiteAdminsAndOwners?: string;
   hideCreateSiteBtn?: boolean;
   hideLoadOneDriveBtn: boolean;
@@ -259,8 +262,6 @@ interface IAppProps {
   maxStorageSize?: number;
   restrictRemovalAdminAccounts?: string;
   restrictRemovalOwnerAccounts?: string;
-  siteAttestation?: boolean;
-  siteAttestationText?: string;
   reportNames?: {
     dlp: string;
     docRetention: string;
@@ -296,6 +297,8 @@ interface IAppProps {
     tabName: string;
     values: string;
   }
+  siteAttestation?: boolean;
+  siteAttestationText?: string;
   siteProps: {
     [key: string]: {
       description: string;
@@ -303,6 +306,7 @@ interface IAppProps {
       label: string;
     }
   }
+  title?: string;
   webProps: {
     [key: string]: {
       description: string;
@@ -684,6 +688,16 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   description: "The description to display when the max storage threshold has been reached.",
                   value: this.properties.MaxStorageDescription
                 }),
+                PropertyPaneToggle("DisableStorageForSharePoint", {
+                  label: "Disable Storage Increase for SharePoint Sites",
+                  offText: "Storage increase will be allowed for SharePoint sites.",
+                  onText: "Storage increase will not be allowed for SharePoint sites."
+                }),
+                PropertyPaneToggle("DisableStorageForTeams", {
+                  label: "Disable Storage Increase for Teams Sites",
+                  offText: "Storage increase will be allowed for Teams sites.",
+                  onText: "Storage increase will not be allowed for Teams sites."
+                })
               ]
             },
             {
@@ -1102,6 +1116,8 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       context: this.context,
       el: this.domElement,
       disableSensitivityLabelOverride: this.properties.DisableSensitivityLabelOverride ? true : false,
+      disableStorageForSharePoint: this.properties.DisableStorageForSharePoint ? true : false,
+      disableStorageForTeams: this.properties.DisableStorageForTeams ? true : false,
       flowGetSiteAdminsAndOwners: this.properties.FlowGetSiteAdminsAndOwners,
       hideCreateSiteBtn: this.properties.HideCreateSiteBtn ? true : false,
       hideLoadOneDriveBtn: this.properties.HideLoadOneDriveBtn ? true : false,

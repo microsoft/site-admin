@@ -3,6 +3,7 @@ import * as moment from "moment";
 import { IProp } from "../app";
 import { DataSource } from "../ds";
 import { Tab } from "./base";
+import { getStorageUsed } from "./common";
 import { M365Groups } from "../m365Groups";
 
 /**
@@ -20,13 +21,6 @@ export class InfoTab extends Tab {
     // Returns the site template
     private getSiteTemplate(): string {
         return `${DataSource.Site.RootWeb.WebTemplate}#${DataSource.Site.RootWeb.Configuration}`;
-    }
-
-    // Returns the site type, based on the template
-    private getSiteType(): string {
-        if (DataSource.Site.RootWeb.WebTemplate?.startsWith("GROUP")) { return "Teams"; }
-        if (DataSource.Site.RootWeb.WebTemplate?.startsWith("TEAMCHANNEL")) { return "Teams Channel"; }
-        return "SharePoint";
     }
 
     // Renders the tab
@@ -58,35 +52,10 @@ export class InfoTab extends Tab {
                     value: DataSource.Site.RootWeb.Title
                 },
                 {
-                    name: "Group",
-                    label: this._props["Group"].label,
-                    description: this._props["Group"].description,
-                    type: Components.FormControlTypes.Readonly,
-                    value: DataSource.Web.AllProperties["GroupId"],
-                    onControlRendered: ctrl => {
-                        // Get the m365 group
-                        if (DataSource.Web.AllProperties["GroupId"]) {
-                            // Get the group information
-                            M365Groups.getGroupInfo([DataSource.Web.AllProperties["GroupId"]], group => {
-                                // Set the group name
-                                ctrl.setValue(group.displayName);
-                                ctrl.setDescription("The group id: " + group.id);
-                            });
-                        }
-                    }
-                },
-                {
                     name: "SiteType",
                     label: "Site Type:",
                     type: Components.FormControlTypes.Readonly,
-                    value: this.getSiteType()
-                },
-                {
-                    name: "Template",
-                    label: this._props["Template"].label,
-                    description: this._props["Template"].description,
-                    type: Components.FormControlTypes.Readonly,
-                    value: this.getSiteTemplate()
+                    value: DataSource.getSiteType()
                 },
                 {
                     name: "TemplateName",
@@ -109,11 +78,32 @@ export class InfoTab extends Tab {
                     }
                 },
                 {
-                    name: "StorageUsed",
-                    label: this._props["StorageUsed"].label,
-                    description: this._props["StorageUsed"].description,
+                    name: "Template",
+                    label: this._props["Template"].label,
+                    description: this._props["Template"].description,
                     type: Components.FormControlTypes.Readonly,
-                    value: `${DataSource.formatBytes(DataSource.Site.Usage.Storage)} of ${DataSource.formatBytes(DataSource.Site.Usage.Storage / DataSource.Site.Usage.StoragePercentageUsed)} (${Math.round(DataSource.Site.Usage.StoragePercentageUsed * 100) + "%"} Used)`
+                    value: this.getSiteTemplate()
+                },
+                {
+                    name: "Group",
+                    label: this._props["Group"].label,
+                    description: this._props["Group"].description,
+                    type: Components.FormControlTypes.Readonly,
+                    value: DataSource.Web.AllProperties["GroupId"],
+                    onControlRendered: ctrl => {
+                        // Get the m365 group
+                        if (DataSource.Web.AllProperties["GroupId"]) {
+                            // Get the group information
+                            M365Groups.getGroupInfo([DataSource.Web.AllProperties["GroupId"]], group => {
+                                // Set the group name
+                                ctrl.setValue(group.mail);
+                                ctrl.setLabel(`${this._props["Group"].label} (${group.id})`)
+                            });
+                        } else {
+                            // Set the value
+                            ctrl.setValue("N/A");
+                        }
+                    }
                 },
                 {
                     name: "HubSite",
@@ -128,6 +118,13 @@ export class InfoTab extends Tab {
                     description: this._props["HubSiteConnected"].description,
                     type: Components.FormControlTypes.Readonly,
                     value: DataSource.Site.HubSiteId != "00000000-0000-0000-0000-000000000000" ? "Yes" : "No"
+                },
+                {
+                    name: "StorageUsed",
+                    label: this._props["StorageUsed"].label,
+                    description: this._props["StorageUsed"].description,
+                    type: Components.FormControlTypes.Readonly,
+                    value: getStorageUsed()
                 },
                 {
                     name: "AttestationDate",

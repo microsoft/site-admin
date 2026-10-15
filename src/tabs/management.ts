@@ -1,7 +1,8 @@
 import { Components } from "gd-sprest-bs";
-import { Tab } from "./base";
 import { IProp } from "../app";
 import { DataSource, IRequest, RequestTypes } from "../ds";
+import { Tab } from "./base";
+import { getStorageUsed } from "./common";
 
 /**
  * Management Tab
@@ -24,7 +25,7 @@ export class ManagementTab extends Tab<{
     ShareByEmailEnabled: boolean;
 }> {
     // Constructor
-    constructor(el: HTMLElement, props: { [key: string]: IProp; }, maxStorageSize: number, maxStorageDesc: string) {
+    constructor(el: HTMLElement, props: { [key: string]: IProp; }, disableStorageForSharePoint: boolean, disableStorageForTeams: boolean, maxStorageSize: number, maxStorageDesc: string) {
         super(el, props, "Site");
 
         // Set the current values
@@ -38,11 +39,11 @@ export class ManagementTab extends Tab<{
         }
 
         // Render the tab
-        this.render(maxStorageSize, maxStorageDesc);
+        this.render(disableStorageForSharePoint, disableStorageForTeams, maxStorageSize, maxStorageDesc);
     }
 
     // Renders the tab
-    private render(maxStorageSize: number = 0, maxStorageDesc: string = "") {
+    private render(disableStorageForSharePoint: boolean, disableStorageForTeams: boolean, maxStorageSize: number = 0, maxStorageDesc: string = "") {
         // Render the form
         Components.Form({
             el: this._el,
@@ -138,17 +139,38 @@ export class ManagementTab extends Tab<{
                 {
                     name: "IncreaseStorage",
                     label: this._props["IncreaseStorage"].label,
-                    description: this._props["IncreaseStorage"].description + ` The current usage is: ${DataSource.formatBytes(DataSource.Site.Usage.Storage)} of ${DataSource.formatBytes(DataSource.Site.Usage.Storage / DataSource.Site.Usage.StoragePercentageUsed)}`,
+                    description: this._props["IncreaseStorage"].description + " " + getStorageUsed(),
                     isDisabled: this._props["IncreaseStorage"].disabled,
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.IncreaseStorage,
                     onControlRendering: ctrl => {
-                        // See if the max threshold has been reached
-                        // 1 TB = 1024GB = 1024*1024MB = 1024*1024*1024KB = 1024*1024*1024*1024 = 1099511627776
-                        if (Math.round(DataSource.Site.Usage.Storage / DataSource.Site.Usage.StoragePercentageUsed) >= maxStorageSize * 1099511627776) {
-                            // Update the props
+                        // Ensure the percentage exists
+                        if (DataSource.Site.Usage.StoragePercentageUsed > 0) {
+                            // See if the max threshold has been reached
+                            // 1 TB = 1024GB = 1024*1024MB = 1024*1024*1024KB = 1024*1024*1024*1024 = 1099511627776
+                            if (Math.round(DataSource.Site.Usage.Storage / DataSource.Site.Usage.StoragePercentageUsed) >= maxStorageSize * 1099511627776) {
+                                // Update the props
+                                ctrl.isDisabled = true;
+                                ctrl.description = maxStorageDesc || ctrl.description;
+                            }
+
+                            // See if we are disabling the ability to increase storage based on the type of site
+                            if (DataSource.getSiteType() === "SharePoint" && disableStorageForSharePoint) {
+                                // Disable this property
+                                ctrl.isDisabled = true;
+
+                                // Set the description
+                                ctrl.description = `${this._props["IncreaseStorage"].description} (Increasing SharePoint sites has been disabled)`;
+                            } else if (DataSource.getSiteType().startsWith("Team") && disableStorageForTeams) {
+                                // Disable this property
+                                ctrl.isDisabled = true;
+
+                                // Set the description
+                                ctrl.description = `${this._props["IncreaseStorage"].description} (Increasing Teams sites has been disabled)`;
+                            }
+                        } else {
+                            // Disable this property
                             ctrl.isDisabled = true;
-                            ctrl.description = maxStorageDesc || ctrl.description;
                         }
 
                         // Return the control
