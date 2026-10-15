@@ -100,7 +100,7 @@ export class SearchAgents {
                     if (this._maxItemCount > 0 && lib.ItemCount > this._maxItemCount) { this._skippedLists.push({ title: lib.Title, webUrl: web.Url }); return; }
 
                     // Show a dialog
-                    this._elSubNav.children[0].textContent = `${siteText} - [Analyzing Library ${++ctrList} of ${libs.length}]: ${lib.Title}`;
+                    this._elSubNav.children[0].innerHTML = sanitizeString(`${siteText} - [Analyzing Library ${++ctrList} of ${libs.length}]: ${lib.Title}`);
 
                     // Analyze the library
                     return this.analyzeLibrary(web, lib);
