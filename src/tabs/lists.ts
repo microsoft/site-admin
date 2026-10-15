@@ -1,6 +1,7 @@
 import { Dashboard, Modal, LoadingDialog } from "dattatable";
 import { Components, Helper, SPTypes, Types, v2, Web } from "gd-sprest-bs";
 import { ExportCSV } from "../reports/exportCSV";
+import { sanitizeString } from "../reports/common";
 import { IAppProps } from "../app";
 import { DataSource } from "../ds";
 import { ReportTypes } from "./reports";
@@ -478,15 +479,11 @@ export class ListsTab {
                         title: "List Info",
                         onRenderCell: (el, col, item: IList) => {
                             // Render the info
-                            el.innerHTML = `<b>Name: </b>`
-                            let span = document.createElement("span");
-                            span.textContent = item.ListName;
-                            el.appendChild(span);
-                            el.innerHTML += `<br/>
+                            el.innerHTML = `<b>Name: </b><span>${sanitizeString(item.ListName)}</span>;
+                                <br/>
                                 <b>Type: </b>${item.ListTemplate}
                                 <br/>
-                                <b>Url: </b>${item.ListUrl}
-                            `;
+                                <b>Url: </b>${item.ListUrl}`;
                         }
                     },
                     {

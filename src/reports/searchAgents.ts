@@ -1,6 +1,7 @@
 import { Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
 import { Components, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
 import { DataSource } from "../ds";
+import { sanitizeString } from "./common";
 import { ExportCSV } from "./exportCSV";
 import { ISkippedList, SkippedListsDialog } from "./skippedListsDialog";
 
@@ -349,7 +350,7 @@ export class SearchAgents {
         Modal.show();
 
         // Update the status
-        this._elSubNav.children[0].textContent = `Searching Library: ${listName}`;
+        this._elSubNav.children[0].innerHTML = sanitizeString(`Searching Library: ${listName}`);
         this._elSubNav.children[1].innerHTML = "Getting the info for the web...";
 
         // Get the permissions
