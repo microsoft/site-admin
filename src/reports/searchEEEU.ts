@@ -574,7 +574,8 @@ export class SearchEEEU {
                             el.innerHTML = `
                                 <b>Name: </b>${item.Name}
                                 ${item.ListId ? `<br/><b>List: </b>${sanitizeString(item.ListName)}` : ""}
-                                <br/><b>Web: </b>${item.WebUrl}
+                                <br/>
+                                <b>Web: </b>${item.WebUrl}
                             `;
                         }
                     },
