@@ -144,8 +144,24 @@ export class ManagementTab extends Tab<{
                     type: Components.FormControlTypes.Switch,
                     value: this._currValues.IncreaseStorage,
                     onControlRendering: ctrl => {
+                        // See if this is a SharePoint site and we are disabling the ability to increase storage
+                        if (DataSource.getSiteType() === "SharePoint" && disableStorageForSharePoint) {
+                            // Disable this property
+                            ctrl.isDisabled = true;
+
+                            // Set the description
+                            ctrl.description = `${this._props["IncreaseStorage"].description} (Increasing SharePoint sites has been disabled)`;
+                        }
+                        // Else, see if this is a teams site and we are disabling the ability to increase storage
+                        else if (DataSource.getSiteType().startsWith("Team") && disableStorageForTeams) {
+                            // Disable this property
+                            ctrl.isDisabled = true;
+
+                            // Set the description
+                            ctrl.description = `${this._props["IncreaseStorage"].description} (Increasing Teams sites has been disabled)`;
+                        }
                         // Ensure the percentage exists
-                        if (DataSource.Site.Usage.StoragePercentageUsed > 0) {
+                        else if (DataSource.Site.Usage.StoragePercentageUsed > 0) {
                             // See if the max threshold has been reached
                             // 1 TB = 1024GB = 1024*1024MB = 1024*1024*1024KB = 1024*1024*1024*1024 = 1099511627776
                             if (Math.round(DataSource.Site.Usage.Storage / DataSource.Site.Usage.StoragePercentageUsed) >= maxStorageSize * 1099511627776) {
@@ -154,20 +170,6 @@ export class ManagementTab extends Tab<{
                                 ctrl.description = maxStorageDesc || ctrl.description;
                             }
 
-                            // See if we are disabling the ability to increase storage based on the type of site
-                            if (DataSource.getSiteType() === "SharePoint" && disableStorageForSharePoint) {
-                                // Disable this property
-                                ctrl.isDisabled = true;
-
-                                // Set the description
-                                ctrl.description = `${this._props["IncreaseStorage"].description} (Increasing SharePoint sites has been disabled)`;
-                            } else if (DataSource.getSiteType().startsWith("Team") && disableStorageForTeams) {
-                                // Disable this property
-                                ctrl.isDisabled = true;
-
-                                // Set the description
-                                ctrl.description = `${this._props["IncreaseStorage"].description} (Increasing Teams sites has been disabled)`;
-                            }
                         } else {
                             // Disable this property
                             ctrl.isDisabled = true;
