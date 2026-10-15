@@ -1,6 +1,7 @@
 import { Dashboard, Modal, LoadingDialog } from "dattatable";
 import { Components, Helper, SPTypes, Types, v2, Web } from "gd-sprest-bs";
 import { ExportCSV } from "../reports/exportCSV";
+import { sanitizeString } from "../reports/common";
 import { IAppProps } from "../app";
 import { DataSource } from "../ds";
 import { ReportTypes } from "./reports";
@@ -479,7 +480,7 @@ export class ListsTab {
                         onRenderCell: (el, col, item: IList) => {
                             // Render the info
                             el.innerHTML = `
-                                <b>Name: </b>${item.ListName}
+                                <b>Name: </b>${sanitizeString(item.ListName)}
                                 <br/>
                                 <b>Type: </b>${item.ListTemplate}
                                 <br/>

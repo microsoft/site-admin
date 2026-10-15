@@ -2,6 +2,7 @@ import { Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
 import { Components, ContextInfo, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
 import { DataSource } from "../ds";
 import Strings from "../strings";
+import { sanitizeString } from "./common";
 import { ExportCSV } from "./exportCSV";
 import { ISkippedList, SkippedListsDialog } from "./skippedListsDialog";
 
@@ -216,7 +217,7 @@ export class SearchEEEU {
                         if (this._maxItemCount > 0 && list.ItemCount > this._maxItemCount) { this._skippedLists.push({ title: list.Title, webUrl: web.Url }); return; }
 
                         // Show a dialog
-                        this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing List ${++ctrList} of ${lists.length}]: ${list.Title}`;
+                        this._elSubNav.children[0].innerHTML = sanitizeString(`${siteText} - [Analyzing List ${++ctrList} of ${lists.length}]: ${list.Title}`);
 
                         // Analyze the list
                         return this.analyzeList(web, list, searchLists);
@@ -572,7 +573,7 @@ export class SearchEEEU {
                             // Render the info
                             el.innerHTML = `
                                 <b>Name: </b>${item.Name}
-                                ${item.ListId ? `<br/><b>List: </b>${item.ListName}` : ""}
+                                ${item.ListId ? `<br/><b>List: </b>${sanitizeString(item.ListName)}` : ""}
                                 <br/>
                                 <b>Web: </b>${item.WebUrl}
                             `;
@@ -936,7 +937,7 @@ export class SearchEEEU {
         Modal.show();
 
         // Update the status
-        this._elSubNav.children[0].innerHTML = `Searching List: ${listName}`;
+        this._elSubNav.children[0].innerHTML = sanitizeString(`Searching List: ${listName}`);
         this._elSubNav.children[1].innerHTML = "Getting the info for the web...";
 
         // Get the permissions

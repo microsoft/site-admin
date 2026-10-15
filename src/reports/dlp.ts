@@ -3,6 +3,7 @@ import { Components, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
 import { DataSource } from "../ds";
 import { M365Groups } from "../m365Groups";
 import Strings from "../strings";
+import { sanitizeString } from "./common";
 import { ExportCSV } from "./exportCSV";
 import { ISkippedList, SkippedListsDialog } from "./skippedListsDialog";
 import { ViewPermissions } from "./viewPermissions";
@@ -86,7 +87,7 @@ export class DLP {
                 if (this._maxItemCount > 0 && lib.ItemCount > this._maxItemCount) { this._skippedLists.push({ title: lib.Title, webUrl }); return; }
 
                 // Update the dialog
-                this._elSubNav.children[0].innerHTML = `${siteText} [Analyzing Library ${++counter} of ${libraries.length}]: ${lib.Title}`;
+                this._elSubNav.children[0].innerHTML = sanitizeString(`${siteText} [Analyzing Library ${++counter} of ${libraries.length}]: ${lib.Title}`);
 
                 // Return a promise
                 return new Promise(resolve => {

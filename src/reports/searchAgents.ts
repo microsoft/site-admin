@@ -1,6 +1,7 @@
 import { Dashboard, Documents, LoadingDialog, Modal } from "dattatable";
 import { Components, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
 import { DataSource } from "../ds";
+import { sanitizeString } from "./common";
 import { ExportCSV } from "./exportCSV";
 import { ISkippedList, SkippedListsDialog } from "./skippedListsDialog";
 
@@ -99,7 +100,7 @@ export class SearchAgents {
                     if (this._maxItemCount > 0 && lib.ItemCount > this._maxItemCount) { this._skippedLists.push({ title: lib.Title, webUrl: web.Url }); return; }
 
                     // Show a dialog
-                    this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing Library ${++ctrList} of ${libs.length}]: ${lib.Title}`;
+                    this._elSubNav.children[0].innerHTML = sanitizeString(`${siteText} - [Analyzing Library ${++ctrList} of ${libs.length}]: ${lib.Title}`);
 
                     // Analyze the library
                     return this.analyzeLibrary(web, lib);
@@ -349,7 +350,7 @@ export class SearchAgents {
         Modal.show();
 
         // Update the status
-        this._elSubNav.children[0].innerHTML = `Searching Library: ${listName}`;
+        this._elSubNav.children[0].innerHTML = sanitizeString(`Searching Library: ${listName}`);
         this._elSubNav.children[1].innerHTML = "Getting the info for the web...";
 
         // Get the permissions

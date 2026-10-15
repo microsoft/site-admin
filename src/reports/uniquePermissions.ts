@@ -3,6 +3,7 @@ import { Components, Helper, SPTypes, Types, Web } from "gd-sprest-bs";
 import { cardList } from "gd-sprest-bs/build/icons/svgs/cardList";
 import { DataSource } from "../ds";
 import Strings from "../strings";
+import { sanitizeString } from "./common";
 import { ExportCSV } from "./exportCSV";
 import { ISkippedList, SkippedListsDialog } from "./skippedListsDialog";
 
@@ -415,7 +416,7 @@ export class UniquePermissions {
                         if (this._maxItemCount > 0 && list.ItemCount > this._maxItemCount) { this._skippedLists.push({ title: list.Title, webUrl: siteItem.text }); return; }
 
                         // Update the dialog
-                        this._elSubNav.children[0].innerHTML = `${siteText} - [Analyzing Library ${++ctrList} of ${lists.results.length}]: ${list.Title}`;
+                        this._elSubNav.children[0].innerHTML = sanitizeString(`${siteText} - [Analyzing Library ${++ctrList} of ${lists.results.length}]: ${list.Title}`);
 
                         // Analyze the list
                         return this.analyzeList(siteItem.text, list);
@@ -480,11 +481,8 @@ export class UniquePermissions {
         Modal.show();
 
         // Update the status
-        this._elSubNav.children[0].innerHTML = `Searching List: ${listName}`;
+        this._elSubNav.children[0].innerHTML = sanitizeString(`Analyzing Library: ${listName}`);
         this._elSubNav.children[1].innerHTML = "Getting the info for the web...";
-
-        // Update the dialog
-        this._elSubNav.children[0].innerHTML = `Analyzing Library: ${listName}`;
 
         // Get the list information
         Web(webUrl, { requestDigest: DataSource.SiteContext.FormDigestValue }).Lists(listName).query({

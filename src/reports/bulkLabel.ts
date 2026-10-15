@@ -2,6 +2,7 @@ import { Dashboard, LoadingDialog, Modal } from "dattatable";
 import { Components, ContextInfo, Helper, Types, Web, v2 } from "gd-sprest-bs";
 import { DataSource } from "../ds";
 import Strings from "../strings";
+import { sanitizeString } from "./common";
 import { ExportCSV } from "./exportCSV";
 import { ISensitivityLabelItem } from "./sensitivityLabels";
 
@@ -230,7 +231,7 @@ export class BulkLabel {
         });
 
         // Update the dialog
-        this._elSubNav.children[0].innerHTML = `Loading files from library: ${listName}`;
+        this._elSubNav.children[0].innerHTML = sanitizeString(`Loading files from library: ${listName}`);
 
         // Process the labels as we load the files
         let fileCounter = 0;
