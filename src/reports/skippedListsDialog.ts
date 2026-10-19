@@ -19,6 +19,7 @@ export class SkippedListsDialog {
     // Shows the dialog
     private showDialog(lists: ISkippedList[]) {
         // Initialize the form
+        CanvasForm.clear();
         CanvasForm.setHeader("Skipped Lists");
         CanvasForm.setSize(Components.OffcanvasSize.Medium2);
         CanvasForm.setType(Components.OffcanvasTypes.End);
