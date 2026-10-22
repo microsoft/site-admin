@@ -13,6 +13,7 @@ export interface IDLPItem {
     Author: string;
     Conditions: string[];
     FileExtension: string;
+    FileId: string;
     FileName: string;
     GeneralText: string;
     HasUniquePermissions: boolean;
@@ -39,6 +40,7 @@ const CSVFields = [
     "ListTitle",
     "FileName",
     "FileExtension",
+    "FileId",
     "GeneralText",
     "AppliedActionsText",
     "Conditions",
@@ -106,8 +108,8 @@ export class DLP {
                         listId: lib.Id,
                         webUrl,
                         query: {
-                            Expand: ["Author"],
-                            Select: ["Author/Title", "FileLeafRef", "FileRef", "File_x0020_Type", "Id"]
+                            Expand: ["Author", "File"],
+                            Select: ["Author/Title", "File/UniqueId", "FileLeafRef", "FileRef", "File_x0020_Type", "Id"]
                         },
                         onItem: item => {
                             let analyzeFile = true;
@@ -138,6 +140,7 @@ export class DLP {
                                             Author: item["Author"]?.Title,
                                             Conditions: result.GetDlpPolicyTip.MatchedConditionDescriptions.results,
                                             FileExtension: item["File_x0020_Type"],
+                                            FileId: item.File?.UniqueId,
                                             FileName: item["FileLeafRef"],
                                             GeneralText: result.GetDlpPolicyTip.GeneralText,
                                             HasUniquePermissions: result.HasUniqueRoleAssignments,
@@ -704,8 +707,8 @@ export class DLP {
             webUrl,
             listId: libId,
             query: {
-                Expand: ["Author"],
-                Select: ["Author/Title", "FileLeafRef", "FileRef", "File_x0020_Type", "Id"],
+                Expand: ["Author", "File"],
+                Select: ["Author/Title", "File/UniqueId", "FileLeafRef", "FileRef", "File_x0020_Type", "Id"],
             },
             onItem: item => {
                 // Create a batch request to get the dlp policy on this item
@@ -721,6 +724,7 @@ export class DLP {
                             Author: item["Author"]?.Title,
                             Conditions: result.GetDlpPolicyTip.MatchedConditionDescriptions.results,
                             FileExtension: item["File_x0020_Type"],
+                            FileId: item.File?.UniqueId,
                             FileName: item["FileLeafRef"],
                             GeneralText: result.GetDlpPolicyTip.GeneralText,
                             HasUniquePermissions: result.HasUniqueRoleAssignments,
