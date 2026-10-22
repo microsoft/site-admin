@@ -47,12 +47,12 @@ export class AccessTab {
         Modal.setHeader("Add User");
 
         // Determine the dropdown options based on the user's current permission
-        let items: Components.IDropdownItem[] = [{ text: "Owner", value: "Owner" }];
-        if (DataSource.IsAdmin) { items.push({ text: "Admin", value: "Admin" }); }
+        let items: Components.IDropdownItem[] = [{ text: "Owner", value: "Owner", isSelected: true }];
+        if (DataSource.IsAdmin) { items.unshift({ text: "Admin", value: "Admin" }); }
 
         // Determine the dropdown options for how we are sharing the access (M365 Group or Site Group)
         let shareItems: Components.IDropdownItem[] = [{ text: "Site Group", value: "Site Group" }];
-        if (siteGroupId) { shareItems.push({ text: "M365 Group", value: "M365 Group" }); }
+        if (siteGroupId) { shareItems.unshift({ text: "M365 Group", value: "M365 Group" }); }
 
         // Set the form
         let form = Components.Form({
@@ -62,18 +62,27 @@ export class AccessTab {
                     name: "permission",
                     type: Components.FormControlTypes.Dropdown,
                     label: "Permission",
+                    description: "Adds the user as an owner.",
                     required: true,
                     items,
                     onChange: (item) => {
                         // See if we are adding an owner
                         if (item.value === "Owner") {
+                            // Set the description
+                            form.getControl("permission").setDescription("Adds the user as an owner.");
+
                             // Show the share type
                             form.getControl("shareType").show();
                         }
-                        // Else, see if it's not associated with the admin group
-                        else if (adminGroupId == null) {
-                            // Hide the share type
-                            form.getControl("shareType").hide();
+                        else {
+                            // Set the description
+                            form.getControl("permission").setDescription("Adds the user as an admin.");
+
+                            // See if it's not associated with the admin group
+                            if (adminGroupId == null) {
+                                // Hide the share type
+                                form.getControl("shareType").hide();
+                            }
                         }
                     }
                 } as Components.IFormControlPropsDropdown,
@@ -81,9 +90,20 @@ export class AccessTab {
                     name: "shareType",
                     type: Components.FormControlTypes.Dropdown,
                     label: "Share Type",
-                    description: "Adds the user to either the site group or m365 group associated with the site.",
+                    description: `Adds the user to the ${siteGroupId ? "site" : "m365"} group associated with the site.`,
                     required: true,
-                    items: shareItems
+                    items: shareItems,
+                    onChange: (item) => {
+                        // See if we are adding an owner
+                        if (item.value === "Site Group") {
+                            // Set the description
+                            form.getControl("permission").setDescription("Adds the user to the site group associated with the site.");
+                        }
+                        else {
+                            // Set the description
+                            form.getControl("permission").setDescription("Adds the user to the m365 group associated with the site.");
+                        }
+                    }
                 } as Components.IFormControlPropsDropdown,
                 {
                     name: "user",
