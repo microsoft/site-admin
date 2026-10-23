@@ -394,7 +394,7 @@ export class SharingLinks {
         web.query({
             Expand: [
                 "ParentWeb", "RoleAssignments", "RoleAssignments/Groups", "RoleAssignments/Member",
-                "RoleAssignments/Member/Users", "RoleAssignments/RoleDefinitionBindings"
+                "RoleAssignments/RoleDefinitionBindings"
             ]
         }).execute(web => {
             // Update the loading dialog
