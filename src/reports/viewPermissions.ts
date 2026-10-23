@@ -94,7 +94,7 @@ export class ViewPermissions {
             // Else, see if it's one of the custom groups
             else {
                 // Parse the users
-                let users: Types.SP.User[] = role.Member["Users"] ? role.Member["Users"].results : [];
+                let users: Types.SP.User[] = role.Member["Users"]?.results || [];
                 for (let j = 0; j < users.length; j++) {
                     let user = users[j];
 
