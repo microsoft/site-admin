@@ -152,7 +152,7 @@ export class Tabs {
         }
         if (!(auditOnly || loadOneDrive) && !this._appProps.hideTabs.webs) {
             items.push({
-                tabName: this._appProps.tabNames?.webs || DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "Top Site" : "Sub Site",
+                tabName: this._appProps.tabNames?.webs || (DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "Top Site" : "Sub Site"),
                 onRenderTab: el => {
                     // Set the tab reference
                     this._elWebTab = el;
@@ -222,7 +222,7 @@ export class Tabs {
                 // See if the tab exists
                 if (this._tabWeb) {
                     // Update the tab name
-                    this._elWebTab.innerHTML = this._appProps.tabNames?.webs || DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "Top Site" : "Sub Site";
+                    this._elWebTab.innerHTML = this._appProps.tabNames?.webs || (DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "Top Site" : "Sub Site");
 
                     // Refresh the tabs
                     this._tabWeb ? this._tabWeb.refresh() : null;
