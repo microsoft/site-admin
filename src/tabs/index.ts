@@ -19,6 +19,7 @@ import { WebTab } from "./web";
  * Tabs
  */
 export class Tabs {
+    private _appProps: IAppProps = null;
     private _el: HTMLElement = null;
     private _elWebTab: HTMLElement = null;
     private _loadOneDrive: boolean = false;
@@ -36,6 +37,7 @@ export class Tabs {
 
     // Constructor
     constructor(el: HTMLElement, appProps: IAppProps, loadOneDrive: boolean) {
+        this._appProps = appProps;
         this._el = el;
         this._loadOneDrive = loadOneDrive;
         this._webRequests = [];
@@ -47,7 +49,7 @@ export class Tabs {
         }
 
         // Render the tabs
-        this.render(appProps, loadOneDrive);
+        this.render(loadOneDrive);
     }
 
     // Event when the webs are loaded
@@ -60,108 +62,108 @@ export class Tabs {
     }
 
     // Renders the tabs
-    private render(appProps: IAppProps, loadOneDrive: boolean) {
-        let auditOnly = !DataSource.IsAdmin || appProps.auditOnly;
+    private render(loadOneDrive: boolean) {
+        let auditOnly = !DataSource.IsAdmin || this._appProps.auditOnly;
 
         // Show the info tab by default always
         let items: Components.IListGroupItem[] = loadOneDrive ? [] : [{
-            tabName: "Info",
+            tabName: this._appProps.tabNames?.info || "Info",
             isActive: true,
             onRender: (el) => {
                 // Render the tab
-                new InfoTab(el, appProps.siteAttestation, appProps.siteProps);
+                new InfoTab(el, this._appProps.siteAttestation, this._appProps.siteProps);
             }
         }];
 
         // Add the tabs
-        if (!loadOneDrive && !appProps.hideTabs.access) {
+        if (!loadOneDrive && !this._appProps.hideTabs.access) {
             items.push({
-                tabName: "Admins/Owners",
+                tabName: this._appProps.tabNames?.access || "Admins/Owners",
                 onRender: (el) => {
                     // Render the tab
-                    this._tabAccess = new AccessTab(el, appProps);
+                    this._tabAccess = new AccessTab(el, this._appProps);
                 }
             });
         }
-        if (!(auditOnly || loadOneDrive) && !appProps.hideTabs.search && !isEmpty(appProps.searchProps) && appProps.searchProps.key) {
+        if (!(auditOnly || loadOneDrive) && !this._appProps.hideTabs.search && !isEmpty(this._appProps.searchProps) && this._appProps.searchProps.key) {
             items.push({
-                tabName: appProps.searchProps.tabName || "Search Property",
+                tabName: this._appProps.searchProps.tabName || "Search Property",
                 onRender: (el) => {
                     // Render the tab
-                    this._tabSearch = new SearchPropTab(el, appProps.searchProps);
+                    this._tabSearch = new SearchPropTab(el, this._appProps.searchProps);
                 }
             });
         }
-        if (!(auditOnly || loadOneDrive) && !appProps.hideTabs.management) {
+        if (!(auditOnly || loadOneDrive) && !this._appProps.hideTabs.management) {
             items.push({
-                tabName: "Management",
+                tabName: this._appProps.tabNames?.management || "Management",
                 onRender: (el) => {
                     // Render the tab
-                    this._tabManagement = new ManagementTab(el, appProps.siteProps, appProps.disableStorageForSharePoint, appProps.disableStorageForTeams, appProps.maxStorageSize, appProps.maxStorageDesc);
+                    this._tabManagement = new ManagementTab(el, this._appProps.siteProps, this._appProps.disableStorageForSharePoint, this._appProps.disableStorageForTeams, this._appProps.maxStorageSize, this._appProps.maxStorageDesc);
                 }
             });
         }
-        if (!(auditOnly || loadOneDrive) && !appProps.hideTabs.features) {
+        if (!(auditOnly || loadOneDrive) && !this._appProps.hideTabs.features) {
             items.push({
-                tabName: "Features",
+                tabName: this._appProps.tabNames?.features || "Features",
                 onRender: (el) => {
                     // Render the tab
-                    this._tabFeatures = new FeaturesTab(el, appProps.siteProps);
+                    this._tabFeatures = new FeaturesTab(el, this._appProps.siteProps);
                 }
             });
         }
-        if (!(auditOnly || loadOneDrive) && !appProps.hideTabs.appPermissions) {
+        if (!(auditOnly || loadOneDrive) && !this._appProps.hideTabs.appPermissions) {
             items.push({
-                tabName: "App Permissions",
+                tabName: this._appProps.tabNames?.appPermissions || "App Permissions",
                 onRender: (el) => {
                     // Render the tab
                     this._tabAppPermissions = new AppPermissionsTab(el);
                 }
             });
         }
-        if (DataSource.WebOnly || (!loadOneDrive && !appProps.hideTabs.lists)) {
+        if (DataSource.WebOnly || (!loadOneDrive && !this._appProps.hideTabs.lists)) {
             items.push({
-                tabName: "Lists/Libraries",
+                tabName: this._appProps.tabNames?.lists || "Lists/Libraries",
                 onRender: (el) => {
                     // Render the tab
-                    this._tabLists = new ListsTab(el, appProps);
+                    this._tabLists = new ListsTab(el, this._appProps);
                 }
             });
         }
-        if (loadOneDrive || !appProps.hideTabs.auditTools || DataSource.WebOnly) {
+        if (loadOneDrive || !this._appProps.hideTabs.auditTools || DataSource.WebOnly) {
             items.push({
                 isActive: loadOneDrive,
-                tabName: "Audit Tools",
+                tabName: this._appProps.tabNames?.auditTools || "Audit Tools",
                 onRender: (el) => {
                     // Render the tab
-                    this._tabReports = new ReportsTab(el, appProps, loadOneDrive);
+                    this._tabReports = new ReportsTab(el, this._appProps, loadOneDrive);
                 }
             });
         }
-        if (loadOneDrive || !appProps.hideTabs.siteAudit || DataSource.WebOnly) {
+        if (loadOneDrive || !this._appProps.hideTabs.siteAudit || DataSource.WebOnly) {
             items.push({
                 isActive: loadOneDrive,
-                tabName: "Auditing",
+                tabName: this._appProps.tabNames?.siteAudit || "Auditing",
                 onRender: (el) => {
                     // Render the tab
-                    this._tabSiteAudit = new SiteAudit(el, appProps);
+                    this._tabSiteAudit = new SiteAudit(el, this._appProps);
                 }
             });
         }
-        if (!(auditOnly || loadOneDrive) && !appProps.hideTabs.webs) {
+        if (!(auditOnly || loadOneDrive) && !this._appProps.hideTabs.webs) {
             items.push({
-                tabName: DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "Top Site" : "Sub Site",
+                tabName: this._appProps.tabNames?.webs || DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "Top Site" : "Sub Site",
                 onRenderTab: el => {
                     // Set the tab reference
                     this._elWebTab = el;
                 },
                 onRender: (el) => {
                     // Render the tab
-                    this._tabWeb = new WebTab(el, appProps.webProps);
+                    this._tabWeb = new WebTab(el, this._appProps.webProps);
                 }
             });
         }
-        if (!(auditOnly || loadOneDrive) && !(appProps.hideTabs.features && appProps.hideTabs.management && appProps.hideTabs.webs)) {
+        if (!(auditOnly || loadOneDrive) && !(this._appProps.hideTabs.features && this._appProps.hideTabs.management && this._appProps.hideTabs.webs)) {
             // Add the changes
             items.push({
                 tabName: "Changes",
@@ -220,7 +222,7 @@ export class Tabs {
                 // See if the tab exists
                 if (this._tabWeb) {
                     // Update the tab name
-                    this._elWebTab.innerHTML = DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "Top Site" : "Sub Site";
+                    this._elWebTab.innerHTML = this._appProps.tabNames?.webs || DataSource.Site.RootWeb.Id == DataSource.Web.Id ? "Top Site" : "Sub Site";
 
                     // Refresh the tabs
                     this._tabWeb ? this._tabWeb.refresh() : null;

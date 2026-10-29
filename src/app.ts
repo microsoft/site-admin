@@ -67,6 +67,17 @@ export interface IAppProps {
     siteAttestation?: boolean;
     siteAttestationText?: string;
     siteProps: { [key: string]: IProp; }
+    tabNames?: {
+        access?: string;
+        appPermissions?: string;
+        auditTools?: string;
+        features?: string;
+        info?: string;
+        lists?: string;
+        management?: string;
+        siteAudit?: string;
+        webs?: string;
+    }
     title?: string;
     webProps: { [key: string]: IProp; }
 }
