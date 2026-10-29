@@ -190,6 +190,15 @@ export interface ISiteAdminWebPartProps {
   SitePropTemplateNameLabel: string;
   SitePropTitleDescription: string;
   SitePropTitleLabel: string;
+  TabNameAccess: string;
+  TabNameAppPermissions: string;
+  TabNameAuditTools: string;
+  TabNameFeatures: string;
+  TabNameInfo: string;
+  TabNameLists: string;
+  TabNameManagement: string;
+  TabNameSiteAudit: string;
+  TabNameWebs: string;
   WebPropCommentsOnSitePagesDisabled: boolean;
   WebPropCommentsOnSitePagesDisabledDescription: string;
   WebPropCommentsOnSitePagesDisabledLabel: string;
@@ -305,6 +314,17 @@ interface IAppProps {
       disabled: boolean;
       label: string;
     }
+  }
+  tabNames?: {
+    access?: string;
+    appPermissions?: string;
+    auditTools?: string;
+    features?: string;
+    info?: string;
+    lists?: string;
+    management?: string;
+    siteAudit?: string;
+    webs?: string;
   }
   title?: string;
   webProps: {
@@ -574,65 +594,6 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
               ]
             },
             {
-              groupName: "Show/Hide Tabs",
-              groupFields: [
-                PropertyPaneToggle("HideAccessTab", {
-                  label: "Hide Access Tab",
-                  checked: this.properties.HideAccessTab,
-                  onText: "The 'Access' tab will be hidden.",
-                  offText: "The 'Access' tab will be visible"
-                }),
-                PropertyPaneToggle("HideAppPermissionsTab", {
-                  label: "Hide App Permissions Tab",
-                  checked: this.properties.HideAppPermissionsTab,
-                  onText: "The 'App Permissions' tab will be hidden.",
-                  offText: "The 'App Permissions' tab will be visible"
-                }),
-                PropertyPaneToggle("HideAuditToolsTab", {
-                  label: "Hide Audit Tools Tab",
-                  checked: this.properties.HideAuditToolsTab,
-                  onText: "The 'Audit Tools' tab will be hidden.",
-                  offText: "The 'Audit Tools' tab will be visible"
-                }),
-                PropertyPaneToggle("HideFeaturesTab", {
-                  label: "Hide Features Tab",
-                  checked: this.properties.HideFeaturesTab,
-                  onText: "The 'Features' tab will be hidden.",
-                  offText: "The 'Features' tab will be visible"
-                }),
-                PropertyPaneToggle("HideListsTab", {
-                  label: "Hide Lists/Libraries Tab",
-                  checked: this.properties.HideListsTab,
-                  onText: "The 'Lists/Libraries' tab will be hidden.",
-                  offText: "The 'Lists/Libraries' tab will be visible"
-                }),
-                PropertyPaneToggle("HideManagementTab", {
-                  label: "Hide Management Tab",
-                  checked: this.properties.HideManagementTab,
-                  onText: "The 'Management' tab will be hidden.",
-                  offText: "The 'Management' tab will be visible"
-                }),
-                PropertyPaneToggle("HideSearchTab", {
-                  label: "Hide Search Tab",
-                  checked: this.properties.HideSearchTab,
-                  onText: "The 'Search' tab will be hidden.",
-                  offText: "The 'Search' tab will be visible"
-                }),
-                PropertyPaneToggle("HideSiteAuditTab", {
-                  label: "Hide Site Audit Tab",
-                  checked: this.properties.HideSiteAuditTab,
-                  onText: "The 'Site Audit' tab will be hidden.",
-                  offText: "The 'Site Audit' tab will be visible"
-                }),
-                PropertyPaneToggle("HideWebsTab", {
-                  label: "Hide Webs Tab",
-                  checked: this.properties.HideWebsTab,
-                  onText: "The 'Webs' tab will be hidden.",
-                  offText: "The 'Webs' tab will be visible"
-                }),
-              ]
-            },
-            {
               groupName: "Access Tab",
               groupFields: [
                 PropertyPaneTextField("AccessTabRestrictAdminRemoval", {
@@ -813,6 +774,119 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   description: "A CSV formatted string containing the values for the search property. If not set, a textbox will be displayed for the user to enter the value.",
                   value: this.properties.WebPropSearchPropertyValues
                 }),
+              ]
+            }
+          ]
+        },
+        {
+          groups: [
+            {
+              groupName: "Show/Hide Tabs",
+              groupFields: [
+                PropertyPaneToggle("HideAccessTab", {
+                  label: "Hide Access Tab",
+                  checked: this.properties.HideAccessTab,
+                  onText: "The 'Access' tab will be hidden.",
+                  offText: "The 'Access' tab will be visible"
+                }),
+                PropertyPaneToggle("HideAppPermissionsTab", {
+                  label: "Hide App Permissions Tab",
+                  checked: this.properties.HideAppPermissionsTab,
+                  onText: "The 'App Permissions' tab will be hidden.",
+                  offText: "The 'App Permissions' tab will be visible"
+                }),
+                PropertyPaneToggle("HideAuditToolsTab", {
+                  label: "Hide Audit Tools Tab",
+                  checked: this.properties.HideAuditToolsTab,
+                  onText: "The 'Audit Tools' tab will be hidden.",
+                  offText: "The 'Audit Tools' tab will be visible"
+                }),
+                PropertyPaneToggle("HideFeaturesTab", {
+                  label: "Hide Features Tab",
+                  checked: this.properties.HideFeaturesTab,
+                  onText: "The 'Features' tab will be hidden.",
+                  offText: "The 'Features' tab will be visible"
+                }),
+                PropertyPaneToggle("HideListsTab", {
+                  label: "Hide Lists/Libraries Tab",
+                  checked: this.properties.HideListsTab,
+                  onText: "The 'Lists/Libraries' tab will be hidden.",
+                  offText: "The 'Lists/Libraries' tab will be visible"
+                }),
+                PropertyPaneToggle("HideManagementTab", {
+                  label: "Hide Management Tab",
+                  checked: this.properties.HideManagementTab,
+                  onText: "The 'Management' tab will be hidden.",
+                  offText: "The 'Management' tab will be visible"
+                }),
+                PropertyPaneToggle("HideSearchTab", {
+                  label: "Hide Search Tab",
+                  checked: this.properties.HideSearchTab,
+                  onText: "The 'Search' tab will be hidden.",
+                  offText: "The 'Search' tab will be visible"
+                }),
+                PropertyPaneToggle("HideSiteAuditTab", {
+                  label: "Hide Site Audit Tab",
+                  checked: this.properties.HideSiteAuditTab,
+                  onText: "The 'Site Audit' tab will be hidden.",
+                  offText: "The 'Site Audit' tab will be visible"
+                }),
+                PropertyPaneToggle("HideWebsTab", {
+                  label: "Hide Webs Tab",
+                  checked: this.properties.HideWebsTab,
+                  onText: "The 'Webs' tab will be hidden.",
+                  offText: "The 'Webs' tab will be visible"
+                })
+              ]
+            },
+            {
+              groupName: "Tab Names",
+              groupFields: [
+                PropertyPaneTextField("TabNameAccess", {
+                  label: "Access Tab",
+                  description: "Enter the name to use for the 'Access' tab",
+                  value: this.properties.TabNameAccess
+                }),
+                PropertyPaneTextField("TabNameAppPermissions", {
+                  label: "App Permissions Tab",
+                  description: "Enter the name to use for the 'App Permissions' tab",
+                  value: this.properties.TabNameAppPermissions
+                }),
+                PropertyPaneTextField("TabNameAuditTools", {
+                  label: "Audit Tools Tab",
+                  description: "Enter the name to use for the 'Audit Tools' tab",
+                  value: this.properties.TabNameAuditTools
+                }),
+                PropertyPaneTextField("TabNameFeatures", {
+                  label: "Features Tab",
+                  description: "Enter the name to use for the 'Features' tab",
+                  value: this.properties.TabNameFeatures
+                }),
+                PropertyPaneTextField("TabNameInfo", {
+                  label: "Info Tab",
+                  description: "Enter the name to use for the 'Info' tab",
+                  value: this.properties.TabNameInfo
+                }),
+                PropertyPaneTextField("TabNameLists", {
+                  label: "Lists/Libraries Tab",
+                  description: "Enter the name to use for the 'Lists/Libraries' tab",
+                  value: this.properties.TabNameLists
+                }),
+                PropertyPaneTextField("TabNameManagement", {
+                  label: "Management Tab",
+                  description: "Enter the name to use for the 'Management' tab",
+                  value: this.properties.TabNameManagement
+                }),
+                PropertyPaneTextField("TabNameSiteAudit", {
+                  label: "Site Audit Tab",
+                  description: "Enter the name to use for the 'Site Audit' tab",
+                  value: this.properties.TabNameSiteAudit
+                }),
+                PropertyPaneTextField("TabNameWebs", {
+                  label: "Webs Tab",
+                  description: "Enter the name to use for the 'Webs' tab",
+                  value: this.properties.TabNameWebs
+                })
               ]
             }
           ]
@@ -1193,6 +1267,17 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       siteAttestation: this.properties.SiteAttestation,
       siteAttestationText: this.properties.SiteAttestationText,
       siteProps,
+      tabNames: {
+        access: this.properties.TabNameAccess,
+        appPermissions: this.properties.TabNameAppPermissions,
+        auditTools: this.properties.TabNameAuditTools,
+        features: this.properties.TabNameFeatures,
+        info: this.properties.TabNameInfo,
+        lists: this.properties.TabNameLists,
+        management: this.properties.TabNameManagement,
+        siteAudit: this.properties.TabNameSiteAudit,
+        webs: this.properties.TabNameWebs
+      },
       title: this.properties.AppTitle,
       webProps
     };
