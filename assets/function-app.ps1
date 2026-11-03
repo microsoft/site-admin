@@ -48,9 +48,9 @@ function IsSiteCollectionAdmin {
 
     # Get the site admins
     $SiteAdminstrators = Get-PnPSiteCollectionAdmin;
-    foreach($Admin in $SiteAdminstrators) {
+    foreach ($Admin in $SiteAdminstrators) {
         # Check if this is the user
-        if($Admin.LoginName -eq $UserEmail -or $Admin.Email -eq $UserEmail) {
+        if ($Admin.LoginName -eq $UserEmail -or $Admin.Email -eq $UserEmail) {
             # Set the flag
             $IsSiteAdmin = $true;
             break;
@@ -60,10 +60,10 @@ function IsSiteCollectionAdmin {
         if ($Admin.PrincipalType -eq 'SecurityGroup') {
             #Get Members of the Group
             $groupMembers = Get-PnPAzureADGroupMember -Identity $Admin.Title -ErrorAction SilentlyContinue;
-            if($groupMembers) {
-                foreach($member in $groupMembers) {
+            if ($groupMembers) {
+                foreach ($member in $groupMembers) {
                     # Check if the user is a member
-                    if($member.UserPrincipalName -eq $UserEmail -or $member.Mail -eq $UserEmail) {
+                    if ($member.UserPrincipalName -eq $UserEmail -or $member.Mail -eq $UserEmail) {
                         $IsSiteAdmin = $true;
                         break;
                     }
@@ -71,7 +71,7 @@ function IsSiteCollectionAdmin {
             }
 
             # Break from the loop if the flag is set
-            if($IsSiteAdmin) { break; }
+            if ($IsSiteAdmin) { break; }
         }
     }
 
@@ -357,8 +357,7 @@ if ($item -ne $null) {
                     # Log
                     Write-Host "Increasing the storage size to 25TB...";
 
-                    # Set the max and warning value (80%)
-                    # Value in MB
+                    # Reference for storage size values in MB and (Warning Level in MB)
                     # 10GB = 10 * 1024        = 10240    (8192)
                     # 25GB = 25 * 1024        = 25600    (20480)
                     # 50GB = 50 * 1024        = 51200    (40960)
@@ -371,10 +370,83 @@ if ($item -ne $null) {
                     # 15TB = 15 * 1024 * 1024 = 15728640 (12582912)
                     # 20TB = 20 * 1024 * 1024 = 20971520 (16777216)
                     # 25TB = 25 * 1024 * 1024 = 26214400 (20971520)
-                    Set-PnPSite -Identity $siteUrl -StorageMaximumLevel 26214400 -StorageWarningLevel 20971520;
 
-                    # Set the output
-                    $output = "The site storage size has increased to 25TB.";
+                    # Get the current storage values
+                    $currentStorage = (Get-PnPTenantSite -Identity $siteUrl).StorageQuota;
+                    Write-Host "Current storage maximum level: $($currentStorage)";
+
+                    # Determine the next storage value
+                    $newStorage = 0;
+                    $newWarning = 0;
+                    if ($currentStorage -lt 10240) {
+                        $newStorage = 10240;
+                        $newWarning = 8192;
+                        $output = "The site storage size has increased to 10GB."
+                    }
+                    elseif ($currentStorage -lt 25600) {
+                        $newStorage = 25600;
+                        $newWarning = 20480;
+                        $output = "The site storage size has increased to 25GB."
+                    }
+                    elseif ($currentStorage -lt 51200) {
+                        $newStorage = 51200;
+                        $newWarning = 40960;
+                        $output = "The site storage size has increased to 50GB."
+                    }
+                    elseif ($currentStorage -lt 102400) {
+                        $newStorage = 102400;
+                        $newWarning = 81920;
+                        $output = "The site storage size has increased to 100GB."
+                    }
+                    elseif ($currentStorage -lt 256000) {
+                        $newStorage = 256000;
+                        $newWarning = 204800;
+                        $output = "The site storage size has increased to 250GB."
+                    }
+                    elseif ($currentStorage -lt 512000) {
+                        $newStorage = 512000;
+                        $newWarning = 409600;
+                        $output = "The site storage size has increased to 500GB."
+                    }
+                    elseif ($currentStorage -lt 1048576) {
+                        $newStorage = 1048576;
+                        $newWarning = 838860;
+                        $output = "The site storage size has increased to 1TB."
+                    }
+                    elseif ($currentStorage -lt 5242880) {
+                        $newStorage = 5242880;
+                        $newWarning = 4194304;
+                        $output = "The site storage size has increased to 5TB."
+                    }
+                    elseif ($currentStorage -lt 10485760) {
+                        $newStorage = 10485760;
+                        $newWarning = 8388608;
+                        $output = "The site storage size has increased to 10TB."
+                    }
+                    elseif ($currentStorage -lt 15728640) {
+                        $newStorage = 15728640;
+                        $newWarning = 12582912;
+                        $output = "The site storage size has increased to 15TB."
+                    }
+                    elseif ($currentStorage -lt 20971520) {
+                        $newStorage = 20971520;
+                        $newWarning = 16777216;
+                        $output = "The site storage size has increased to 20TB."
+                    }
+                    elseif ($currentStorage -lt 26214400) {
+                        $newStorage = 26214400;
+                        $newWarning = 20971520;
+                        $output = "The site storage size has increased to 25TB."
+                    }
+
+                    # See if we are setting a new storage value
+                    if ($newStorage -gt 0) {
+                        # Set the max and warning value (80%)
+                        Set-PnPSite -Identity $siteUrl -StorageMaximumLevel $newStorage -StorageWarningLevel $newWarning;
+                    } else {
+                        # Set the output message
+                        $output = "The site storage was not changed.";
+                    }
                 }
             }
             "Lock State" {
