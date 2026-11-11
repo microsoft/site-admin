@@ -389,15 +389,20 @@ export class DataSource {
                     }
                 }).then(resp => {
                     // Clear the sites
-                    this._siteItems = [];
+                    this._siteItems = [{
+                        text: DataSource.Web.Url,
+                        value: DataSource.Web.Id
+                    }];
 
                     // Parse the results
                     resp.results.forEach(result => {
-                        // Add the item
-                        this._siteItems.push({
-                            text: result.Path.substring(location.origin.length),
-                            value: result.IdentityWebId
-                        });
+                        // Add the item if it's not the root web
+                        if (DataSource.Web.Id != result.IdentityWebId) {
+                            this._siteItems.push({
+                                text: result.Path.substring(location.origin.length),
+                                value: result.IdentityWebId
+                            });
+                        }
                     });
 
                     // Sort the webs

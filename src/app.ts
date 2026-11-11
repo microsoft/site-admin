@@ -276,17 +276,11 @@ export class App {
                                     } else {
                                         // Load the sub-webs
                                         DataSource.getAllWebs(DataSource.Site.Url).then(() => {
-                                            // Ensure sub-webs were loaded
-                                            if (DataSource.SiteItems.length > 0) {
-                                                // Update the tabs
-                                                tabs.onWebsLoaded(DataSource.SiteItems);
+                                            // Update the tabs
+                                            tabs.onWebsLoaded(DataSource.SiteItems);
 
-                                                // Update the control
-                                                ctrl.dropdown.setItems(DataSource.SiteItems);
-                                            } else {
-                                                // Update the control
-                                                ctrl.dropdown.setItems([{ text: DataSource.Web.ServerRelativeUrl, value: DataSource.Web.Id }]);
-                                            }
+                                            // Update the control
+                                            ctrl.dropdown.setItems(DataSource.SiteItems);
                                         });
                                     }
                                 }
