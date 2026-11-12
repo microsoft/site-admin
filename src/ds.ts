@@ -377,38 +377,66 @@ export class DataSource {
                     });
                 }).then(resolve);
             }, () => {
-                // Try to get the webs using search
-                Search.postQuery<{ Path: string; IdentityWebId: string; }>({
-                    query: {
-                        Querytext: "path: " + url + " contentclass=sts_site contentclass=sts_web",
-                        SelectProperties: {
-                            results: [
-                                "Path", "IdentityWebId"
-                            ]
-                        }
-                    }
-                }).then(resp => {
-                    // Parse the results
-                    resp.results.forEach(result => {
-                        // Skip this item if we already have it in the list
-                        if (this._siteItems.find(item => { return item.value == result.IdentityWebId; })) { return; }
+                // Get the web infos to populate the site items
+                Web(url, { requestDigest: this.SiteContext.FormDigestValue }).query({
+                    Expand: ["WebInfos"],
+                    Select: ["WebInfos/Id", "WebInfos/ServerRelativeUrl", "WebInfos/Title"]
+                }).execute(resp => {
+                    // Parse the webs
+                    Helper.Executor(resp.Webs.results, web => {
+                        // Return a promise
+                        return new Promise(resolve => {
+                            // Get the property for the web
+                            Web(web.ServerRelativeUrl).query({ Select: ["HasUniqueRoleAssignments"] }).execute(result => {
+                                // Set the property
+                                web.HasUniqueRoleAssignments = result.HasUniqueRoleAssignments;
 
-                        // Add the item
-                        this._siteItems.push({
-                            text: result.Path.substring(location.origin.length),
-                            value: result.IdentityWebId
+                                // Append the item
+                                this._siteItems.push({
+                                    data: web,
+                                    text: web.ServerRelativeUrl,
+                                    value: web.Id
+                                });
+
+                                // Get the sub sites
+                                this.getAllWebs(web.ServerRelativeUrl).then(resolve, resolve);
+                            }, resolve);
                         });
-                    });
+                    }).then(resolve);
+                }, () => {
+                    // Try to get the webs using search
+                    Search.postQuery<{ Path: string; IdentityWebId: string; }>({
+                        query: {
+                            Querytext: "path: " + url + " contentclass=sts_site contentclass=sts_web",
+                            SelectProperties: {
+                                results: [
+                                    "Path", "IdentityWebId"
+                                ]
+                            }
+                        }
+                    }).then(resp => {
+                        // Parse the results
+                        resp.results.forEach(result => {
+                            // Skip this item if we already have it in the list
+                            if (this._siteItems.find(item => { return item.value == result.IdentityWebId; })) { return; }
 
-                    // Sort the webs
-                    this._siteItems = this._siteItems.sort((a, b) => {
-                        if (a.text < b.text) { return -1; }
-                        if (a.text > b.text) { return 1; }
-                        return 0;
-                    });
+                            // Add the item
+                            this._siteItems.push({
+                                text: result.Path.substring(location.origin.length),
+                                value: result.IdentityWebId
+                            });
+                        });
 
-                    // Resolve the request
-                    resolve();
+                        // Sort the webs
+                        this._siteItems = this._siteItems.sort((a, b) => {
+                            if (a.text < b.text) { return -1; }
+                            if (a.text > b.text) { return 1; }
+                            return 0;
+                        });
+
+                        // Resolve the request
+                        resolve();
+                    });
                 });
             });
         });
