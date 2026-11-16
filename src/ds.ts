@@ -809,10 +809,10 @@ export class DataSource {
 
                         // Parse the site admins
                         items.results.forEach(item => {
-                            // Ensure the email exists
-                            if (item["EMail"]) {
+                            // Ensure the login name exists
+                            if (item["LoginName"]) {
                                 // Get the user
-                                web.SiteUsers().getByEmail(item["EMail"]).batch(item => {
+                                web.SiteUsers().getByLoginName(item["LoginName"]).batch(item => {
                                     // Add the user information
                                     users.push({
                                         email: item.Email,
