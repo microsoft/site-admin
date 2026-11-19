@@ -51,7 +51,8 @@ export class AccessTab {
         if (DataSource.IsAdmin) { items.unshift({ text: "Admin", value: "Admin" }); }
 
         // Determine the dropdown options for how we are sharing the access (M365 Group or Site Group)
-        let shareItems: Components.IDropdownItem[] = this._appProps.access.restrictTeamsM365 ? [] : [{ text: "Site Group", value: "Site Group" }];
+        let isTeams = DataSource.getSiteType().startsWith("Team");
+        let shareItems: Components.IDropdownItem[] = isTeams && this._appProps.access.restrictTeamsM365 ? [] : [{ text: "Site Group", value: "Site Group" }];
         if (siteGroupId) { shareItems.unshift({ text: "M365 Group", value: "M365 Group" }); }
 
         // Set the form
