@@ -51,7 +51,8 @@ export class AccessTab {
         if (DataSource.IsAdmin) { items.unshift({ text: "Admin", value: "Admin" }); }
 
         // Determine the dropdown options for how we are sharing the access (M365 Group or Site Group)
-        let shareItems: Components.IDropdownItem[] = [{ text: "Site Group", value: "Site Group" }];
+        let isTeams = DataSource.getSiteType().startsWith("Team");
+        let shareItems: Components.IDropdownItem[] = isTeams && this._appProps.access.restrictTeamsM365 ? [] : [{ text: "Site Group", value: "Site Group" }];
         if (siteGroupId) { shareItems.unshift({ text: "M365 Group", value: "M365 Group" }); }
 
         // Set the form
@@ -253,7 +254,7 @@ export class AccessTab {
         if (!DataSource.IsAdmin && item.permission === "Admin") { return false; }
 
         // See if there are restricted accounts
-        let restrictedAccounts = ((item.permission === "Admin" ? this._appProps.restrictRemovalAdminAccounts : this._appProps.restrictRemovalOwnerAccounts) || "").split(",").map(account => account.trim().toLowerCase());
+        let restrictedAccounts = ((item.permission === "Admin" ? this._appProps.access.restrictRemovalAdminAccounts : this._appProps.access.restrictRemovalOwnerAccounts) || "").split(",").map(account => account.trim().toLowerCase());
         if (restrictedAccounts.indexOf(item.title.toLowerCase()) > -1) { return false; }
 
         // Return true

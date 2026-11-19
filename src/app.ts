@@ -18,6 +18,11 @@ export interface IProp {
     label: string;
 }
 export interface IAppProps {
+    access?: {
+        restrictRemovalAdminAccounts?: string;
+        restrictRemovalOwnerAccounts?: string;
+        restrictTeamsM365?: boolean;
+    }
     auditOnly?: boolean;
     context?: any;
     disableSensitivityLabelOverride?: boolean;
@@ -59,8 +64,6 @@ export interface IAppProps {
     maxRequests?: number;
     maxStorageDesc?: string;
     maxStorageSize?: number;
-    restrictRemovalAdminAccounts?: string;
-    restrictRemovalOwnerAccounts?: string;
     reportNames?: IReportNames;
     reportProps?: IReportProps;
     searchProps?: ISearchProps;

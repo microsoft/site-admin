@@ -71,6 +71,7 @@ const imageReferences = [
 export interface ISiteAdminWebPartProps {
   AccessTabRestrictAdminRemoval: string;
   AccessTabRestrictOwnerRemoval: string;
+  AccessTabRestrictTeamsM365: boolean;
   AppTitle: string;
   AuditOnly: boolean;
   DisableSensitivityLabelOverride: boolean;
@@ -228,6 +229,11 @@ export interface ISiteAdminWebPartProps {
 // Reference the solution
 import "main-lib";
 interface IAppProps {
+  access?: {
+    restrictRemovalAdminAccounts?: string;
+    restrictRemovalOwnerAccounts?: string;
+    restrictTeamsM365?: boolean;
+  }
   auditOnly?: boolean;
   context?: WebPartContext;
   el: HTMLElement;
@@ -269,8 +275,6 @@ interface IAppProps {
   maxRequests?: number;
   maxStorageDesc?: string;
   maxStorageSize?: number;
-  restrictRemovalAdminAccounts?: string;
-  restrictRemovalOwnerAccounts?: string;
   reportNames?: {
     dlp: string;
     docRetention: string;
@@ -605,6 +609,12 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
                   label: "Restricted Owner Accounts",
                   description: "The owner accounts that should be restricted from removal. Enter the names separated by commas.",
                   value: this.properties.AccessTabRestrictOwnerRemoval
+                }),
+                PropertyPaneToggle("AccessTabRestrictTeamsM365", {
+                  label: "M365 Group Restriction",
+                  offText: "The user will be able to add users to Site Groups and M365 Groups.",
+                  onText: "The user will only be able to add users to M365 Groups.",
+                  checked: this.properties.AccessTabRestrictTeamsM365
                 })
               ]
             },
@@ -1186,6 +1196,11 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
       }
     }
     return {
+      access: {
+        restrictRemovalAdminAccounts: this.properties.AccessTabRestrictAdminRemoval,
+        restrictRemovalOwnerAccounts: this.properties.AccessTabRestrictOwnerRemoval,
+        restrictTeamsM365: this.properties.AccessTabRestrictTeamsM365
+      },
       auditOnly: this.properties.AuditOnly,
       context: this.context,
       el: this.domElement,
@@ -1254,8 +1269,6 @@ export default class SiteAdminWebPart extends BaseClientSideWebPart<ISiteAdminWe
         siteAuditReports: this.properties.ReportsSiteAudit,
         sensitivityLabelFileExt: this.properties.SensitivityLabelFileExt
       },
-      restrictRemovalAdminAccounts: this.properties.AccessTabRestrictAdminRemoval,
-      restrictRemovalOwnerAccounts: this.properties.AccessTabRestrictOwnerRemoval,
       searchProps: {
         description: this.properties.WebPropSearchPropertyDescription,
         key: this.properties.WebPropSearchPropertyKey,
