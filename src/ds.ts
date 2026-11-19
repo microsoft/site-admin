@@ -383,13 +383,13 @@ export class DataSource {
                     Select: ["WebInfos/Id", "WebInfos/ServerRelativeUrl", "WebInfos/Title"]
                 }).execute(resp => {
                     // Parse the webs
-                    Helper.Executor(resp.Webs.results, web => {
+                    Helper.Executor(resp.WebInfos.results, web => {
                         // Return a promise
                         return new Promise(resolve => {
                             // Get the property for the web
                             Web(web.ServerRelativeUrl).query({ Select: ["HasUniqueRoleAssignments"] }).execute(result => {
                                 // Set the property
-                                web.HasUniqueRoleAssignments = result.HasUniqueRoleAssignments;
+                                web["HasUniqueRoleAssignments"] = result.HasUniqueRoleAssignments;
 
                                 // Append the item
                                 this._siteItems.push({
